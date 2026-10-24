@@ -3,12 +3,12 @@
   "date": "2026-10-24",
   "version": "0.1.0.dev1",
   "tests": {
-    "tests": "107",
+    "tests": "108",
     "failures": "0",
     "errors": "0",
     "skipped": "4"
   },
-  "statement_coverage": 0.8041,
+  "statement_coverage": 0.8045,
   "legacy_sdk_separate_suite_passed": 21,
   "runtime_known_vulnerabilities": 0,
   "browser": "authenticated API parity, navigation, mobile overflow, key lifetime and axe smoke passed",
@@ -22,7 +22,7 @@
     "uv.lock": "c1b004fc7166b2f918a660448d5a393cb7382940f19f373094e0d8b17f0e4dc3",
     "web\\package-lock.json": "154839c87068883c3d5f4665665e89fded83856e814ed4de30fd0eff2ebf7f59",
     "src\\cutback\\pricing\\catalog.json": "57acf5108329471b4280a09c65714aeb235542effa7bcf93fa16434f301e897d",
-    "artifacts\\test-results.xml": "458e0407754205ede16a38a3ca3818eead9ba556d88e2dddcfe60099fe6d3758",
-    "artifacts\\coverage.xml": "4b5fd0f338e10d50e0b88aeba77dcecd639a2686def0163e6a0c0f6af5420750"
+    "artifacts\\test-results.xml": "1b7df616f2f5fa1068214519f8f35f89be0e61a80e5edf2705b07a31ee9b7d25",
+    "artifacts\\coverage.xml": "1e2f61be5c3faec8bcab75ce6f2d061817c64ee61ce7a5b0c6a4a064a338ea6a"
   }
 }

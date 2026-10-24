@@ -2,7 +2,7 @@
 
 Development candidate 0.1.0.dev1; 24 October 2026.
 
-Local PostgreSQL/synthetic SDK/browser suite: 103 passed, 4 legacy-version cases skipped intentionally. Separate OpenAI 1.55.3/Pydantic 2.10.6 compatibility and scanner suite: 21 passed. Statement coverage: 80.41%.
+Local PostgreSQL/synthetic SDK/browser suite: 104 passed, 4 legacy-version cases skipped intentionally. Separate OpenAI 1.55.3/Pydantic 2.10.6 compatibility and scanner suite: 21 passed. Statement coverage: 80.45%.
 
 React/TypeScript build and browser/API parity, mobile overflow, credential lifetime and axe smoke passed. The local encrypted backup restored into a disposable database with matching row counts across 22 tables. Core-only wheel install, offline scan, archive exclusions, Ruff and mypy passed. Python runtime audit and npm audit reported zero known vulnerabilities in the checked environment.
 

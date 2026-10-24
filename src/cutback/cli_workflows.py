@@ -123,7 +123,13 @@ def register(app, output, request, fail):
         if not dataset:
             fail("DATASET_NOT_FOUND", "import an authorized dataset in this project first")
         assert dataset is not None
-        semantic = minimum_accuracy is not None and dataset["provenance"]["independent_labels"]
+        task = dataset["provenance"].get("task_inference", {})
+        metric = task.get("suggested_metric", "nonempty")
+        semantic = (
+            minimum_accuracy is not None
+            and dataset["provenance"]["independent_labels"]
+            and metric in {"field_f1", "exact_label"}
+        )
         spec = ExperimentPlan.model_validate(
             {
                 "workflow": workflow,
@@ -134,7 +140,7 @@ def register(app, output, request, fail):
                     for i, r in enumerate(candidates[:2])
                 ],
                 "metric": {
-                    "kind": "exact_label" if semantic else "nonempty",
+                    "kind": metric if semantic else "nonempty",
                     "minimum": minimum_accuracy if semantic else 1,
                 },
                 "budget": {"max_usd": max_usd, "max_requests": max_requests},
@@ -150,9 +156,8 @@ def register(app, output, request, fail):
                 "plan_file": str(destination),
                 "provider_calls": 0,
                 "approval_status": "pending",
-                "quality_scope": "heldout_label_accuracy"
-                if semantic
-                else "technical_only_not_verified",
+                "task_inference": task,
+                "quality_scope": f"heldout_{metric}" if semantic else "technical_only_not_verified",
                 "next_action": "review plan then submit, approve its hash, and queue one run",
             }
         )

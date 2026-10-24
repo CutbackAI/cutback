@@ -77,6 +77,25 @@ def test_metrics_gold_reference_schema_and_failure_denominators():
     assert wilson(0, 0) == (None, None)
 
 
+def test_task_inference_does_not_promote_references_or_prose_to_gold():
+    from cutback.evals.datasets import infer_task
+
+    body = dataset_body()
+    assert infer_task(body)["suggested_metric"] == "exact_label"
+    for case in body.cases:
+        case.gold = {"field": "synthetic"}
+    assert infer_task(body)["suggested_metric"] == "field_f1"
+    body.independent_labels = False
+    for case in body.cases:
+        case.reference = "synthetic reference"
+    assert infer_task(body)["suggested_metric"] == "reference_match"
+    assert infer_task(body)["semantic_quality"] == "NOT VERIFIED"
+    body.independent_labels = True
+    for i, case in enumerate(body.cases):
+        case.gold = f"Distinct long prose {i}" + "x" * 200
+    assert infer_task(body)["kind"] == "unknown"
+
+
 def test_plan_approval_budget_and_paired_quality():
     dataset = prepare_dataset(dataset_body())
     plan = plan_for(dataset)

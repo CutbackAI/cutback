@@ -26,3 +26,5 @@ uv run cutback dashboard --local
 The demo uses synthetic inference and an actual local collector/database. Dashboard credentials are separate control keys held only in browser memory. Read [deployment](docs/deployment.md), [evaluation](docs/evaluation.md), [provider compatibility](docs/providers.md), and [agent setup](docs/agent-integration.md).
 
 Extras: `cutback[openai]`, `[anthropic]`, `[instrumentation]`, `[server]`, `[eval]`, `[storage]`. The scanner core contains no SDK, server or GPU dependencies. No calls home, implicit paid inference, automatic production patches or traffic changes.
+
+Watch or reproduce the [synthetic demo](docs/demo.md). Its data is explicitly labeled; it is not a customer benchmark.

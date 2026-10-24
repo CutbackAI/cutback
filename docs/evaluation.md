@@ -10,6 +10,8 @@ Dataset imports contain workflow/environment/policy, source_type/provenance_ref,
 
 Inputs, references, labels, prompt variants and rubrics are encrypted separately. PostgreSQL keeps safe pointers/hashes/provenance/metrics; purpose-scoped admin content reads are audited. Provider keys stay in the worker, never the browser.
 
+Import infers a reviewable task hint from label shape: independent structured gold suggests field F1; repeated short labels suggest classification/exact accuracy; references remain provisional; ambiguous prose stays unknown and needs explicit criteria. No LLM or label text is sent for this inference. The automatic planner uses the hint only with a declared threshold and independent labels; otherwise it retains technical-only checks.
+
 Frozen hashes include content and provenance. Normalized duplicates are unioned with customer groups before seeded stratified train/validation/test assignment. Rare groups/missing splits are flagged. This is selected near-duplicate detection, not universal semantic deduplication. Training examples never become held-out test evidence.
 
 ## Plan, approve and run

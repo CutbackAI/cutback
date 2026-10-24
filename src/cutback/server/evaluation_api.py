@@ -293,6 +293,7 @@ def install_evaluation(app, sessions, authorize, scope):
                 provenance.update(
                     {
                         "split_counts": prepared["split_counts"],
+                        "task_inference": prepared["task_inference"],
                         "split_strategy": prepared["split_strategy"],
                         "group_count": prepared["group_count"],
                         "strata": prepared["strata"],

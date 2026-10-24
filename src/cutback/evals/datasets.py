@@ -96,6 +96,35 @@ class DatasetImport(StrictModel):
     split_seed: int = Field(default=17, ge=0, le=2**31 - 1)
 
 
+def infer_task(body: DatasetImport) -> dict:
+    """Conservative local shape inference; no labels or customer text in metadata."""
+    labels = [case.gold for case in body.cases]
+    independent = body.independent_labels and all(label is not None for label in labels)
+    if independent and all(isinstance(label, (dict, list)) for label in labels):
+        kind, metric, basis = "structured_extraction", "field_f1", "independent_structured_gold"
+    elif independent and all(isinstance(label, str) for label in labels):
+        # Short repeated labels are evidence for classification; arbitrary prose is not.
+        text_labels = [label for label in labels if isinstance(label, str)]
+        classes = set(text_labels)
+        if all(len(label) <= 128 for label in text_labels) and len(classes) <= min(
+            100, len(labels) / 2
+        ):
+            kind, metric, basis = "classification", "exact_label", "repeated_short_gold_labels"
+        else:
+            kind, metric, basis = "unknown", "nonempty", "text_gold_needs_explicit_rubric"
+    elif all(case.reference is not None for case in body.cases):
+        kind, metric, basis = "reference_comparison", "reference_match", "references_are_not_gold"
+    else:
+        kind, metric, basis = "unknown", "nonempty", "insufficient_independent_task_evidence"
+    return {
+        "kind": kind,
+        "suggested_metric": metric,
+        "basis": basis,
+        "status": "heuristic_requires_review",
+        "semantic_quality": "NOT VERIFIED",
+    }
+
+
 def prepare_dataset(body: DatasetImport) -> dict:
     ids = [case.id for case in body.cases]
     if len(ids) != len(set(ids)):
@@ -169,6 +198,7 @@ def prepare_dataset(body: DatasetImport) -> dict:
     counts = Counter(item["split"] for item in items)
     return {
         "schema_version": "1.0",
+        "task_inference": infer_task(body),
         "immutable_hash": digest(body.model_dump(mode="json")),
         "items": items,
         "split_counts": dict(counts),
