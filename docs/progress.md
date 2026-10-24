@@ -1,6 +1,6 @@
 # Implementation progress
 
-Updated 24 October 2026. Candidate: `0.1.0.dev1`. PyPI ownership was secured by `0.1.0.dev0`; published versions are listed at https://pypi.org/project/cutback/. This is a working pre-alpha, not production validation or completion of the later commercial roadmap.
+Updated 24 October 2026. Published pre-alpha: [`0.1.0.dev1`](https://pypi.org/project/cutback/0.1.0.dev1/). [Source release and synthetic demo](https://github.com/CutbackAI/cutback/releases/tag/v0.1.0.dev1). PyPI ownership was secured by `0.1.0.dev0`; published versions are listed at https://pypi.org/project/cutback/. This is a working pre-alpha, not production validation or completion of the later commercial roadmap.
 
 | Milestone | Implemented | Remaining acceptance boundary |
 |---|---|---|
