@@ -1,0 +1,47 @@
+"""Check release payloads, metadata and internal-file exclusion before upload."""
+
+import email
+import tarfile
+import zipfile
+from pathlib import Path
+
+
+def check(directory: Path):
+    wheels = list(directory.glob("*.whl"))
+    sources = list(directory.glob("*.tar.gz"))
+    if len(wheels) != 1 or len(sources) != 1:
+        raise ValueError("expected exactly one wheel and one source distribution")
+    banned = (
+        "MASTER_ENGINEERING_HANDOFF",
+        "pilot-app-staging-plan",
+        "secrets/",
+        ".env",
+        "synthetic-compose-report",
+        "changed-files.txt",
+        "prepare_public_release",
+    )
+    with zipfile.ZipFile(wheels[0]) as wheel:
+        names = wheel.namelist()
+        (metadata_name,) = (name for name in names if name.endswith(".dist-info/METADATA"))
+        metadata = email.message_from_bytes(wheel.read(metadata_name))
+        if metadata["Name"] != "cutback" or metadata["Version"] != "0.1.0.dev0":
+            raise ValueError("unexpected release identity")
+        if "Development Status :: 2 - Pre-Alpha" not in metadata.get_all("Classifier", []):
+            raise ValueError("development status must be explicit")
+        if not any(name.endswith("licenses/LICENSE") for name in names):
+            raise ValueError("wheel license missing")
+    with tarfile.open(sources[0]) as source:
+        names += source.getnames()
+        if any(member.issym() or member.islnk() for member in source.getmembers()):
+            raise ValueError("release archive must not contain symlinks")
+    if any(
+        marker.lower() in name.lower().replace("\\", "/") for name in names for marker in banned
+    ):
+        raise ValueError("internal or secret file included in archive")
+    print("Release identity, pre-alpha metadata, licenses and archive exclusions passed.")
+
+
+if __name__ == "__main__":
+    import sys
+
+    check(Path(sys.argv[1]) if len(sys.argv) > 1 else Path("dist"))

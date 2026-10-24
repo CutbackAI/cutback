@@ -1,0 +1,69 @@
+[build-system]
+requires = ["hatchling==1.29.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cutback"
+version = "0.1.0.dev0"
+description = "Independent, evidence-aware AI application cost observation and optimization"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+dependencies = ["pydantic>=2.12,<3", "typer>=0.20,<1", "PyYAML>=6,<7", "pathspec>=1,<2"]
+
+[project.urls]
+Homepage = "https://github.com/CutbackAI/cutback"
+Repository = "https://github.com/CutbackAI/cutback"
+Issues = "https://github.com/CutbackAI/cutback/issues"
+Documentation = "https://github.com/CutbackAI/cutback/tree/main/docs"
+
+[project.optional-dependencies]
+instrumentation = ["httpx>=0.28,<1", "opentelemetry-api>=1.38,<2"]
+openai = ["cutback[instrumentation]", "openai==2.29.0"]
+server = ["fastapi>=0.120,<1", "uvicorn>=0.38,<1", "sqlalchemy>=2.0.44,<3", "alembic>=1.17,<2", "psycopg[binary]>=3.2,<4"]
+
+[dependency-groups]
+dev = ["pytest>=8.4,<10", "pytest-cov>=7,<8", "ruff>=0.14,<1", "mypy>=1.18,<2", "types-PyYAML>=6", "build>=1.3,<2", "pip-audit>=2.9,<3", "twine>=6,<7"]
+
+[project.scripts]
+cutback = "cutback.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cutback"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src", "/tests", "/examples", "/README.md", "/LICENSE", "/NOTICE",
+  "/pyproject.toml", "/uv.lock", "/.python-version", "/scripts/wheel_smoke.py",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["postgres: requires CUTBACK_TEST_DATABASE_URL", "e2e: local HTTP/PostgreSQL integration"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/cutback/server/api.py" = ["B008"] # FastAPI dependency defaults are its documented API.
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src/cutback"]
+check_untyped_defs = true
+ignore_missing_imports = true
+

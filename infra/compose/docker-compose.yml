@@ -1,0 +1,43 @@
+name: cutback-dev
+services:
+  postgres:
+    image: postgres:17-alpine@sha256:eee6c6e1b0894fa4fe0075eb054af9fd1cf39a35321c2d4110626cfe506411fb
+    environment:
+      POSTGRES_USER: cutback
+      POSTGRES_DB: cutback
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets: [db_password]
+    ports: ["127.0.0.1:55432:5432"]
+    volumes: ["cutback_postgres:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cutback -d cutback"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  collector:
+    build:
+      context: ../..
+      dockerfile: infra/compose/Dockerfile
+    environment:
+      CUTBACK_DB_HOST: postgres
+      CUTBACK_DB_PASSWORD_FILE: /run/secrets/db_password
+      CUTBACK_ADMIN_TOKEN_FILE: /run/secrets/admin_token
+      CUTBACK_DEV_HTTP: "true"
+    secrets: [db_password, admin_token]
+    ports: ["127.0.0.1:8080:8080"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+secrets:
+  db_password:
+    file: ./secrets/db_password
+  admin_token:
+    file: ./secrets/admin_token
+volumes:
+  cutback_postgres:

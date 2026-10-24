@@ -1,0 +1,436 @@
+"""Conservative, non-executing Python inventory. No source content in default output."""
+
+import ast
+import copy
+import hashlib
+import os
+import re
+import subprocess
+from dataclasses import dataclass, field
+from fnmatch import fnmatch
+from pathlib import Path
+from typing import Any
+
+from pathspec import GitIgnoreSpec
+
+from cutback import __version__
+from cutback.core.config import load_config
+from cutback.pricing import Catalog
+
+SKIP = {
+    ".git",
+    ".venv",
+    "venv",
+    "env",
+    "node_modules",
+    "__pycache__",
+    "dist",
+    "build",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".cutback",
+    "site-packages",
+}
+CONSTRUCTORS = {
+    "openai.OpenAI": "openai",
+    "openai.AsyncOpenAI": "openai",
+    "openai.AzureOpenAI": "azure_openai",
+    "openai.AsyncAzureOpenAI": "azure_openai",
+    "anthropic.Anthropic": "anthropic",
+    "anthropic.AsyncAnthropic": "anthropic",
+}
+SURFACES = {
+    "openai": ("responses.create", "chat.completions.create"),
+    "anthropic": ("messages.create",),
+}
+
+
+def digest(value: str) -> str:
+    return hashlib.sha256(value.encode()).hexdigest()[:24]
+
+
+def safe_model(value: Any) -> str | None:
+    if (
+        isinstance(value, str)
+        and re.fullmatch(r"[A-Za-z0-9_.:/-]{1,200}", value)
+        and not value.lower().startswith(("sk-", "sk_", "bearer"))
+    ):
+        return value
+    return None
+
+
+@dataclass
+class Module:
+    path: str
+    name: str
+    tree: ast.Module
+    bindings: dict[str, Any] = field(default_factory=dict)
+    nodes: list[tuple[ast.AST, str]] = field(default_factory=list)
+    functions: set[str] = field(default_factory=set)
+
+    def index(self):
+        def bind(key, value):
+            # Multiple assignments are ambiguous: never claim execution order or branch resolution.
+            self.bindings[key] = value if key not in self.bindings else None
+
+        def visit(node, scope=""):
+            self.nodes.append((node, scope))
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                key = f"{scope}.{node.name}".strip(".")
+                bind(key, ("symbol", f"{self.name}.{key}"))
+                self.functions.add(key)
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    for arg in (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs):
+                        bind(f"{key}.{arg.arg}", None)
+                for child in node.body:
+                    visit(child, key)
+                return
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    bind(
+                        f"{scope}.{alias.asname or alias.name.split('.')[0]}".strip("."),
+                        ("symbol", alias.name if alias.asname else alias.name.split(".")[0]),
+                    )
+            elif isinstance(node, ast.ImportFrom):
+                parent = self.name.split(".")[: -node.level] if node.level else []
+                target = ".".join(parent + ([node.module] if node.module else []))
+                for alias in node.names:
+                    bind(
+                        f"{scope}.{alias.asname or alias.name}".strip("."),
+                        ("symbol", f"{target}.{alias.name}"),
+                    )
+            elif isinstance(node, (ast.Assign, ast.AnnAssign)):
+                targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+                for assignment_target in targets:
+                    if isinstance(assignment_target, ast.Name):
+                        bind(
+                            f"{scope}.{assignment_target.id}".strip("."),
+                            ("expr", node.value, scope),
+                        )
+            for walk_child in ast.iter_child_nodes(node):
+                visit(walk_child, scope)
+
+        visit(self.tree)
+
+
+def scan(root: str | Path) -> dict[str, Any]:
+    root = Path(root).resolve(strict=True)
+    if not root.is_dir():
+        raise ValueError("scan target must be a directory")
+    config = load_config(root).scanner
+    ignore_path = root / ".gitignore"
+    ignore = GitIgnoreSpec.from_lines([])
+    if (
+        ignore_path.is_file()
+        and not ignore_path.is_symlink()
+        and ignore_path.stat().st_size <= 65536
+    ):
+        ignore = GitIgnoreSpec.from_lines(ignore_path.read_text(encoding="utf-8").splitlines())
+    warnings: list[dict] = []
+    modules: dict[str, Module] = {}
+    counts = {
+        "applicable_python_files": 0,
+        "analyzed_files": 0,
+        "excluded_entries": 0,
+        "unparsed_files": 0,
+        "other_source_files": 0,
+    }
+    for directory, dirs, files in os.walk(root, followlinks=False):
+        base = Path(directory)
+        for name in list(dirs):
+            path = base / name
+            rel = path.relative_to(root).as_posix()
+            if (
+                name in SKIP
+                or path.is_symlink()
+                or not path.resolve().is_relative_to(root)
+                or ignore.match_file(rel + "/")
+                or any(fnmatch(rel + "/", p) or fnmatch(rel, p) for p in config.exclude)
+            ):
+                dirs.remove(name)
+                counts["excluded_entries"] += 1
+        for name in sorted(files):
+            path = base / name
+            rel = path.relative_to(root).as_posix()
+            if path.suffix in {".js", ".ts", ".tsx", ".jsx"}:
+                counts["other_source_files"] += 1
+            if path.suffix != ".py":
+                continue
+            counts["applicable_python_files"] += 1
+            if (
+                path.is_symlink()
+                or not path.resolve().is_relative_to(root)
+                or ignore.match_file(rel)
+                or any(fnmatch(rel, p) for p in config.exclude)
+            ):
+                counts["excluded_entries"] += 1
+                continue
+            if len(modules) >= config.max_files or path.stat().st_size > config.max_file_bytes:
+                warnings.append({"code": "RESOURCE_LIMIT", "file": rel})
+                counts["unparsed_files"] += 1
+                continue
+            try:
+                source = path.read_text(encoding="utf-8-sig")
+                tree = ast.parse(source, filename=rel)
+            except (OSError, UnicodeError, SyntaxError, RecursionError, ValueError):
+                warnings.append({"code": "UNPARSED_FILE", "file": rel})
+                counts["unparsed_files"] += 1
+                continue
+            module_name = rel.removeprefix("src/").removesuffix(".py").replace("/", ".")
+            if module_name.endswith(".__init__"):
+                module_name = module_name.removesuffix(".__init__")
+            module = Module(rel, module_name, tree)
+            try:
+                module.index()
+            except RecursionError:
+                warnings.append({"code": "AST_DEPTH_LIMIT", "file": rel})
+                counts["unparsed_files"] += 1
+                continue
+            modules[module_name] = module
+            counts["analyzed_files"] += 1
+
+    def symbol(module, node, scope, seen=frozenset()):
+        if isinstance(node, ast.Name):
+            parts = scope.split(".") if scope else []
+            for i in range(len(parts), -1, -1):
+                key = ".".join(parts[:i] + [node.id])
+                if key in module.bindings:
+                    marker = (module.name, key)
+                    if marker in seen:
+                        return None
+                    value = module.bindings[key]
+                    if value is None:
+                        return None
+                    if value[0] == "symbol":
+                        target = value[1]
+                        if key in module.functions:
+                            return target
+                        for other_name in sorted(modules, key=len, reverse=True):
+                            prefix = other_name + "."
+                            if target.startswith(prefix):
+                                rest = target[len(prefix) :]
+                                other = modules[other_name]
+                                if "." not in rest and rest in other.bindings:
+                                    return symbol(other, ast.Name(id=rest), "", seen | {marker})
+                        return target
+                    return symbol(module, value[1], value[2], seen | {marker})
+            return None
+        if isinstance(node, ast.Attribute):
+            parent = symbol(module, node.value, scope, seen)
+            return f"{parent}.{node.attr}" if parent else None
+        if isinstance(node, ast.Call):
+            constructor = symbol(module, node.func, scope, seen)
+            if constructor in CONSTRUCTORS:
+                return "client:" + CONSTRUCTORS[constructor]
+        return None
+
+    def model_value(module, node, scope, seen=frozenset()):
+        if isinstance(node, ast.Constant):
+            return safe_model(node.value), "literal"
+        if isinstance(node, ast.Name):
+            key = f"{scope}.{node.id}".strip(".")
+            if key not in module.bindings:
+                key = node.id
+            marker = (module.name, key)
+            value = module.bindings.get(key)
+            if value and value[0] == "expr" and marker not in seen:
+                resolved, _ = model_value(module, value[1], value[2], seen | {marker})
+                return resolved, "config_symbol"
+            if value and value[0] == "symbol":
+                for other_name, other in modules.items():
+                    prefix = other_name + "."
+                    if value[1].startswith(prefix) and marker not in seen:
+                        return model_value(
+                            other, ast.Name(id=value[1][len(prefix) :]), "", seen | {marker}
+                        )
+        return None, "runtime_unresolved"
+
+    catalog = Catalog()
+    sites = []
+    graph: dict[str, set[str]] = {}
+    ordinal: dict[tuple, int] = {}
+    for module in modules.values():
+        for node, scope in module.nodes:
+            if not isinstance(node, ast.Call):
+                continue
+            target = symbol(module, node.func, scope)
+            caller = f"{module.name}.{scope}".rstrip(".")
+            if target and not target.startswith("client:"):
+                graph.setdefault(target, set()).add(caller)
+            provider, surface = None, None
+            if target:
+                for candidate, methods in SURFACES.items():
+                    for method in methods:
+                        if target in {f"client:{candidate}.{method}", f"{candidate}.{method}"}:
+                            provider, surface = candidate, method
+            if not provider or not surface:
+                if target and ("azure_openai" in target or "litellm" in target):
+                    warnings.append(
+                        {"code": "UNSUPPORTED_PROVIDER", "file": module.path, "line": node.lineno}
+                    )
+                # Detect direct HTTP endpoints without including URLs or payloads in output.
+                if isinstance(node.func, ast.Attribute) and node.func.attr in {"post", "request"}:
+                    if any(
+                        isinstance(arg, ast.Constant)
+                        and isinstance(arg.value, str)
+                        and re.match(r"https://api\.(openai|anthropic)\.com/", arg.value)
+                        for arg in node.args
+                    ):
+                        warnings.append(
+                            {
+                                "code": "DIRECT_HTTP_NEEDS_INSTRUMENTATION",
+                                "file": module.path,
+                                "line": node.lineno,
+                            }
+                        )
+                continue
+            kwargs = {kw.arg: kw.value for kw in node.keywords}
+            model_node = kwargs.get("model")
+            model, model_kind = model_value(module, model_node, scope)
+            unresolved = [] if model else ["model_runtime_unresolved"]
+            model_ref = {
+                "kind": model_kind,
+                "symbol": model_node.id if isinstance(model_node, ast.Name) else None,
+                "environment_names": [],
+            }
+            if model_node:
+                for child in ast.walk(model_node):
+                    if (
+                        isinstance(child, ast.Call)
+                        and isinstance(child.func, ast.Attribute)
+                        and child.func.attr in {"getenv", "get"}
+                        and child.args
+                        and isinstance(child.args[0], ast.Constant)
+                    ):
+                        env_name = child.args[0].value
+                        if isinstance(env_name, str) and re.fullmatch(
+                            r"[A-Z_][A-Z0-9_]*", env_name
+                        ):
+                            model_ref["environment_names"].append(env_name)
+            prompt_refs = []
+            for key in ("input", "messages", "instructions", "system"):
+                prompt = kwargs.get(key)
+                if prompt is not None:
+                    prompt_refs.append(
+                        {
+                            "argument": key,
+                            "file": module.path,
+                            "line": prompt.lineno,
+                            "kind": type(prompt).__name__,
+                            "symbol": prompt.id if isinstance(prompt, ast.Name) else None,
+                            "content": None,
+                        }
+                    )
+                    if isinstance(prompt, ast.Name):
+                        binding = module.bindings.get(
+                            f"{scope}.{prompt.id}".strip(".")
+                        ) or module.bindings.get(prompt.id)
+                        if binding and binding[0] == "expr" and binding[1] is not None:
+                            for child in ast.walk(binding[1]):
+                                if (
+                                    isinstance(child, ast.Call)
+                                    and isinstance(child.func, ast.Name)
+                                    and child.func.id == "Path"
+                                    and child.args
+                                    and isinstance(child.args[0], ast.Constant)
+                                    and isinstance(child.args[0].value, str)
+                                ):
+                                    template = child.args[0].value
+                                    if (
+                                        not Path(template).is_absolute()
+                                        and ".." not in Path(template).parts
+                                        and Path(template).suffix
+                                        in {".j2", ".jinja2", ".txt", ".md"}
+                                    ):
+                                        prompt_refs[-1]["template_path"] = template
+            if not prompt_refs:
+                unresolved.append("prompt_reference_unresolved")
+            signature = (module.path, scope, provider, surface)
+            ordinal[signature] = ordinal.get(signature, 0) + 1
+            fingerprint = "callsite:" + digest("|".join(signature) + f"|{ordinal[signature]}")
+
+            class RedactConstants(ast.NodeTransformer):
+                def visit_Constant(self, node):
+                    return ast.copy_location(ast.Constant(value="<redacted>"), node)
+
+            expression = (
+                ast.unparse(RedactConstants().visit(copy.deepcopy(model_node)))
+                if model_node is not None
+                else None
+            )
+            sites.append(
+                {
+                    "call_site_id": fingerprint,
+                    "provider": provider,
+                    "sdk_surface": surface,
+                    "requested_model": model,
+                    "model_reference": model_ref,
+                    "model_expression": expression,
+                    "prompt_template_refs": prompt_refs,
+                    "source_file": module.path,
+                    "source_symbol": scope or "<module>",
+                    "line": node.lineno,
+                    "workflow_hint": caller,
+                    "workflow_attribution": "heuristic",
+                    "confidence": "high",
+                    "unresolved": unresolved,
+                    "evidence": [f"{module.path}:{node.lineno}", "python_ast"],
+                    "price": catalog.rate_info(provider, model),
+                    "upstream_callers": [],
+                    "evidence_status": "discovered",
+                    "actual_cost": None,
+                    "actual_tokens": None,
+                    "actual_latency": None,
+                }
+            )
+    for site in sites:
+        pending = list(graph.get(site["workflow_hint"], set()))
+        visited: set[str] = set()
+        while pending and len(visited) < 1000:
+            caller = pending.pop()
+            if caller not in visited:
+                visited.add(caller)
+                pending.extend(graph.get(caller, set()) - visited)
+        site["upstream_callers"] = sorted(visited) if config.follow_local_call_graph else []
+    sites.sort(key=lambda site: (site["source_file"], site["line"]))
+    if counts["other_source_files"]:
+        warnings.append({"code": "UNSUPPORTED_LANGUAGES", "count": counts["other_source_files"]})
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=False,
+        )
+        commit = result.stdout.strip() if result.returncode == 0 else None
+    except (OSError, subprocess.TimeoutExpired):
+        commit = None
+    return {
+        "version": "1.0",
+        "scanner_version": __version__,
+        "project": {"root": str(root), "commit": commit},
+        "coverage": counts,
+        "summary": {
+            "llm_call_sites_detected": len(sites),
+            "runtime_observations": 0,
+            "actual_spend_usd": None,
+            "actual_spend_reason": "no_runtime_telemetry",
+        },
+        "call_sites": sites,
+        "warnings": warnings,
+        "unknowns": [
+            {
+                "field": "historical_usage_and_quality",
+                "reason": "static_code_only",
+                "next_action": "instrument_supported_sdk_and_import_authorized_examples",
+            }
+        ],
+        "limitations": [
+            "Python only; no exhaustive recall claim",
+            "Ambiguous assignments, factories, object attributes may be unresolved",
+            "Call sites are static candidates, not runtime coverage",
+            "Fingerprint changes on moves or same-symbol sink reordering",
+        ],
+    }

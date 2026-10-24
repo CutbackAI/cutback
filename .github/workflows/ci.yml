@@ -1,0 +1,40 @@
+name: CI
+on: [push, pull_request, workflow_call]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        python: ['3.11', '3.13']
+    services:
+      postgres:
+        image: postgres:17-alpine@sha256:eee6c6e1b0894fa4fe0075eb054af9fd1cf39a35321c2d4110626cfe506411fb
+        env:
+          POSTGRES_USER: cutback
+          POSTGRES_PASSWORD: synthetic-ci-only
+          POSTGRES_DB: cutback_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U cutback -d cutback_test"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      CUTBACK_TEST_DATABASE_URL: postgresql+psycopg://cutback:synthetic-ci-only@127.0.0.1:5432/cutback_test
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+        with:
+          version: '0.12.13'
+          python-version: ${{ matrix.python }}
+          enable-cache: false
+      - run: uv sync --locked --all-extras --dev
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy
+      - run: uv run pytest --cov=cutback --cov-report=term-missing --cov-report=xml
+      - run: uv build
+      - run: uv run python scripts/check_release_artifacts.py
+      - run: uv run twine check dist/*
+      - run: uv run python scripts/wheel_smoke.py

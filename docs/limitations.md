@@ -1,0 +1,15 @@
+# Current limitations and release blockers
+
+The current development slice is useful for offline inventory and locally tested metadata observation. It is not the completed master product and is not production-ready.
+
+- Scanner: Python only. No exhaustive recall claim. Conservative resolution misses factories, instance attributes and dynamic plugin imports. Multiple assignments are unresolved. Cross-file resolution covers straightforward source modules, not arbitrary installed/import roots. Nested gitignore files, full endpoint decorators, robust move reconciliation and annotated precision/recall benchmarks remain open. Source line shifts preserve IDs; file moves and same-symbol sink reordering may not.
+- Runtime: only OpenAI 2.29.0 resource methods, with synthetic compatibility evidence. Individual internal retries, all streaming helper variants, live calls, Lambda freeze and multiworker performance are not validated. Process init should occur after worker fork. Source attribution is explicit `workflow(...)`; automatic runtime-to-scan matching remains open.
+- Export: bounded queue (default 512), batches up to 50, no disk spool, zero automatic retries, 300ms HTTP timeout default. Delivery is best effort. Process exit, short-lived runtimes, saturation and collector failures can lose data. Counters are process-local; remote health aggregation remains open. HTTPX timeout is per network phase; an in-flight daemon export may outlive a bounded `flush` wait, while the caller returns at the flush deadline.
+- Collector: PostgreSQL only; local single-instance quotas, bootstrap admin and project viewer/ingest roles. Full user/RBAC/OIDC, distributed rate limiting, richer key lifecycle, health persistence, public TLS deployment tests and production DB least privilege remain open. No public infrastructure was created.
+- Operations: no scheduled retention worker or long-lived daily aggregates yet. Do not collect real personal data before retention/deletion jobs and restore validation are operational. Backup instructions exist, but an encrypted external backup/restore drill is not yet demonstrated. M3 is partial.
+- Pricing: two OpenAI text models and explicit aliases, effective from checked date. No regional, batch, flex, tool, multimodal, contract override, refresh job or invoice reconciliation. Earlier timestamps and unlisted usage are unpriced. A price is an estimate from provider-reported usage, not a provider bill.
+- Later milestones: payload capture/object stores, fixture/dataset automation, semantic evaluation, budgeted experiments, patch recommendations, React dashboard, agent-specific packages, Helm/IaC and commercial service are not implemented. No placeholder endpoint claims otherwise.
+- Public release: namespace ownership, trademark review, independent public example integration, full dependency security/license gate, release signing/SBOM and clean-machine onboarding remain release requirements.
+
+See progress.md for exact evidence and the ordered next tasks.
+
