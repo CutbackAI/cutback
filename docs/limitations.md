@@ -14,4 +14,4 @@ This is a tested Python-first pre-alpha, not production validation.
 - Optional JS/TS scanning, Node observation, OIDC/PKCE, team access, caching/routing, CPU LoRA, billing connectors and Helm/Terraform are implemented within documented bounds. Native CPU training is tested; CUDA, customer IdP/Stripe accounts and live cluster/network/storage acceptance remain external gates. No managed cloud service or paid infrastructure was provisioned.
 - Retention refuses a day above its 100,000-event aggregation bound rather than pruning incomplete evidence. The local scale smoke is not an unbounded throughput claim. Browser acceptance uses Chromium; additional browsers require their own runs.
 
-See progress.md and evidence/public-acceptance.md for demonstrated results and external gates.
+See [progress](progress.md) and [public acceptance](evidence/public-acceptance.md) for demonstrated results and external gates.
