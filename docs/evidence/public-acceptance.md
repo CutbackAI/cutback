@@ -13,3 +13,7 @@ Dev2 local engineering acceptance, 24 October 2026. Release publication is recor
 - Ruff, formatting, mypy, generated OpenAPI/TypeScript/React build, archive checks, Twine metadata and core-only wheel install/offline scan passed. Runtime/training and web/Node audits reported zero known vulnerabilities in checked dependencies. SBOMs accompany the release.
 
 Synthetic results are not independent customer quality, realized savings, paid-provider, customer IdP/Stripe/S3, CUDA or live-cluster acceptance. No production deployment, paid inference/GPU operation, customer payload capture or live model change occurred. See [progress](../progress.md), [limitations](../limitations.md) and [completion ledger](../product-completion.md).
+
+The unchanged upstream OpenAI examples at commit `acd0c54d8a68efeedde0e5b4e6c310eef1ce7867` were scanned offline: 32 Python files, four supported call sites, zero source modifications, unknown spend. The optional Linux CPU training container built and imported native Torch/Transformers/PEFT/safetensors with nonroot/read-only settings and network disabled. These are separate from live provider or CUDA acceptance.
+
+Hosted [CI](https://github.com/CutbackAI/cutback/actions/runs/40088432154) and [security checks](https://github.com/CutbackAI/cutback/actions/runs/40088432129) passed. Python 3.11: 153 passed/four legacy skips, including native CPU training; Python 3.13: 152 passed/five skips. Both separate legacy runs passed 21. CodeQL: zero open alerts.

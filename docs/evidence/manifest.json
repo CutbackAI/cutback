@@ -36,6 +36,41 @@
   "customer_payloads_captured": 0,
   "production_deployments": 0,
   "remote_ci": {
-    "status": "pending_current_release"
+    "status": "passed",
+    "source_commit": "ea234c31479424029239fc9055801106de669043",
+    "ci": "https://github.com/CutbackAI/cutback/actions/runs/40088432154",
+    "security": "https://github.com/CutbackAI/cutback/actions/runs/40088432129",
+    "python_3_11": {
+      "passed": 153,
+      "skipped_legacy": 4,
+      "native_cpu_training": "passed"
+    },
+    "python_3_13": {
+      "passed": 152,
+      "skipped": 5,
+      "native_cpu_training": "separate_3_11_job"
+    },
+    "legacy_each_python_passed": 21,
+    "open_codeql_alerts": 0
+  },
+  "statement_coverage_percent": 81.94746528358708,
+  "training_runtime": {
+    "torch": "2.14.1+cpu",
+    "transformers": "5.20.2",
+    "peft": "0.21.2",
+    "safetensors": "0.8.0",
+    "setuptools": "84.2.1",
+    "windows_native_training": "passed",
+    "linux_cpu_container_build_and_offline_nonroot_import": "passed",
+    "cuda": "not_exercised",
+    "linux_native_training": "passed"
+  },
+  "unrelated_example": {
+    "repository": "https://github.com/openai/openai-python",
+    "commit": "acd0c54d8a68efeedde0e5b4e6c310eef1ce7867",
+    "files_analyzed": 32,
+    "call_sites_detected": 4,
+    "modified": false,
+    "actual_spend_usd": null
   }
 }

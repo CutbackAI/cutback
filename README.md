@@ -4,7 +4,7 @@ Find AI costs. Test alternatives. Review every change.
 
 Cutback discovers AI calls, observes supported runtime usage, evaluates authorized alternatives, and prepares reviewable changes. Apache-2.0 includes the CLI, collector, PostgreSQL, worker, encrypted datasets and React dashboard. No corporate account or hosted service is required.
 
-**Pre-alpha, not production validated.** Tests use synthetic provider responses. Real pilot traffic, representative quality validation, paid requests and production deployment remain explicit approval gates. See [progress](docs/progress.md) and [limitations](docs/limitations.md).
+**Pre-alpha, not production validated.** Tests use synthetic provider responses. Real pilot traffic, representative quality validation, paid requests and production deployment remain explicit approval gates. See [progress](https://github.com/CutbackAI/cutback/blob/main/docs/progress.md) and [limitations](https://github.com/CutbackAI/cutback/blob/main/docs/limitations.md).
 
 ```sh
 python -m pip install --pre cutback
@@ -23,11 +23,11 @@ uv run python scripts/demo.py
 uv run cutback dashboard --local
 ```
 
-The demo uses synthetic inference and an actual local collector/database. Dashboard credentials are separate control keys held only in browser memory. Read [deployment](docs/deployment.md), [evaluation](docs/evaluation.md), [provider compatibility](docs/providers.md), and [agent setup](docs/agent-integration.md).
+The demo uses synthetic inference and an actual local collector/database. Dashboard credentials are separate control keys held only in browser memory. Read [deployment](https://github.com/CutbackAI/cutback/blob/main/docs/deployment.md), [evaluation](https://github.com/CutbackAI/cutback/blob/main/docs/evaluation.md), [provider compatibility](https://github.com/CutbackAI/cutback/blob/main/docs/providers.md), and [agent setup](https://github.com/CutbackAI/cutback/blob/main/docs/agent-integration.md).
 
 The dashboard guides project setup, scoped keys, capture policies, CSV/JSON datasets, frozen experiment plans, budget approval and cancellation. It also exposes team access, retention, contract rates, schedules, rollout records, optional billing and local training jobs. Credentials stay in page memory; closing or reloading signs out.
 
-![Actual dashboard with synthetic telemetry](docs/assets/dashboard-synthetic.png)
+![Actual dashboard with synthetic telemetry](https://raw.githubusercontent.com/CutbackAI/cutback/main/docs/assets/dashboard-synthetic.png)
 
 The screenshot uses synthetic data. Unknown prices and incomplete coverage remain visible.
 
@@ -64,9 +64,9 @@ python -m pip install --pre 'cutback[javascript]'
 cutback scan /path/to/app --language python --language javascript --language typescript --json
 ```
 
-The [Node SDK](packages/js-sdk/README.md) is supplied as source and a release tarball; npm publication is separate. Exact supported SDK versions and stream limits are in [provider compatibility](docs/providers.md).
+The [Node SDK](https://github.com/CutbackAI/cutback/blob/main/packages/js-sdk/README.md) is supplied as source and a release tarball; npm publication is separate. Exact supported SDK versions and stream limits are in [provider compatibility](https://github.com/CutbackAI/cutback/blob/main/docs/providers.md).
 
-Run [working examples](examples/README.md) for both providers, FastAPI, Django, threaded workers and Lambda-style bounded flushing. For the complete scanner → native mocked SDK → HTTP → PostgreSQL → encrypted dataset → approved worker → paired report path:
+Run [working examples](https://github.com/CutbackAI/cutback/blob/main/examples/README.md) for both providers, FastAPI, Django, threaded workers and Lambda-style bounded flushing. For the complete scanner → native mocked SDK → HTTP → PostgreSQL → encrypted dataset → approved worker → paired report path:
 
 ```sh
 uv run python examples/experiment_walkthrough.py
@@ -74,8 +74,8 @@ uv run python examples/experiment_walkthrough.py
 
 That walkthrough performs no paid inference and deletes its own synthetic project afterward. It exercises the same collector and worker used by ordinary authorized runs.
 
-Operations guides: [identity and teams](docs/identity-and-teams.md), [evaluation](docs/evaluation.md), [advanced optimization](docs/advanced-optimization.md), [local training](docs/local-training.md), [continuous operations](docs/continuous-operations.md), [optional billing](docs/hosted-billing.md), and [Helm/Terraform](infra/README.md). Read [security and privacy](docs/security-and-privacy.md) before authorizing payload capture.
+Operations guides: [identity and teams](https://github.com/CutbackAI/cutback/blob/main/docs/identity-and-teams.md), [evaluation](https://github.com/CutbackAI/cutback/blob/main/docs/evaluation.md), [advanced optimization](https://github.com/CutbackAI/cutback/blob/main/docs/advanced-optimization.md), [local training](https://github.com/CutbackAI/cutback/blob/main/docs/local-training.md), [continuous operations](https://github.com/CutbackAI/cutback/blob/main/docs/continuous-operations.md), [optional billing](https://github.com/CutbackAI/cutback/blob/main/docs/hosted-billing.md), and [Helm/Terraform](https://github.com/CutbackAI/cutback/blob/main/infra/README.md). Read [security and privacy](https://github.com/CutbackAI/cutback/blob/main/docs/security-and-privacy.md) before authorizing payload capture.
 
-Development uses Python 3.11–3.13, Node 24 and PostgreSQL 17. See [contributing](CONTRIBUTING.md) for tests and [completion evidence](docs/product-completion.md) for implemented scope, executed checks and external acceptance gates. No production deployment or real customer savings is implied by a synthetic benchmark.
+Development uses Python 3.11–3.13, Node 24 and PostgreSQL 17. See [contributing](https://github.com/CutbackAI/cutback/blob/main/CONTRIBUTING.md) for tests and [completion evidence](https://github.com/CutbackAI/cutback/blob/main/docs/product-completion.md) for implemented scope, executed checks and external acceptance gates. No production deployment or real customer savings is implied by a synthetic benchmark.
 
-Watch or reproduce the [synthetic demo](docs/demo.md). Its data is explicitly labeled; it is not a customer benchmark.
+Watch or reproduce the [synthetic demo](https://github.com/CutbackAI/cutback/blob/main/docs/demo.md). Its data is explicitly labeled; it is not a customer benchmark.
