@@ -59,6 +59,11 @@ include = [
   '/web/src','/web/scripts','/web/tests','/web/package.json','/web/package-lock.json',
   '/web/openapi.json','/web/index.html','/web/tsconfig.json','/web/vite.config.ts',
   '/web/playwright.config.ts','/skills','/AGENTS.md','/CONTRIBUTING.md','/CHANGELOG.md',
+  '/infra/compose/Dockerfile','/infra/compose/docker-compose.yml',
+  '/infra/compose/docker-compose.tls.yml','/infra/compose/prepare.py','/infra/compose/Caddyfile',
+  '/scripts/check.py','/scripts/demo.py','/scripts/export_openapi.py',
+  '/scripts/generate_ts_client.py','/scripts/package_agent_workflows.py',
+  '/scripts/backup_restore.py','/scripts/scanner_benchmark.py','/scripts/check_release_artifacts.py',
 ]
 
 [tool.pytest.ini_options]

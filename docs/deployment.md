@@ -38,6 +38,8 @@ The SDK requires HTTPS outside exact loopback names, rejects endpoint credential
 
 ## Retention and deletion
 
+Upgrade window for this development line: dev1 retains dev0's metadata event schema and adds revision 0002 after immutable 0001. Back up first, upgrade collector/worker together, then SDKs. Existing metadata and scoped keys are retained; new operational APIs require dev1. Keep old binaries and the encrypted pre-upgrade backup for rollback through restore into a separate database. Older or future development versions need their own reviewed migration/compatibility evidence. This limited development window is not a production support commitment.
+
 The worker archives complete days, prunes raw events after 30 days and daily summaries after 395 days, and deletes registered sample/plan artifacts at expiry (7 days default). `cutback worker maintain` previews; `--apply` executes. Shared locking/audit apply. A day above the bounded aggregation limit is refused before deletion; partition before exceeding that envelope. Late events for archived days stop pruning for reconciliation rather than overwriting evidence.
 
 Reports flag partial retained days and unknown combined quantiles/logical identities. Shared authenticated quotas complement an operator edge gateway/WAF for anonymous floods. SDK counters are cumulative per process instance, not population coverage. `/metrics` requires installation admin scope.

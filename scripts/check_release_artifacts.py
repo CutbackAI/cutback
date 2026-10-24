@@ -14,7 +14,7 @@ def check(directory: Path):
         raise ValueError("expected exactly one wheel and one source distribution")
     banned = (
         "MASTER_ENGINEERING_HANDOFF",
-        "pilot-app-staging-plan",
+        "private-application-staging-plan",
         "secrets/",
         ".env",
         "synthetic-compose-report",
@@ -35,7 +35,17 @@ def check(directory: Path):
         if not any(name.endswith("licenses/LICENSE") for name in names):
             raise ValueError("wheel license missing")
     with tarfile.open(sources[0]) as source:
-        names += source.getnames()
+        source_names = source.getnames()
+        names += source_names
+        for required in (
+            "infra/compose/docker-compose.yml",
+            "infra/compose/prepare.py",
+            "scripts/export_openapi.py",
+            "scripts/generate_ts_client.py",
+            "web/scripts/licenses.mjs",
+        ):
+            if not any(name.endswith("/" + required) for name in source_names):
+                raise ValueError("source distribution missing reproducibility file: " + required)
         if any(member.issym() or member.islnk() for member in source.getmembers()):
             raise ValueError("release archive must not contain symlinks")
     if any(
