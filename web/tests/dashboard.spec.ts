@@ -220,13 +220,11 @@ test("guided policy, CSV dataset, frozen plan approval, queue and cancellation r
   const plan = page.getByRole("form", {
     name: "Compare authorized alternatives",
   });
-  const selected = await plan
-    .getByLabel("Frozen dataset")
-    .locator("option")
-    .all();
+  const selected = plan.getByLabel("Frozen dataset").locator("option");
+  await expect(selected).toHaveCount(2);
   await plan
     .getByLabel("Frozen dataset")
-    .selectOption((await selected[1].getAttribute("value"))!);
+    .selectOption((await selected.nth(1).getAttribute("value"))!);
   await plan.getByLabel("Maximum experiment USD").fill("1");
   await plan.getByLabel("Minimum labeled metric percent").fill("80");
   await plan.getByRole("button", { name: "Freeze proposed plan" }).click();
