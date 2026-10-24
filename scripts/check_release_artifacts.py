@@ -43,6 +43,12 @@ def check(directory: Path):
             "scripts/export_openapi.py",
             "scripts/generate_ts_client.py",
             "web/scripts/licenses.mjs",
+            "packages/js-sdk/index.mjs",
+            "infra/helm/cutback/Chart.yaml",
+            "infra/terraform/kubernetes/main.tf",
+            "infra/training/uv.lock",
+            "examples/experiment_walkthrough.py",
+            "docs/local-training.md",
         ):
             if not any(name.endswith("/" + required) for name in source_names):
                 raise ValueError("source distribution missing reproducibility file: " + required)

@@ -115,6 +115,41 @@ def test_retention_atomic_idempotent_known_and_unknown_usage(api, tenant, event)
         assert report["summary"]["input_tokens_observed"] == 1000
 
 
+def test_project_retention_override_is_protected_from_shorter_global_default(api, tenant, event):
+    from cutback.server.operations import maintain_all
+
+    client, admin, app = api
+    project, ingest, _ = tenant
+    path = f"/v1/projects/{project}"
+    client.post(
+        "/v1/ingest/events",
+        headers=ingest,
+        json={"project_id": project, "events": [event.model_dump(mode="json")]},
+    )
+    old = datetime.now(UTC) - timedelta(days=40)
+    with app.state.sessions.begin() as session:
+        session.execute(
+            update(StoredEvent)
+            .where(StoredEvent.project_id == UUID(project))
+            .values(occurred_at=old)
+        )
+    assert (
+        client.put(
+            path + "/settings", headers=admin, json={"raw_days": 45, "aggregate_days": 395}
+        ).status_code
+        == 200
+    )
+    maintain_all(app.state.sessions, raw_days=30, aggregate_days=395, apply=True)
+    with app.state.sessions() as session:
+        assert session.scalar(select(StoredEvent).where(StoredEvent.project_id == UUID(project)))
+    client.put(path + "/settings", headers=admin, json={"raw_days": 10, "aggregate_days": 395})
+    maintain_all(app.state.sessions, raw_days=30, aggregate_days=395, apply=True)
+    with app.state.sessions() as session:
+        assert not session.scalar(
+            select(StoredEvent).where(StoredEvent.project_id == UUID(project))
+        )
+
+
 def test_encrypted_dataset_approved_budget_worker_and_review(api, tenant, monkeypatch, tmp_path):
     client, admin, app = api
     project, _, viewer = tenant

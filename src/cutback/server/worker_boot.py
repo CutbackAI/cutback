@@ -4,7 +4,7 @@ import os
 import time
 
 from cutback.server.db import database
-from cutback.server.operations import maintain
+from cutback.server.operations import maintain_all
 from cutback.server.worker import configured_execution_enabled, expire_payloads, run_one
 
 
@@ -20,7 +20,7 @@ def main():
         while True:
             try:
                 if time.monotonic() - last_maintenance >= 3600:
-                    maintain(
+                    maintain_all(
                         sessions,
                         apply=True,
                         raw_days=int(os.getenv("CUTBACK_RAW_DAYS", "30")),
@@ -28,9 +28,25 @@ def main():
                     )
                     if store:
                         expire_payloads(sessions, store)
+                        from cutback.server.cache_api import expire_cache
+
+                        expire_cache(sessions, store)
+                        from cutback.server.training_worker import expire_training_artifacts
+
+                        expire_training_artifacts(sessions, store)
                     last_maintenance = time.monotonic()
                 if store and configured_execution_enabled():
+                    from cutback.server.continuous import queue_schedules
+
+                    queue_schedules(
+                        sessions,
+                        enabled=os.getenv("CUTBACK_SCHEDULE_EXECUTION", "false").lower() == "true",
+                    )
                     run_one(sessions, store, execution_enabled=True)
+                if store and os.getenv("CUTBACK_TRAINING_EXECUTION", "false").lower() == "true":
+                    from cutback.server.training_worker import run_training_one
+
+                    run_training_one(sessions, store, execution_enabled=True)
             except Exception:
                 print(
                     "Cutback worker cycle failed; inspect service health (details suppressed)",

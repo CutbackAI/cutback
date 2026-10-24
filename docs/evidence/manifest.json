@@ -1,62 +1,41 @@
 {
   "kind": "LOCAL_SYNTHETIC_ACCEPTANCE",
   "date": "2026-10-24",
-  "version": "0.1.0.dev1",
+  "version": "0.1.0.dev2",
   "tests": {
-    "tests": "108",
-    "failures": "0",
-    "errors": "0",
-    "skipped": "4"
+    "passed": 153,
+    "skipped_legacy": 4,
+    "failed": 0
   },
-  "statement_coverage": 0.8045,
-  "legacy_sdk_separate_suite_passed": 21,
+  "legacy_separate_passed": 21,
+  "native_node_passed": 9,
+  "browser_parser_passed": 3,
+  "native_training_after_audit_passed": 3,
+  "helm_schema_passed": 3,
+  "terraform_mock_passed": 1,
   "runtime_known_vulnerabilities": 0,
-  "browser": "authenticated API parity, navigation, mobile overflow, key lifetime and axe smoke passed",
-  "backup_restore": "encrypted local dump restored into disposable DB; 22 table row counts matched",
-  "production_deployments": 0,
+  "training_known_vulnerabilities": 0,
+  "backup_tables_matched": 33,
+  "database_revision": "0004",
+  "capacity_smoke": {
+    "disclosure": "SYNTHETIC EVENT INGESTION; NOT PROVIDER OR CUSTOMER PERFORMANCE",
+    "occurred_at": "2026-10-24T10:53:15.531542+00:00",
+    "events": 10000,
+    "duplicate_replays": 10000,
+    "ingestion_seconds": 24.3774,
+    "event_receipts_per_second": 410.22,
+    "usage_query_wall_ms": 664.084,
+    "host_os": "Windows",
+    "architecture": "AMD64",
+    "python": "3.11.0",
+    "unknown_cost_preserved": true,
+    "project_deleted_after_smoke": true,
+    "production_capacity_claim": false
+  },
   "paid_provider_calls": 0,
   "customer_payloads_captured": 0,
+  "production_deployments": 0,
   "remote_ci": {
-    "status": "passed",
-    "url": "https://github.com/CutbackAI/cutback/actions/runs/40078866445",
-    "commit": "c826e999ad6a94d3b889083c2925134e2b7cb556",
-    "python": [
-      "3.11",
-      "3.13"
-    ],
-    "main_suite_passed_per_version": 104,
-    "legacy_suite_passed_per_version": 21
-  },
-  "supported_scope": "see providers.md and limitations.md",
-  "hashes": {
-    "uv.lock": "c1b004fc7166b2f918a660448d5a393cb7382940f19f373094e0d8b17f0e4dc3",
-    "web\\package-lock.json": "154839c87068883c3d5f4665665e89fded83856e814ed4de30fd0eff2ebf7f59",
-    "src\\cutback\\pricing\\catalog.json": "57acf5108329471b4280a09c65714aeb235542effa7bcf93fa16434f301e897d",
-    "artifacts\\test-results.xml": "1b7df616f2f5fa1068214519f8f35f89be0e61a80e5edf2705b07a31ee9b7d25",
-    "artifacts\\coverage.xml": "1e2f61be5c3faec8bcab75ce6f2d061817c64ee61ce7a5b0c6a4a064a338ea6a"
-  },
-  "security": {
-    "status": "passed",
-    "url": "https://github.com/CutbackAI/cutback/actions/runs/40078860136",
-    "open_codeql_alerts": 0
-  },
-  "upgrade_drill": {
-    "status": "passed",
-    "migration": "0001 -> 0002",
-    "retained": [
-      "project",
-      "environment",
-      "key_digest",
-      "event_json"
-    ],
-    "previous_metadata_event": "accepted",
-    "production_changed": false
-  },
-  "publication": {
-    "version": "0.1.0.dev1",
-    "pypi_url": "https://pypi.org/project/cutback/0.1.0.dev1/",
-    "fresh_install": "passed",
-    "offline_scan": "passed",
-    "github_artifact_hashes_match_pypi": true
+    "status": "pending_current_release"
   }
 }

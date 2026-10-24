@@ -1,6 +1,6 @@
 # Scope and acceptance limits
 
-This is a tested Python-first pre-alpha, not production validation or completion of the later enterprise/commercial roadmap.
+This is a tested Python-first pre-alpha, not production validation.
 
 - Scanner resolution is conservative. Dynamic imports/providers, mutation and arbitrary frameworks can remain unresolved. Counts and annotated fixture precision/recall are not universal coverage. Partial time-budget analysis is explicit.
 - Only documented SDK versions/surfaces are supported. Abandoned streams, process exit, queue saturation and outages can lose data. Population coverage remains unknown.
@@ -10,7 +10,8 @@ This is a tested Python-first pre-alpha, not production validation or completion
 - Evaluation supports declared deterministic text/structured metrics and provisional judges. Grouping/stratification are heuristics; small or unrepresentative datasets remain insufficient. No arbitrary writing-quality guarantee, customer savings or production tier-5 evidence is invented.
 - Budgets cover modeled costs under frozen supported contracts; invoice changes, taxes, infrastructure and local hardware economics are separate. Uncertain charges retain reservations; worker crashes do not trigger automatic billable retries.
 - Generated patches support source-bound literal model changes and rollback. Dynamic/provider migrations and separately changed prompt templates need inspected custom changes. Deployment and traffic remain operator decisions.
-- The dashboard has authenticated browser/mobile/accessibility smoke evidence. Advanced authoring uses versioned JSON/CLI contracts. Agent bundles have validated formats and executable CLI evidence; discovery in every third-party client needs independent acceptance.
-- M8 follows validated demand: TS/JS, more providers, enterprise identity, large-scale analytics/storage/Helm/IaC, advanced routing/fine-tuning, hosted cloud and billing remain later scope. No paid infrastructure was provisioned.
+- The dashboard has authenticated browser/mobile/accessibility smoke evidence. Guided forms cover the normal setup and experiment lifecycle; API/CLI contracts expose advanced parameters. Agent bundles have validated formats and executable CLI evidence; discovery in every third-party client needs independent acceptance.
+- Optional JS/TS scanning, Node observation, OIDC/PKCE, team access, caching/routing, CPU LoRA, billing connectors and Helm/Terraform are implemented within documented bounds. Native CPU training is tested; CUDA, customer IdP/Stripe accounts and live cluster/network/storage acceptance remain external gates. No managed cloud service or paid infrastructure was provisioned.
+- Retention refuses a day above its 100,000-event aggregation bound rather than pruning incomplete evidence. The local scale smoke is not an unbounded throughput claim. Browser acceptance uses Chromium; additional browsers require their own runs.
 
 See progress.md and evidence/public-acceptance.md for demonstrated results and external gates.

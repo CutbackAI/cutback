@@ -27,6 +27,10 @@ jobs:
           node-version: '24'
       - run: npm ci --ignore-scripts && npm audit --audit-level=high
         working-directory: web
+      - run: npm ci --ignore-scripts && npm audit --audit-level=high
+        working-directory: packages/js-sdk
+      - run: uv export --project infra/training --locked --no-dev --format requirements-txt --output-file /tmp/training.txt
+      - run: uv run pip-audit -r /tmp/training.txt --no-deps --disable-pip
   codeql:
     runs-on: ubuntu-latest
     timeout-minutes: 20

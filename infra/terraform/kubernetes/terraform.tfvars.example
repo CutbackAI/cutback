@@ -1,0 +1,14 @@
+kubeconfig_path       = "~/.kube/config"
+kube_context          = "replace-with-explicit-authorized-staging-context"
+namespace             = "cutback-staging"
+runtime_secret_name   = "cutback-runtime"
+migration_secret_name = "cutback-migration"
+image_digest          = "replace-with-reviewed-sha256-digest"
+
+# Nonsecret configuration only. External PostgreSQL, TLS certificates, private
+# object storage, workload identity and secrets are customer owned prerequisites.
+reviewed_values = {
+  network = {
+    databasePeers = [{ ipBlock = { cidr = "192.0.2.10/32" } }]
+  }
+}

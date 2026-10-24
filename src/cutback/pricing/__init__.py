@@ -41,6 +41,7 @@ class Catalog:
         validated = validate_snapshot(raw, expected)
         self.data = validated.model_dump(mode="json", exclude_none=True)
         self.snapshot_id = self.data["snapshot_id"]
+        self.sha256 = expected
 
     def rate_info(self, provider: str, model: str | None):
         rate = next(

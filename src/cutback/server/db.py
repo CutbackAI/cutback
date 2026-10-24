@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+import importlib
 import secrets
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -34,9 +35,12 @@ class Organization(Base):
 
 class Project(Base):
     __tablename__ = "projects"
+    __table_args__ = (
+        UniqueConstraint("organization_id", "slug", name="uq_projects_organization_slug"),
+    )
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
     organization_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id"))
-    slug: Mapped[str] = mapped_column(String(100), unique=True)
+    slug: Mapped[str] = mapped_column(String(100))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
@@ -323,3 +327,7 @@ def database(url: str):
         connect_args={"connect_timeout": 3, "options": "-c statement_timeout=5000 -c timezone=UTC"},
     )
     return engine, sessionmaker(engine, expire_on_commit=False)
+
+
+# Register the additive shared control-plane models only after Base and foundation classes exist.
+importlib.import_module("cutback.server.enterprise_db")

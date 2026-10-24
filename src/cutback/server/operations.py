@@ -57,7 +57,16 @@ def percentile(values, quantile):
     return ordered[lower] + (ordered[upper] - ordered[lower]) * (position - lower)
 
 
-def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False):
+def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False, project_id=None):
+    from cutback.server.enterprise_db import ProjectSettings
+
+    def selected(column):
+        return (
+            column == project_id
+            if project_id
+            else column.not_in(select(ProjectSettings.project_id))
+        )
+
     if not 1 <= raw_days <= aggregate_days <= 3650:
         raise ValueError("invalid retention periods")
     now = now or datetime.now(UTC)
@@ -67,7 +76,7 @@ def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False
             return {"apply": False, "status": "ANOTHER_RETENTION_WORKER_ACTIVE"}
         rows = session.scalars(
             select(StoredEvent)
-            .where(StoredEvent.occurred_at < cutoff)
+            .where(StoredEvent.occurred_at < cutoff, selected(StoredEvent.project_id))
             .order_by(StoredEvent.occurred_at)
             .limit(10000)
         ).all()
@@ -173,12 +182,19 @@ def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False
                 count += len(group)
         if apply:
             session.execute(
-                delete(DailyUsage).where(DailyUsage.day < now - timedelta(days=aggregate_days))
+                delete(DailyUsage).where(
+                    DailyUsage.day < now - timedelta(days=aggregate_days),
+                    selected(DailyUsage.project_id),
+                )
             )
             session.execute(
                 delete(RateBucket).where(RateBucket.window < int(now.timestamp() / 60) - 2)
             )
-            session.execute(delete(SDKHealth).where(SDKHealth.updated_at < cutoff))
+            session.execute(
+                delete(SDKHealth).where(
+                    SDKHealth.updated_at < cutoff, selected(SDKHealth.project_id)
+                )
+            )
             session.add(
                 AuditEvent(
                     project_id=None,
@@ -199,6 +215,26 @@ def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False
             "raw_retention_days": raw_days,
             "aggregate_retention_days": aggregate_days,
         }
+
+
+def maintain_all(sessions, **options):
+    from cutback.server.enterprise_db import ProjectSettings
+
+    with sessions() as session:
+        configured = [
+            (row.project_id, row.raw_days, row.aggregate_days)
+            for row in session.scalars(select(ProjectSettings))
+        ]
+    results = [maintain(sessions, **options)]
+    for project, raw, aggregate in configured:
+        results.append(
+            maintain(
+                sessions,
+                **{**options, "raw_days": raw, "aggregate_days": aggregate},
+                project_id=project,
+            )
+        )
+    return {"projects_with_custom_retention": len(configured), "results": results}
 
 
 def _sum_known(values):

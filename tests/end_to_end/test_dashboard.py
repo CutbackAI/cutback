@@ -17,11 +17,16 @@ from cutback.server.api import create_app
 
 @pytest.mark.postgres
 @pytest.mark.e2e
-def test_dashboard_authenticated_accessibility(postgres_url, tmp_path, event):
+def test_dashboard_authenticated_accessibility(postgres_url, tmp_path, event, monkeypatch):
     if os.getenv("CUTBACK_TEST_BROWSER") != "true":
         pytest.skip("set CUTBACK_TEST_BROWSER=true after npm ci and playwright install chromium")
+    from cutback.evals.artifacts import EncryptedFileStore
+
+    monkeypatch.setenv("CUTBACK_ALLOW_PAYLOADS", "true")
+    monkeypatch.setenv("CUTBACK_EXPERIMENT_EXECUTION", "false")
     admin = secrets.token_urlsafe(48)
     app = create_app(database_url=postgres_url, admin_token=admin, allow_insecure_http=True)
+    app.state.artifact_store = EncryptedFileStore(tmp_path / "encrypted-ui", os.urandom(32))
     root = Path(__file__).resolve().parents[2]
     with server(app) as endpoint, httpx.Client(base_url=endpoint, trust_env=False) as client:
         headers = {"Authorization": "Bearer " + admin}

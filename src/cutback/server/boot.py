@@ -1,10 +1,9 @@
 """Container entry point. Runtime secrets never appear in argv or application logs."""
 
 import os
-from pathlib import Path
-from urllib.parse import quote
 
 from cutback.server.migrate import migrate
+from cutback.server.runtime import configure_secrets, trusted_proxies
 
 
 def main():
@@ -12,34 +11,22 @@ def main():
 
     from cutback.server.api import create_app
 
-    if "CUTBACK_DATABASE_URL" not in os.environ:
-        password = Path(os.environ["CUTBACK_DB_PASSWORD_FILE"]).read_text().strip()
-        host = os.environ.get("CUTBACK_DB_HOST", "postgres")
-        os.environ["CUTBACK_DATABASE_URL"] = (
-            f"postgresql+psycopg://cutback:{quote(password, safe='')}@{host}:5432/cutback"
-        )
-    if "CUTBACK_ADMIN_TOKEN" not in os.environ:
-        os.environ["CUTBACK_ADMIN_TOKEN"] = (
-            Path(os.environ["CUTBACK_ADMIN_TOKEN_FILE"]).read_text().strip()
-        )
+    worker = os.getenv("CUTBACK_PROCESS") == "worker"
     try:
-        migrate()
-        if os.getenv("CUTBACK_PROCESS") == "worker":
+        configure_secrets(control=not worker)
+        if os.getenv("CUTBACK_SKIP_MIGRATIONS", "false").lower() != "true":
+            migrate()
+        if worker:
             from cutback.server.worker_boot import main as worker_main
 
             worker_main()
             return
         app = create_app(allow_insecure_http=os.getenv("CUTBACK_DEV_HTTP", "false") == "true")
+        trusted = trusted_proxies(os.getenv("CUTBACK_TRUSTED_PROXIES", ""))
     except Exception:
         raise SystemExit(
             "Cutback startup failed; check runtime configuration and migrations (secrets omitted)"
         ) from None
-    trusted = os.getenv("CUTBACK_TRUSTED_PROXIES", "")
-    if trusted:
-        import ipaddress
-
-        for address in trusted.split(","):
-            ipaddress.ip_address(address)
     uvicorn.run(
         app,
         host="0.0.0.0",

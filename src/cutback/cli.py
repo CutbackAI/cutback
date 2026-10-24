@@ -129,12 +129,13 @@ def scan_command(
     target: Annotated[Path, typer.Argument()] = Path("."),
     format: Literal["json", "table"] = "table",
     destination: Annotated[Path | None, typer.Option("--output")] = None,
+    language: Annotated[list[str] | None, typer.Option("--language")] = None,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ):
     from cutback.scanner import scan
 
     try:
-        result = scan(target)
+        result = scan(target, languages=language)
     except (OSError, ValueError, RecursionError):
         fail(
             "SCAN_INPUT_INVALID", "check directory, configuration schema and readable source files"
@@ -363,6 +364,7 @@ def collector_status(endpoint: str = "http://127.0.0.1:8080"):
 
 @db_app.command("migrate")
 def migrate():
+    from cutback.server.migrate import CURRENT_REVISION
     from cutback.server.migrate import migrate as run
 
     try:
@@ -372,7 +374,7 @@ def migrate():
             "MIGRATION_FAILED",
             "inspect database connectivity and migration version; credentials are not logged",
         )
-    output({"status": "migrated", "revision": "0002"})
+    output({"status": "migrated", "revision": CURRENT_REVISION})
 
 
 @project_app.command("create")

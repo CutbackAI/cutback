@@ -210,25 +210,83 @@ def prepare_dataset(body: DatasetImport) -> dict:
     }
 
 
-def discover_fixtures(root):
+def discover_fixtures(root, *, max_files=1000, max_entries=20000, max_seconds=5):
+    """Bounded metadata-only discovery; no fixture payload, .env or application code read."""
+    import os
+    import time
     from pathlib import Path
 
+    from pathspec import GitIgnoreSpec
+
+    from cutback.scanner.python import SKIP
+
     root = Path(root).resolve(strict=True)
-    found = []
-    for directory in ("tests", "fixtures", "examples"):
-        base = root / directory
-        if not base.is_dir() or base.is_symlink():
+    found: list[dict] = []
+    visited, entries = set(), 0
+    deadline = time.monotonic() + max_seconds
+    specs = {}
+
+    def load_ignore(directory):
+        path = directory / ".gitignore"
+        if path.is_file() and not path.is_symlink() and path.stat().st_size <= 65536:
+            try:
+                specs[directory] = GitIgnoreSpec.from_lines(
+                    path.read_text(encoding="utf-8").splitlines()
+                )
+            except (OSError, UnicodeError):
+                pass
+
+    def ignored(path, directory=False):
+        result = False
+        for parent in reversed(path.parents):
+            if parent in specs:
+                match = specs[parent].check_file(
+                    path.relative_to(parent).as_posix() + ("/" if directory else "")
+                )
+                if match.include is not None:
+                    result = match.include
+        return result
+
+    load_ignore(root)
+    for name in ("tests", "fixtures", "examples"):
+        base = root / name
+        if not base.is_dir() or base.is_symlink() or ignored(base, True):
             continue
-        for path in base.rglob("*.jsonl"):
-            if path.is_symlink() or not path.resolve().is_relative_to(root):
-                continue
-            found.append(
-                {
-                    "path": path.relative_to(root).as_posix(),
-                    "size": path.stat().st_size,
-                    "status": "unreviewed_no_content_read_or_uploaded",
-                }
-            )
-            if len(found) >= 1000:
+        for directory, dirs, files in os.walk(base, followlinks=False):
+            folder = Path(directory)
+            entries += len(dirs) + len(files)
+            if entries > max_entries or time.monotonic() > deadline:
                 return found
+            load_ignore(folder)
+            dirs[:] = sorted(
+                d
+                for d in dirs
+                if d not in SKIP and not (folder / d).is_symlink() and not ignored(folder / d, True)
+            )
+            for filename in sorted(files):
+                path = folder / filename
+                if (
+                    path.suffix.lower() not in {".json", ".jsonl", ".csv"}
+                    or path.is_symlink()
+                    or ignored(path)
+                    or not path.resolve().is_relative_to(root)
+                    or path in visited
+                ):
+                    continue
+                visited.add(path)
+                try:
+                    size = path.stat().st_size
+                except OSError:
+                    continue
+                found.append(
+                    {
+                        "path": path.relative_to(root).as_posix(),
+                        "format": path.suffix.lstrip("."),
+                        "size": size,
+                        "within_import_bound": size <= 1048576,
+                        "status": "unreviewed_no_content_read_or_uploaded",
+                    }
+                )
+                if len(found) >= max_files:
+                    return found
     return found

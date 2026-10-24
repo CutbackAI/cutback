@@ -16,5 +16,13 @@ infra/compose/secrets/
 artifacts/
 
 web/node_modules/
+node_modules/
+packages/js-sdk/*.tgz
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+*.local.yaml
 web/test-results/
 web/playwright-report/

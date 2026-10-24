@@ -1,0 +1,13 @@
+# Continuous experiments and rollout evidence
+
+Schedules are proposals until an administrator approves their exact hash and a reference. They bind a frozen plan hash, a maximum number of runs, interval, expiry, total request limit and total modeled USD cap. Aggregate limits must cover the full per-run caps. Approval cannot be reused to authorize a changed or exhausted schedule.
+
+The worker additionally requires `CUTBACK_EXPERIMENT_EXECUTION=true`, configured approved execution credentials/store, and `CUTBACK_SCHEDULE_EXECUTION=true`. These settings default to false. Ticks use PostgreSQL row locks/skip-locked selection, reserve the whole run cap before queueing and advance from the current time. Missed ticks do not cause catch-up bursts. Failed or uncertain runs do not refund the schedule reservation. Catalog changes, plan expiry, hash changes and exhausted limits disable further queueing. Existing worker policy/expiry checks and per-request durable reservations still apply before inference.
+
+Schedules can be listed, proposed, approved and disabled under `/v1/projects/{id}/schedules`. Disabling stops future queueing; cancel already queued/running experiments separately. A cancelled queued run also marks its queue record cancelled, so it cannot consume a worker slot as runnable work.
+
+Rollouts are evidence records under `/v1/projects/{id}/rollouts`. A reviewed recommendation, baseline reference, rollback reference, guardrails, traffic ceiling and budget are frozen into a proposal. An administrator approves its hash before reporting deployment. Operators report canary deployment, rejection or actual rollback with an external reference. Cutback does not deploy infrastructure, merge changes or change traffic through these endpoints.
+
+Bounded, timestamped baseline/candidate observations retain their source reference, sample counts, error/schema rates, cost/latency and declared business metric. Guardrail breaches recommend rollback; the operator records actual rollback separately. Tier 5 requires controlled, explicitly nonsynthetic production observations with an independent business metric and a declared threshold. Such evidence is labeled operator reported, not independently audited. Synthetic/staging observations cannot acquire a production-validated claim. There are at most 100 observation windows per rollout; each window is bounded to thirty days.
+
+Project export/deletion includes these new records. Per-project retention settings are applied independently by the maintenance worker, so a global shorter default cannot silently override a project's longer retention policy.

@@ -1,0 +1,152 @@
+{{- $root := . -}}
+{{- range $component := list "collector" "worker" -}}
+{{- $settings := index $root.Values $component -}}
+{{- if or (eq $component "collector") $settings.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cutback.name" $root }}-{{ $component }}
+  labels:
+    {{- include "cutback.labels" $root | nindent 4 }}
+    app.kubernetes.io/component: {{ $component }}
+spec:
+  {{- if or (ne $component "collector") (not $root.Values.autoscaling.enabled) }}
+  replicas: {{ $settings.replicas }}
+  {{- end }}
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: {maxSurge: 1, maxUnavailable: 0}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ $root.Release.Name | quote }}
+      app.kubernetes.io/component: {{ $component }}
+  template:
+    metadata:
+      labels:
+        {{- include "cutback.labels" $root | nindent 8 }}
+        app.kubernetes.io/component: {{ $component }}
+      annotations:
+        checksum/config: {{ include (print $root.Template.BasePath "/config.yaml") $root | sha256sum }}
+    spec:
+      serviceAccountName: {{ include "cutback.name" $root }}
+      automountServiceAccountToken: {{ $root.Values.serviceAccount.automount }}
+      terminationGracePeriodSeconds: 45
+      securityContext: {fsGroup: 10001, fsGroupChangePolicy: OnRootMismatch}
+      {{- with $root.Values.imagePullSecrets }}
+      imagePullSecrets: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ $component }}
+          image: {{ include "cutback.image" $root | quote }}
+          imagePullPolicy: {{ $root.Values.image.pullPolicy }}
+          securityContext: {{ include "cutback.security" $root | nindent 12 }}
+          resources: {{ toYaml $settings.resources | nindent 12 }}
+          envFrom:
+            - configMapRef: {name: {{ include "cutback.name" $root }}}
+          env:
+            - {name: CUTBACK_DATABASE_URL_FILE, value: /run/cutback/database_url}
+            - {name: CUTBACK_SKIP_MIGRATIONS, value: "true"}
+            - {name: CUTBACK_PROCESS, value: {{ $component | quote }}}
+            {{- if eq $component "worker" }}
+            - {name: CUTBACK_TRAINING_EXECUTION, value: "false"}
+            {{- end }}
+            {{- if eq $component "collector" }}
+            - {name: CUTBACK_ADMIN_TOKEN_FILE, value: /run/cutback/admin_token}
+            {{- if $root.Values.billing.enabled }}
+            - {name: CUTBACK_STRIPE_RESTRICTED_KEY_FILE, value: /run/cutback/stripe_restricted_key}
+            - {name: CUTBACK_STRIPE_WEBHOOK_SECRET_FILE, value: /run/cutback/stripe_webhook_secret}
+            {{- end }}
+            {{- if $root.Values.identity.clientSecretKey }}
+            - {name: CUTBACK_OIDC_CLIENT_SECRET_FILE, value: /run/cutback/oidc_client_secret}
+            {{- end }}
+            {{- end }}
+            {{- if $root.Values.payloads.enabled }}
+            - {name: CUTBACK_PAYLOAD_KEY_FILE, value: /run/cutback/payload_key}
+            {{- end }}
+            {{- if and (eq $component "worker") $root.Values.execution.experiments }}
+            {{- range $provider := $root.Values.execution.providers }}
+            - {name: {{ printf "CUTBACK_EXPERIMENT_%s_KEY_FILE" (upper $provider) }}, value: {{ printf "/run/experiments/%s_experiment_key" $provider | quote }}}
+            {{- end }}
+            {{- end }}
+          {{- if eq $component "collector" }}
+          ports: [{name: http, containerPort: 8080, protocol: TCP}]
+          startupProbe:
+            exec: {command: ["/app/.venv/bin/python", "-m", "cutback.server.probe"]}
+            periodSeconds: 5
+            timeoutSeconds: 8
+            failureThreshold: 30
+          readinessProbe:
+            exec: {command: ["/app/.venv/bin/python", "-m", "cutback.server.probe"]}
+            periodSeconds: 15
+            timeoutSeconds: 8
+          livenessProbe:
+            exec: {command: ["/app/.venv/bin/python", "-m", "cutback.server.probe", "--live-only"]}
+            periodSeconds: 20
+            timeoutSeconds: 5
+          {{- else }}
+          readinessProbe:
+            exec: {command: ["/app/.venv/bin/python", "-m", "cutback.server.probe", "--database-only"]}
+            periodSeconds: 20
+            timeoutSeconds: 8
+          {{- end }}
+          volumeMounts:
+            - {name: runtime, mountPath: /run/cutback, readOnly: true}
+            - {name: temporary, mountPath: /tmp}
+            {{- if and $root.Values.payloads.enabled (eq $root.Values.payloads.backend "file") }}
+            - {name: payloads, mountPath: /var/lib/cutback/payloads}
+            {{- end }}
+            {{- if and (eq $component "worker") $root.Values.execution.experiments $root.Values.execution.providers }}
+            - {name: experiments, mountPath: /run/experiments, readOnly: true}
+            {{- end }}
+      volumes:
+        - name: runtime
+          secret:
+            secretName: {{ $root.Values.secrets.runtime }}
+            defaultMode: 0440
+            items:
+              - {key: database_url, path: database_url}
+              {{- if $root.Values.database.tlsCAKey }}
+              - {key: {{ $root.Values.database.tlsCAKey }}, path: database_ca.pem}
+              {{- end }}
+              {{- if eq $component "collector" }}
+              - {key: admin_token, path: admin_token}
+              {{- if $root.Values.billing.enabled }}
+              - {key: stripe_restricted_key, path: stripe_restricted_key}
+              - {key: stripe_webhook_secret, path: stripe_webhook_secret}
+              {{- end }}
+              {{- if $root.Values.identity.clientSecretKey }}
+              - {key: {{ $root.Values.identity.clientSecretKey }}, path: oidc_client_secret}
+              {{- end }}
+              {{- end }}
+              {{- if $root.Values.payloads.enabled }}
+              - {key: payload_key, path: payload_key}
+              {{- end }}
+        - {name: temporary, emptyDir: {sizeLimit: 128Mi}}
+        {{- if and $root.Values.payloads.enabled (eq $root.Values.payloads.backend "file") }}
+        - name: payloads
+          persistentVolumeClaim:
+            claimName: {{ required "file payload storage needs payloads.existingClaim with shared access" $root.Values.payloads.existingClaim }}
+        {{- end }}
+        {{- if and (eq $component "worker") $root.Values.execution.experiments $root.Values.execution.providers }}
+        - name: experiments
+          secret:
+            secretName: {{ $root.Values.secrets.experiments }}
+            defaultMode: 0440
+            items:
+              {{- range $provider := $root.Values.execution.providers }}
+              - {key: {{ $provider }}_experiment_key, path: {{ $provider }}_experiment_key}
+              {{- end }}
+        {{- end }}
+      {{- with $root.Values.nodeSelector }}
+      nodeSelector: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $root.Values.tolerations }}
+      tolerations: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $root.Values.affinity }}
+      affinity: {{ toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
+{{- end }}

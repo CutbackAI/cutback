@@ -21,7 +21,7 @@ from cutback.evals.datasets import (
     prepare_dataset,
     redact,
 )
-from cutback.evals.experiments import ExperimentPlan, plan_summary
+from cutback.evals.experiments import ExperimentPlan, ModelSpec, plan_summary
 from cutback.server.db import (
     AuditEvent,
     CapturePolicyRecord,
@@ -37,6 +37,15 @@ from cutback.server.db import (
 from cutback.server.plan_artifacts import freeze_plan, load_plan
 
 
+def policy_object_count(session, policy_id):
+    from cutback.server.enterprise_db import CacheEntry
+
+    return sum(
+        session.scalar(select(func.count()).select_from(cls).where(cls.policy_id == policy_id)) or 0
+        for cls in (PayloadSample, CacheEntry)
+    )
+
+
 class PlanInput(StrictModel):
     dataset_id: UUID
     specification: ExperimentPlan
@@ -49,6 +58,19 @@ class ApproveInput(StrictModel):
 
 class QueueInput(StrictModel):
     plan_id: UUID
+
+
+class DraftInput(StrictModel):
+    dataset_id: UUID
+    baseline: ModelSpec
+    candidates: list[ModelSpec] | None = Field(default=None, min_length=1, max_length=5)
+    minimum: float | None = Field(default=None, ge=0, le=1)
+    max_usd: str = Field(default="0", max_length=30)
+    max_requests: int = Field(default=100, ge=1, le=10000)
+    repeats: int = Field(default=1, ge=1, le=5)
+    pilot_samples: int = Field(default=0, ge=0, le=100)
+    pilot_minimum: float | None = Field(default=None, ge=0, le=1)
+    max_wall_seconds: int = Field(default=300, ge=1, le=3600)
 
 
 class ReviewInput(StrictModel):
@@ -126,11 +148,7 @@ def install_evaluation(app, sessions, authorize, scope):
                     if existing.project_id != project:
                         raise HTTPException(403, "SAMPLE_SCOPE_DENIED")
                     return {"status": "duplicate", "sample_id": str(body.sample_id)}
-                count = session.scalar(
-                    select(func.count())
-                    .select_from(PayloadSample)
-                    .where(PayloadSample.policy_id == body.policy_id)
-                )
+                count = policy_object_count(session, body.policy_id)
                 if count >= policy.max_samples:
                     raise HTTPException(429, "CAPTURE_SAMPLE_QUOTA_EXCEEDED")
                 case = redact(
@@ -277,11 +295,7 @@ def install_evaluation(app, sessions, authorize, scope):
                 if body.source_type == "synthetic_fixture" and policy.rights_basis != "synthetic":
                     raise HTTPException(422, "SYNTHETIC_PROVENANCE_POLICY_MISMATCH")
                 session.get(CapturePolicyRecord, policy_id, with_for_update=True)
-                existing = session.scalar(
-                    select(func.count())
-                    .select_from(PayloadSample)
-                    .where(PayloadSample.policy_id == policy_id)
-                )
+                existing = policy_object_count(session, policy_id)
                 if existing + len(body.cases) > policy.max_samples:
                     raise HTTPException(429, "CAPTURE_SAMPLE_QUOTA_EXCEEDED")
                 # Serialize policy consumption across concurrent imports before checking quota.
@@ -299,6 +313,7 @@ def install_evaluation(app, sessions, authorize, scope):
                         "strata": prepared["strata"],
                         "warnings": prepared["warnings"],
                         "case_count": len(clean.cases),
+                        "max_input_bytes": max(len(case.input.encode()) for case in clean.cases),
                         "redaction": policy.redaction_version,
                     }
                 )
@@ -378,6 +393,42 @@ def install_evaluation(app, sessions, authorize, scope):
                     .offset(offset)
                 )
             ]
+
+    @app.post("/v1/projects/{project_id}/experiments/draft", status_code=201)
+    def create_draft(project_id: UUID, body: DraftInput, auth=Depends(authorize)):
+        from cutback.evals.planning import draft_plan
+
+        scope(auth, project_id, ("analyst",))
+        with sessions() as session:
+            row = session.get(DatasetRecord, body.dataset_id)
+            if not row or row.project_id != project_id:
+                raise HTTPException(404, "DATASET_NOT_FOUND")
+            metadata = {
+                "hash": row.immutable_hash,
+                "workflow": row.workflow_id,
+                "provenance": row.provenance,
+            }
+        try:
+            spec = draft_plan(
+                metadata,
+                body.baseline,
+                candidates=body.candidates,
+                minimum=body.minimum,
+                max_usd=body.max_usd,
+                max_requests=body.max_requests,
+                repeats=body.repeats,
+                pilot_samples=body.pilot_samples,
+                pilot_minimum=body.pilot_minimum,
+                max_wall_seconds=body.max_wall_seconds,
+            )
+        except ValueError as exc:
+            code = str(exc)
+            raise HTTPException(
+                422, code if code.isupper() and len(code) < 100 else "INVALID_DRAFT_CONTRACT"
+            ) from None
+        return create_plan(
+            project_id, PlanInput(dataset_id=body.dataset_id, specification=spec), auth
+        )
 
     @app.post("/v1/projects/{project_id}/experiments/plans", status_code=201)
     def create_plan(project_id: UUID, body: PlanInput, auth=Depends(authorize)):
@@ -565,6 +616,11 @@ def install_evaluation(app, sessions, authorize, scope):
             if row.status not in {"QUEUED", "RUNNING"}:
                 raise HTTPException(409, "RUN_TERMINAL")
             row.status = "CANCELLED"
+            job = session.scalar(
+                select(JobRecord).where(JobRecord.run_id == row.id).with_for_update()
+            )
+            if job:
+                job.status = "CANCELLED"
             session.add(
                 AuditEvent(
                     project_id=project_id,

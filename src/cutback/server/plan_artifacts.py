@@ -14,7 +14,7 @@ def public_config(value):
         return value
     result = {}
     for key, item in value.items():
-        if key in {"instruction", "judge_rubric"}:
+        if key in {"instruction", "judge_rubric", "schema_definition", "allowed_labels"}:
             result[key] = "" if key == "instruction" else None
             result[key + "_sha256"] = digest(item)
         else:

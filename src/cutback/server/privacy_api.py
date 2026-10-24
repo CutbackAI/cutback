@@ -21,6 +21,13 @@ from cutback.server.db import (
     ScanRun,
     StoredEvent,
 )
+from cutback.server.enterprise_db import (
+    CacheEntry,
+    ExperimentSchedule,
+    ProjectSettings,
+    RolloutRecord,
+    TrainingJob,
+)
 
 
 def install_privacy(app, sessions, authorize, scope):
@@ -40,6 +47,11 @@ def install_privacy(app, sessions, authorize, scope):
         def records():
             with sessions() as session:
                 for cls in (
+                    ProjectSettings,
+                    ExperimentSchedule,
+                    RolloutRecord,
+                    TrainingJob,
+                    CacheEntry,
                     StoredEvent,
                     DailyUsage,
                     ScanRun,
@@ -83,6 +95,16 @@ def install_privacy(app, sessions, authorize, scope):
                 )
                 .limit(1)
             )
+            training_running = session.scalar(
+                select(TrainingJob)
+                .where(
+                    TrainingJob.project_id == project_id,
+                    TrainingJob.status.in_(["QUEUED", "RUNNING", "CANCEL_REQUESTED"]),
+                )
+                .limit(1)
+            )
+            if training_running:
+                raise HTTPException(409, "CANCEL_OR_FINISH_RUNNING_TRAINING_FIRST")
             if running:
                 raise HTTPException(409, "CANCEL_OR_FINISH_RUNNING_EXPERIMENTS_FIRST")
             for policy in session.scalars(
@@ -99,19 +121,35 @@ def install_privacy(app, sessions, authorize, scope):
             plans = session.scalars(
                 select(ExperimentPlanRecord).where(ExperimentPlanRecord.project_id == project_id)
             ).all()
-            if payloads or plans:
+            caches = session.scalars(
+                select(CacheEntry).where(CacheEntry.project_id == project_id)
+            ).all()
+            trained = session.scalars(
+                select(TrainingJob).where(TrainingJob.project_id == project_id)
+            ).all()
+            if payloads or plans or caches or any(job.results.get("artifacts") for job in trained):
                 from cutback.evals.artifacts import configured_store
 
                 store = getattr(app.state, "artifact_store", None) or configured_store()
+                for job in trained:
+                    for artifact in job.results.get("artifacts", []):
+                        for chunk in artifact["chunks"]:
+                            store.delete(project_id, chunk["ref"])
                 for payload in payloads:
                     store.delete(project_id, payload.object_ref)
                 for plan in plans:
                     if plan.specification.get("artifact_ref"):
                         store.delete(project_id, plan.specification["artifact_ref"])
+                for cache in caches:
+                    store.delete(project_id, cache.object_ref)
             # Deletion order follows restrictive FKs. Project cascades remove the remaining records.
             from cutback.server.db import ChangeProposal, DatasetItem, RecommendationRecord
 
             for cls in (
+                CacheEntry,
+                TrainingJob,
+                ExperimentSchedule,
+                RolloutRecord,
                 ChangeProposal,
                 RecommendationRecord,
                 JobRecord,

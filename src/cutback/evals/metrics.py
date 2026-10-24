@@ -12,15 +12,35 @@ from cutback.core.models import StrictModel
 
 
 class MetricSpec(StrictModel):
-    kind: Literal["exact_label", "field_f1", "json_schema", "nonempty", "reference_match"]
+    kind: Literal[
+        "exact_label",
+        "field_f1",
+        "json_schema",
+        "nonempty",
+        "reference_match",
+        "allowed_label",
+        "span_support",
+        "retrieval_recall",
+        "ndcg",
+        "rank_agreement",
+        "numeric_match",
+    ]
     minimum: float = Field(ge=0, le=1)
     max_regression: float = Field(default=0, ge=0, le=1)
     min_test_samples: int = Field(default=30, ge=1, le=10000)
     min_test_groups: int = Field(default=3, ge=1, le=10000)
     schema_definition: dict | None = None
+    allowed_labels: list[str] = Field(default_factory=list, max_length=1000)
+    cutoff: int = Field(default=10, ge=1, le=1000)
+    numeric_tolerance: float = Field(default=0, ge=0, le=1000)
 
     @model_validator(mode="after")
     def safe_schema(self):
+        if self.kind == "allowed_label" and (
+            not self.allowed_labels or any(len(label) > 200 for label in self.allowed_labels)
+        ):
+            raise ValueError("bounded allowed labels required")
+
         def inspect(value, depth=0):
             if depth > 30:
                 raise ValueError("schema nesting exceeds limit")
@@ -110,6 +130,17 @@ def evaluate(
                         case.get("reference") is not None
                         and output.strip() == case["reference"].strip()
                     )
+                elif metric.kind in {
+                    "allowed_label",
+                    "span_support",
+                    "retrieval_recall",
+                    "ndcg",
+                    "rank_agreement",
+                    "numeric_match",
+                }:
+                    from cutback.evals.metrics_extra import score_extra
+
+                    score = score_extra(case, output, metric)
                 else:
                     score = float(bool(output.strip()))
                 if metric.kind not in {"nonempty", "json_schema"} or score == 1:
@@ -124,11 +155,27 @@ def evaluate(
     mean = sum(values) / len(values)
     if metric.kind == "field_f1":
         mean = 2 * tp / (2 * tp + fp + fn) if (2 * tp + fp + fn) else mean
-    binary = metric.kind != "field_f1"
+    binary = metric.kind in {
+        "exact_label",
+        "json_schema",
+        "nonempty",
+        "reference_match",
+        "allowed_label",
+    }
     lower, upper = wilson(exact, len(cases)) if binary else (None, None)
     tier = (
         4
-        if independent_labels and labels_available and metric.kind in {"exact_label", "field_f1"}
+        if independent_labels
+        and labels_available
+        and metric.kind
+        in {
+            "exact_label",
+            "field_f1",
+            "retrieval_recall",
+            "ndcg",
+            "rank_agreement",
+            "numeric_match",
+        }
         else 2
         if metric.kind == "reference_match"
         else 1
@@ -155,6 +202,7 @@ def evaluate(
             for (gold, predicted), count in sorted(confusion.items())
         ],
         "field_counts": {"tp": tp, "fp": fp, "fn": fn},
+        "scale": "(spearman_rho+1)/2" if metric.kind == "rank_agreement" else "unit_interval",
     }
 
 
@@ -167,7 +215,14 @@ def grouped_confidence(cases, outputs, groups, metric, evidence):
     for index, group in enumerate(groups):
         grouped[group].append(index)
     evidence["independent_group_n"] = len(grouped)
-    if len(grouped) < 2 or metric.kind not in {"exact_label", "field_f1"}:
+    if len(grouped) < 2 or metric.kind not in {
+        "exact_label",
+        "field_f1",
+        "retrieval_recall",
+        "ndcg",
+        "rank_agreement",
+        "numeric_match",
+    }:
         evidence["confidence_95"] = {
             "low": None,
             "high": None,
@@ -188,6 +243,13 @@ def grouped_confidence(cases, outputs, groups, metric, evidence):
         )["value"]
         values.append(score)
     values.sort()
+    if metric.kind != "exact_label" and values[0] == values[-1]:
+        evidence["confidence_95"] = {
+            "low": 0.0,
+            "high": 1.0,
+            "method": "degenerate_bootstrap_unknown_population_interval",
+        }
+        return evidence
     # Perfect observations still have sampling uncertainty; bootstrap alone degenerates at 1.0.
     group_success = sum(
         all(
@@ -200,6 +262,8 @@ def grouped_confidence(cases, outputs, groups, metric, evidence):
     evidence["confidence_95"] = {
         "low": min(values[4], low) if metric.kind == "exact_label" else values[4],
         "high": max(values[-5], high) if metric.kind == "exact_label" else values[-5],
-        "method": "seed17_cluster_bootstrap_200_plus_exact_label_wilson",
+        "method": "seed17_cluster_bootstrap_200_plus_exact_label_wilson"
+        if metric.kind == "exact_label"
+        else "seed17_cluster_bootstrap_200",
     }
     return evidence

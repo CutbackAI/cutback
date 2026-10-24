@@ -8,7 +8,7 @@ from decimal import Decimal
 from sqlalchemy import select
 
 from cutback.evals.datasets import CapturePolicy, DatasetImport, digest
-from cutback.evals.experiments import run
+from cutback.evals.experiments import provider_models, run
 from cutback.server.db import (
     AuditEvent,
     CapturePolicyRecord,
@@ -140,16 +140,22 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False):
                 return {"status": "FAILED", "provider_calls": 0}
             if owned_executor:
                 providers = {
-                    model.provider
+                    target.provider
                     for model in [
                         plan.baseline,
                         *plan.candidates,
                         *([plan.judge] if plan.judge else []),
                     ]
+                    for target in provider_models(model)
                 }
                 missing = (
-                    "openai" in providers and not os.getenv("CUTBACK_EXPERIMENT_OPENAI_KEY")
-                ) or ("local" in providers and not os.getenv("CUTBACK_LOCAL_INFERENCE_ENDPOINT"))
+                    ("openai" in providers and not os.getenv("CUTBACK_EXPERIMENT_OPENAI_KEY"))
+                    or (
+                        "anthropic" in providers
+                        and not os.getenv("CUTBACK_EXPERIMENT_ANTHROPIC_KEY")
+                    )
+                    or ("local" in providers and not os.getenv("CUTBACK_LOCAL_INFERENCE_ENDPOINT"))
+                )
                 if missing:
                     record.results = {
                         "code": "NO_EXPERIMENT_KEY_OR_LOCAL_ENDPOINT",

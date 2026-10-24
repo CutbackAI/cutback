@@ -1,0 +1,15 @@
+{
+  "name": "@cutbackai/sdk",
+  "version": "0.1.0-dev.2",
+  "description": "Metadata-only Cutback observer for explicitly supported native Node provider SDKs",
+  "type": "module",
+  "license": "Apache-2.0",
+  "engines": {"node": ">=24"},
+  "exports": {".": {"types": "./index.d.ts", "import": "./index.mjs"}},
+  "files": ["index.mjs", "index.d.ts", "README.md", "LICENSE", "NOTICE", "examples"],
+  "scripts": {"test": "node --test test/*.test.mjs", "check": "tsc --noEmit --strict --module NodeNext --moduleResolution NodeNext test/types.ts"},
+  "peerDependencies": {"openai": "7.43.0", "@anthropic-ai/sdk": "1.3.0"},
+  "peerDependenciesMeta": {"openai": {"optional": true}, "@anthropic-ai/sdk": {"optional": true}},
+  "devDependencies": {"openai": "7.43.0", "@anthropic-ai/sdk": "1.3.0", "typescript": "5.9.3", "@types/node": "24.10.0"},
+  "repository": {"type": "git", "url": "https://github.com/CutbackAI/cutback.git", "directory": "packages/js-sdk"}
+}

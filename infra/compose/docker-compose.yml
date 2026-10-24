@@ -41,10 +41,9 @@ services:
     environment:
       CUTBACK_DB_HOST: postgres
       CUTBACK_DB_PASSWORD_FILE: /run/secrets/db_password
-      CUTBACK_ADMIN_TOKEN_FILE: /run/secrets/admin_token
       CUTBACK_PROCESS: worker
       CUTBACK_EXPERIMENT_EXECUTION: "false"
-    secrets: [db_password, admin_token]
+    secrets: [db_password]
     depends_on:
       collector:
         condition: service_started

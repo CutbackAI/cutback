@@ -1,0 +1,52 @@
+{{- if .Values.migration.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "cutback.name" . }}-migration
+  labels:
+    {{- include "cutback.labels" . | nindent 4 }}
+    app.kubernetes.io/component: migration
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "0"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 300
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+        app.kubernetes.io/component: migration
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext: {fsGroup: 10001, fsGroupChangePolicy: OnRootMismatch}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: migration
+          image: {{ include "cutback.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/app/.venv/bin/python", "-m", "cutback.server.migrate"]
+          securityContext: {{ include "cutback.security" . | nindent 12 }}
+          resources: {{ toYaml .Values.migration.resources | nindent 12 }}
+          env:
+            - {name: CUTBACK_DATABASE_URL_FILE, value: /run/migration/database_url}
+          volumeMounts:
+            - {name: migration, mountPath: /run/migration, readOnly: true}
+            - {name: temporary, mountPath: /tmp}
+      volumes:
+        - name: migration
+          secret:
+            secretName: {{ .Values.secrets.migration }}
+            defaultMode: 0440
+            items:
+              - {key: database_url, path: database_url}
+              {{- if .Values.database.tlsCAKey }}
+              - {key: {{ .Values.database.tlsCAKey }}, path: database_ca.pem}
+              {{- end }}
+        - {name: temporary, emptyDir: {sizeLimit: 32Mi}}
+{{- end }}

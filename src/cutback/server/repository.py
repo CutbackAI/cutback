@@ -83,6 +83,9 @@ class PostgresEventRepository:
             )
             if session.execute(statement).scalar_one_or_none():
                 accepted += 1
+        from cutback.server.billing import meter_ingestion
+
+        meter_ingestion(session, batch.project_id, accepted)
         session.commit()  # Acknowledge only after durable commit; entire batch is atomic.
         return IngestReceipt(
             accepted=accepted, duplicate=len(batch.events) - accepted, request_id=uuid4()

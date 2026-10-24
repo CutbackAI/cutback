@@ -5,7 +5,7 @@
 | OpenAI Responses create | 2.29.0 | sync/async/native streams, retries/errors/outages, usage/cache/reasoning, privacy |
 | OpenAI Chat Completions create | 2.29.0 and 1.55.3 | sync/async/native streams, per-attempt retries/logical linkage |
 | Anthropic Messages create | 2.3.0 | sync/async/native streams, separate five-minute/one-hour cache usage |
-| Text experiment executor | OpenAI 2.29.0 validated GPT-4.1 contracts, or configured local Chat endpoint | approved providers, bounded input/output, no tools/retries, pre-call reservations |
+| Text experiment executor | OpenAI 2.29.0, Anthropic 2.3.0, or configured local Chat endpoint | approved providers, bounded input/output, no tools/retries, pre-call reservations |
 
 These are tested versions, not newest-version claims. `cutback[openai]` pins 2.29.0; `[anthropic]` pins 2.3.0. An application already pinned to 1.55.3 installs `[instrumentation]` alongside its existing pin. Legacy compatibility also tests Pydantic 2.10.6.
 
@@ -22,3 +22,9 @@ Metadata is the default. Nonstream text capture additionally requires active pol
 Complete supported text usage is priced conservatively. OpenAI input includes cached reads; Anthropic input excludes cache reads/writes. Reasoning is a subset of output. Ambiguous cache duration, absent usage/rates, custom endpoints, regional/tier/tool/modality units remain unpriced. Anthropic rates use [official pricing](https://platform.claude.com/docs/en/about-claude/pricing).
 
 All ordinary inference is synthetic. No live provider or customer savings validation is claimed.
+
+## Node observer and optimization adapters
+
+The independent source package `@cutbackai/sdk` targets Node 24+, OpenAI 7.43.0 and Anthropic 1.3.0. Native promise/response types, sync-compatible async methods, retries, cancellation, lazy SSE bytes, bounded health/export and collector-outage behavior are exercised against actual installed SDKs with synthetic transports. It does not capture payloads or use ambient proxies. Custom provider hosts and untested SDK versions pass through without observation. Source/tarball delivery is not an npm publication claim.
+
+The Anthropic experiment executor supports explicitly approved five-minute/one-hour prefix caching and reserves write premiums. Byte-bounded routing selects one declared target and freezes the worst target reservation; it does not introduce an LLM classifier, fallback or unapproved provider. Incomplete outputs cannot pass quality gates and unpriced usage remains unknown.

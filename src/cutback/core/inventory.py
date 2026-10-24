@@ -17,6 +17,7 @@ class PromptReference(StrictModel):
 
 
 class CallSite(StrictModel):
+    language: Literal["python", "javascript", "typescript"] = "python"
     call_site_id: str
     semantic_fingerprint: str
     provider: Literal["openai", "anthropic"]

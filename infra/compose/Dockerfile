@@ -4,7 +4,8 @@ RUN pip install --no-cache-dir uv==0.12.13
 WORKDIR /app
 COPY pyproject.toml uv.lock README.md LICENSE NOTICE .python-version ./
 COPY src ./src
-RUN uv sync --locked --no-dev --extra server --extra instrumentation --no-editable \
+RUN uv sync --locked --no-dev --extra server --extra instrumentation --extra openai --extra anthropic \
+    --extra identity --extra commercial --extra storage --no-editable \
     && useradd --uid 10001 --create-home cutback
 USER 10001
 EXPOSE 8080

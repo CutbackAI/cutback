@@ -1,0 +1,51 @@
+{{- if .Values.network.enabled -}}
+{{- $root := . -}}
+{{- range $component := list "collector" "worker" "migration" "training" }}
+{{- if or (ne $component "training") $root.Values.training.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "cutback.name" $root }}-{{ $component }}
+  labels: {{ include "cutback.labels" $root | nindent 4 }}
+  {{- if eq $component "migration" }}
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-10"
+    helm.sh/hook-delete-policy: before-hook-creation
+  {{- end }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ $root.Release.Name | quote }}
+      app.kubernetes.io/component: {{ $component }}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    {{- if and (eq $component "collector") $root.Values.network.ingressPeers }}
+    - from: {{ toYaml $root.Values.network.ingressPeers | nindent 8 }}
+      ports: [{port: 8080, protocol: TCP}]
+    {{- else }} []
+    {{- end }}
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels: {{ toYaml $root.Values.network.dnsNamespaceSelector | nindent 14 }}
+          podSelector:
+            matchLabels: {{ toYaml $root.Values.network.dnsPodSelector | nindent 14 }}
+      ports: [{port: 53, protocol: UDP}, {port: 53, protocol: TCP}]
+    {{- if $root.Values.network.databasePeers }}
+    - to: {{ toYaml $root.Values.network.databasePeers | nindent 8 }}
+      ports: [{port: 5432, protocol: TCP}]
+    {{- end }}
+    {{- if eq $component "collector" }}
+    {{- with $root.Values.network.collectorEgress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- else if or (eq $component "worker") (eq $component "training") }}
+    {{- with $root.Values.network.workerEgress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

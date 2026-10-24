@@ -27,3 +27,13 @@ Open `http://127.0.0.1:8080/dashboard/` with a separate control key. Load the lo
 For browser development run npm ci in web, export OpenAPI from the root, then npm run types/build in web. Install Chromium and set `CUTBACK_TEST_BROWSER=true` for PostgreSQL tests. They exercise actual APIs and disposable synthetic projects.
 
 See deployment.md, providers.md, evaluation.md and agent-integration.md for configuration and acceptance limits.
+
+## Guided workflow
+
+Connect using the local bootstrap credential privately, then issue scoped keys for normal use. Create a project, upload its offline scan, and observe synthetic examples first. The Security page creates project keys, retention rules and optional capture policies. Datasets accepts bounded CSV/JSON/JSONL after explicit rights confirmation. Experiments drafts and freezes a plan, shows the complete budget, and requires the exact plan hash approval before queueing. Cancel stops further calls; uncertain in-flight charges retain reservations.
+
+No dataset is required for inventory and metadata reports. Missing independent labels remain provisional evidence. Model output is never silently treated as gold.
+
+See [runnable examples](../examples/README.md) and run `uv run python examples/experiment_walkthrough.py` for a complete synthetic experiment using real HTTP and PostgreSQL. Use `uv run python scripts/scale_smoke.py` for a bounded local ingestion/replay smoke; neither script calls paid providers.
+
+Optional JS scanning: install `cutback[javascript]` and repeat `--language python --language javascript --language typescript`. Native Node instrumentation lives in `packages/js-sdk` with pinned compatibility tests; it is not an npm publication claim.

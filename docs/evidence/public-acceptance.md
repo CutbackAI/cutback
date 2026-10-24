@@ -1,9 +1,15 @@
 # Acceptance evidence
 
-Published pre-alpha 0.1.0.dev1; 24 October 2026.
+Dev2 local engineering acceptance, 24 October 2026. Release publication is recorded separately in the PyPI verification receipt.
 
-Local PostgreSQL/synthetic SDK/browser suite: 104 passed, 4 legacy-version cases skipped intentionally. Separate OpenAI 1.55.3/Pydantic 2.10.6 compatibility and scanner suite: 21 passed. Statement coverage: 80.45%.
+- Full synthetic/native PostgreSQL suite: **153 passed, four legacy-version cases skipped**. Authenticated React browser, axe/mobile, guided policy/dataset/plan/approval/queue/cancellation and actual RSA/JWKS/PKCE fixtures ran.
+- Separate native OpenAI 1.55.3/Pydantic 2.10.6 compatibility/scanner suite: **21 passed**.
+- Native Node SDK: **9 passed**, plus TypeScript compatibility. Dashboard file parser: **3 passed**.
+- Isolated native CPU HF/PEFT optimizer, encrypted artifact download/checksum/expiry, cancellation and crashed lease tests: **3 passed** again after auditing/upgrading Torch to 2.14.1+cpu and setuptools to 84.2.1.
+- Helm private defaults and opt-in manifests: **3 passed**, using strict Kubernetes 1.35 schemas. Terraform fmt/validate and **one mocked plan passed** without a cluster.
+- Final local Compose upgrade reaches schema **0004**. Encrypted backup/restore matched all **33 tables** in a separate disposable database.
+- Full synthetic experiment walkthrough: 64 observations and two paired worker reports via native SDK transports, actual HTTP/PostgreSQL and authorized encrypted datasets; own project/artifacts deleted afterward.
+- Local capacity smoke: **10,000 durable events plus 10,000 correctly deduplicated replays**. Ingestion/replay took 24.38 seconds; usage query took 664 ms on Windows/Docker. Unknown total and exact known subtotal were preserved. This is a bounded local smoke, not a production SLA.
+- Ruff, formatting, mypy, generated OpenAPI/TypeScript/React build, archive checks, Twine metadata and core-only wheel install/offline scan passed. Runtime/training and web/Node audits reported zero known vulnerabilities in checked dependencies. SBOMs accompany the release.
 
-React/TypeScript build and browser/API parity, mobile overflow, credential lifetime and axe smoke passed. The local encrypted backup restored into a disposable database with matching row counts across 22 tables. Core-only wheel install, offline scan, archive exclusions, Ruff and mypy passed. Python runtime audit and npm audit reported zero known vulnerabilities in the checked environment.
-
-Inference and capture fixtures are synthetic. No paid provider call, customer payload capture or production deployment occurred. Hosted Python 3.11 and 3.13 each passed 104 main tests (four legacy cases intentionally skipped) plus 21 separate legacy tests. The [publishing run](https://github.com/CutbackAI/cutback/actions/runs/40078866445) passed, as did [security checks](https://github.com/CutbackAI/cutback/actions/runs/40078860136), with zero open CodeQL alerts. A fresh real-index PyPI installation and offline scan passed; downloaded release artifact hashes match PyPI. The 0001 to 0002 upgrade drill retained existing metadata/key digests and accepted the previous event schema. Live provider/cloud acceptance remains pending. See progress.md, providers.md and limitations.md for scope and external gates.
+Synthetic results are not independent customer quality, realized savings, paid-provider, customer IdP/Stripe/S3, CUDA or live-cluster acceptance. No production deployment, paid inference/GPU operation, customer payload capture or live model change occurred. See [progress](../progress.md), [limitations](../limitations.md) and [completion ledger](../product-completion.md).

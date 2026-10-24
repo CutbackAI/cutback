@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cutback"
-version = "0.1.0.dev1"
+version = "0.1.0.dev2"
 description = "Independent, evidence-aware AI application cost observation and optimization"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -42,9 +42,31 @@ anthropic = [
 storage = [
     "boto3>=1.43.118",
 ]
+identity = [
+    "pyjwt[crypto]==2.15.1",
+]
+commercial = [
+    "stripe==16.0.0",
+]
+javascript = [
+    "tree-sitter==0.26.0",
+    "tree-sitter-javascript==0.25.0",
+    "tree-sitter-typescript==0.23.2",
+]
 
 [dependency-groups]
-dev = ["pytest>=8.4,<10", "pytest-cov>=7,<8", "ruff>=0.14,<1", "mypy>=1.18,<2", "types-PyYAML>=6", "build>=1.3,<2", "pip-audit>=2.9,<3", "twine>=6,<7"]
+dev = [
+    "pytest>=8.4,<10",
+    "pytest-cov>=7,<8",
+    "ruff>=0.14,<1",
+    "mypy>=1.18,<2",
+    "types-PyYAML>=6",
+    "build>=1.3,<2",
+    "pip-audit>=2.9,<3",
+    "twine>=6,<7",
+    "kubernetes-validate==1.37.0",
+    "django==5.2.18",
+]
 
 [project.scripts]
 cutback = "cutback.cli:app"
@@ -54,6 +76,19 @@ packages = ["src/cutback"]
 
 [tool.hatch.build.targets.sdist]
 include = [
+  "/docs/quickstart.md", "/docs/deployment.md", "/docs/providers.md",
+  "/docs/limitations.md", "/docs/architecture.md", "/docs/security-and-privacy.md",
+  "/docs/evaluation.md", "/docs/dependencies.md", "/docs/progress.md",
+  "/docs/agent-integration.md", "/docs/demo.md", "/docs/product-completion.md",
+  "/docs/identity-and-teams.md", "/docs/hosted-billing.md", "/docs/continuous-operations.md",
+  "/docs/advanced-optimization.md", "/docs/local-training.md", "/docs/adr", "/docs/assets", "/packages/js-sdk/index.mjs", "/packages/js-sdk/index.d.ts",
+  "/packages/js-sdk/package.json", "/packages/js-sdk/package-lock.json",
+  "/packages/js-sdk/README.md", "/packages/js-sdk/LICENSE", "/packages/js-sdk/NOTICE",
+  "/packages/js-sdk/examples", "/packages/js-sdk/test",
+  "/infra/README.md", "/infra/helm", "/infra/terraform/kubernetes/*.tf",
+  "/infra/terraform/kubernetes/.terraform.lock.hcl", "/infra/terraform/kubernetes/tests",
+  "/infra/training/Dockerfile", "/infra/training/pyproject.toml", "/infra/training/uv.lock",
+  "/web/public", "/web/unit", "/scripts/create_training_fixture.py", "/scripts/scale_smoke.py",
   "/src", "/tests", "/examples", "/README.md", "/LICENSE", "/NOTICE",
   "/pyproject.toml", "/uv.lock", "/.python-version", "/scripts/wheel_smoke.py",
   '/web/src','/web/scripts','/web/tests','/web/package.json','/web/package-lock.json',
@@ -65,6 +100,9 @@ include = [
   '/scripts/generate_ts_client.py','/scripts/package_agent_workflows.py',
   '/scripts/backup_restore.py','/scripts/scanner_benchmark.py','/scripts/check_release_artifacts.py',
 ]
+
+[tool.hatch.build]
+exclude = ["/docs/pilot-app-staging-plan.md", "/docs/evidence/acceptance.md", "/docs/CUTBACK_MASTER_ENGINEERING_HANDOFF.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -83,6 +121,11 @@ select = ["E", "F", "I", "UP", "B"]
 "src/cutback/server/operations.py" = ["B008"]
 "src/cutback/server/evaluation_api.py" = ["B008"]
 "src/cutback/server/privacy_api.py" = ["B008"]
+"src/cutback/server/organization_api.py" = ["B008"]
+"src/cutback/server/continuous.py" = ["B008"]
+"src/cutback/server/billing.py" = ["B008"]
+"src/cutback/server/cache_api.py" = ["B008"]
+"src/cutback/server/training_api.py" = ["B008"]
 
 [tool.mypy]
 python_version = "3.11"

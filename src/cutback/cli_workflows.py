@@ -5,7 +5,7 @@ import json
 import os
 import time
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 import typer
@@ -18,6 +18,9 @@ def read_json(path):
 
 
 def register(app, output, request, fail):
+    from cutback.cli_advanced import register as register_advanced
+
+    advanced_groups = register_advanced(app, output, request)
     scans = typer.Typer(no_args_is_help=True)
     prices = typer.Typer(no_args_is_help=True)
     datasets = typer.Typer(no_args_is_help=True)
@@ -68,6 +71,47 @@ def register(app, output, request, fail):
 
         output({"fixtures": discover_fixtures(target), "content_read": False, "uploaded": False})
 
+    @datasets.command("prepare")
+    def prepare_records(
+        file: Path,
+        workflow: str,
+        policy_id: UUID,
+        provenance_ref: str,
+        destination: Annotated[Path, typer.Option("--output")],
+        source_type: Literal[
+            "synthetic_fixture", "human_labeled", "application_records"
+        ] = "synthetic_fixture",
+        environment: str = "staging",
+        independent_labels: bool = False,
+        representative: bool = False,
+    ):
+        from cutback.evals.datasets import DatasetImport
+        from cutback.evals.records import read_records
+
+        body = DatasetImport(
+            workflow=workflow,
+            environment=environment,
+            policy_id=str(policy_id),
+            source_type=source_type,
+            provenance_ref=provenance_ref,
+            independent_labels=independent_labels,
+            representative=representative,
+            cases=read_records(file),
+        )
+        with os.fdopen(
+            os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "w", encoding="utf-8"
+        ) as stream:
+            json.dump(body.model_dump(mode="json"), stream, ensure_ascii=False)
+        output(
+            {
+                "file": str(destination),
+                "examples": len(body.cases),
+                "independent_labels": independent_labels,
+                "uploaded": False,
+                "next_action": "review rights and examples before explicit import",
+            }
+        )
+
     @datasets.command("import")
     def import_dataset(project: UUID, file: Path, endpoint: str = "http://127.0.0.1:8080"):
         from cutback.evals.datasets import DatasetImport
@@ -89,64 +133,32 @@ def register(app, output, request, fail):
         baseline: str,
         workflow: str,
         destination: Annotated[Path, typer.Option("--output")],
+        provider: Literal["openai", "anthropic"] = "openai",
         max_usd: str = "0",
         max_requests: int = 100,
         minimum_accuracy: float | None = None,
         endpoint: str = "http://127.0.0.1:8080",
     ):
-        from decimal import Decimal
+        from cutback.evals.experiments import ModelSpec
+        from cutback.evals.planning import draft_plan
 
-        from cutback.evals.experiments import ExperimentPlan
-        from cutback.pricing import Catalog
-
-        catalog = Catalog()
-        base = catalog.rate_info("openai", baseline)["rate"]
-        if not base:
-            fail(
-                "UNKNOWN_BASELINE_PRICE", "choose a supported priced model; no provider calls made"
-            )
-        candidates = [
-            rate
-            for rate in catalog.data["rates"]
-            if rate["provider"] == "openai"
-            and Decimal(rate["input"]) < Decimal(base["input"])
-            and Decimal(rate["output"]) <= Decimal(base["output"])
-        ]
-        candidates.sort(key=lambda r: Decimal(r["input"]) + Decimal(r["output"]))
-        if not candidates:
-            fail(
-                "NO_ELIGIBLE_CHEAPER_MODEL",
-                "import an approved rate catalog or test a prompt variant",
-            )
         found = request("GET", endpoint, f"/v1/projects/{project}/datasets")
         dataset = next((d for d in found if d["id"] == str(dataset_id)), None)
         if not dataset:
             fail("DATASET_NOT_FOUND", "import an authorized dataset in this project first")
         assert dataset is not None
+        if workflow != dataset["workflow"]:
+            fail("DATASET_WORKFLOW_MISMATCH", "use the frozen dataset workflow")
+        spec = draft_plan(
+            dataset,
+            ModelSpec(key="baseline", provider=provider, model=baseline),
+            minimum=minimum_accuracy,
+            max_usd=max_usd,
+            max_requests=max_requests,
+        )
         task = dataset["provenance"].get("task_inference", {})
-        metric = task.get("suggested_metric", "nonempty")
-        semantic = (
-            minimum_accuracy is not None
-            and dataset["provenance"]["independent_labels"]
-            and metric in {"field_f1", "exact_label"}
-        )
-        spec = ExperimentPlan.model_validate(
-            {
-                "workflow": workflow,
-                "dataset_hash": dataset["hash"],
-                "baseline": {"key": "baseline", "provider": "openai", "model": baseline},
-                "candidates": [
-                    {"key": f"candidate-{i}", "provider": "openai", "model": r["model"]}
-                    for i, r in enumerate(candidates[:2])
-                ],
-                "metric": {
-                    "kind": metric if semantic else "nonempty",
-                    "minimum": minimum_accuracy if semantic else 1,
-                },
-                "budget": {"max_usd": max_usd, "max_requests": max_requests},
-                "approved_providers": ["openai"],
-            }
-        )
+        metric = spec.metric.kind
+        semantic = metric != "nonempty"
         output(
             {"dataset_id": str(dataset_id), "specification": spec.model_dump(mode="json")},
             destination,
@@ -246,12 +258,12 @@ def register(app, output, request, fail):
     @worker.command("maintain")
     def maintenance(apply: bool = False, raw_days: int = 30, aggregate_days: int = 395):
         from cutback.server.db import database
-        from cutback.server.operations import maintain
+        from cutback.server.operations import maintain_all
         from cutback.server.worker import expire_payloads
 
         engine, sessions = database(os.environ["CUTBACK_DATABASE_URL"])
         try:
-            result = maintain(
+            result = maintain_all(
                 sessions, apply=apply, raw_days=raw_days, aggregate_days=aggregate_days
             )
             if apply and os.getenv("CUTBACK_PAYLOAD_KEY"):
@@ -329,7 +341,7 @@ def register(app, output, request, fail):
 
         return guarded
 
-    for group in (scans, prices, datasets, experiments, recommendations, worker):
+    for group in (scans, prices, datasets, experiments, recommendations, worker, *advanced_groups):
         for command in group.registered_commands:
             if command.callback:
                 command.callback = protect(command.callback)

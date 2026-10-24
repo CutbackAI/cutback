@@ -136,12 +136,16 @@ class Module:
         visit(self.tree)
 
 
-def scan(root: str | Path) -> dict[str, Any]:
+def scan(root: str | Path, *, languages: list[str] | None = None) -> dict[str, Any]:
     root = Path(root).resolve(strict=True)
     if not root.is_dir():
         raise ValueError("scan target must be a directory")
     config = load_config(root).scanner
+    if languages is not None:
+        config = type(config).model_validate({**config.model_dump(), "languages": languages})
     deadline = time.monotonic() + config.max_seconds
+    external_sites = []
+    javascript_available = True
     ignore_path = root / ".gitignore"
     ignore = GitIgnoreSpec.from_lines([])
     if (
@@ -175,6 +179,8 @@ def scan(root: str | Path) -> dict[str, Any]:
         "excluded_entries": 0,
         "unparsed_files": 0,
         "other_source_files": 0,
+        "applicable_javascript_files": 0,
+        "analyzed_javascript_files": 0,
     }
     for directory, dirs, files in os.walk(root, followlinks=False):
         base = Path(directory)
@@ -216,11 +222,23 @@ def scan(root: str | Path) -> dict[str, Any]:
         for name in sorted(files):
             path = base / name
             rel = path.relative_to(root).as_posix()
-            if path.suffix in {".js", ".ts", ".tsx", ".jsx"}:
-                counts["other_source_files"] += 1
-            if path.suffix != ".py":
+            external_language = (
+                "javascript"
+                if path.suffix in {".js", ".jsx", ".mjs", ".cjs"}
+                else "typescript"
+                if path.suffix in {".ts", ".tsx", ".mts", ".cts"}
+                else None
+            )
+            if external_language:
+                counts["applicable_javascript_files"] += 1
+                if external_language not in config.languages:
+                    counts["other_source_files"] += 1
+            if path.suffix != ".py" and external_language not in config.languages:
                 continue
-            counts["applicable_python_files"] += 1
+            if path.suffix == ".py":
+                counts["applicable_python_files"] += 1
+                if "python" not in config.languages:
+                    continue
             if (
                 path.is_symlink()
                 or not path.resolve().is_relative_to(root)
@@ -229,9 +247,35 @@ def scan(root: str | Path) -> dict[str, Any]:
             ):
                 counts["excluded_entries"] += 1
                 continue
-            if len(modules) >= config.max_files or path.stat().st_size > config.max_file_bytes:
+            if (
+                counts["analyzed_files"] >= config.max_files
+                or path.stat().st_size > config.max_file_bytes
+            ):
                 warnings.append({"code": "RESOURCE_LIMIT", "file": rel})
                 counts["unparsed_files"] += 1
+                continue
+            if external_language:
+                if not javascript_available:
+                    counts["unparsed_files"] += 1
+                    continue
+                try:
+                    from cutback.scanner.javascript import parse_file
+
+                    external_sites.extend(parse_file(path.read_bytes(), rel, Catalog(), deadline))
+                    counts["analyzed_files"] += 1
+                    counts["analyzed_javascript_files"] += 1
+                except ImportError:
+                    javascript_available = False
+                    warnings.append(
+                        {
+                            "code": "JAVASCRIPT_EXTRA_REQUIRED",
+                            "next_action": "install_cutback_javascript_extra",
+                        }
+                    )
+                    counts["unparsed_files"] += 1
+                except (ValueError, OSError, UnicodeError, RecursionError):
+                    warnings.append({"code": "UNPARSED_JAVASCRIPT", "file": rel})
+                    counts["unparsed_files"] += 1
                 continue
             try:
                 source = path.read_text(encoding="utf-8-sig")
@@ -632,6 +676,7 @@ def scan(root: str | Path) -> dict[str, Any]:
                                     "confidence": "heuristic",
                                 }
                             )
+    sites.extend(external_sites)
     sites.sort(key=lambda site: (site["source_file"], site["line"]))
     if counts["other_source_files"]:
         warnings.append({"code": "UNSUPPORTED_LANGUAGES", "count": counts["other_source_files"]})
@@ -667,7 +712,8 @@ def scan(root: str | Path) -> dict[str, Any]:
             }
         ],
         "limitations": [
-            "Python only; no exhaustive recall claim",
+            "Python AST and opt-in JS/TS tree-sitter; no exhaustive recall claim",
+            "JS/TS imports across files, destructuring and dynamic factories remain unresolved",
             "Ambiguous assignments, dynamic factories and object mutation may be unresolved",
             "Call sites are static candidates, not runtime coverage",
             "Fingerprint changes on moves or same-symbol sink reordering",

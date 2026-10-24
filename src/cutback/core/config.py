@@ -9,7 +9,7 @@ from cutback.core.models import StrictModel
 
 
 class ScannerConfig(StrictModel):
-    languages: list[Literal["python"]] = ["python"]
+    languages: list[Literal["python", "javascript", "typescript"]] = ["python"]
     exclude: list[str] = Field(default_factory=list)
     include_prompt_literals: Literal[False] = False
     follow_local_call_graph: bool = True

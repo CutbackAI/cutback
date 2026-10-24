@@ -28,6 +28,7 @@ from cutback.server.db import (
     token_hash,
     token_matches,
 )
+from cutback.server.migrate import CURRENT_REVISION
 from cutback.server.repository import PostgresEventRepository
 
 ShortName = Annotated[str, StringConstraints(pattern=r"^[a-zA-Z0-9_.-]{1,100}$")]
@@ -36,6 +37,7 @@ ShortName = Annotated[str, StringConstraints(pattern=r"^[a-zA-Z0-9_.-]{1,100}$")
 class ProjectInput(StrictModel):
     slug: ShortName
     environment: ShortName = "staging"
+    organization_id: UUID | None = None
 
 
 class KeyInput(StrictModel):
@@ -68,9 +70,18 @@ def create_app(
         yield
         engine.dispose()
 
-    app = FastAPI(title="Cutback Collector and Control API", version="1.0", lifespan=lifespan)
+    app = FastAPI(
+        title="Cutback Collector and Control API",
+        version="1.0",
+        lifespan=lifespan,
+        docs_url=None,
+        redoc_url=None,
+    )
     app.state.engine = engine
     app.state.sessions = sessions
+    from cutback.server.identity import configured_verifier
+
+    app.state.oidc_verifier = configured_verifier()
 
     def increment(key, value=1):
         with metric_lock:
@@ -156,7 +167,7 @@ def create_app(
 
     def authorize(request: Request):
         header = request.headers.get("authorization", "")
-        if not header.startswith("Bearer ") or len(header) > 1024:
+        if not header.startswith("Bearer ") or len(header) > 8200:
             increment("auth_failures")
             raise HTTPException(401, "AUTH_REQUIRED")
         token = header[7:]
@@ -178,6 +189,16 @@ def create_app(
 
             enforce_quota(sessions, hashed, rate_limit)
             return {"role": "admin", "actor": "bootstrap_admin"}
+        if app.state.oidc_verifier is not None and token.count(".") == 2:
+            from cutback.server.operations import enforce_quota
+
+            try:
+                identity = app.state.oidc_verifier.principal(token, sessions)
+            except Exception:
+                increment("auth_failures")
+                raise HTTPException(401, "INVALID_OIDC_IDENTITY") from None
+            enforce_quota(sessions, token_hash(identity["actor"]), rate_limit)
+            return identity
         with sessions() as session:
             key_row = session.scalar(select(AccessKey).where(AccessKey.digest == hashed))
             if (
@@ -207,7 +228,12 @@ def create_app(
             "ingest": {"ingest"},
         }
         permitted = set().union(*(hierarchy.get(role, {role}) for role in roles))
-        if auth["role"] not in permitted or (
+        effective_role = (
+            auth.get("project_roles", {}).get(project_id)
+            if auth["role"] == "oidc"
+            else auth["role"]
+        )
+        if effective_role not in permitted or (
             auth.get("project_id") is not None and auth["project_id"] != project_id
         ):
             raise HTTPException(403, "SCOPE_DENIED")
@@ -221,15 +247,25 @@ def create_app(
         with sessions() as session:
             session.execute(text("SELECT 1"))
             revision = session.execute(text("SELECT version_num FROM alembic_version")).scalar()
-            if revision != "0002":
+            if revision != CURRENT_REVISION:
                 raise HTTPException(503, "MIGRATION_REQUIRED")
         return {"status": "ready", "schema_revision": revision}
 
     @app.post("/v1/projects", status_code=201)
     def project_create(body: ProjectInput, auth=Depends(authorize)):
-        scope(auth, None, ("admin",))
+        if auth["role"] == "oidc":
+            if auth["organizations"].get(body.organization_id) not in {"owner", "admin"}:
+                raise HTTPException(403, "ORGANIZATION_ADMIN_REQUIRED")
+        else:
+            scope(auth, None, ("admin",))
         with sessions.begin() as session:
-            organization = session.scalar(select(Organization).limit(1))
+            organization = (
+                session.get(Organization, body.organization_id)
+                if body.organization_id
+                else session.scalar(select(Organization).limit(1))
+            )
+            if body.organization_id and not organization:
+                raise HTTPException(404, "ORGANIZATION_NOT_FOUND")
             if not organization:
                 organization = Organization(name="Self-hosted")
                 session.add(organization)
@@ -257,10 +293,28 @@ def create_app(
         if auth["role"] == "ingest":
             raise HTTPException(403, "SCOPE_DENIED")
         query = select(Project).order_by(Project.created_at, Project.id).limit(limit).offset(offset)
-        if auth["role"] != "admin":
+        if auth["role"] == "oidc":
+            query = query.where(Project.id.in_(auth["project_roles"]))
+        elif auth["role"] != "admin":
             query = query.where(Project.id == auth["project_id"])
         with sessions() as session:
-            return [{"id": str(row.id), "slug": row.slug} for row in session.scalars(query)]
+            return [
+                {"id": str(row.id), "slug": row.slug, "organization_id": str(row.organization_id)}
+                for row in session.scalars(query)
+            ]
+
+    @app.get("/v1/projects/{project_id}")
+    def project_metadata(project_id: UUID, auth=Depends(authorize)):
+        scope(auth, project_id)
+        with sessions() as session:
+            project = session.get(Project, project_id)
+            if not project:
+                raise HTTPException(404, "PROJECT_NOT_FOUND")
+            return {
+                "id": str(project.id),
+                "slug": project.slug,
+                "organization_id": str(project.organization_id),
+            }
 
     @app.post("/v1/projects/{project_id}/keys", status_code=201)
     def key_create(project_id: UUID, body: KeyInput, auth=Depends(authorize)):
@@ -449,6 +503,21 @@ def create_app(
     from cutback.server.privacy_api import install_privacy
 
     install_privacy(app, sessions, authorize, scope)
+    from cutback.server.organization_api import install_organizations
+
+    install_organizations(app, sessions, authorize, scope)
+    from cutback.server.continuous import install_continuous
+
+    install_continuous(app, sessions, authorize, scope)
+    from cutback.server.billing import install_billing
+
+    install_billing(app, sessions, authorize, scope)
+    from cutback.server.cache_api import install_cache
+
+    install_cache(app, sessions, authorize, scope)
+    from cutback.server.training_api import install_training
+
+    install_training(app, sessions, authorize, scope)
     from importlib.resources import files
 
     from fastapi.staticfiles import StaticFiles

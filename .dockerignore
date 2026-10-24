@@ -8,3 +8,9 @@
 !src/
 !src/**
 **/__pycache__/
+!infra/
+infra/**
+!infra/training/
+infra/training/**
+!infra/training/pyproject.toml
+!infra/training/uv.lock

@@ -26,7 +26,7 @@ cutback report --source collector --project PROJECT_UUID --period 1h
 cutback opportunities --source collector --project PROJECT_UUID --period 7d
 ```
 
-Key files use exclusive creation and are never printed. Restrict Windows ACLs. Server hashes, expiry and revocation apply. Rotate through replacement, runtime-secret update, verified ingress, then revocation. Clear bootstrap variables afterward. Viewer/analyst/editor/project_admin have distinct scoped capabilities; enterprise OIDC is later scope.
+Key files use exclusive creation and are never printed. Restrict Windows ACLs. Server hashes, expiry and revocation apply. Rotate through replacement, runtime-secret update, verified ingress, then revocation. Clear bootstrap variables afterward. Viewer/analyst/editor/project_admin have distinct scoped capabilities; OIDC/PKCE and organization membership are available through the optional identity extra; see identity-and-teams.md.
 
 ## PostgreSQL and HTTPS
 
@@ -38,13 +38,13 @@ The SDK requires HTTPS outside exact loopback names, rejects endpoint credential
 
 ## Retention and deletion
 
-Upgrade window for this development line: dev1 retains dev0's metadata event schema and adds revision 0002 after immutable 0001. Back up first, upgrade collector/worker together, then SDKs. Existing metadata and scoped keys are retained; new operational APIs require dev1. Keep old binaries and the encrypted pre-upgrade backup for rollback through restore into a separate database. Older or future development versions need their own reviewed migration/compatibility evidence. This limited development window is not a production support commitment.
+Upgrade window for this development line: dev2 retains dev0/dev1 metadata event schemas and adds immutable revisions 0003 (optional control-plane tables) and 0004 (organization-scoped project names) after released 0001/0002. Back up first, upgrade collector/worker together, then SDKs. Existing metadata and scoped keys are retained; new control-plane APIs require dev2. The 0004 downgrade refuses duplicate names across organizations rather than deleting or renaming projects. Keep old binaries and the encrypted pre-upgrade backup for rollback through restore into a separate database. Older or future development versions need their own reviewed migration/compatibility evidence. This limited development window is not a production support commitment.
 
 The worker archives complete days, prunes raw events after 30 days and daily summaries after 395 days, and deletes registered sample/plan artifacts at expiry (7 days default). `cutback worker maintain` previews; `--apply` executes. Shared locking/audit apply. A day above the bounded aggregation limit is refused before deletion; partition before exceeding that envelope. Late events for archived days stop pruning for reconciliation rather than overwriting evidence.
 
 Reports flag partial retained days and unknown combined quantiles/logical identities. Shared authenticated quotas complement an operator edge gateway/WAF for anonymous floods. SDK counters are cumulative per process instance, not population coverage. `/metrics` requires installation admin scope.
 
-Project export streams administrative NDJSON without raw samples or credentials. Project deletion requires admin and exact `confirm_slug`, refuses queued/running jobs, deletes encrypted objects/scoped records, and retains a minimal receipt. Cancel/finish jobs first. Backup/version history, legal holds, orphans and storage/DB failure reconciliation remain operator lifecycle responsibilities; one API call is not a compliance guarantee.
+Project export streams administrative NDJSON without raw samples or credentials. Project deletion requires admin and exact `confirm_slug`, refuses queued/running experiment and training jobs, including pending training cancellation, deletes encrypted objects/scoped records, and retains a minimal receipt. Cancel/finish jobs first. Backup/version history, legal holds, orphans and storage/DB failure reconciliation remain operator lifecycle responsibilities; one API call is not a compliance guarantee.
 
 ## Optional content and inference
 
@@ -53,3 +53,9 @@ Keep `CUTBACK_ALLOW_PAYLOADS=false` until approved. Configure an independent bas
 Collector and worker need the same store/key. Policies separately scope rights, vendors, workflows, environments, sampling, bytes and expiry. Revocation stops future access; an authorized in-flight call may finish. Maintenance can delete expired registered artifacts even while new capture is disabled.
 
 Inference stays disabled until exact budget approval. Configure `CUTBACK_EXPERIMENT_EXECUTION=true` and distinct approved worker credentials/local endpoint; install its required provider extra. Never give it application production tool credentials. See evaluation.md for reservations, crash behavior and quality scope.
+
+## Cluster and optional runtimes
+
+See [infrastructure guide](../infra/README.md) for reviewed image digests, external secrets, separate DDL migrations, private network defaults, role-separated workers and Terraform validation. No registry image or cluster is assumed. Build and review your image before supplying its digest. Secret-file loading supports `*_FILE`; worker images never need the bootstrap admin credential. Readiness checks both the API and current database revision; liveness does not require an admin token.
+
+Use [local training](local-training.md) for the separate offline runtime, frozen local model hashes and compute bounds. Schedules, cache, training, inference and billing are disabled by default. Individual feature opt-ins do not replace dataset rights, exact budget approvals or staging review.

@@ -1,0 +1,23 @@
+[project]
+name = "cutback-training-runtime"
+version = "0.1.0"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  "torch==2.14.1",
+  "transformers==5.20.2",
+  "peft==0.21.2",
+  "safetensors==0.8.0",
+  "setuptools==84.2.1",
+]
+
+[tool.uv]
+package = false
+environments = ["sys_platform == 'win32' or sys_platform == 'linux'"]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true

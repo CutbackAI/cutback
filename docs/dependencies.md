@@ -12,6 +12,7 @@ psycopg/binary LGPL obligations and image OS packages before publishing images.
 | annotated-types | 0.8.0 | MIT |
 | anthropic | 2.3.0 | Apache-2.0 |
 | anyio | 4.15.1 | MIT |
+| asgiref | 3.13.0 | BSD-3-Clause |
 | attrs | 26.1.0 | MIT |
 | backports.tarfile | 1.2.0 | OSI Approved :: MIT License |
 | boolean.py | 5.0 | BSD-2-Clause |
@@ -26,10 +27,11 @@ psycopg/binary LGPL obligations and image OS packages before publishing images.
 | colorama | 0.4.6 | OSI Approved :: BSD License |
 | coverage | 7.17.0 | Apache-2.0 |
 | cryptography | 50.0.2 | Apache-2.0 OR BSD-3-Clause |
-| cutback | 0.1.0.dev1 | Apache-2.0 |
+| cutback | 0.1.0.dev2 | Apache-2.0 |
 | cyclonedx-python-lib | 11.12.0 | Apache-2.0 |
 | defusedxml | 0.7.1 | PSFL |
 | distro | 1.9.0 | Apache License, Version 2.0 |
+| Django | 5.2.18 | BSD-3-Clause |
 | docstring_parser | 0.18.0 | MIT |
 | docutils | 0.23 | Public Domain; OSI Approved :: BSD License; OSI Approved :: GNU General Public License (GPL) |
 | fastapi | 0.162.0 | MIT |
@@ -42,6 +44,7 @@ psycopg/binary LGPL obligations and image OS packages before publishing images.
 | id | 1.6.1 | OSI Approved :: Apache Software License |
 | idna | 3.20 | BSD-3-Clause |
 | importlib_metadata | 10.1.0 | Apache-2.0 |
+| importlib_resources | 7.1.0 | Apache-2.0 |
 | iniconfig | 2.3.1 | MIT |
 | jaraco.classes | 3.4.0 | OSI Approved :: MIT License |
 | jaraco.context | 6.1.2 | MIT |
@@ -51,6 +54,7 @@ psycopg/binary LGPL obligations and image OS packages before publishing images.
 | jsonschema | 4.26.0 | MIT |
 | jsonschema-specifications | 2025.9.1 | MIT |
 | keyring | 25.7.0 | MIT |
+| kubernetes-validate | 1.37.0 | Apache |
 | librt | 0.16.0 | MIT |
 | license-expression | 30.4.4 | Apache-2.0 |
 | Mako | 1.4.3 | MIT |
@@ -80,6 +84,7 @@ psycopg/binary LGPL obligations and image OS packages before publishing images.
 | pydantic | 2.14.1 | MIT |
 | pydantic_core | 2.50.1 | MIT |
 | Pygments | 2.21.0 | BSD-2-Clause |
+| PyJWT | 2.15.1 | MIT |
 | pyparsing | 3.3.3 | MIT |
 | pyproject_hooks | 1.3.3 | MIT |
 | pytest | 9.1.1 | MIT |
@@ -101,10 +106,15 @@ psycopg/binary LGPL obligations and image OS packages before publishing images.
 | sniffio | 1.3.1 | MIT OR Apache-2.0 |
 | sortedcontainers | 2.4.0 | Apache 2.0 |
 | SQLAlchemy | 2.1.6 | MIT |
+| sqlparse | 0.6.0 | OSI Approved :: BSD License |
 | starlette | 1.9.0 | BSD-3-Clause |
+| stripe | 16.0.0 | OSI Approved :: MIT License |
 | tomli | 2.5.0 | MIT |
 | tomli_w | 1.2.0 | OSI Approved :: MIT License |
 | tqdm | 4.70.1 | MPL-2.0 AND MIT |
+| tree-sitter | 0.26.0 | OSI Approved :: MIT License |
+| tree-sitter-javascript | 0.25.0 | MIT |
+| tree-sitter-typescript | 0.23.2 | MIT |
 | truststore | 0.10.5 | MIT |
 | twine | 6.2.0 | Apache-2.0 |
 | typer | 0.27.3 | MIT |

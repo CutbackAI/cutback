@@ -69,3 +69,43 @@ class SyntheticExecutor:
             Decimal("0.001" if model.key == "baseline" else "0.0002"),
             2,
         )
+
+
+def authorized_dataset(api, tenant, tmp_path, monkeypatch):
+    import os
+    from datetime import UTC, datetime, timedelta
+
+    from cutback.evals.artifacts import EncryptedFileStore
+
+    client, admin, app = api
+    project = tenant[0]
+    path = f"/v1/projects/{project}"
+    monkeypatch.setenv("CUTBACK_ALLOW_PAYLOADS", "true")
+    store = EncryptedFileStore(tmp_path, os.urandom(32))
+    app.state.artifact_store = store
+    policy = client.post(
+        path + "/capture-policies",
+        headers=admin,
+        json={
+            "enabled": True,
+            "approval_ref": "synthetic-unit-test",
+            "rights_basis": "synthetic",
+            "environments": ["staging"],
+            "workflows": ["classify"],
+            "allowed_providers": ["local", "openai"],
+            "sample_rate": 1,
+            "max_samples": 100,
+            "expires_at": (datetime.now(UTC) + timedelta(days=1)).isoformat(),
+        },
+    ).json()["id"]
+    data = dataset_body(40).model_copy(update={"policy_id": policy})
+    dataset = client.post(
+        path + "/datasets", headers=admin, json=data.model_dump(mode="json")
+    ).json()
+    spec = plan_for({"immutable_hash": dataset["immutable_hash"]})
+    plan = client.post(
+        path + "/experiments/plans",
+        headers=admin,
+        json={"dataset_id": dataset["id"], "specification": spec.model_dump(mode="json")},
+    ).json()
+    return path, store, dataset, plan

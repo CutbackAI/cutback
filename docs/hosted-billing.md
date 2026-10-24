@@ -1,0 +1,15 @@
+# Optional hosted billing
+
+The same Apache-2.0 core supports customer-operated hosted deployments. Fundamental self-hosted scanning, observation, reporting and evaluation do not require a subscription or license server. `CUTBACK_HOSTED_MODE` and `CUTBACK_BILLING_ENABLED` default to false.
+
+The optional `[commercial]` extra uses Stripe Python 16.0.0 / API `2026-09-30.endive`. Configure a restricted test key in `CUTBACK_STRIPE_RESTRICTED_KEY`, a private `CUTBACK_STRIPE_WEBHOOK_SECRET`, allowed server-managed Price IDs in `CUTBACK_STRIPE_PRICE_IDS`, and the HTTPS `CUTBACK_PUBLIC_URL`. Use separate development/CI Stripe sandboxes when exercising an actual account. No account, product, price or charge has been created by the implementation tests. Product prices and commercial launch require the owner's decision; no illustrative tier is silently turned into a charge.
+
+Live keys and live webhook events are refused unless the operator separately enables `CUTBACK_BILLING_ALLOW_LIVE=true` following authorization. That flag does not itself constitute consent to charge customers. Checkout accepts an allowed Price ID and request UUID, uses idempotency keys, and sends the customer to Stripe's hosted subscription flow. The customer portal handles subscription/payment-method management. No payment-method allowlist or card data is embedded in Cutback.
+
+Subscription state comes from signed webhooks and a canonical subscription read, never the browser success URL. Raw-body signatures, event ID deduplication, customer binding and the server Price allowlist are enforced. Event timestamps are not used to order updates: different events can share timestamps and arrive out of order. Unknown or temporarily unreconciled customer/subscription state returns a retryable error; ambiguous financial operations require the same request UUID on retry. Native SDK network retries are disabled. SDK error text and credentials are suppressed.
+
+Organization owners configure optional monthly event and hosted USD caps. Accepted-event metering is atomic with telemetry persistence; duplicate ingestion does not add usage. Hosted enforcement requires an active/trialing configured subscription. A hosted USD cap also requires an explicit `CUTBACK_HOSTED_EVENT_RATE_USD`; missing rates stay unknown and cannot be interpreted as free. This modeled subtotal is not a Stripe invoice or a promise about taxes/infrastructure. Self-hosted mode does not impose these subscription gates.
+
+Read state and usage at `/v1/organizations/{id}/billing`; checkout, portal and caps are separate owner-authorized operations. Register `/v1/billing/webhook` for subscription created/updated/deleted, invoice paid/payment failed, Checkout completed and asynchronous payment success events. Keep test and live endpoints/secrets separate. Reconcile Stripe/customer records and financial backups through the operator's approved process.
+
+Acceptance uses the actual Stripe SDK, a synthetic HTTP transport, real PostgreSQL, signed fixtures, duplicate/out-of-order events, quota rollback and an ungated OSS check. It does not claim a live Stripe sandbox or production account has been verified.

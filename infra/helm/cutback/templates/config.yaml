@@ -1,0 +1,124 @@
+{{- if and .Values.cache.enabled (not .Values.payloads.enabled) -}}
+{{- fail "Application caching requires explicitly authorized encrypted payload storage" -}}
+{{- end -}}
+{{- if and .Values.execution.schedules (not .Values.execution.experiments) -}}
+{{- fail "Schedules require explicit experiment execution enablement" -}}
+{{- end -}}
+{{- if and .Values.execution.experiments (not .Values.payloads.enabled) -}}
+{{- fail "Experiments require explicitly authorized encrypted datasets" -}}
+{{- end -}}
+{{- if and .Values.training.enabled (not .Values.payloads.enabled) -}}
+{{- fail "Training requires explicitly authorized encrypted datasets and artifacts" -}}
+{{- end -}}
+{{- if and .Values.billing.hostedMode (not .Values.billing.enabled) -}}
+{{- fail "Hosted billing enforcement requires an explicitly configured billing service" -}}
+{{- end -}}
+{{- if .Values.ingress.enabled -}}
+{{- $_ := required "Configure the exact ingress proxy IPs or restricted CIDRs" .Values.ingress.trustedProxies -}}
+{{- if not (hasPrefix "https://" .Values.publicURL) -}}
+{{- fail "TLS ingress requires an explicit https publicURL" -}}
+{{- end -}}
+{{- if and .Values.network.enabled (not .Values.network.ingressPeers) -}}
+{{- fail "Explicitly authorize the TLS ingress controller peers" -}}
+{{- end -}}
+{{- end -}}
+{{- if gt (int .Values.retention.rawDays) (int .Values.retention.aggregateDays) -}}
+{{- fail "Raw event retention cannot exceed aggregate retention" -}}
+{{- end -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cutback.name" . }}
+  labels: {{ include "cutback.labels" . | nindent 4 }}
+data:
+  CUTBACK_ALLOW_PAYLOADS: {{ .Values.payloads.enabled | quote }}
+  CUTBACK_CACHE_ENABLED: {{ .Values.cache.enabled | quote }}
+  CUTBACK_EXPERIMENT_EXECUTION: {{ .Values.execution.experiments | quote }}
+  CUTBACK_SCHEDULE_EXECUTION: {{ .Values.execution.schedules | quote }}
+  CUTBACK_TRAINING_EXECUTION: {{ .Values.training.enabled | quote }}
+  CUTBACK_BILLING_ENABLED: {{ .Values.billing.enabled | quote }}
+  CUTBACK_BILLING_ALLOW_LIVE: {{ .Values.billing.allowLive | quote }}
+  CUTBACK_HOSTED_MODE: {{ .Values.billing.hostedMode | quote }}
+  {{- if .Values.billing.enabled }}
+  CUTBACK_STRIPE_PRICE_IDS: {{ join "," .Values.billing.priceIDs | quote }}
+  {{- if .Values.billing.eventRateUSD }}
+  CUTBACK_HOSTED_EVENT_RATE_USD: {{ .Values.billing.eventRateUSD | quote }}
+  {{- end }}
+  {{- end }}
+  CUTBACK_RAW_DAYS: {{ .Values.retention.rawDays | quote }}
+  CUTBACK_AGGREGATE_DAYS: {{ .Values.retention.aggregateDays | quote }}
+  CUTBACK_TRUSTED_PROXIES: {{ .Values.ingress.trustedProxies | quote }}
+  CUTBACK_PUBLIC_URL: {{ .Values.publicURL | quote }}
+  {{- if .Values.payloads.enabled }}
+  CUTBACK_PAYLOAD_BACKEND: {{ .Values.payloads.backend | quote }}
+  {{- if eq .Values.payloads.backend "s3" }}
+  CUTBACK_S3_BUCKET: {{ required "payloads.bucket is required for encrypted S3 storage" .Values.payloads.bucket | quote }}
+  {{- if .Values.payloads.endpoint }}
+  CUTBACK_S3_ENDPOINT: {{ .Values.payloads.endpoint | quote }}
+  {{- end }}
+  {{- if .Values.payloads.region }}
+  CUTBACK_S3_REGION: {{ .Values.payloads.region | quote }}
+  {{- end }}
+  {{- else }}
+  CUTBACK_PAYLOAD_DIR: /var/lib/cutback/payloads
+  {{- end }}
+  {{- end }}
+  {{- if .Values.execution.localEndpoint }}
+  CUTBACK_LOCAL_INFERENCE_ENDPOINT: {{ .Values.execution.localEndpoint | quote }}
+  {{- end }}
+  {{- if .Values.identity.issuer }}
+  CUTBACK_OIDC_ISSUER: {{ .Values.identity.issuer | quote }}
+  CUTBACK_OIDC_AUDIENCE: {{ required "identity.audience is required" .Values.identity.audience | quote }}
+  CUTBACK_OIDC_JWKS_URL: {{ required "identity.jwksURL is required" .Values.identity.jwksURL | quote }}
+  CUTBACK_OIDC_CLIENT_ID: {{ .Values.identity.clientID | quote }}
+  CUTBACK_OIDC_AUTHORIZATION_URL: {{ .Values.identity.authorizationURL | quote }}
+  CUTBACK_OIDC_TOKEN_URL: {{ .Values.identity.tokenURL | quote }}
+  {{- end }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "cutback.name" . }}
+  labels: {{ include "cutback.labels" . | nindent 4 }}
+  {{- with .Values.serviceAccount.annotations }}
+  annotations: {{ toYaml . | nindent 4 }}
+  {{- end }}
+automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cutback.name" . }}
+  labels: {{ include "cutback.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    app.kubernetes.io/component: collector
+  ports: [{name: http, port: 8080, targetPort: http, protocol: TCP}]
+{{- if .Values.ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "cutback.name" . }}
+  labels: {{ include "cutback.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations: {{ toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  ingressClassName: {{ required "Choose the installed TLS ingress class" .Values.ingress.className | quote }}
+  tls:
+    - hosts: [{{ required "ingress.host is required" .Values.ingress.host | quote }}]
+      secretName: {{ required "Use an existing reviewed TLS certificate secret" .Values.ingress.tlsSecret }}
+  rules:
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "cutback.name" . }}
+                port: {name: http}
+{{- end }}

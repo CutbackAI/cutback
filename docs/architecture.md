@@ -13,3 +13,9 @@ Paired evaluations use a durable pre-call ledger. Jobs use row locks/leases; unc
 Compose provides collector/worker/PostgreSQL, generated secrets and persistent volumes. A separate TLS reference adds pinned Caddy/private networking/exact proxy trust. Customer DB/secrets/identity remain supported. The free core has no hosted-account gate or company endpoint.
 
 Dashboard OpenAPI/types are generated. Credentials stay in memory; URL filters contain no tokens, and empty states contain no fabricated telemetry/savings.
+
+Optional modules preserve the independent core. Organization membership and project grants constrain OIDC subjects; PKCE state is single-use and browser tokens stay in memory. Billing is a configured Stripe connector behind explicit flags and does not gate self-hosted OSS. Scoped cache entries use the same authorized encrypted store and shared capture quotas.
+
+Routing reserves the worst allowed target and makes exactly one selected call, with no paid classifier or fallback. Validation pilots never consume final test groups. Local training runs in a separate frozen HF/PEFT process with no provider/admin credentials, bounded termination grace, durable one-shot reservations and encrypted checksummed adapters. Training losses are not quality evidence.
+
+Revision 0003 adds optional operational tables; 0004 scopes project names to organizations. Released migrations stay immutable. Maintenance respects per-project retention. Helm separates migration, collector, inference worker and optional training credentials/resources; Terraform targets an already approved cluster and namespace.

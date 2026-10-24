@@ -1,0 +1,106 @@
+# Build/publish the reviewed source image and supply its immutable registry digest.
+image:
+  repository: ghcr.io/cutbackai/cutback
+  digest: ""
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+secrets:
+  runtime: cutback-runtime
+  migration: cutback-migration
+  experiments: cutback-experiments
+serviceAccount:
+  annotations: {}
+  automount: false
+collector:
+  replicas: 2
+  resources:
+    requests: {cpu: 250m, memory: 256Mi}
+    limits: {cpu: "1", memory: 1Gi}
+worker:
+  enabled: true
+  replicas: 1
+  resources:
+    requests: {cpu: 100m, memory: 256Mi}
+    limits: {cpu: "1", memory: 1Gi}
+migration:
+  enabled: true
+  resources:
+    requests: {cpu: 100m, memory: 128Mi}
+    limits: {cpu: 500m, memory: 512Mi}
+execution:
+  experiments: false
+  schedules: false
+  # Exactly these keys are mounted on the worker, never on the collector.
+  providers: []
+  localEndpoint: ""
+payloads:
+  enabled: false
+  backend: s3
+  bucket: ""
+  endpoint: ""
+  region: ""
+  existingClaim: ""
+cache:
+  enabled: false
+billing:
+  enabled: false
+  hostedMode: false
+  allowLive: false
+  priceIDs: []
+  eventRateUSD: ""
+training:
+  enabled: false
+  imageRepository: ""
+  imageDigest: ""
+  baseModelClaim: ""
+  models: {}
+  python: /opt/training/.venv/bin/python
+  cpuHourlyUSD: ""
+  cudaHourlyUSD: ""
+  allowCUDA: false
+  cudaDevice: "0"
+  scratchSize: 2Gi
+  resources:
+    requests: {cpu: "1", memory: 2Gi}
+    limits: {cpu: "2", memory: 8Gi}
+database:
+  tlsCAKey: ""
+identity:
+  issuer: ""
+  audience: ""
+  jwksURL: ""
+  clientID: ""
+  authorizationURL: ""
+  tokenURL: ""
+  clientSecretKey: ""
+publicURL: ""
+retention:
+  rawDays: 30
+  aggregateDays: 395
+ingress:
+  enabled: false
+  className: ""
+  host: ""
+  tlsSecret: ""
+  trustedProxies: ""
+  annotations: {}
+network:
+  enabled: true
+  # Private application/ingress controller peers must be explicitly authorized.
+  ingressPeers: []
+  # External DB/service egress examples belong in a reviewed values file.
+  databasePeers: []
+  dnsNamespaceSelector: {kubernetes.io/metadata.name: kube-system}
+  dnsPodSelector: {k8s-app: kube-dns}
+  collectorEgress: []
+  workerEgress: []
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPU: 70
+podDisruptionBudget:
+  enabled: true
+nodeSelector: {}
+tolerations: []
+affinity: {}

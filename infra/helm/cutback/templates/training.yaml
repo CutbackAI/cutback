@@ -1,0 +1,97 @@
+{{- if .Values.training.enabled }}
+{{- if not .Values.training.models -}}
+{{- fail "Register reviewed local model paths and sha256 hashes in training.models" -}}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cutback.name" . }}-training
+  labels:
+    {{- include "cutback.labels" . | nindent 4 }}
+    app.kubernetes.io/component: training
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name | quote }}
+      app.kubernetes.io/component: training
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/config.yaml") $ | sha256sum }}
+        checksum/training: {{ toJson .Values.training | sha256sum }}
+      labels:
+        {{- include "cutback.labels" . | nindent 8 }}
+        app.kubernetes.io/component: training
+    spec:
+      serviceAccountName: {{ include "cutback.name" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      terminationGracePeriodSeconds: 30
+      securityContext: {fsGroup: 10001, fsGroupChangePolicy: OnRootMismatch}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: training
+          image: {{ printf "%s@%s" (required "A reviewed training image repository is required" .Values.training.imageRepository) (required "A reviewed training image digest is required" .Values.training.imageDigest) | quote }}
+          imagePullPolicy: IfNotPresent
+          securityContext: {{ include "cutback.security" . | nindent 12 }}
+          resources: {{ toYaml .Values.training.resources | nindent 12 }}
+          envFrom:
+            - configMapRef: {name: {{ include "cutback.name" . }}}
+          env:
+            - {name: CUTBACK_DATABASE_URL_FILE, value: /run/cutback/database_url}
+            - {name: CUTBACK_PAYLOAD_KEY_FILE, value: /run/cutback/payload_key}
+            - {name: CUTBACK_SKIP_MIGRATIONS, value: "true"}
+            - {name: CUTBACK_PROCESS, value: worker}
+            - {name: CUTBACK_EXPERIMENT_EXECUTION, value: "false"}
+            - {name: CUTBACK_SCHEDULE_EXECUTION, value: "false"}
+            - {name: CUTBACK_TRAINING_EXECUTION, value: "true"}
+            - {name: CUTBACK_TRAINING_PYTHON, value: {{ .Values.training.python | quote }}}
+            - {name: CUTBACK_TRAINING_MODELS, value: {{ toJson .Values.training.models | quote }}}
+            - {name: CUTBACK_TRAINING_CPU_HOURLY_USD, value: {{ .Values.training.cpuHourlyUSD | quote }}}
+            - {name: CUTBACK_TRAINING_CUDA_HOURLY_USD, value: {{ .Values.training.cudaHourlyUSD | quote }}}
+            - {name: CUTBACK_TRAINING_ALLOW_CUDA, value: {{ .Values.training.allowCUDA | quote }}}
+            - {name: CUTBACK_TRAINING_CUDA_DEVICE, value: {{ .Values.training.cudaDevice | quote }}}
+          readinessProbe:
+            exec: {command: ["/app/.venv/bin/python", "-m", "cutback.server.probe", "--database-only"]}
+            periodSeconds: 20
+            timeoutSeconds: 8
+          volumeMounts:
+            - {name: runtime, mountPath: /run/cutback, readOnly: true}
+            - {name: models, mountPath: /models, readOnly: true}
+            - {name: temporary, mountPath: /tmp}
+            {{- if eq .Values.payloads.backend "file" }}
+            - {name: payloads, mountPath: /var/lib/cutback/payloads}
+            {{- end }}
+      volumes:
+        - name: runtime
+          secret:
+            secretName: {{ .Values.secrets.runtime }}
+            defaultMode: 0440
+            items:
+              - {key: database_url, path: database_url}
+              - {key: payload_key, path: payload_key}
+              {{- if .Values.database.tlsCAKey }}
+              - {key: {{ .Values.database.tlsCAKey }}, path: database_ca.pem}
+              {{- end }}
+        - name: models
+          persistentVolumeClaim:
+            claimName: {{ required "A read-only approved base-model PVC is required" .Values.training.baseModelClaim }}
+        - {name: temporary, emptyDir: {sizeLimit: {{ .Values.training.scratchSize }}}}
+        {{- if eq .Values.payloads.backend "file" }}
+        - name: payloads
+          persistentVolumeClaim:
+            claimName: {{ .Values.payloads.existingClaim }}
+        {{- end }}
+{{- end }}
