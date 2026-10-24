@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0.dev0 — unreleased
+## 0.1.0.dev0 — first pre-alpha release, 23 October 2026 (America/Winnipeg)
 
 - Independent Python package, CLI and offline OpenAI/Anthropic AST inventory.
 - Immutable pricing seed with Decimal accounting and explicit unpriced outcomes.

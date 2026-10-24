@@ -1,0 +1,20 @@
+{
+  "source": "https://pypi.org/pypi/cutback/0.1.0.dev0/json",
+  "project_url": "https://pypi.org/project/cutback/0.1.0.dev0/",
+  "version": "0.1.0.dev0",
+  "fresh_pypi_install": "passed",
+  "offline_scan": "passed",
+  "paid_provider_calls": 0,
+  "files": [
+    {
+      "name": "cutback-0.1.0.dev0-py3-none-any.whl",
+      "sha256": "13470118c961ea49b1ef13deceb00c60194614f89fa62f15cd60f0754f972b4b",
+      "uploaded_at": "2026-10-24T03:09:31.902064Z"
+    },
+    {
+      "name": "cutback-0.1.0.dev0.tar.gz",
+      "sha256": "317572ceb77950e608852d5033172b1d8ab1bad6f702944e6aee816e9503fd34",
+      "uploaded_at": "2026-10-24T03:09:33.109596Z"
+    }
+  ]
+}
