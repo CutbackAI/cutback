@@ -28,6 +28,17 @@ def test_explicit_sdk_capture_requires_policy_and_keeps_raw_out_of_events(
     monkeypatch.delenv("CUTBACK_ENABLED", raising=False)
     admin = secrets.token_urlsafe(48)
     app = create_app(database_url=postgres_url, admin_token=admin, allow_insecure_http=True)
+
+    # Capture must honor the configured bounded transport timeout. This owned
+    # fixture is deliberately slower than the ordinary 300 ms default.
+    @app.middleware("http")
+    async def slow_owned_sample_write(request, call_next):
+        if request.url.path == "/v1/ingest/samples":
+            import asyncio
+
+            await asyncio.sleep(0.4)
+        return await call_next(request)
+
     store = EncryptedFileStore(tmp_path, os.urandom(32))
     app.state.artifact_store = store
     with server(app) as endpoint, httpx.Client(base_url=endpoint, trust_env=False) as control:
@@ -61,6 +72,7 @@ def test_explicit_sdk_capture_requires_policy_and_keeps_raw_out_of_events(
             project_id=project,
             capture_content=True,
             capture_policy_id=policy,
+            timeout_seconds=2,
         )
         response = {
             **SYNTHETIC_RESPONSE,
@@ -90,7 +102,7 @@ def test_explicit_sdk_capture_requires_policy_and_keeps_raw_out_of_events(
                     )
                 assert result.output_text == "PRIVATE OUTPUT"
             assert observer.flush(3), observer.health()
-            assert observer.health()["captured_exported"] == 1
+            assert observer.health()["captured_exported"] == 1, observer.health()
             events = control.get(f"/v1/projects/{project}/events", headers=headers).json()
             assert "PRIVATE" not in json.dumps(events) and "example.org" not in json.dumps(events)
             with app.state.sessions() as session:

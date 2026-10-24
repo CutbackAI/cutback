@@ -132,6 +132,7 @@ def init(
                         project_id or os.environ["CUTBACK_PROJECT_ID"],
                         os.environ.get(project_key_from_env, ""),
                         capture_policy_id,
+                        timeout=export_options.get("timeout_seconds", 0.3),
                     )
                 try:
                     observer = cls(

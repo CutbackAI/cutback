@@ -43,6 +43,8 @@ def bounded_content(value, limit):
 
 class CaptureExporter:
     def __init__(self, endpoint, project_id, token, policy_id, *, timeout=0.3):
+        if not 0.01 <= timeout <= 2:
+            raise ValueError("capture timeout must be 0.01–2 seconds")
         if not endpoint.endswith("/v1/ingest/events"):
             raise ValueError("capture requires the standard collector endpoint")
         self.base = validate_endpoint(endpoint).removesuffix("/events")
