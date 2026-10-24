@@ -25,6 +25,20 @@ def test_project_names_are_organization_scoped_while_keys_remain_project_scoped(
             ).status_code
             == 409
         )
+    from importlib.resources import files
+
+    from alembic import command
+    from alembic.config import Config
+    from sqlalchemy import text
+
+    cfg = Config()
+    cfg.set_main_option("script_location", str(files("cutback.server").joinpath("migrations")))
+    with pytest.raises(ValueError, match="DOWNGRADE_REQUIRES_UNIQUE_LEGACY_PROJECT_NAMES"):
+        command.downgrade(cfg, "0003")
+    with api[2].state.engine.connect() as connection:
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0004"
+        assert connection.scalar(text("SELECT pg_try_advisory_lock(1638366142)")) is True
+        connection.execute(text("SELECT pg_advisory_unlock(1638366142)"))
     key = client.post(
         f"/v1/projects/{projects[0]}/keys", headers=admin, json={"role": "viewer"}
     ).json()["token"]
