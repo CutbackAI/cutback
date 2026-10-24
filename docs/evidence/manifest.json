@@ -37,9 +37,9 @@
   "production_deployments": 0,
   "remote_ci": {
     "status": "passed",
-    "source_commit": "ea234c31479424029239fc9055801106de669043",
-    "ci": "https://github.com/CutbackAI/cutback/actions/runs/40088432154",
-    "security": "https://github.com/CutbackAI/cutback/actions/runs/40088432129",
+    "source_commit": "6f759764f035e9f1764839264271d1cdfb6f2d67",
+    "ci": "https://github.com/CutbackAI/cutback/actions/runs/40088987906",
+    "security": "https://github.com/CutbackAI/cutback/actions/runs/40088987920",
     "python_3_11": {
       "passed": 153,
       "skipped_legacy": 4,
@@ -72,5 +72,20 @@
     "call_sites_detected": 4,
     "modified": false,
     "actual_spend_usd": null
+  },
+  "capture_timeout_regression": {
+    "slow_synthetic_sample_write_seconds": 0.4,
+    "explicit_transport_timeout_seconds": 2,
+    "focused_native_and_capture_passed": 17,
+    "default_timeout_seconds": 0.3
+  },
+  "publication": {
+    "status": "published_and_verified",
+    "run": "https://github.com/CutbackAI/cutback/actions/runs/40089189222",
+    "source_commit": "6f759764f035e9f1764839264271d1cdfb6f2d67",
+    "fresh_pypi_core_install": "passed",
+    "offline_scan": "passed",
+    "artifact_sha256_match": true,
+    "cryptographic_provenance_verification": "passed"
   }
 }

@@ -1,6 +1,6 @@
 # Implementation progress
 
-Updated 24 October 2026. Current reviewed engineering target: **0.1.0.dev2**. Prior published pre-alpha: [`0.1.0.dev1`](https://pypi.org/project/cutback/0.1.0.dev1/). [Source release and synthetic demo](https://github.com/CutbackAI/cutback/releases/tag/v0.1.0.dev1). PyPI ownership was secured by `0.1.0.dev0`; published versions are listed at https://pypi.org/project/cutback/. This is a working pre-alpha, not production validation.
+Updated 24 October 2026. Published pre-alpha: [`0.1.0.dev2`](https://pypi.org/project/cutback/0.1.0.dev2/). [Source, examples, SBOMs and synthetic demos](https://github.com/CutbackAI/cutback/releases/tag/v0.1.0.dev2). PyPI ownership was secured by dev0. This is a working self-hosted pre-alpha; production and real customer quality are not validated.
 
 | Milestone | Implemented | Remaining acceptance boundary |
 |---|---|---|
@@ -24,4 +24,6 @@ Current dev2 local acceptance: **153 passed, four legacy-version cases skipped**
 
 The final local Compose image upgraded to schema **0004**. Encrypted backup/restore matched **33 tables**. The full synthetic experiment walkthrough produced 64 actual collector observations and two paired worker reports, then deleted its own project/artifacts. The capacity smoke durably accepted **10,000 synthetic events and 10,000 duplicate replays**, preserved unknown pricing, and queried usage in 664 ms on this local Windows/Docker run. This is one bounded smoke, not a production SLA. See [completion ledger](product-completion.md).
 
-[Hosted CI](https://github.com/CutbackAI/cutback/actions/runs/40088432154) and [security](https://github.com/CutbackAI/cutback/actions/runs/40088432129) passed on the reviewed dev2 code. Python 3.11 passed 153 tests with four legacy skips including native CPU training; Python 3.13 passed 152 with five skips. Separate legacy suites passed 21 each; CodeQL has zero open alerts.
+[Hosted CI](https://github.com/CutbackAI/cutback/actions/runs/40088987906) and [security](https://github.com/CutbackAI/cutback/actions/runs/40088987920) passed on the reviewed dev2 code. Python 3.11 passed 153 tests with four legacy skips including native CPU training; Python 3.13 passed 152 with five skips. Separate legacy suites passed 21 each; CodeQL has zero open alerts.
+
+[Trusted Publishing](https://github.com/CutbackAI/cutback/actions/runs/40089189222) passed after rerunning the full acceptance suite. A fresh public-index core install/offline scan passed; wheel and source hashes match PyPI and cryptographic provenance verification passed for both distributions. The versioned publication receipt records exact digests.

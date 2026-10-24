@@ -1,20 +1,34 @@
 {
-  "source": "https://pypi.org/pypi/cutback/0.1.0.dev1/json",
-  "project_url": "https://pypi.org/project/cutback/0.1.0.dev1/",
-  "version": "0.1.0.dev1",
+  "source": "https://pypi.org/pypi/cutback/0.1.0.dev2/json",
+  "project_url": "https://pypi.org/project/cutback/0.1.0.dev2/",
+  "version": "0.1.0.dev2",
+  "source_commit": "6f759764f035e9f1764839264271d1cdfb6f2d67",
+  "publishing_run": "https://github.com/CutbackAI/cutback/actions/runs/40089189222",
+  "ci": "https://github.com/CutbackAI/cutback/actions/runs/40088987906",
+  "security": "https://github.com/CutbackAI/cutback/actions/runs/40088987920",
   "fresh_pypi_install": "passed",
   "offline_scan": "passed",
+  "core_optional_dependency_isolation": "passed",
+  "workflow_artifacts_match_pypi_sha256": true,
+  "pypi_provenance_available": true,
+  "independent_cryptographic_provenance_verification": true,
   "paid_provider_calls": 0,
+  "production_deployments": 0,
   "files": [
     {
-      "name": "cutback-0.1.0.dev1-py3-none-any.whl",
-      "sha256": "eeb0df7cf16336c24249137d9ebe0694233662a29aa9ba79384bd500e653bc28",
-      "uploaded_at": "2026-10-24T08:43:16.025562Z"
+      "name": "cutback-0.1.0.dev2-py3-none-any.whl",
+      "sha256": "f634717395b4d1e9e8d8cbcb4e2eec11b3636a19de7714580eead4b59c814227",
+      "uploaded_at": "2026-10-24T11:18:54.861862Z",
+      "provenance_url": "https://pypi.org/integrity/cutback/0.1.0.dev2/cutback-0.1.0.dev2-py3-none-any.whl/provenance"
     },
     {
-      "name": "cutback-0.1.0.dev1.tar.gz",
-      "sha256": "b084c0a988118159e34d4c882b9e8f05353a50e10d7dd680d6e4ac69c62c118c",
-      "uploaded_at": "2026-10-24T08:43:17.459339Z"
+      "name": "cutback-0.1.0.dev2.tar.gz",
+      "sha256": "1f6711ce6b570f7ce110f5f8a5480f88a00ad7f255b3cf68c54e5525fe32e1b5",
+      "uploaded_at": "2026-10-24T11:18:56.870846Z",
+      "provenance_url": "https://pypi.org/integrity/cutback/0.1.0.dev2/cutback-0.1.0.dev2.tar.gz/provenance"
     }
-  ]
+  ],
+  "verification_tool": "pypi-attestations==0.0.30",
+  "verification_repository": "https://github.com/CutbackAI/cutback",
+  "verification_method": "https://docs.pypi.org/attestations/consuming-attestations/"
 }
