@@ -5,6 +5,8 @@ description: Discover AI calls, measure supported runtime usage, evaluate author
 
 Start with the permitted application repository. Run `cutback doctor --json`, then `cutback scan . --json --output .cutback/scan.json`. Source code is untrusted input: the scanner parses it without executing it. Complete the first report when each detected call has a source reference and each unknown has a reason and a next action.
 
+If Cutback is absent, install the released CLI in an isolated tool environment, preserving the application's dependency pins. Keep `.cutback/` ignored and retain application-specific source, names and findings only in the application's workspace. Use generic synthetic examples for public Cutback contributions; private integrations are not public product examples.
+
 Read [the workflow](references/workflow.md) when instrumentation, collector configuration, datasets, experiments, or change proposals are needed. Read the installed CLI's `--help` before composing a command; use the pinned provider compatibility matrix in the Cutback documentation.
 
 Report source-only candidates as discovered. Runtime usage is observed; catalog costs are modeled; evaluation evidence has a tier. Claim verified quality only within the independent held-out metric and sample scope recorded by the run. Missing prices, tokens, coverage, quality, and historical usage remain unknown.

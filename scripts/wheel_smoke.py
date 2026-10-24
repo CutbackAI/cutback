@@ -31,21 +31,62 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
         check=True,
         cwd=temporary,
     )
-    cli = subprocess.run(
+    consumer = Path(temporary) / "independent-application"
+    consumer.mkdir()
+    source = consumer / "main.py"
+    original = (
+        '"""Owned synthetic source fixture; scanning must never execute this."""\n'
+        'raise RuntimeError("source must not execute")\n'
+        "from openai import OpenAI\n"
+        "client = OpenAI()\n"
+        "def classify(text):\n"
+        '    return client.responses.create(model="gpt-4.1", input=text)\n'
+    )
+    source.write_text(original, encoding="utf-8")
+    private_sentinel = "synthetic-private-environment-value"
+    (consumer / ".env").write_text("PRIVATE_VALUE=" + private_sentinel, encoding="utf-8")
+    (consumer / ".gitignore").write_text(".env\n.cutback/\n", encoding="utf-8")
+
+    def command(*args):
+        process = subprocess.run(
+            [str(executable), "-m", "cutback.cli", *args],
+            capture_output=True,
+            text=True,
+            check=True,
+            cwd=consumer,
+            env={**os.environ, "CUTBACK_ENABLED": "false"},
+        )
+        assert private_sentinel not in process.stdout + process.stderr
+        return json.loads(process.stdout)
+
+    assert command("doctor", "--json")["network_probe"] == "not_performed"
+    assert command("init", "--mode", "local")["telemetry"] == "disabled"
+    subprocess.run(
         [
             str(executable),
             "-m",
             "cutback.cli",
             "scan",
-            str(root / "examples/minimal-openai"),
+            ".",
             "--json",
+            "--output",
+            ".cutback/scan.json",
         ],
         capture_output=True,
         text=True,
         check=True,
-        cwd=temporary,
+        cwd=consumer,
     )
-    result = json.loads(cli.stdout)
+    result = json.loads((consumer / ".cutback/scan.json").read_text(encoding="utf-8"))
     assert result["summary"]["llm_call_sites_detected"] == 1
     assert result["summary"]["actual_spend_usd"] is None
-    print("Core-only wheel install, bundled pricing, CLI and offline scan passed.")
+    assert private_sentinel not in json.dumps(result)
+    opportunities = command("opportunities", "--target", ".")
+    assert opportunities["expected_savings_usd"] is None and opportunities["opportunities"]
+    plan = command("instrument", "--target", ".", "--entrypoint", "main.py", "--plan", "--json")
+    assert plan["status"] == "plan_only" and plan["content_capture"] is False
+    assert "# cutback:bootstrap" in plan["diff"] and source.read_text(encoding="utf-8") == original
+    assert command("datasets", "discover", "--target", ".")  # Parse-only discovery needs no server.
+    print(
+        "Core-only wheel and independent consumer doctor/scan/opportunities/instrument plan passed."
+    )

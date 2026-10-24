@@ -92,6 +92,7 @@ jobs:
       - name: Install isolated native CPU training runtime
         if: matrix.python == '3.11'
         run: UV_PROJECT_ENVIRONMENT=/tmp/cutback-training uv sync --project infra/training --locked --no-dev
+      - run: uv run python scripts/check_public_boundary.py
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy
@@ -101,5 +102,6 @@ jobs:
           CUTBACK_TEST_TRAINING_PYTHON: ${{ matrix.python == '3.11' && '/tmp/cutback-training/bin/python' || '' }}
       - run: uv build
       - run: uv run python scripts/check_release_artifacts.py
+      - run: uv run python scripts/check_public_boundary.py --archive dist/cutback-*.whl --archive dist/cutback-*.tar.gz
       - run: uv run twine check dist/*
       - run: uv run python scripts/wheel_smoke.py

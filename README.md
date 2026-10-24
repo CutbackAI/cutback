@@ -13,6 +13,8 @@ cutback scan /path/to/python/project --json
 cutback opportunities --target /path/to/python/project
 ```
 
+To start from another application, give your coding agent the [independent application onboarding request](https://github.com/CutbackAI/cutback/blob/main/docs/application-onboarding.md). Cutback does not require a reference customer application.
+
 Scanning is offline and never executes the application. Historical tokens, spend, latency and quality remain unknown from source alone. Lower prices establish a candidate, not preserved quality or realized savings.
 
 ```sh

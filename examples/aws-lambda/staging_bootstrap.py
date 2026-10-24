@@ -18,7 +18,7 @@ def _observer():
         import cutback
 
         _instance = cutback.init(
-            service_name="pilot-backend",
+            service_name=os.environ["CUTBACK_SERVICE_NAME"],
             environment="staging",
             enabled=True,
             providers=("openai",),

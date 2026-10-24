@@ -1,5 +1,7 @@
 # Security and privacy
 
+Public product examples use generic synthetic applications. Keep private application source, identifiers, paths, reports and deployment plans in the application's own ignored workspace; they are not Cutback publication inputs. Private publication marker policies stay outside the repository. `scripts/check_public_boundary.py` checks current files, Git history and release archives without logging marker values; CI checks tracked publication files and built distributions. Review media and sharing scope separately before publishing customer-derived material. See [independent application onboarding](application-onboarding.md).
+
 Source, telemetry, samples and provider outputs are untrusted. The scanner parses without executing application code, excludes secrets/binaries and bounds size/count/depth/time. Default output contains references, not prompt content.
 
 The collector authenticates scope, validates schema/body/time/environment, rejects content in metadata, hashes/expires/revokes keys, shares quotas and acknowledges after persistence. Ingest cannot read; viewers cannot alter policy/budget. Errors never echo validation input or sensitive traces. Bootstrap admin, DB privileges, secrets, network and backup operators are separate boundaries.

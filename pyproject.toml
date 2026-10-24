@@ -88,6 +88,7 @@ include = [
   "/infra/README.md", "/infra/helm", "/infra/terraform/kubernetes/*.tf",
   "/infra/terraform/kubernetes/.terraform.lock.hcl", "/infra/terraform/kubernetes/tests",
   "/infra/training/Dockerfile", "/infra/training/pyproject.toml", "/infra/training/uv.lock",
+  "/scripts/check_public_boundary.py", "/docs/application-onboarding.md",
   "/web/public", "/web/unit", "/scripts/create_training_fixture.py", "/scripts/scale_smoke.py",
   "/src", "/tests", "/examples", "/README.md", "/LICENSE", "/NOTICE",
   "/pyproject.toml", "/uv.lock", "/.python-version", "/scripts/wheel_smoke.py",
@@ -100,9 +101,6 @@ include = [
   '/scripts/generate_ts_client.py','/scripts/package_agent_workflows.py',
   '/scripts/backup_restore.py','/scripts/scanner_benchmark.py','/scripts/check_release_artifacts.py',
 ]
-
-[tool.hatch.build]
-exclude = ["/docs/pilot-app-staging-plan.md", "/docs/evidence/acceptance.md", "/docs/CUTBACK_MASTER_ENGINEERING_HANDOFF.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

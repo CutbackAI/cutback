@@ -14,7 +14,7 @@ def check(directory: Path):
         raise ValueError("expected exactly one wheel and one source distribution")
     banned = (
         "MASTER_ENGINEERING_HANDOFF",
-        "pilot-app-staging-plan",
+        "private-notes",
         "secrets/",
         ".env",
         "synthetic-compose-report",

@@ -1,5 +1,7 @@
 # Cutback workflow
 
+Start inside the authorized application's repository. Use an isolated Cutback tool environment for offline analysis; modifying that application's SDK pins is not a prerequisite. Save findings in its ignored `.cutback/` directory. Public Cutback source, issues, screenshots and release artifacts contain only generic synthetic examples, with no private application names, source paths, deployment details or customer observations.
+
 For instrumentation, inspect the process/handler entry point and existing SDK wrappers. Generate `cutback instrument --plan --target . --entrypoint path.py --json`. The bootstrap uses `CUTBACK_ENABLED=false` until configured; provider choices come from `CUTBACK_PROVIDERS`. Apply within the user's authorized scope. Use a scoped ingest key and HTTPS outside localhost; keep control keys separate. Validate native responses, errors, stream completion, retries, absence of content, outage behavior, and bounded handler flushing before describing a deployment as supported.
 
 For self-hosting, use the released Compose definition, external PostgreSQL interface, reverse-proxy trust configuration and backup/restore playbook. Local Docker services are development services; cloud/staging/production deployment needs the user's destination and approval. Run a synthetic pipeline first. A genuine provider acceptance call requires a permitted key, data, vendor and dollar cap.
