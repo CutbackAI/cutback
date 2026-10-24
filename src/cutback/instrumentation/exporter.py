@@ -5,7 +5,8 @@ import queue
 import threading
 import time
 from collections import Counter
-from uuid import UUID
+from collections.abc import Callable
+from uuid import UUID, uuid4
 
 import httpx
 
@@ -40,6 +41,9 @@ class Exporter:
         self._counters: Counter = Counter()
         self._closed = threading.Event()
         self._last_export: float | None = None
+        self.instance_id = uuid4()
+        self._last_health = float("-inf")
+        self.extra_health: Callable[[], dict[str, int]] = lambda: {}
         self._thread = threading.Thread(target=self._run, name="cutback-export", daemon=True)
         self._thread.start()
 
@@ -65,6 +69,7 @@ class Exporter:
                 "queue_depth": self._queue.qsize(),
                 "last_export_unix": self._last_export,
                 "delivery": "best_effort_no_disk_spool",
+                **self.extra_health(),
             }
 
     def flush(self, timeout_seconds=0.3) -> bool:
@@ -124,5 +129,46 @@ class Exporter:
                     self.count("export_failed", len(batch))
                     self.count("dropped", len(batch))
                 finally:
+                    if time.monotonic() - self._last_health >= 60:
+                        self._last_health = time.monotonic()
+                        self._send_health(client, first)
                     for _ in batch:
                         self._queue.task_done()
+
+    def _send_health(self, client, event):
+        from cutback.core.health import HealthBatch
+
+        if not self.endpoint.endswith("/v1/ingest/events"):
+            return
+        try:
+            allowed = {
+                "observed",
+                "queued",
+                "dropped",
+                "exported",
+                "rejected",
+                "export_failed",
+                "normalization_failed",
+                "queue_depth",
+                "captured_queued",
+                "captured_exported",
+                "captured_dropped",
+                "capture_enabled",
+            }
+            health = HealthBatch(
+                project_id=self.project_id,
+                instance_id=self.instance_id,
+                environment=event.environment,
+                service_name=event.service_name,
+                counters={k: v for k, v in self.health().items() if k in allowed},
+            )
+            client.post(
+                self.endpoint.removesuffix("events") + "health",
+                content=health.model_dump_json(),
+                headers={
+                    "Authorization": f"Bearer {self._token}",
+                    "Content-Type": "application/json",
+                },
+            )
+        except Exception:
+            pass  # Health export is bounded best-effort, independent from event receipt.

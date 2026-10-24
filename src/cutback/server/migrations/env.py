@@ -15,7 +15,13 @@ if context.is_offline_mode():
 else:
     engine, _ = database(os.environ["CUTBACK_DATABASE_URL"])
     with engine.connect() as connection:
+        from sqlalchemy import text
+
+        connection.execute(text("SELECT pg_advisory_lock(1638366142)"))
+        connection.commit()
         context.configure(connection=connection, target_metadata=target_metadata)
         with context.begin_transaction():
             context.run_migrations()
+        connection.execute(text("SELECT pg_advisory_unlock(1638366142)"))
+        connection.commit()
     engine.dispose()

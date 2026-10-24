@@ -12,6 +12,7 @@ from typing import Annotated, Literal, NoReturn
 import typer
 
 from cutback import __version__
+from cutback.cli_workflows import register
 
 app = typer.Typer(
     no_args_is_help=True,
@@ -101,7 +102,7 @@ def doctor(json_output: Annotated[bool, typer.Option("--json")] = False):
         },
         "pricing_snapshot_id": Catalog().snapshot_id,
         "telemetry_enabled": os.getenv("CUTBACK_ENABLED", "false").lower() == "true",
-        "content_capture": "unavailable_disabled",
+        "content_capture": "disabled_by_default_explicit_policy_required",
         "network_probe": "not_performed",
         "paid_calls": "never_implicit",
         "release": "development_not_production_validated",
@@ -197,28 +198,35 @@ def report(
 
 
 @app.command()
-def opportunities(target: Path = Path(".")):
+def opportunities(
+    target: Path = Path("."),
+    source: Literal["scan", "collector"] = "scan",
+    project: str | None = None,
+    period: str = "7d",
+    endpoint: str = "http://127.0.0.1:8080",
+):
+    if source == "collector":
+        from uuid import UUID
+
+        try:
+            project_id = UUID(project or os.getenv("CUTBACK_PROJECT_ID", ""))
+        except ValueError:
+            fail("PROJECT_REQUIRED", "supply --project UUID or CUTBACK_PROJECT_ID")
+        output(
+            request(
+                "GET",
+                endpoint,
+                f"/v1/projects/{project_id}/opportunities",
+                params={"start": period_start(period).isoformat()},
+            )
+        )
+        return
     from cutback.scanner import scan
 
     result = scan(target)
-    output(
-        {
-            "evidence_status": "discovered",
-            "quality_status": "not_evaluated",
-            "expected_savings_usd": None,
-            "opportunities": [
-                {
-                    "id": site["call_site_id"],
-                    "type": "measure_and_evaluate",
-                    "source": site["evidence"][0],
-                    "model": site["requested_model"],
-                    "reason": "static_usage_found_without_runtime_or_quality_evidence",
-                    "next_action": "instrument_then_import_authorized_representative_examples",
-                }
-                for site in result["call_sites"]
-            ],
-        }
-    )
+    from cutback.optimizer import static_opportunities
+
+    output(static_opportunities(result))
 
 
 @app.command()
@@ -364,7 +372,7 @@ def migrate():
             "MIGRATION_FAILED",
             "inspect database connectivity and migration version; credentials are not logged",
         )
-    output({"status": "migrated", "revision": "0001"})
+    output({"status": "migrated", "revision": "0002"})
 
 
 @project_app.command("create")
@@ -384,8 +392,10 @@ def create_project(
 
 @keys_app.command("create")
 def create_key(
-    project: str,
-    role: Literal["ingest", "viewer"],
+    project: Annotated[str, typer.Option("--project")],
+    role: Annotated[
+        Literal["ingest", "viewer", "analyst", "editor", "project_admin"], typer.Option("--role")
+    ],
     destination: Annotated[Path, typer.Option("--output")],
     environment: str = "staging",
     endpoint: str = "http://127.0.0.1:8080",
@@ -418,6 +428,8 @@ def create_key(
         }
     )
 
+
+register(app, output, request, fail)
 
 if __name__ == "__main__":
     app()

@@ -15,6 +15,7 @@ class ScannerConfig(StrictModel):
     follow_local_call_graph: bool = True
     max_file_bytes: int = Field(default=1_048_576, ge=1024, le=10_485_760)
     max_files: int = Field(default=20000, ge=1, le=100000)
+    max_seconds: float = Field(default=30, ge=1, le=300)
 
 
 class ProjectConfig(StrictModel):

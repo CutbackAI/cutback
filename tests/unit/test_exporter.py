@@ -29,7 +29,8 @@ def test_bounded_export_failure_counters_and_no_redirect(monkeypatch, event, sta
         assert health["observed"] == 1
         assert health.get("exported", 0) == (1 if status == 200 else 0)
         assert health.get("dropped", 0) == (0 if status == 200 else 1)
-        assert len(calls) == 1  # No unbounded retries.
+        assert len(calls) == 2  # One event batch and one metadata health report; no retries.
+        assert calls[1].url.path == "/v1/ingest/health"
     finally:
         exporter.close()
 

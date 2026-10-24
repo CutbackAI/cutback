@@ -1,15 +1,16 @@
-# Current limitations and release blockers
+# Scope and acceptance limits
 
-The current development slice is useful for offline inventory and locally tested metadata observation. It is not the completed master product and is not production-ready.
+This is a tested Python-first pre-alpha, not production validation or completion of the later enterprise/commercial roadmap.
 
-- Scanner: Python only. No exhaustive recall claim. Conservative resolution misses factories, instance attributes and dynamic plugin imports. Multiple assignments are unresolved. Cross-file resolution covers straightforward source modules, not arbitrary installed/import roots. Nested gitignore files, full endpoint decorators, robust move reconciliation and annotated precision/recall benchmarks remain open. Source line shifts preserve IDs; file moves and same-symbol sink reordering may not.
-- Runtime: only OpenAI 2.29.0 resource methods, with synthetic compatibility evidence. Individual internal retries, all streaming helper variants, live calls, Lambda freeze and multiworker performance are not validated. Process init should occur after worker fork. Source attribution is explicit `workflow(...)`; automatic runtime-to-scan matching remains open.
-- Export: bounded queue (default 512), batches up to 50, no disk spool, zero automatic retries, 300ms HTTP timeout default. Delivery is best effort. Process exit, short-lived runtimes, saturation and collector failures can lose data. Counters are process-local; remote health aggregation remains open. HTTPX timeout is per network phase; an in-flight daemon export may outlive a bounded `flush` wait, while the caller returns at the flush deadline.
-- Collector: PostgreSQL only; local single-instance quotas, bootstrap admin and project viewer/ingest roles. Full user/RBAC/OIDC, distributed rate limiting, richer key lifecycle, health persistence, public TLS deployment tests and production DB least privilege remain open. No public infrastructure was created.
-- Operations: no scheduled retention worker or long-lived daily aggregates yet. Do not collect real personal data before retention/deletion jobs and restore validation are operational. Backup instructions exist, but an encrypted external backup/restore drill is not yet demonstrated. M3 is partial.
-- Pricing: two OpenAI text models and explicit aliases, effective from checked date. No regional, batch, flex, tool, multimodal, contract override, refresh job or invoice reconciliation. Earlier timestamps and unlisted usage are unpriced. A price is an estimate from provider-reported usage, not a provider bill.
-- Later milestones: payload capture/object stores, fixture/dataset automation, semantic evaluation, budgeted experiments, patch recommendations, React dashboard, agent-specific packages, Helm/IaC and commercial service are not implemented. No placeholder endpoint claims otherwise.
-- Public release: namespace ownership, trademark review, independent public example integration, full dependency security/license gate, release signing/SBOM and clean-machine onboarding remain release requirements.
+- Scanner resolution is conservative. Dynamic imports/providers, mutation and arbitrary frameworks can remain unresolved. Counts and annotated fixture precision/recall are not universal coverage. Partial time-budget analysis is explicit.
+- Only documented SDK versions/surfaces are supported. Abandoned streams, process exit, queue saturation and outages can lose data. Population coverage remains unknown.
+- Local SDK/HTTP/PostgreSQL/browser/backup tests use synthetic inference. They do not prove paid provider behavior, remote TLS, cloud freezing, real S3 permissions/lifecycle or production performance.
+- Public-rate accounting is not an invoice. Unsupported rates/units stay unpriced. Retained daily summaries cannot reconstruct partial days, combined latency quantiles or distinct cross-day operation identities.
+- Capture/import requires rights and policy approval. Redaction is incomplete. File storage is locally exercised; S3 has driver contract tests. Operators own ACLs, keys/rotation/recovery, storage version history, lifecycle/orphan reconciliation, backup expiry and legal holds.
+- Evaluation supports declared deterministic text/structured metrics and provisional judges. Grouping/stratification are heuristics; small or unrepresentative datasets remain insufficient. No arbitrary writing-quality guarantee, customer savings or production tier-5 evidence is invented.
+- Budgets cover modeled costs under frozen supported contracts; invoice changes, taxes, infrastructure and local hardware economics are separate. Uncertain charges retain reservations; worker crashes do not trigger automatic billable retries.
+- Generated patches support source-bound literal model changes and rollback. Dynamic/provider migrations and separately changed prompt templates need inspected custom changes. Deployment and traffic remain operator decisions.
+- The dashboard has authenticated browser/mobile/accessibility smoke evidence. Advanced authoring uses versioned JSON/CLI contracts. Agent bundles have validated formats and executable CLI evidence; discovery in every third-party client needs independent acceptance.
+- M8 follows validated demand: TS/JS, more providers, enterprise identity, large-scale analytics/storage/Helm/IaC, advanced routing/fine-tuning, hosted cloud and billing remain later scope. No paid infrastructure was provisioned.
 
-See progress.md for exact evidence and the ordered next tasks.
-
+See progress.md and evidence/public-acceptance.md for demonstrated results and external gates.

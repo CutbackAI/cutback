@@ -1,0 +1,84 @@
+name: cutback-selfhost
+services:
+  postgres:
+    image: postgres:17-alpine@sha256:eee6c6e1b0894fa4fe0075eb054af9fd1cf39a35321c2d4110626cfe506411fb
+    environment:
+      POSTGRES_USER: cutback
+      POSTGRES_DB: cutback
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets: [db_password]
+    volumes: ["database:/var/lib/postgresql/data"]
+    networks: [backend]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cutback -d cutback"]
+      interval: 5s
+      retries: 20
+    restart: unless-stopped
+  collector:
+    build:
+      context: ../..
+      dockerfile: infra/compose/Dockerfile
+    environment: &runtime
+      CUTBACK_DB_HOST: postgres
+      CUTBACK_DB_PASSWORD_FILE: /run/secrets/db_password
+      CUTBACK_ADMIN_TOKEN_FILE: /run/secrets/admin_token
+      CUTBACK_TRUSTED_PROXIES: 172.31.243.2
+      CUTBACK_EXPERIMENT_EXECUTION: "false"
+    secrets: [db_password, admin_token]
+    networks: [backend, edge]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+  worker:
+    build:
+      context: ../..
+      dockerfile: infra/compose/Dockerfile
+    environment:
+      <<: *runtime
+      CUTBACK_PROCESS: worker
+    secrets: [db_password, admin_token]
+    networks: [backend]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+  proxy:
+    image: caddy:2.11.7-alpine@sha256:eb4d35b7452d1ab6171fbdbe8d9275b2301dad6dad92115d91e19fb9b24d510f
+    environment:
+      CUTBACK_DOMAIN: ${CUTBACK_DOMAIN:?Set the approved public collector hostname}
+      CUTBACK_TLS_EMAIL: ${CUTBACK_TLS_EMAIL:?Set the certificate contact email}
+    ports: ["80:80", "443:443"]
+    volumes: ["./Caddyfile:/etc/caddy/Caddyfile:ro", "certificates:/data", "proxy_config:/config"]
+    networks:
+      edge:
+        ipv4_address: 172.31.243.2
+    depends_on: [collector]
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+networks:
+  backend:
+    internal: true
+  edge:
+    ipam:
+      config:
+        - subnet: 172.31.243.0/28
+volumes:
+  database:
+  certificates:
+  proxy_config:
+secrets:
+  db_password:
+    file: ./secrets/db_password
+  admin_token:
+    file: ./secrets/admin_token

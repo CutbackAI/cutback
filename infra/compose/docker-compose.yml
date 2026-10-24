@@ -34,6 +34,25 @@ services:
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
     restart: unless-stopped
+  worker:
+    build:
+      context: ../..
+      dockerfile: infra/compose/Dockerfile
+    environment:
+      CUTBACK_DB_HOST: postgres
+      CUTBACK_DB_PASSWORD_FILE: /run/secrets/db_password
+      CUTBACK_ADMIN_TOKEN_FILE: /run/secrets/admin_token
+      CUTBACK_PROCESS: worker
+      CUTBACK_EXPERIMENT_EXECUTION: "false"
+    secrets: [db_password, admin_token]
+    depends_on:
+      collector:
+        condition: service_started
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
 secrets:
   db_password:
     file: ./secrets/db_password

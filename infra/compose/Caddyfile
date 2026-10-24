@@ -1,0 +1,11 @@
+{
+    admin off
+    email {$CUTBACK_TLS_EMAIL}
+}
+{$CUTBACK_DOMAIN} {
+    encode gzip
+    request_body {
+        max_size 1MB
+    }
+    reverse_proxy collector:8080
+}

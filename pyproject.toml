@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cutback"
-version = "0.1.0.dev0"
+version = "0.1.0.dev1"
 description = "Independent, evidence-aware AI application cost observation and optimization"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -19,7 +19,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
 ]
-dependencies = ["pydantic>=2.12,<3", "typer>=0.20,<1", "PyYAML>=6,<7", "pathspec>=1,<2"]
+dependencies = ["pydantic>=2.10.6,<3", "typer>=0.20,<1", "PyYAML>=6,<7", "pathspec>=1,<2"]
 
 [project.urls]
 Homepage = "https://github.com/CutbackAI/cutback"
@@ -30,7 +30,18 @@ Documentation = "https://github.com/CutbackAI/cutback/tree/main/docs"
 [project.optional-dependencies]
 instrumentation = ["httpx>=0.28,<1", "opentelemetry-api>=1.38,<2"]
 openai = ["cutback[instrumentation]", "openai==2.29.0"]
-server = ["fastapi>=0.120,<1", "uvicorn>=0.38,<1", "sqlalchemy>=2.0.44,<3", "alembic>=1.17,<2", "psycopg[binary]>=3.2,<4"]
+server = ["cutback[eval]", "fastapi>=0.120,<1", "uvicorn>=0.38,<1", "sqlalchemy>=2.0.44,<3", "alembic>=1.17,<2", "psycopg[binary]>=3.2,<4"]
+eval = [
+    "cryptography>=50,<51",
+    "jsonschema>=4.25,<5",
+]
+anthropic = [
+    "cutback[instrumentation]",
+    "anthropic==2.3.0",
+]
+storage = [
+    "boto3>=1.43.118",
+]
 
 [dependency-groups]
 dev = ["pytest>=8.4,<10", "pytest-cov>=7,<8", "ruff>=0.14,<1", "mypy>=1.18,<2", "types-PyYAML>=6", "build>=1.3,<2", "pip-audit>=2.9,<3", "twine>=6,<7"]
@@ -45,10 +56,14 @@ packages = ["src/cutback"]
 include = [
   "/src", "/tests", "/examples", "/README.md", "/LICENSE", "/NOTICE",
   "/pyproject.toml", "/uv.lock", "/.python-version", "/scripts/wheel_smoke.py",
+  '/web/src','/web/scripts','/web/tests','/web/package.json','/web/package-lock.json',
+  '/web/openapi.json','/web/index.html','/web/tsconfig.json','/web/vite.config.ts',
+  '/web/playwright.config.ts','/skills','/AGENTS.md','/CONTRIBUTING.md','/CHANGELOG.md',
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["tests"]
 markers = ["postgres: requires CUTBACK_TEST_DATABASE_URL", "e2e: local HTTP/PostgreSQL integration"]
 
 [tool.ruff]
@@ -60,6 +75,9 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.ruff.lint.per-file-ignores]
 "src/cutback/server/api.py" = ["B008"] # FastAPI dependency defaults are its documented API.
+"src/cutback/server/operations.py" = ["B008"]
+"src/cutback/server/evaluation_api.py" = ["B008"]
+"src/cutback/server/privacy_api.py" = ["B008"]
 
 [tool.mypy]
 python_version = "3.11"

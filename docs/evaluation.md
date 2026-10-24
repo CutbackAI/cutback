@@ -1,8 +1,42 @@
-# Evaluation work is deferred until the telemetry gate is closed
+# Datasets, budgets and evidence
 
-Current reports always show semantic quality `NOT VERIFIED`. Static opportunities have unknown savings. No dataset importer, judge, optimizer runner or paid inference worker is advertised in this revision.
+Tiers: 0 opportunity; 1 technical contract; 2 historical-reference alignment; 3 judge proxy; 4 independent held-out labels/tests; 5 controlled production evidence. A judge preference never verifies semantic correctness. No tier-5 result is fabricated.
 
-The next implementation must preserve the master handoff's evidence tiers: opportunity only; contract checks; baseline alignment; judge-assessed proxy; independent held-out labels; controlled production evidence. Model agreement and a judge preference do not establish independent correctness.
+## Evidence
 
-Before any runner is implemented, add immutable dataset provenance/hashes, grouped train/validation/held-out splits, rights/vendor constraints, predeclared metrics and uncertainty, audited approvals, and worst-case budget reservation across baseline, candidate, retry and judge requests. No key alone authorizes spend. No optimization may silently apply a production change.
+`cutback datasets discover --target .` indexes fixture paths without reading/uploading content. Imports require a project-admin policy with approval reference, rights basis, environment/workflow/provider allowlists, expiry, sampling, byte/sample limits and retention. The server capture switch and encrypted store must also be configured. Redaction is defense in depth, not deidentification proof.
 
+Dataset imports contain workflow/environment/policy, source_type/provenance_ref, independent_labels/representative attestations, split_seed and cases. A case has id/input, optional gold/reference, customer group and stratum. Old model outputs are references, not gold. Synthetic evidence stays synthetic and cannot establish representative customer verification.
+
+Inputs, references, labels, prompt variants and rubrics are encrypted separately. PostgreSQL keeps safe pointers/hashes/provenance/metrics; purpose-scoped admin content reads are audited. Provider keys stay in the worker, never the browser.
+
+Frozen hashes include content and provenance. Normalized duplicates are unioned with customer groups before seeded stratified train/validation/test assignment. Rare groups/missing splits are flagged. This is selected near-duplicate detection, not universal semantic deduplication. Training examples never become held-out test evidence.
+
+## Plan, approve and run
+
+```sh
+cutback datasets import PROJECT_UUID dataset.json
+cutback experiments plan PROJECT_UUID DATASET_UUID gpt-4.1 classify --max-usd 1 --max-requests 100 --minimum-accuracy 0.9 --output plan.json
+cutback experiments submit PROJECT_UUID plan.json
+cutback experiments approve PROJECT_UUID PLAN_UUID PLAN_HASH approval-reference
+cutback experiments run PROJECT_UUID PLAN_UUID
+cutback experiments report PROJECT_UUID RUN_UUID
+```
+
+Defaults authorize zero dollars. Without independent labels/criteria, automatic plans use technical nonempty checks and cannot verify semantics. Check provider, context, format/tool requirements and sample scope before approving candidates. Custom frozen plans can contain prompt variants.
+
+Approval authorizes the exact hash for one run; queueing consumes it. Worker inference is disabled by default. Enable `CUTBACK_EXPERIMENT_EXECUTION` only with approval and a distinct `CUTBACK_EXPERIMENT_OPENAI_KEY`, or `CUTBACK_LOCAL_INFERENCE_ENDPOINT`/optional local key. Ambient application keys are never borrowed implicitly. Missing credentials block a queued run without a provider call.
+
+The shared ledger reserves maximum modeled cost/request count before baseline, candidate and judge calls. Supported text input bytes/framing/output limits bound reservations. Unknown prices/providers/regions/capabilities are refused. No hidden retries or production tools execute. Wall/request limits apply; errors, cancellations, lost responses and crashed leases retain reservations. Lost leases fail rather than repeating a potentially billed operation.
+
+The cap covers modeled inference under the frozen supported rate contract, not invoices, taxes or infrastructure. Local compute uses the approved customer upper-bound assumption. Unsupported actual usage stops execution. Reports distinguish known subtotals, incomplete spend and reservations.
+
+## Metrics and changes
+
+Exact labels include hashed confusion labels. Extraction uses field F1/TP/FP/FN; malformed/missing outputs contribute failures/false negatives. Schema/nonempty checks do not become semantic accuracy. External schema references and untrusted regexes are refused; collector plugins do not execute arbitrary evaluators.
+
+Repeated runs retain variation and latency. Confidence resamples whole duplicate/customer groups with a fixed seed; exact labels also use Wilson bounds. Small/uniform-set bootstrap intervals can be weak: inspect independent groups/strata/failures. Verification requires predeclared thresholds/regression, adequate samples/groups, independent labels, representativeness and test split. Monthly savings stay unknown without defensible volume/coverage.
+
+Optional judges use approved vendors/data and the same budget, freeze the rubric hash, blind/randomize answer positions and report invalid votes. Results remain NOT VERIFIED without independent evidence; production decisions need customer calibration.
+
+Reviewed recommendations generate source/commit/hash-checked model diffs and rollback. Dynamic/provider/prompt migrations need inspected custom diffs. Canary logic reports guardrail/rollback decisions without changing traffic.

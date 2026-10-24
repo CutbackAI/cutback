@@ -1,11 +1,65 @@
 {
   "schema_version": "1.0",
-  "snapshot_id": "public-text-2026-10-23-v1",
-  "checked_at": "2026-10-23",
+  "snapshot_id": "public-text-2026-10-24-v2",
+  "checked_at": "2026-10-24",
   "provenance": "Manually transcribed numerical public rate facts from official model pages; no upstream code or bulk catalog copied.",
-  "limitations": ["Small text-only seed", "No automatic refresh", "Not an invoice", "Rates may change after checked_at", "No tool, audio, image generation, batch, flex, regional or contract rates"],
+  "limitations": [
+    "Small text-only seed",
+    "No automatic refresh",
+    "Not an invoice",
+    "Rates may change after checked_at",
+    "No tool, audio, image generation, batch, flex, regional or contract rates"
+  ],
   "rates": [
-    {"provider": "openai", "model": "gpt-4.1-mini", "aliases": ["gpt-4.1-mini-2025-04-14"], "input": "0.40", "cache_read": "0.10", "output": "1.60", "effective_from": "2026-10-23T00:00:00+00:00", "source": "https://developers.openai.com/api/docs/models/gpt-4.1-mini"},
-    {"provider": "openai", "model": "gpt-4.1", "aliases": ["gpt-4.1-2025-04-14"], "input": "2.00", "cache_read": "0.50", "output": "8.00", "effective_from": "2026-10-23T00:00:00+00:00", "source": "https://developers.openai.com/api/docs/models/gpt-4.1"}
+    {
+      "provider": "openai",
+      "model": "gpt-4.1-mini",
+      "aliases": [
+        "gpt-4.1-mini-2025-04-14"
+      ],
+      "input": "0.40",
+      "cache_read": "0.10",
+      "output": "1.60",
+      "effective_from": "2026-10-23T00:00:00+00:00",
+      "source": "https://developers.openai.com/api/docs/models/gpt-4.1-mini"
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-4.1",
+      "aliases": [
+        "gpt-4.1-2025-04-14"
+      ],
+      "input": "2.00",
+      "cache_read": "0.50",
+      "output": "8.00",
+      "effective_from": "2026-10-23T00:00:00+00:00",
+      "source": "https://developers.openai.com/api/docs/models/gpt-4.1"
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-6",
+      "aliases": [],
+      "input": "3",
+      "output": "15",
+      "cache_read": "0.30",
+      "cache_write": "3.75",
+      "cache_write_1h": "6",
+      "effective_from": "2026-10-24T00:00:00+00:00",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing"
+    },
+    {
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5",
+      "aliases": [
+        "claude-haiku-4-5-20251001"
+      ],
+      "input": "1",
+      "output": "5",
+      "cache_read": "0.10",
+      "cache_write": "1.25",
+      "cache_write_1h": "2",
+      "effective_from": "2026-10-24T00:00:00+00:00",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing"
+    }
   ]
 }

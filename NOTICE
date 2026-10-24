@@ -8,3 +8,8 @@ code or catalog is vendored. The pricing seed contains numerical public pricing
 facts with official URLs and provenance, not copied provider prose.
 See uv.lock and docs/dependencies.md for the dependency and license inventory.
 
+The included dashboard bundles React, React DOM and Scheduler (MIT), with Vite
+build helpers. Their copyright and license texts are distributed in
+cutback/dashboard/licenses/ alongside the built assets. The complete frontend
+source and npm lockfile are in the public repository's web/ directory.
+

@@ -5,6 +5,7 @@ import sys
 import pytest
 from typer.testing import CliRunner
 
+from cutback import __version__
 from cutback.cli import app
 from cutback.core.config import validate_endpoint
 
@@ -24,7 +25,7 @@ def test_import_offline_no_optional_modules():
 
 def test_cli_help_doctor_and_scan(tmp_path):
     assert runner.invoke(app, ["--help"]).exit_code == 0
-    assert runner.invoke(app, ["--version"]).stdout.strip() == "0.1.0.dev0"
+    assert runner.invoke(app, ["--version"]).stdout.strip() == __version__
     doctor = runner.invoke(app, ["doctor", "--json"])
     assert doctor.exit_code == 0
     assert json.loads(doctor.stdout)["network_probe"] == "not_performed"

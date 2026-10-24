@@ -2,6 +2,7 @@
 
 import email
 import tarfile
+import tomllib
 import zipfile
 from pathlib import Path
 
@@ -24,7 +25,10 @@ def check(directory: Path):
         names = wheel.namelist()
         (metadata_name,) = (name for name in names if name.endswith(".dist-info/METADATA"))
         metadata = email.message_from_bytes(wheel.read(metadata_name))
-        if metadata["Name"] != "cutback" or metadata["Version"] != "0.1.0.dev0":
+        version = tomllib.loads(
+            (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text()
+        )["project"]["version"]
+        if metadata["Name"] != "cutback" or metadata["Version"] != version:
             raise ValueError("unexpected release identity")
         if "Development Status :: 2 - Pre-Alpha" not in metadata.get_all("Classifier", []):
             raise ValueError("development status must be explicit")

@@ -39,7 +39,7 @@ class ProjectInput(StrictModel):
 
 
 class KeyInput(StrictModel):
-    role: Literal["ingest", "viewer"]
+    role: Literal["ingest", "viewer", "analyst", "editor", "project_admin"]
     environment: ShortName = "staging"
     expires_in_days: int = Field(default=30, ge=1, le=365)
 
@@ -123,6 +123,15 @@ def create_app(
             return error("INTERNAL_ERROR", 500, request.state.request_id, True)
         response.headers["X-Request-ID"] = request.state.request_id
         response.headers["Cache-Control"] = "no-store"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Referrer-Policy"] = "no-referrer"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; script-src 'self'; "
+            "style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; "
+            "object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+        )
+        if request.url.scheme == "https":
+            response.headers["Strict-Transport-Security"] = "max-age=31536000"
         return response
 
     @app.exception_handler(RequestValidationError)
@@ -165,6 +174,9 @@ def create_app(
                 increment("rate_limited")
                 raise HTTPException(429, "RATE_LIMITED")
         if token_matches(token, admin_digest):
+            from cutback.server.operations import enforce_quota
+
+            enforce_quota(sessions, hashed, rate_limit)
             return {"role": "admin", "actor": "bootstrap_admin"}
         with sessions() as session:
             key_row = session.scalar(select(AccessKey).where(AccessKey.digest == hashed))
@@ -175,16 +187,28 @@ def create_app(
             ):
                 increment("auth_failures")
                 raise HTTPException(401, "INVALID_OR_EXPIRED_KEY")
-            return {
+            identity = {
                 "role": key_row.role,
                 "project_id": key_row.project_id,
                 "environment_id": key_row.environment_id,
                 "actor": str(key_row.id),
             }
+        from cutback.server.operations import enforce_quota
+
+        enforce_quota(sessions, hashed, rate_limit)
+        return identity
 
     def scope(auth, project_id, roles=("viewer", "admin")):
-        if auth["role"] not in roles or (
-            auth["role"] != "admin" and auth["project_id"] != project_id
+        hierarchy = {
+            "viewer": {"viewer", "analyst", "editor", "project_admin", "admin"},
+            "analyst": {"analyst", "editor", "project_admin", "admin"},
+            "editor": {"editor", "project_admin", "admin"},
+            "admin": {"project_admin", "admin"},
+            "ingest": {"ingest"},
+        }
+        permitted = set().union(*(hierarchy.get(role, {role}) for role in roles))
+        if auth["role"] not in permitted or (
+            auth.get("project_id") is not None and auth["project_id"] != project_id
         ):
             raise HTTPException(403, "SCOPE_DENIED")
 
@@ -197,7 +221,7 @@ def create_app(
         with sessions() as session:
             session.execute(text("SELECT 1"))
             revision = session.execute(text("SELECT version_num FROM alembic_version")).scalar()
-            if revision != "0001":
+            if revision != "0002":
                 raise HTTPException(503, "MIGRATION_REQUIRED")
         return {"status": "ready", "schema_revision": revision}
 
@@ -294,6 +318,25 @@ def create_app(
                 )
             )
         return {"status": "revoked"}
+
+    @app.get("/v1/projects/{project_id}/keys")
+    def key_list(project_id: UUID, auth=Depends(authorize)):
+        scope(auth, project_id, ("admin",))
+        with sessions() as session:
+            return [
+                {
+                    "id": str(row.id),
+                    "role": row.role,
+                    "expires_at": row.expires_at.isoformat() if row.expires_at else None,
+                    "revoked_at": row.revoked_at.isoformat() if row.revoked_at else None,
+                }
+                for row in session.scalars(
+                    select(AccessKey)
+                    .where(AccessKey.project_id == project_id)
+                    .order_by(AccessKey.id)
+                    .limit(100)
+                )
+            ]
 
     @app.post("/v1/ingest/events")
     def ingest(body: EventBatch, auth=Depends(authorize)):
@@ -397,4 +440,20 @@ def create_app(
             )
         return Response(output + "\n", media_type="text/plain")
 
+    from cutback.server.operations import install_operations
+
+    install_operations(app, sessions, authorize, scope, repository)
+    from cutback.server.evaluation_api import install_evaluation
+
+    install_evaluation(app, sessions, authorize, scope)
+    from cutback.server.privacy_api import install_privacy
+
+    install_privacy(app, sessions, authorize, scope)
+    from importlib.resources import files
+
+    from fastapi.staticfiles import StaticFiles
+
+    dashboard = files("cutback").joinpath("dashboard")
+    if dashboard.joinpath("index.html").is_file():
+        app.mount("/dashboard", StaticFiles(directory=str(dashboard), html=True), name="dashboard")
     return app

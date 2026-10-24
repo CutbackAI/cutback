@@ -1,0 +1,13 @@
+# Cutback workflow
+
+For instrumentation, inspect the process/handler entry point and existing SDK wrappers. Generate `cutback instrument --plan --target . --entrypoint path.py --json`. The bootstrap uses `CUTBACK_ENABLED=false` until configured; provider choices come from `CUTBACK_PROVIDERS`. Apply within the user's authorized scope. Use a scoped ingest key and HTTPS outside localhost; keep control keys separate. Validate native responses, errors, stream completion, retries, absence of content, outage behavior, and bounded handler flushing before describing a deployment as supported.
+
+For self-hosting, use the released Compose definition, external PostgreSQL interface, reverse-proxy trust configuration and backup/restore playbook. Local Docker services are development services; cloud/staging/production deployment needs the user's destination and approval. Run a synthetic pipeline first. A genuine provider acceptance call requires a permitted key, data, vendor and dollar cap.
+
+For evidence, run `cutback datasets discover` first; it indexes candidate paths without uploading contents. Prepare a scoped capture policy only after rights approval. Imports go to an encrypted store. Freeze dataset provenance, duplicate/customer groups and train/validation/test splits. Historical outputs are references rather than independent labels. Choose a business metric with the owner when none is defensible; deterministic contract checks can still run with semantic quality marked NOT VERIFIED.
+
+For experiments, `cutback experiments plan` chooses cheaper catalog candidates conservatively. Review provider/context/format compatibility, frozen dataset hash, metric and worst-case budget. Submit the plan, approve its exact hash, then queue one run. Execution is disabled by default; a separately configured worker uses an experiment-specific key. Baseline, candidates and judges share the pre-call reservation ledger. Errors retain reservations. A lost worker lease is failed rather than automatically retried.
+
+For changes, export a recommendation, review it, and use `cutback recommendations patch --dry-run` with scan, call-site ID and current source hash. The generator checks source/commit/model identity and emits both the patch and rollback diff. Dynamic model expressions, provider migrations and separately edited prompt templates require an inspected manual diff. Present the dataset/run/plan evidence with the change. Staging/canary guardrails are operator decisions; the engine never changes traffic itself.
+
+Finish with demonstrated results, supported version/scope, known gaps, and a short ordered list of genuinely external decisions. Preserve incomplete work in the progress ledger; synthetic fixtures never become customer savings claims.

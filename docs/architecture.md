@@ -1,31 +1,15 @@
 # Architecture
 
-The development implementation uses one Python distribution with separate modules, not one script. This preserves cheap scanner installs while allowing the collector image to install only its own extras. See ADR-013 for the layout decision.
+The independent package separates scanner/inventory, instrumentation/metadata, collector/PostgreSQL, pricing/valuations, datasets/evaluators/experiments and recommendations/change proposals. CLI and React use the same scoped API. Core import performs no network call or SDK instrumentation.
 
-```mermaid
-flowchart LR
-    Source[Local Python source] --> Scanner[AST scanner]
-    Scanner --> Inventory[Source-linked JSON inventory]
-    App[Customer application and OpenAI SDK] --> Observer[Explicit Cutback bootstrap]
-    Observer --> Queue[Bounded metadata queue]
-    Queue --> HTTP[Configured HTTPS endpoint]
-    HTTP --> Collector[Authenticated FastAPI collector]
-    Collector --> Pricing[Immutable offline price catalog]
-    Collector --> Postgres[(Customer PostgreSQL)]
-    Postgres --> Control[Scoped control API]
-    Control --> CLI[CLI usage report]
-```
+Scanning runs next to source; observation runs where the application executes. New metadata goes to the configured customer collector. A laptop cannot magically observe remote production. PostgreSQL is canonical; SQLite is not substituted for shared telemetry.
 
-- `src/cutback/core`: strict event/config contracts; no server dependency.
-- `scanner`: local AST, bounded files, aliases/constants and conservative call graph. No LLM, imports, prompt text export, historical-usage inference or remote scans.
-- `instrumentation`: explicit process bootstrap; pinned resource hooks; native stream iterators; metadata allowlist; OTel parent context; bounded background JSON export.
-- `pricing`: checksum-verified immutable seed; exact supported aliases, categories and effective dates; Decimal math. Unknown remains null.
-- `server`: FastAPI, separate ingestion/control scopes, PostgreSQL repository, Alembic migrations. No inference, cloud SDK or commercial dependency.
-- `cli`: scan/report, instrumentation diff, local stack helper, migration, project/key administration.
+Telemetry keys are environment/project write-only. Control roles, separate bootstrap admin, hashed expiring/revocable keys, schema/body/time bounds and shared quotas protect distinct boundaries. Queries/mutations enforce credential scope in addition to payload project IDs.
 
-The normalized JSON protocol is `1.0`; OTLP ingestion/export is not implemented. Existing OTel parent context is reused without setting a global tracer provider. We do not add payload attributes to third-party spans. Resource wrappers preserve the original result/error and native Stream type. Internal SDK retries are currently one logical SDK operation; this does not satisfy the full per-attempt specification yet. See ADR-012.
+Content is a denied-by-default separate plane. Approved examples and prompt/rubric artifacts are encrypted in customer file/S3 storage; PostgreSQL keeps safe pointers/hashes/provenance. Policy rights/vendor/environment/workflow scope, expiry, quotas and redaction precede capture/import. Provider credentials never enter events or browser responses.
 
-The PostgreSQL schema currently contains organizations, projects, environments, access keys, metadata events and audit records. Deferred inventory uploads, workflow registries, aggregates, dataset/experiment/rollout tables will be added through forward migrations when those milestones are implemented. Empty or mock implementations are not presented as those subsystems.
+Paired evaluations use a durable pre-call ledger. Jobs use row locks/leases; uncertain operations fail rather than replaying potential charges. Hash approval authorizes one run. Evidence tiers distinguish contracts, references, judges and independent labels. Changes include rollback and never deploy themselves.
 
-Writes acknowledge after transaction commit. Duplicate `(project_id,event_id)` inserts do nothing. Event batches reject atomically when schema/environment/timestamp validation fails. Cost is determined by the server, never accepted from the sender. Historical valuation is preserved with its snapshot ID. Report tokens distinguish provider-reported from estimated/counted usage. Reports do not extrapolate population coverage or claim invoice reconciliation.
+Compose provides collector/worker/PostgreSQL, generated secrets and persistent volumes. A separate TLS reference adds pinned Caddy/private networking/exact proxy trust. Customer DB/secrets/identity remain supported. The free core has no hosted-account gate or company endpoint.
 
+Dashboard OpenAPI/types are generated. Credentials stay in memory; URL filters contain no tokens, and empty states contain no fabricated telemetry/savings.

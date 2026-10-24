@@ -11,6 +11,8 @@ from pydantic import (
     model_validator,
 )
 
+from cutback import __version__
+
 Identifier = Annotated[str, StringConstraints(pattern=r"^[a-zA-Z0-9_.:/-]{1,200}$")]
 TokenCount = Annotated[int, Field(strict=True, ge=0, le=10**12)]
 
@@ -25,7 +27,7 @@ class LLMEvent(StrictModel):
     occurred_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     environment: Identifier
     service_name: Identifier
-    sdk_version: Identifier = "0.1.0.dev0"
+    sdk_version: Identifier = __version__
     trace_id: Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{32}$")]
     span_id: Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{16}$")]
     parent_span_id: Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{16}$")] | None = None
@@ -50,6 +52,7 @@ class LLMEvent(StrictModel):
     output_tokens: TokenCount | None = None
     cache_read_tokens: TokenCount | None = None
     cache_write_tokens: TokenCount | None = None
+    cache_write_1h_tokens: TokenCount | None = None
     reasoning_tokens: TokenCount | None = None
     usage_source: Literal["provider_reported", "counted", "estimated", "unavailable"] = (
         "unavailable"
@@ -73,6 +76,7 @@ class LLMEvent(StrictModel):
             self.output_tokens,
             self.cache_read_tokens,
             self.cache_write_tokens,
+            self.cache_write_1h_tokens,
             self.reasoning_tokens,
         ]
         if self.usage_source == "unavailable" and any(v is not None for v in values):

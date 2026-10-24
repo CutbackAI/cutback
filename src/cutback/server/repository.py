@@ -1,14 +1,15 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from typing import Protocol
 from uuid import UUID, uuid4
 
-from sqlalchemy import BigInteger, Float, cast, func, select
+from sqlalchemy import BigInteger, Float, String, cast, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.sql.elements import ColumnElement
 
 from cutback.core.models import EventBatch, IngestReceipt
 from cutback.pricing import Catalog
-from cutback.server.db import StoredEvent
+from cutback.server.db import DailyUsage, RateOverride, StoredEvent
 
 
 class EventRepository(Protocol):
@@ -25,7 +26,39 @@ class PostgresEventRepository:
     def ingest_batch(self, session, batch, environments):
         accepted = 0
         for event in batch.events:
-            cost = self.catalog.price(event)
+            rates = session.scalars(
+                select(RateOverride)
+                .where(
+                    RateOverride.project_id == batch.project_id,
+                    RateOverride.provider == event.provider,
+                    RateOverride.model == (event.response_model or event.requested_model),
+                    RateOverride.valid_from <= event.occurred_at,
+                    (RateOverride.valid_to.is_(None) | (RateOverride.valid_to > event.occurred_at)),
+                )
+                .order_by(RateOverride.valid_from.desc())
+            ).all()
+            match = next(
+                (
+                    row
+                    for row in rates
+                    if row.region == event.region and row.service_tier == event.service_tier
+                ),
+                None,
+            )
+            override = (
+                {
+                    **match.rates,
+                    "snapshot_id": "project-override:" + str(match.id),
+                    "effective_from": match.valid_from.isoformat(),
+                }
+                if match
+                else None
+            )
+            cost = self.catalog.price(event, override)
+            if match and cost.amount is not None:
+                from dataclasses import replace
+
+                cost = replace(cost, status="contract_rate")
             statement = (
                 insert(StoredEvent)
                 .values(
@@ -56,6 +89,8 @@ class PostgresEventRepository:
         )
 
     def query_usage(self, session, project_id, start, end, group_by):
+        if not session.in_transaction():
+            session.connection(execution_options={"isolation_level": "REPEATABLE READ"})
         table = StoredEvent
         group = {
             "model": table.model_actual,
@@ -70,6 +105,13 @@ class PostgresEventRepository:
         reported = table.event["usage_source"].as_string() == "provider_reported"
         selected: list[ColumnElement] = [
             func.count().label("requests"),
+            func.count(
+                func.distinct(
+                    func.coalesce(
+                        table.event["logical_request_id"].as_string(), cast(table.event_id, String)
+                    )
+                )
+            ).label("operations"),
             func.count(table.cost_usd).label("priced_requests"),
             func.sum(table.cost_usd).label("known_cost"),
             func.sum(input_tokens).filter(reported).label("input_tokens"),
@@ -96,6 +138,8 @@ class PostgresEventRepository:
             requests, priced = row.requests, row.priced_requests
             return {
                 "observed_requests": requests,
+                "observed_attempts": requests,
+                "logical_operations": row.operations,
                 "priced_requests": priced,
                 "unpriced_requests": requests - priced,
                 "modeled_cost_usd": str(row.known_cost)
@@ -122,7 +166,7 @@ class PostgresEventRepository:
             select(group.label("key"), *selected)
             .where(*scope)
             .group_by(group)
-            .order_by(func.count().desc())
+            .order_by(func.sum(table.cost_usd).desc().nullslast(), func.count().desc())
             .limit(101)
         ).all()
         unknown_reasons = session.execute(
@@ -130,7 +174,7 @@ class PostgresEventRepository:
             .where(*scope, table.cost_usd.is_(None))
             .group_by(table.cost_reason)
         ).all()
-        return {
+        result = {
             "schema_version": "1.0",
             "project_id": str(project_id),
             "period": {"from": start.isoformat(), "to": end.isoformat()},
@@ -150,3 +194,101 @@ class PostgresEventRepository:
             "next_action": "validate_coverage_and_collect_authorized_evaluation_evidence",
             "semantic_quality": "NOT VERIFIED",
         }
+        archived = session.scalars(
+            select(DailyUsage)
+            .where(
+                DailyUsage.project_id == project_id,
+                DailyUsage.day >= start.replace(hour=0, minute=0, second=0, microsecond=0),
+                DailyUsage.day < end,
+            )
+            .limit(50001)
+        ).all()
+        if len(archived) > 50000:
+            raise ValueError("REPORT_TOO_LARGE: narrow reporting period")
+        by_key = {group["key"]: group for group in result["groups"]}
+        partial = []
+        for row in archived:
+            if row.day < start or row.day + timedelta(days=1) > end:
+                partial.append(row.day.isoformat())
+                continue  # Daily retention cannot reconstruct partial-day totals.
+            merge_usage(result["summary"], row.report)
+            key = {
+                "model": row.model,
+                "provider": row.provider,
+                "workflow": row.workflow,
+                "environment": row.environment,
+                "day": str(row.day),
+            }[group_by]
+            if key not in by_key:
+                by_key[key] = {
+                    "key": key,
+                    **row.report,
+                    "actual_billed_cost_usd": None,
+                    "cost_evidence": "retained_daily_modeled_cost",
+                }
+            else:
+                merge_usage(by_key[key], row.report)
+        groups_merged = sorted(
+            by_key.values(),
+            key=lambda g: (
+                Decimal(g["known_modeled_cost_subtotal_usd"] or "0"),
+                g["observed_attempts"],
+            ),
+            reverse=True,
+        )
+        result["groups"] = groups_merged[:100]
+        result["groups_truncated"] |= len(groups_merged) > 100
+        result["retention"] = {
+            "archived_daily_rows": len(archived),
+            "partial_days_excluded": sorted(set(partial)),
+            "partial_day_totals_complete": not partial,
+        }
+        if partial:
+            result["summary"]["modeled_cost_usd"] = None
+        return result
+
+
+def merge_usage(target: dict, source: dict):
+    """Sum additive facts; do not average quantiles or invent cross-day operation identities."""
+    old_count = target["observed_attempts"]
+    counts = (
+        "observed_requests",
+        "observed_attempts",
+        "priced_requests",
+        "unpriced_requests",
+        "non_provider_usage_count",
+        "missing_usage_count",
+        "errors",
+    )
+    tokens = (
+        "input_tokens_observed",
+        "output_tokens_observed",
+        "input_tokens_counted_or_estimated",
+        "output_tokens_counted_or_estimated",
+    )
+    for field in (*counts, *tokens):
+        values = [v for v in (target.get(field), source.get(field)) if v is not None]
+        target[field] = sum(values) if values else None
+    known = [
+        Decimal(v)
+        for v in (
+            target.get("known_modeled_cost_subtotal_usd"),
+            source.get("known_modeled_cost_subtotal_usd"),
+        )
+        if v is not None
+    ]
+    target["known_modeled_cost_subtotal_usd"] = str(sum(known)) if known else None
+    target["modeled_cost_usd"] = (
+        target["known_modeled_cost_subtotal_usd"] if not target["unpriced_requests"] else None
+    )
+    for field in ("latency_p50_ms", "latency_p95_ms", "logical_operations"):
+        target[field] = None if old_count else source.get(field)
+    if old_count:
+        target["non_additive_metrics_reason"] = "cannot_reconstruct_from_retained_daily_summaries"
+    target["price_snapshot_ids"] = sorted(
+        set(target.get("price_snapshot_ids", [])) | set(source.get("price_snapshot_ids", []))
+    )
+    target["latest_observation"] = max(
+        filter(None, (target.get("latest_observation"), source.get("latest_observation"))),
+        default=None,
+    )

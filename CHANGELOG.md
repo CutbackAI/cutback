@@ -1,12 +1,9 @@
 # Changelog
 
-## 0.1.0.dev0 — first pre-alpha release, 23 October 2026 (America/Winnipeg)
+## 0.1.0.dev1 — open-source workflow expansion
 
-- Independent Python package, CLI and offline OpenAI/Anthropic AST inventory.
-- Immutable pricing seed with Decimal accounting and explicit unpriced outcomes.
-- OpenAI 2.29.0 sync/async Responses and Chat Completions resource observation, including streaming fixtures.
-- Bounded metadata exporter, project-scoped authenticated collector, PostgreSQL and Alembic migration.
-- Local Compose deployment, CLI reports, privacy/security tests and a synthetic HTTP/PostgreSQL end-to-end test.
+Scanner resolution/coverage, per-attempt OpenAI/Anthropic adapters and legacy compatibility; RBAC/shared quotas/health/retention/backup; catalog overrides/imports and opportunities; encrypted datasets/configs, grouped evaluation and budgeted jobs; reviewed model patches/rollback; React dashboard and agent bundles. Ordinary inference remains synthetic; production and paid validation are not claimed.
 
-Live provider/staging validation, attempt-level retries, full scanner coverage, production operations, experiments, dashboard and later milestones remain open. See docs/progress.md.
+## 0.1.0.dev0 — first pre-alpha
 
+Independent package, offline inventory, pricing seed, experimental OpenAI observation, authenticated collector/PostgreSQL and local synthetic pipeline.

@@ -3,11 +3,15 @@
 import json
 import os
 import subprocess
+import sys
 import tempfile
+import tomllib
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
-wheel = sorted((root / "dist").glob("*.whl"))[-1]
+directory = Path(sys.argv[1]) if len(sys.argv) > 1 else root / "dist"
+version = tomllib.loads((root / "pyproject.toml").read_text())["project"]["version"]
+(wheel,) = directory.glob(f"cutback-{version}-*.whl")
 with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
     environment = Path(temporary) / "venv"
     subprocess.run(["uv", "venv", str(environment), "--python", "3.11"], check=True)
@@ -18,6 +22,7 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
             str(executable),
             "-c",
             "import importlib.util; from cutback.pricing import Catalog; "
+            f"import cutback; assert cutback.__version__=={version!r}; "
             'assert importlib.util.find_spec("openai") is None; '
             'assert importlib.util.find_spec("fastapi") is None; print(Catalog().snapshot_id)',
         ],

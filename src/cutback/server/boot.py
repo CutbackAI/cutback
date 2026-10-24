@@ -24,13 +24,30 @@ def main():
         )
     try:
         migrate()
+        if os.getenv("CUTBACK_PROCESS") == "worker":
+            from cutback.server.worker_boot import main as worker_main
+
+            worker_main()
+            return
         app = create_app(allow_insecure_http=os.getenv("CUTBACK_DEV_HTTP", "false") == "true")
     except Exception:
         raise SystemExit(
             "Cutback startup failed; check runtime configuration and migrations (secrets omitted)"
         ) from None
+    trusted = os.getenv("CUTBACK_TRUSTED_PROXIES", "")
+    if trusted:
+        import ipaddress
+
+        for address in trusted.split(","):
+            ipaddress.ip_address(address)
     uvicorn.run(
-        app, host="0.0.0.0", port=8080, access_log=False, proxy_headers=False, log_level="warning"
+        app,
+        host="0.0.0.0",
+        port=8080,
+        access_log=False,
+        proxy_headers=bool(trusted),
+        forwarded_allow_ips=trusted,
+        log_level="warning",
     )
 
 

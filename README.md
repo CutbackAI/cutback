@@ -1,29 +1,28 @@
 # Cutback
 
-Discover AI call sites locally, without API keys or sending source to an LLM. An experimental metadata-only SDK and customer-owned collector/PostgreSQL pipeline are included for local development.
+Cut your AI costs. Keep your quality.
 
-**Pre-alpha development release.** This is the initial foundation, not the complete optimization product. It does not yet run optimization experiments, verify semantic quality, provide a dashboard, or implement production deployment operations. Runtime contracts are tested with synthetic provider responses; live provider and production acceptance are not claimed. See [current status](https://github.com/CutbackAI/cutback/blob/main/docs/progress.md).
+Cutback discovers AI calls, observes supported runtime usage, evaluates authorized alternatives, and prepares reviewable changes. Apache-2.0 includes the CLI, collector, PostgreSQL, worker, encrypted datasets and React dashboard. No corporate account or hosted service is required.
+
+**Pre-alpha, not production validated.** Tests use synthetic provider responses. Real pilot traffic, representative quality validation, paid requests and production deployment remain explicit approval gates. See [progress](docs/progress.md) and [limitations](docs/limitations.md).
 
 ```sh
 python -m pip install --pre cutback
-cutback --help
-cutback scan /path/to/your/python/project --format table
-cutback scan /path/to/your/python/project --format json
+cutback doctor --json
+cutback scan /path/to/python/project --json
+cutback opportunities --target /path/to/python/project
 ```
 
-The scanner discovers supported OpenAI and Anthropic Python call sites, model/source/prompt references, unresolved values, and a small offline pricing seed. Historical usage, actual spend, latency and quality remain unknown from source alone. It parses source without executing it. No account, provider key, paid request, or external control plane is needed.
+Scanning is offline and never executes the application. Historical tokens, spend, latency and quality remain unknown from source alone. Lower prices establish a candidate, not preserved quality or realized savings.
 
-For development from the repository:
-
-```powershell
-uv sync --all-extras --dev --locked
-uv run cutback --help
-uv run cutback doctor --json
-uv run cutback scan examples/fastapi-mixed-providers --format json
-uv run pytest
+```sh
+uv sync --locked --all-extras --dev
+uv run python infra/compose/prepare.py
+docker compose -f infra/compose/docker-compose.yml up -d --build
+uv run python scripts/demo.py
+uv run cutback dashboard --local
 ```
 
-Optional extras: `cutback[openai]` (pinned experimental SDK adapter) and `cutback[server]` (self-hosted collector). Read the compatibility and operational limitations before enabling either.
+The demo uses synthetic inference and an actual local collector/database. Dashboard credentials are separate control keys held only in browser memory. Read [deployment](docs/deployment.md), [evaluation](docs/evaluation.md), [provider compatibility](docs/providers.md), and [agent setup](docs/agent-integration.md).
 
-See [quickstart](https://github.com/CutbackAI/cutback/blob/main/docs/quickstart.md), [local deployment](https://github.com/CutbackAI/cutback/blob/main/docs/deployment.md), [provider compatibility](https://github.com/CutbackAI/cutback/blob/main/docs/providers.md), and [security](https://github.com/CutbackAI/cutback/security/policy). Apache-2.0. No calls home or implicit paid inference. Independent of any commercial account or cloud vendor.
-
+Extras: `cutback[openai]`, `[anthropic]`, `[instrumentation]`, `[server]`, `[eval]`, `[storage]`. The scanner core contains no SDK, server or GPU dependencies. No calls home, implicit paid inference, automatic production patches or traffic changes.

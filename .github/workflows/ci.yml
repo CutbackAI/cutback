@@ -3,6 +3,22 @@ on: [push, pull_request, workflow_call]
 permissions:
   contents: read
 jobs:
+  legacy-sdk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        python: ['3.11','3.13']
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
+        with:
+          version: '0.12.13'
+          python-version: ${{ matrix.python }}
+          enable-cache: false
+      - run: uv venv /tmp/cutback-legacy --python ${{ matrix.python }}
+      - run: uv pip install --python /tmp/cutback-legacy/bin/python '.[instrumentation]' 'openai==1.55.3' 'pydantic==2.10.6' pytest
+      - run: /tmp/cutback-legacy/bin/python -m pytest tests/unit/test_legacy_sdk.py tests/unit/test_scanner.py tests/unit/test_scanner_extended.py tests/unit/test_scanner_lazy.py -q
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -30,10 +46,22 @@ jobs:
           python-version: ${{ matrix.python }}
           enable-cache: false
       - run: uv sync --locked --all-extras --dev
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts
+        working-directory: web
+      - run: uv run python scripts/export_openapi.py
+      - run: npm run types && npm run build
+        working-directory: web
+      - run: npx playwright install --with-deps chromium
+        working-directory: web
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy
       - run: uv run pytest --cov=cutback --cov-report=term-missing --cov-report=xml
+        env:
+          CUTBACK_TEST_BROWSER: 'true'
       - run: uv build
       - run: uv run python scripts/check_release_artifacts.py
       - run: uv run twine check dist/*

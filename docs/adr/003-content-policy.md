@@ -1,3 +1,3 @@
-# ADR-003: Metadata-only, strict allowlist
+# ADR-003: Explicit payload authorization
 
-Accepted. Default events cannot contain content, arbitrary attributes or raw provider objects. Unknown fields are forbidden. Requested content capture is rejected until a separate authorized encrypted/expiring payload store is implemented. Error messages and provider request identifiers are not exported. This intentionally limits replay/evaluation while protecting day-zero usage monitoring.
+Metadata is the default. Nonstream capture/import requires active policy, rights/vendor/environment/workflow scope, sampling/quota, redaction and encrypted file/S3 storage. Inputs/references/labels and prompt/rubric variants live outside analytical rows. Retention, revocation and audited content access apply; redaction is not deidentification proof.
