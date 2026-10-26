@@ -1,4 +1,8 @@
-# Runnable examples and source fixtures
+# Examples
+
+**Start with the [support-desk application](support_desk/README.md): `uv run cutback demo`.** Its [walkthrough](../docs/testing-the-sample.md) shows a useful end-to-end decision before you study SDK/framework details. No provider key or paid call is needed.
+
+The examples below are supplementary compatibility and integration references.
 
 Start from the repository with `uv sync --locked --all-extras --dev`. The runnable examples below use the **installed pinned native SDKs**, with provider HTTP intercepted by explicitly synthetic transports. They make no paid provider request or model download. Framework development servers bind loopback; they are examples, not production deployments.
 

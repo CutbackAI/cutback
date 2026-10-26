@@ -1,83 +1,65 @@
 # Cutback
 
-Find AI costs. Test alternatives. Review every change.
+Find where an AI application spends money. Test cheaper alternatives against its quality requirements. Review the evidence before changing anything.
 
-Cutback discovers AI calls, observes supported runtime usage, evaluates authorized alternatives, and prepares reviewable changes. Apache-2.0 includes the CLI, collector, PostgreSQL, worker, encrypted datasets and React dashboard. No corporate account or hosted service is required.
+Cutback is an Apache-2.0 Python tool with an offline scanner and a self-hosted collector, PostgreSQL worker and dashboard. **Pre-alpha: synthetic tests demonstrate the workflow; production behavior and real customer savings are not validated.**
 
-**Pre-alpha, not production validated.** Tests use synthetic provider responses. Real pilot traffic, representative quality validation, paid requests and production deployment remain explicit approval gates. See [progress](https://github.com/CutbackAI/cutback/blob/main/docs/progress.md) and [limitations](https://github.com/CutbackAI/cutback/blob/main/docs/limitations.md).
+## Start with a working application
 
-```sh
-python -m pip install --pre cutback
-cutback doctor --json
-cutback scan /path/to/python/project --json
-cutback opportunities --target /path/to/python/project
-```
+The support-desk sample routes tickets by category and priority. It shows why a cheaper configuration that mishandles urgent tickets must be rejected.
 
-To start from another application, give your coding agent the [independent application onboarding request](https://github.com/CutbackAI/cutback/blob/main/docs/application-onboarding.md). Cutback does not require a reference customer application.
-
-Scanning is offline and never executes the application. Historical tokens, spend, latency and quality remain unknown from source alone. Lower prices establish a candidate, not preserved quality or realized savings.
+You need Python 3.11–3.13, uv and running Docker Desktop. The dashboard is already built; no Node setup or provider API key is needed for the sample.
 
 ```sh
-uv sync --locked --all-extras --dev
-uv run python infra/compose/prepare.py
-docker compose -f infra/compose/docker-compose.yml up -d --build
-uv run python scripts/demo.py
-uv run cutback dashboard --local
+git clone https://github.com/CutbackAI/cutback.git
+cd cutback
+uv sync --locked --extra server --extra openai
+uv run cutback demo
 ```
 
-The demo uses synthetic inference and an actual local collector/database. Dashboard credentials are separate control keys held only in browser memory. Read [deployment](https://github.com/CutbackAI/cutback/blob/main/docs/deployment.md), [evaluation](https://github.com/CutbackAI/cutback/blob/main/docs/evaluation.md), [provider compatibility](https://github.com/CutbackAI/cutback/blob/main/docs/providers.md), and [agent setup](https://github.com/CutbackAI/cutback/blob/main/docs/agent-integration.md).
+Wait for `Ready:` in the terminal, then click **Explore sample** in the browser.
 
-The dashboard guides project setup, scoped keys, capture policies, CSV/JSON datasets, frozen experiment plans, budget approval and cancellation. It also exposes team access, retention, contract rates, schedules, rollout records, optional billing and local training jobs. Credentials stay in page memory; closing or reloading signs out.
+| Configuration | Expected sample decision | Why |
+|---|---|---|
+| Baseline | Reference behavior | Classifies ticket category and priority |
+| Compact candidate | Passes sample gates | Preserves synthetic labels with lower modeled fixture cost |
+| Unsafe candidate | Not eligible | Loses urgent priorities; a required criterion fails |
 
-![Actual dashboard with synthetic telemetry](https://raw.githubusercontent.com/CutbackAI/cutback/main/docs/assets/dashboard-synthetic.png)
+**All provider responses in the demo are synthetic.** The scanner, native SDK observation, authenticated HTTP collector, PostgreSQL, encrypted evidence, approvals and worker are real. Fixture prices and latency are not real-model benchmarks, invoices or customer savings. No paid inference occurs.
 
-The screenshot uses synthetic data. Unknown prices and incomplete coverage remain visible.
+The sample stays available for exploration while the command runs. Inspect calls, modeled usage, scorecards, failed cases, smoke/pilot/test receipts and a source diff with rollback. Nothing is applied or deployed. Press Ctrl+C to remove its own temporary database and encrypted artifacts.
 
-| Capability | What works |
-|---|---|
-| Discover | Offline Python scanner; optional JavaScript/TypeScript syntax scanning, stable call-site IDs, explicit unresolved coverage |
-| Observe | Native pinned OpenAI and Anthropic SDKs, sync/async/streams, retry attempts, bounded fail-open export, separate Node observer |
-| Account | PostgreSQL, idempotent ingestion, Decimal pricing, cached/reasoning usage, contract rates, retained summaries and unknown totals |
-| Evaluate | Rights-scoped encrypted datasets, independent labels or provisional judges, paired uncertainty, disjoint pilot elimination, one-run hash approvals |
-| Optimize | Model/prompt alternatives, native prompt caching, bounded routing, explicit encrypted response cache, local HF/PEFT LoRA training |
-| Review | Source-bound model diffs and rollback, approved schedules, canary/guardrail records, evidence tiers and audited actions |
-| Operate | Scoped RBAC, OIDC/PKCE, team grants, deletion/export, backup/restore, Compose, Helm and Terraform references |
+![Synthetic support-desk comparison: compact passes and unsafe fails priority](docs/assets/support-desk-decisions.png)
 
-```mermaid
-flowchart LR
-    Source[Source repository] --> Scanner[Offline scanner]
-    App[Application SDK] --> Observer[Metadata observer]
-    Scanner --> API[Customer collector]
-    Observer --> API
-    API --> DB[(PostgreSQL)]
-    API --> Store[(Opt-in encrypted artifacts)]
-    DB --> UI[CLI and React dashboard]
-    Store --> Worker[Approved experiment or training worker]
-    Worker --> UI
-    UI --> Review[Evidence and reviewable changes]
-```
+Read [the walkthrough and testing checklist](docs/testing-the-sample.md) for every expected result and troubleshooting. The walkthrough requires dev3 or this source checkout; earlier PyPI pre-alphas do not include the new demo command.
 
-Extras: `cutback[openai]`, `[anthropic]`, `[instrumentation]`, `[server]`, `[eval]`, `[storage]`, `[identity]`, `[commercial]`, `[javascript]`. The scanner core contains no SDK, server or GPU dependencies. Training uses a separate locked runtime. Optional commercial integrations do not restrict the OSS pipeline.
-
-For JavaScript/TypeScript scanning:
+## Try the offline scanner without Docker
 
 ```sh
-python -m pip install --pre 'cutback[javascript]'
-cutback scan /path/to/app --language python --language javascript --language typescript --json
+uv run cutback sample support-desk
+uv run cutback scan support-desk
+uv run cutback opportunities --target support-desk
 ```
 
-The [Node SDK](https://github.com/CutbackAI/cutback/blob/main/packages/js-sdk/README.md) is supplied as source and a release tarball; npm publication is separate. Exact supported SDK versions and stream limits are in [provider compatibility](https://github.com/CutbackAI/cutback/blob/main/docs/providers.md).
+This copies a standalone native-SDK app and owned synthetic cases. Scanning parses files without executing them or making a network request. It finds source call sites; historical usage, spend and quality remain unknown until measured. Add `--json` for machine-readable scan/opportunity output.
 
-Run [working examples](https://github.com/CutbackAI/cutback/blob/main/examples/README.md) for both providers, FastAPI, Django, threaded workers and Lambda-style bounded flushing. For the complete scanner → native mocked SDK → HTTP → PostgreSQL → encrypted dataset → approved worker → paired report path:
+## Use your own application
 
-```sh
-uv run python examples/experiment_walkthrough.py
-```
+Start with [application onboarding](docs/application-onboarding.md). Keep your dependencies pinned and save findings in that application's ignored `.cutback/` directory. Prepare an instrumentation diff before authorizing its application or deployment.
 
-That walkthrough performs no paid inference and deletes its own synthetic project afterward. It exercises the same collector and worker used by ordinary authorized runs.
+For runtime observation, connect a scoped ingestion key to your own collector. For optimization, supply permitted examples and explicit quality criteria, review the complete budget, and approve one frozen plan. Metadata is the default; raw content requires a separate active rights policy and encrypted storage. No application name, source or report needs to be published to this repository.
 
-Operations guides: [identity and teams](https://github.com/CutbackAI/cutback/blob/main/docs/identity-and-teams.md), [evaluation](https://github.com/CutbackAI/cutback/blob/main/docs/evaluation.md), [advanced optimization](https://github.com/CutbackAI/cutback/blob/main/docs/advanced-optimization.md), [local training](https://github.com/CutbackAI/cutback/blob/main/docs/local-training.md), [continuous operations](https://github.com/CutbackAI/cutback/blob/main/docs/continuous-operations.md), [optional billing](https://github.com/CutbackAI/cutback/blob/main/docs/hosted-billing.md), and [Helm/Terraform](https://github.com/CutbackAI/cutback/blob/main/infra/README.md). Read [security and privacy](https://github.com/CutbackAI/cutback/blob/main/docs/security-and-privacy.md) before authorizing payload capture.
+## Define what good means
 
-Development uses Python 3.11–3.13, Node 24 and PostgreSQL 17. See [contributing](https://github.com/CutbackAI/cutback/blob/main/CONTRIBUTING.md) for tests and [completion evidence](https://github.com/CutbackAI/cutback/blob/main/docs/product-completion.md) for implemented scope, executed checks and external acceptance gates. No production deployment or real customer savings is implied by a synthetic benchmark.
+[Experiment files](docs/experiment-files.md) describe named model/prompt variants, required criteria, optional rubric judging, budgets and staged execution. The dashboard exposes scorecards, segments, descriptive paired comparisons and audited encrypted case reads. Lower cost never overrides a required quality failure; synthetic results never establish customer quality.
 
-Watch or reproduce the [synthetic demo](https://github.com/CutbackAI/cutback/blob/main/docs/demo.md). Its data is explicitly labeled; it is not a customer benchmark.
+## Explore further
+
+- [Other examples](examples/README.md): sync/async/streams, FastAPI, Django, Lambda, workers and Node.
+- [Provider compatibility](docs/providers.md): exact supported SDKs/models and limitations.
+- [Evaluation](docs/evaluation.md): frozen datasets, independent labels, uncertainty and approval semantics.
+- [Deployment](docs/deployment.md) and [privacy](docs/security-and-privacy.md): customer-owned PostgreSQL, scoped credentials, retention and encrypted payloads.
+- [Agent workflows](docs/agent-integration.md): portable instructions for supported agent clients.
+- [Architecture](docs/architecture.md), [contributing](CONTRIBUTING.md) and [implementation progress](docs/progress.md): internals, executed acceptance and outstanding external gates.
+
+Optional identity, billing, storage, scheduling, routing and training are documented separately. They are not prerequisites for understanding the sample. JavaScript/TypeScript scanning and native Node observation are optional; npm publication is separate. No managed cloud service is operated by this repository.

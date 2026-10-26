@@ -1122,6 +1122,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/experiments/{run_id}/cases/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Content */
+        post: operations["content_v1_projects__project_id__experiments__run_id__cases_content_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1428,6 +1445,22 @@ export interface components {
             /** Purpose */
             purpose: string;
         };
+        /** CriterionSpec */
+        CriterionSpec: {
+            /** Key */
+            key: string;
+            metric: components["schemas"]["MetricSpec"];
+            /**
+             * Required
+             * @default true
+             */
+            required: boolean;
+            /**
+             * Weight
+             * @default 1
+             */
+            weight: number;
+        };
         /** DatasetImport */
         DatasetImport: {
             /** Workflow */
@@ -1466,6 +1499,13 @@ export interface components {
         };
         /** DraftInput */
         DraftInput: {
+            /** Criteria */
+            criteria?: components["schemas"]["CriterionSpec"][];
+            /**
+             * Retain Case Outputs
+             * @default false
+             */
+            retain_case_outputs: boolean;
             /**
              * Dataset Id
              * Format: uuid
@@ -1536,6 +1576,43 @@ export interface components {
             /** Candidates */
             candidates: components["schemas"]["ModelSpec"][];
             metric: components["schemas"]["MetricSpec"];
+            /** Criteria */
+            criteria?: components["schemas"]["CriterionSpec"][];
+            /**
+             * Retain Case Outputs
+             * @default false
+             */
+            retain_case_outputs: boolean;
+            /**
+             * Stage
+             * @default full
+             * @enum {string}
+             */
+            stage: "smoke" | "pilot" | "full";
+            /**
+             * Staged
+             * @default false
+             */
+            staged: boolean;
+            /** Predecessor Run Id */
+            predecessor_run_id?: string | null;
+            /** Sample Limit */
+            sample_limit?: number | null;
+            /**
+             * Judge Swap Orders
+             * @default false
+             */
+            judge_swap_orders: boolean;
+            /**
+             * Judge Require Evidence
+             * @default false
+             */
+            judge_require_evidence: boolean;
+            /**
+             * Judge Max Invalid Fraction
+             * @default 0.2
+             */
+            judge_max_invalid_fraction: number;
             budget: components["schemas"]["Budget"];
             /** Approved Providers */
             approved_providers: ("openai" | "anthropic" | "local")[];
@@ -1608,7 +1685,7 @@ export interface components {
             service_name: string;
             /**
              * Sdk Version
-             * @default 0.1.0.dev2
+             * @default 0.1.0.dev3
              */
             sdk_version: string;
             /** Counters */
@@ -1692,7 +1769,7 @@ export interface components {
             service_name: string;
             /**
              * Sdk Version
-             * @default 0.1.0.dev2
+             * @default 0.1.0.dev3
              */
             sdk_version: string;
             /** Trace Id */
@@ -1816,6 +1893,8 @@ export interface components {
         };
         /** MetricSpec */
         MetricSpec: {
+            /** Output Field */
+            output_field?: string | null;
             /**
              * Kind
              * @enum {string}
@@ -4755,6 +4834,45 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ArtifactAccess"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    content_v1_projects__project_id__experiments__run_id__cases_content_post: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentPurpose"];
             };
         };
         responses: {

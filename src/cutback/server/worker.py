@@ -188,6 +188,9 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False):
                 ):
                     raise ValueError("PROVIDER_POLICY_DENIED")
                 provenance = dataset_row.provenance
+                from cutback.server.stages import validate_stage
+
+                validate_stage(session, store, project_id, plan)
 
             def reserve(amount):
                 if datetime.now(UTC) >= min(
@@ -208,6 +211,8 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False):
                         raise ValueError("CAPTURE_POLICY_REVOKED_OR_EXPIRED")
                 reserve_request(sessions, run_id, job_id, plan.budget, amount)
 
+            from cutback.server.case_evidence import recorder
+
             results = run(
                 plan,
                 dataset,
@@ -217,7 +222,11 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False):
                 representative=provenance["representative"]
                 and provenance["source_type"] != "synthetic_fixture",
                 reserve=reserve,
+                record_case=recorder(sessions, store, project_id, run_id, provenance["policy_id"])
+                if plan.retain_case_outputs
+                else None,
             )
+            results["case_outputs_retained"] = plan.retain_case_outputs
         except Exception:
             results = {
                 "status": "FAILED",

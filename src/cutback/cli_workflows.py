@@ -21,12 +21,32 @@ def register(app, output, request, fail):
     from cutback.cli_advanced import register as register_advanced
 
     advanced_groups = register_advanced(app, output, request)
-    scans = typer.Typer(no_args_is_help=True)
-    prices = typer.Typer(no_args_is_help=True)
-    datasets = typer.Typer(no_args_is_help=True)
-    experiments = typer.Typer(no_args_is_help=True)
-    recommendations = typer.Typer(no_args_is_help=True)
-    worker = typer.Typer(no_args_is_help=True)
+
+    @app.command("compile-experiment")
+    def compile_experiment(source: Path, destination: Path):
+        """Validate a YAML experiment and write a submission file offline; never calls a model."""
+        from cutback.evals.recipes import compile_recipe
+
+        try:
+            output(compile_recipe(source, destination))
+        except (ValueError, OSError):
+            fail(
+                "INVALID_EXPERIMENT_FILE",
+                "Check the YAML schema and use a new destination file; no calls were made.",
+            )
+
+    scans = typer.Typer(no_args_is_help=True, help="Register and compare offline inventories.")
+    prices = typer.Typer(no_args_is_help=True, help="Inspect or import immutable price catalogs.")
+    datasets = typer.Typer(
+        no_args_is_help=True, help="Discover, import and inspect evaluation cases."
+    )
+    experiments = typer.Typer(
+        no_args_is_help=True, help="Plan, approve and inspect bounded evaluations."
+    )
+    recommendations = typer.Typer(
+        no_args_is_help=True, help="Review evidence and export change plans."
+    )
+    worker = typer.Typer(no_args_is_help=True, help="Execute approved queued experiments.")
     for name, group in (
         ("scans", scans),
         ("prices", prices),
@@ -39,6 +59,7 @@ def register(app, output, request, fail):
 
     @scans.command("upload")
     def upload(project: UUID, file: Path, endpoint: str = "http://127.0.0.1:8080"):
+        """Upload using the configured scoped credentials."""
         from cutback.core.inventory import Inventory
 
         body = Inventory.model_validate(read_json(file))
@@ -50,12 +71,14 @@ def register(app, output, request, fail):
 
     @prices.command("show")
     def price_show():
+        """Price show using the configured scoped credentials."""
         from cutback.pricing import Catalog
 
         output(Catalog().data)
 
     @prices.command("update")
     def price_update(file: Path, sha256: str, destination: Path = Path(".cutback/prices")):
+        """Price update using the configured scoped credentials."""
         from cutback.pricing.importer import import_snapshot
 
         if file.stat().st_size > 2097152:
@@ -67,6 +90,7 @@ def register(app, output, request, fail):
 
     @datasets.command("discover")
     def discover(target: Path = Path(".")):
+        """Discover using the configured scoped credentials."""
         from cutback.evals.datasets import discover_fixtures
 
         output({"fixtures": discover_fixtures(target), "content_read": False, "uploaded": False})
@@ -85,6 +109,7 @@ def register(app, output, request, fail):
         independent_labels: bool = False,
         representative: bool = False,
     ):
+        """Prepare records using the configured scoped credentials."""
         from cutback.evals.datasets import DatasetImport
         from cutback.evals.records import read_records
 
@@ -114,6 +139,7 @@ def register(app, output, request, fail):
 
     @datasets.command("import")
     def import_dataset(project: UUID, file: Path, endpoint: str = "http://127.0.0.1:8080"):
+        """Import dataset using the configured scoped credentials."""
         from cutback.evals.datasets import DatasetImport
 
         body = DatasetImport.model_validate(read_json(file))
@@ -139,6 +165,7 @@ def register(app, output, request, fail):
         minimum_accuracy: float | None = None,
         endpoint: str = "http://127.0.0.1:8080",
     ):
+        """Plan experiment using the configured scoped credentials."""
         from cutback.evals.experiments import ModelSpec
         from cutback.evals.planning import draft_plan
 
@@ -176,6 +203,7 @@ def register(app, output, request, fail):
 
     @experiments.command("submit")
     def submit_plan(project: UUID, file: Path, endpoint: str = "http://127.0.0.1:8080"):
+        """Submit plan using the configured scoped credentials."""
         output(
             request(
                 "POST", endpoint, f"/v1/projects/{project}/experiments/plans", json=read_json(file)
@@ -190,6 +218,7 @@ def register(app, output, request, fail):
         approval_ref: str,
         endpoint: str = "http://127.0.0.1:8080",
     ):
+        """Approve plan using the configured scoped credentials."""
         output(
             request(
                 "POST",
@@ -202,6 +231,7 @@ def register(app, output, request, fail):
 
     @experiments.command("run")
     def queue_run(project: UUID, plan_id: UUID, endpoint: str = "http://127.0.0.1:8080"):
+        """Queue run using the configured scoped credentials."""
         output(
             request(
                 "POST",
@@ -213,6 +243,7 @@ def register(app, output, request, fail):
 
     @experiments.command("report")
     def run_report(project: UUID, run_id: UUID, endpoint: str = "http://127.0.0.1:8080"):
+        """Run report using the configured scoped credentials."""
         output(request("GET", endpoint, f"/v1/projects/{project}/experiments/{run_id}"))
 
     @recommendations.command("export")
@@ -221,6 +252,7 @@ def register(app, output, request, fail):
         destination: Annotated[Path | None, typer.Option("--output")] = None,
         endpoint: str = "http://127.0.0.1:8080",
     ):
+        """Export recs using the configured scoped credentials."""
         output(request("GET", endpoint, f"/v1/projects/{project}/recommendations"), destination)
 
     @recommendations.command("patch")
@@ -233,6 +265,7 @@ def register(app, output, request, fail):
         destination: Annotated[Path | None, typer.Option("--output")] = None,
         dry_run: bool = True,
     ):
+        """Patch using the configured scoped credentials."""
         from cutback.changes import model_patch
 
         if not dry_run:
@@ -257,6 +290,7 @@ def register(app, output, request, fail):
 
     @worker.command("maintain")
     def maintenance(apply: bool = False, raw_days: int = 30, aggregate_days: int = 395):
+        """Maintenance using the configured scoped credentials."""
         from cutback.server.db import database
         from cutback.server.operations import maintain_all
         from cutback.server.worker import expire_payloads
@@ -276,6 +310,7 @@ def register(app, output, request, fail):
 
     @worker.command("run")
     def worker_run(once: bool = True):
+        """Worker run using the configured scoped credentials."""
         from cutback.evals.artifacts import configured_store
         from cutback.server.db import database
         from cutback.server.worker import configured_execution_enabled, run_one
@@ -297,6 +332,7 @@ def register(app, output, request, fail):
 
     @app.command("dashboard")
     def dashboard(endpoint: str = "http://127.0.0.1:8080", local: bool = True):
+        """Open an existing collector dashboard; does not start a server."""
         import webbrowser
 
         from cutback.core.config import validate_endpoint
@@ -307,6 +343,7 @@ def register(app, output, request, fail):
 
     @app.command("uninstall")
     def uninstall(target: Path = Path("."), plan: bool = True):
+        """Plan removal of instrumentation and credentials."""
         from cutback.scanner import scan
 
         inventory = scan(target)

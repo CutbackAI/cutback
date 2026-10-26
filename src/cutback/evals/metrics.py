@@ -12,6 +12,7 @@ from cutback.core.models import StrictModel
 
 
 class MetricSpec(StrictModel):
+    output_field: str | None = Field(default=None, pattern=r"^[A-Za-z_][A-Za-z0-9_]{0,63}$")
     kind: Literal[
         "exact_label",
         "field_f1",
@@ -83,6 +84,26 @@ def evaluate(
 ) -> dict:
     if len(cases) != len(outputs) or not cases:
         raise ValueError("paired nonempty cases/outputs required")
+    if metric.output_field:
+        field = metric.output_field
+        projected_cases, projected_outputs = [], []
+        for case, output in zip(cases, outputs, strict=True):
+            gold = case.get("gold")
+            projected_cases.append(
+                {**case, "gold": gold.get(field) if isinstance(gold, dict) else None}
+            )
+            try:
+                parsed = json.loads(output) if output is not None else None
+                value = parsed[field] if isinstance(parsed, dict) else None
+                projected_outputs.append(str(value) if value is not None else None)
+            except (ValueError, KeyError, TypeError):
+                projected_outputs.append(None)
+        return evaluate(
+            projected_cases,
+            projected_outputs,
+            metric.model_copy(update={"output_field": None}),
+            independent_labels=independent_labels,
+        )
     exact, valid, tp, fp, fn = 0, 0, 0, 0, 0
     labels_available = all(case.get("gold") is not None for case in cases)
     confusion: Counter = Counter()
@@ -253,7 +274,7 @@ def grouped_confidence(cases, outputs, groups, metric, evidence):
     # Perfect observations still have sampling uncertainty; bootstrap alone degenerates at 1.0.
     group_success = sum(
         all(
-            outputs[i] is not None and str(outputs[i]).strip() == str(cases[i].get("gold"))
+            evaluate([cases[i]], [outputs[i]], metric, independent_labels=False)["value"] == 1
             for i in indexes
         )
         for indexes in grouped.values()

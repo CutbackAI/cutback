@@ -3,6 +3,8 @@
 import json
 from datetime import UTC, datetime, timedelta
 
+from pydantic import ValidationError
+
 from cutback.evals.datasets import digest
 from cutback.evals.experiments import ExperimentPlan
 
@@ -43,4 +45,10 @@ def load_plan(store, project, metadata):
     raw = json.loads(store.get(project, metadata["artifact_ref"]))
     if digest(raw) != metadata["plan_hash"]:
         raise ValueError("PLAN_INTEGRITY_FAILURE")
-    return ExperimentPlan.model_validate(raw)
+    try:
+        plan = ExperimentPlan.model_validate(raw)
+    except ValidationError:
+        raise ValueError("PLAN_SCHEMA_INVALID_REAPPROVAL_REQUIRED") from None
+    if digest(plan.model_dump(mode="json")) != metadata["plan_hash"]:
+        raise ValueError("PLAN_SCHEMA_CHANGED_REAPPROVAL_REQUIRED")
+    return plan

@@ -1,5 +1,7 @@
 # Reproducible synthetic demo
 
+For a first introduction, run `uv run cutback demo` with Docker Desktop running and follow [the support-desk walkthrough](testing-the-sample.md). It retains an explorable workspace with completed quality comparisons, encrypted case evidence, stage receipts and source/rollback diffs. The scripts and dev2 recording below remain maintainer regression tools and historical evidence.
+
 The [development release](https://github.com/CutbackAI/cutback/releases/tag/v0.1.0.dev2) includes a `cutback-synthetic-dashboard.webm` walkthrough. Its banner identifies synthetic data. It shows the actual authenticated React/HTTP/PostgreSQL path, inventory, costs with an unknown model, opportunities, empty experiment/change states, instrumentation/security pages, mobile layout and credential clearing. It does not depict a live provider request or measured customer savings.
 
 For the scanner → SDK → collector → database → report demonstration:

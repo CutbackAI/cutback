@@ -12,12 +12,16 @@ import typer
 def register(app, output, request):
     from cutback.cli_workflows import read_json
 
-    training, schedules = typer.Typer(no_args_is_help=True), typer.Typer(no_args_is_help=True)
+    training = typer.Typer(no_args_is_help=True, help="Plan and run isolated local model training.")
+    schedules = typer.Typer(
+        no_args_is_help=True, help="Manage bounded, explicitly approved schedules."
+    )
     app.add_typer(training, name="training")
     app.add_typer(schedules, name="schedules")
 
     @training.command("model-hash")
     def model_hash(directory: Path):
+        """Model hash using the configured scoped credentials."""
         from cutback.evals.training import model_digest
 
         output(
@@ -26,10 +30,12 @@ def register(app, output, request):
 
     @training.command("list")
     def jobs(project: UUID, endpoint: str = "http://127.0.0.1:8080"):
+        """Jobs using the configured scoped credentials."""
         output(request("GET", endpoint, f"/v1/projects/{project}/training"))
 
     @training.command("propose")
     def propose(project: UUID, file: Path, endpoint: str = "http://127.0.0.1:8080"):
+        """Propose using the configured scoped credentials."""
         from cutback.server.training_api import TrainingInput
 
         body = TrainingInput.model_validate(read_json(file))
@@ -50,6 +56,7 @@ def register(app, output, request):
         approval_ref: str,
         endpoint: str = "http://127.0.0.1:8080",
     ):
+        """Approve using the configured scoped credentials."""
         from cutback.server.continuous import Approval
 
         body = Approval(approval_hash=approval_hash, approval_ref=approval_ref)
@@ -64,6 +71,7 @@ def register(app, output, request):
 
     @training.command("cancel")
     def cancel(project: UUID, training_id: UUID, endpoint: str = "http://127.0.0.1:8080"):
+        """Cancel using the configured scoped credentials."""
         output(
             request(
                 "POST", endpoint, f"/v1/projects/{project}/training/{training_id}/cancel", json={}
@@ -72,6 +80,7 @@ def register(app, output, request):
 
     @training.command("worker-once")
     def worker_once():
+        """Worker once using the configured scoped credentials."""
         from cutback.evals.artifacts import configured_store
         from cutback.server.db import database
         from cutback.server.training_worker import run_training_one
@@ -94,6 +103,7 @@ def register(app, output, request):
         purpose: str,
         endpoint: str = "http://127.0.0.1:8080",
     ):
+        """Download using the configured scoped credentials."""
         import httpx
 
         from cutback.core.config import validate_endpoint
@@ -135,10 +145,12 @@ def register(app, output, request):
 
     @schedules.command("list")
     def schedule_list(project: UUID, endpoint: str = "http://127.0.0.1:8080"):
+        """Schedule list using the configured scoped credentials."""
         output(request("GET", endpoint, f"/v1/projects/{project}/schedules"))
 
     @schedules.command("propose")
     def schedule_propose(project: UUID, file: Path, endpoint: str = "http://127.0.0.1:8080"):
+        """Schedule propose using the configured scoped credentials."""
         from cutback.server.continuous import ScheduleInput
 
         body = ScheduleInput.model_validate(read_json(file))
@@ -159,6 +171,7 @@ def register(app, output, request):
         approval_ref: str,
         endpoint: str = "http://127.0.0.1:8080",
     ):
+        """Schedule approve using the configured scoped credentials."""
         from cutback.server.continuous import Approval
 
         body = Approval(approval_hash=approval_hash, approval_ref=approval_ref)
@@ -173,6 +186,7 @@ def register(app, output, request):
 
     @schedules.command("disable")
     def schedule_disable(project: UUID, schedule_id: UUID, endpoint: str = "http://127.0.0.1:8080"):
+        """Schedule disable using the configured scoped credentials."""
         output(request("DELETE", endpoint, f"/v1/projects/{project}/schedules/{schedule_id}"))
 
     return training, schedules

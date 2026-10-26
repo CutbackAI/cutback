@@ -49,6 +49,10 @@ def check(directory: Path):
             "infra/training/uv.lock",
             "examples/experiment_walkthrough.py",
             "docs/local-training.md",
+            "docs/testing-the-sample.md",
+            "docs/experiment-files.md",
+            "examples/support_desk/README.md",
+            "src/cutback/sample_app/app.py",
         ):
             if not any(name.endswith("/" + required) for name in source_names):
                 raise ValueError("source distribution missing reproducibility file: " + required)

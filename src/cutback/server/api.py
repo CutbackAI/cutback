@@ -79,6 +79,9 @@ def create_app(
     )
     app.state.engine = engine
     app.state.sessions = sessions
+    from cutback.server.case_evidence import install_case_evidence
+
+    # Same authentication and project scope as every other control route.
     from cutback.server.identity import configured_verifier
 
     app.state.oidc_verifier = configured_verifier()
@@ -520,6 +523,7 @@ def create_app(
     install_training(app, sessions, authorize, scope)
     from importlib.resources import files
 
+    install_case_evidence(app, sessions, authorize, scope)
     from fastapi.staticfiles import StaticFiles
 
     dashboard = files("cutback").joinpath("dashboard")

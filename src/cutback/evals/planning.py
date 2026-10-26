@@ -25,6 +25,8 @@ def draft_plan(
     max_wall_seconds=300,
     pilot_samples=0,
     pilot_minimum=None,
+    criteria=None,
+    retain_case_outputs=False,
 ):
     provenance = dataset["provenance"]
     catalog = Catalog()
@@ -93,4 +95,6 @@ def draft_plan(
         repeats=repeats,
         pilot_samples=pilot_samples,
         pilot_minimum=pilot_minimum,
+        criteria=criteria or [],
+        retain_case_outputs=retain_case_outputs,
     )

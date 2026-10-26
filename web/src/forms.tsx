@@ -443,6 +443,7 @@ export function PlanForm({
 }) {
   const [dataset, setDataset] = useState(datasets[0]?.id || "");
   const [strategy, setStrategy] = useState("model_swap");
+  const [criterionCount, setCriterionCount] = useState(0);
   const current = datasets.find((row) => row.id === dataset);
   return (
     <Editor title="Plan an experiment">
@@ -521,6 +522,17 @@ export function PlanForm({
             max_usd: String(data.max_usd),
             max_requests: Number(data.max_requests),
             repeats: Number(data.repeats),
+            retain_case_outputs: !!data.retain_outputs,
+            criteria: Array.from({ length: criterionCount }, (_, i) => ({
+              key: String(data[`criterion_key_${i}`]),
+              metric: {
+                kind: String(data[`criterion_kind_${i}`]),
+                output_field: data[`criterion_field_${i}`] || null,
+                minimum: Number(data[`criterion_min_${i}`]) / 100,
+              },
+              required: !!data[`criterion_required_${i}`],
+              weight: 1,
+            })),
             pilot_samples: Number(data.pilot_samples),
             pilot_minimum:
               data.pilot_minimum === ""
@@ -624,6 +636,70 @@ export function PlanForm({
           max="100"
           step="0.1"
           hint="Leave empty for technical checks only. Choose a meaningful threshold for your task."
+        />
+        <fieldset>
+          <legend>Additional quality criteria</legend>
+          <p>
+            Every required criterion must pass. A good average cannot hide a
+            required failure.
+          </p>
+          {Array.from({ length: criterionCount }, (_, i) => (
+            <fieldset key={i}>
+              <legend>Criterion {i + 1}</legend>
+              <Field
+                label={`Criterion ${i + 1} name`}
+                name={`criterion_key_${i}`}
+                required
+                pattern="[A-Za-z0-9_.:/-]+"
+              />
+              <Select
+                label={`Criterion ${i + 1} metric`}
+                name={`criterion_kind_${i}`}
+              >
+                <option value="exact_label">Exact expected label</option>
+                <option value="nonempty">
+                  Nonempty response (technical only)
+                </option>
+              </Select>
+              <Field
+                label={`Criterion ${i + 1} JSON field (optional)`}
+                name={`criterion_field_${i}`}
+                pattern="[A-Za-z_][A-Za-z0-9_]*"
+              />
+              <Field
+                label={`Criterion ${i + 1} minimum percent`}
+                name={`criterion_min_${i}`}
+                type="number"
+                min="0"
+                max="100"
+                defaultValue="95"
+                required
+              />
+              <Check
+                label={`Criterion ${i + 1} is required`}
+                name={`criterion_required_${i}`}
+              />
+            </fieldset>
+          ))}
+          <button
+            type="button"
+            disabled={criterionCount >= 8}
+            onClick={() => setCriterionCount(criterionCount + 1)}
+          >
+            Add quality criterion
+          </button>
+          {criterionCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setCriterionCount(criterionCount - 1)}
+            >
+              Remove last criterion
+            </button>
+          )}
+        </fieldset>
+        <Check
+          name="retain_outputs"
+          label="Retain encrypted case outputs under the dataset's active rights policy, quota and expiry."
         />
         <Field
           label="Maximum experiment USD"

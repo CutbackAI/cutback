@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cutback"
-version = "0.1.0.dev2"
+version = "0.1.0.dev3"
 description = "Independent, evidence-aware AI application cost observation and optimization"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -76,6 +76,7 @@ packages = ["src/cutback"]
 
 [tool.hatch.build.targets.sdist]
 include = [
+  "/docs/testing-the-sample.md", "/docs/experiment-files.md", "/docs/evidence",
   "/docs/quickstart.md", "/docs/deployment.md", "/docs/providers.md",
   "/docs/limitations.md", "/docs/architecture.md", "/docs/security-and-privacy.md",
   "/docs/evaluation.md", "/docs/dependencies.md", "/docs/progress.md",

@@ -21,7 +21,7 @@ from cutback.evals.datasets import (
     prepare_dataset,
     redact,
 )
-from cutback.evals.experiments import ExperimentPlan, ModelSpec, plan_summary
+from cutback.evals.experiments import CriterionSpec, ExperimentPlan, ModelSpec, plan_summary
 from cutback.server.db import (
     AuditEvent,
     CapturePolicyRecord,
@@ -61,6 +61,8 @@ class QueueInput(StrictModel):
 
 
 class DraftInput(StrictModel):
+    criteria: list[CriterionSpec] = Field(default_factory=list, max_length=8)
+    retain_case_outputs: bool = False
     dataset_id: UUID
     baseline: ModelSpec
     candidates: list[ModelSpec] | None = Field(default=None, min_length=1, max_length=5)
@@ -420,6 +422,8 @@ def install_evaluation(app, sessions, authorize, scope):
                 pilot_samples=body.pilot_samples,
                 pilot_minimum=body.pilot_minimum,
                 max_wall_seconds=body.max_wall_seconds,
+                criteria=body.criteria,
+                retain_case_outputs=body.retain_case_outputs,
             )
         except ValueError as exc:
             code = str(exc)
@@ -434,6 +438,12 @@ def install_evaluation(app, sessions, authorize, scope):
     def create_plan(project_id: UUID, body: PlanInput, auth=Depends(authorize)):
         scope(auth, project_id, ("analyst",))
         with sessions.begin() as session:
+            from cutback.server.stages import validate_stage
+
+            try:
+                validate_stage(session, require_store(app), project_id, body.specification)
+            except ValueError as exc:
+                raise HTTPException(409, str(exc)) from None
             dataset = session.get(DatasetRecord, body.dataset_id)
             if not dataset or dataset.project_id != project_id:
                 raise HTTPException(404, "DATASET_NOT_FOUND")
@@ -493,7 +503,10 @@ def install_evaluation(app, sessions, authorize, scope):
             if not row or row.project_id != project_id:
                 raise HTTPException(404, "PLAN_NOT_FOUND")
             active_policy(session, project_id, UUID(row.specification["policy_id"]))
-            plan = load_plan(store, project_id, row.specification)
+            try:
+                plan = load_plan(store, project_id, row.specification)
+            except ValueError as exc:
+                raise HTTPException(409, str(exc)) from None
             session.add(
                 AuditEvent(
                     project_id=project_id,
@@ -542,6 +555,17 @@ def install_evaluation(app, sessions, authorize, scope):
                 raise HTTPException(404, "PLAN_NOT_FOUND")
             if plan.approval_status != "approved":
                 raise HTTPException(403, "NO_API_BUDGET_OR_APPROVAL_ALREADY_CONSUMED")
+            from cutback.server.stages import validate_stage
+
+            try:
+                validate_stage(
+                    session,
+                    require_store(app),
+                    project_id,
+                    load_plan(require_store(app), project_id, plan.specification),
+                )
+            except ValueError as exc:
+                raise HTTPException(409, str(exc)) from None
             plan.approval_status = (
                 "consumed"  # A budget approval authorizes one run, not unlimited runs.
             )

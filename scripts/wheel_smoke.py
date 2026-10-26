@@ -81,12 +81,22 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
     assert result["summary"]["llm_call_sites_detected"] == 1
     assert result["summary"]["actual_spend_usd"] is None
     assert private_sentinel not in json.dumps(result)
-    opportunities = command("opportunities", "--target", ".")
+    opportunities = command("opportunities", "--target", ".", "--json")
     assert opportunities["expected_savings_usd"] is None and opportunities["opportunities"]
     plan = command("instrument", "--target", ".", "--entrypoint", "main.py", "--plan", "--json")
     assert plan["status"] == "plan_only" and plan["content_capture"] is False
     assert "# cutback:bootstrap" in plan["diff"] and source.read_text(encoding="utf-8") == original
     assert command("datasets", "discover", "--target", ".")  # Parse-only discovery needs no server.
+    subprocess.run(
+        [str(executable), "-m", "cutback.cli", "sample", str(Path(temporary) / "support-desk")],
+        check=True,
+        capture_output=True,
+        text=True,
+        cwd=consumer,
+    )
+    sample_source = Path(temporary) / "support-desk" / "app.py"
+    assert "from openai import OpenAI" in sample_source.read_text()
+    assert "import cutback" not in sample_source.read_text()
     print(
         "Core-only wheel and independent consumer doctor/scan/opportunities/instrument plan passed."
     )

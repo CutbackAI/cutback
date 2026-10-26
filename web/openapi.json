@@ -3502,6 +3502,88 @@
           }
         }
       }
+    },
+    "/v1/projects/{project_id}/experiments/{run_id}/cases/content": {
+      "post": {
+        "summary": "Content",
+        "operationId": "content_v1_projects__project_id__experiments__run_id__cases_content_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 25,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10000,
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentPurpose"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4260,6 +4342,37 @@
         ],
         "title": "ContentPurpose"
       },
+      "CriterionSpec": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Key"
+          },
+          "metric": {
+            "$ref": "#/components/schemas/MetricSpec"
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required",
+            "default": true
+          },
+          "weight": {
+            "type": "number",
+            "maximum": 100.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Weight",
+            "default": 1
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "metric"
+        ],
+        "title": "CriterionSpec"
+      },
       "DatasetImport": {
         "properties": {
           "workflow": {
@@ -4332,6 +4445,19 @@
       },
       "DraftInput": {
         "properties": {
+          "criteria": {
+            "items": {
+              "$ref": "#/components/schemas/CriterionSpec"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "title": "Criteria"
+          },
+          "retain_case_outputs": {
+            "type": "boolean",
+            "title": "Retain Case Outputs",
+            "default": false
+          },
           "dataset_id": {
             "type": "string",
             "format": "uuid",
@@ -4488,6 +4614,76 @@
           },
           "metric": {
             "$ref": "#/components/schemas/MetricSpec"
+          },
+          "criteria": {
+            "items": {
+              "$ref": "#/components/schemas/CriterionSpec"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "title": "Criteria"
+          },
+          "retain_case_outputs": {
+            "type": "boolean",
+            "title": "Retain Case Outputs",
+            "default": false
+          },
+          "stage": {
+            "type": "string",
+            "enum": [
+              "smoke",
+              "pilot",
+              "full"
+            ],
+            "title": "Stage",
+            "default": "full"
+          },
+          "staged": {
+            "type": "boolean",
+            "title": "Staged",
+            "default": false
+          },
+          "predecessor_run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9-]{36}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predecessor Run Id"
+          },
+          "sample_limit": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sample Limit"
+          },
+          "judge_swap_orders": {
+            "type": "boolean",
+            "title": "Judge Swap Orders",
+            "default": false
+          },
+          "judge_require_evidence": {
+            "type": "boolean",
+            "title": "Judge Require Evidence",
+            "default": false
+          },
+          "judge_max_invalid_fraction": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Judge Max Invalid Fraction",
+            "default": 0.2
           },
           "budget": {
             "$ref": "#/components/schemas/Budget"
@@ -4658,7 +4854,7 @@
             "type": "string",
             "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
             "title": "Sdk Version",
-            "default": "0.1.0.dev2"
+            "default": "0.1.0.dev3"
           },
           "counters": {
             "additionalProperties": {
@@ -4846,7 +5042,7 @@
             "type": "string",
             "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
             "title": "Sdk Version",
-            "default": "0.1.0.dev2"
+            "default": "0.1.0.dev3"
           },
           "trace_id": {
             "type": "string",
@@ -5251,6 +5447,18 @@
       },
       "MetricSpec": {
         "properties": {
+          "output_field": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,63}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Field"
+          },
           "kind": {
             "type": "string",
             "enum": [

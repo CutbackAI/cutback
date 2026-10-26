@@ -256,4 +256,9 @@ export function createSDK(request:Request) {return {
   artifact_v1_projects__project_id__training__training_id__artifacts__artifact_index__post: (args:{project_id:string;training_id:string;artifact_index:number;body:components["schemas"]["ArtifactAccess"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/training/${encodeURIComponent(String(args.training_id))}/artifacts/${encodeURIComponent(String(args.artifact_index))}`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  content_v1_projects__project_id__experiments__run_id__cases_content_post: (args:{project_id:string;run_id:string;limit?:number;offset?:number;body:components["schemas"]["ContentPurpose"]}) => {
+    const query=new URLSearchParams();
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    if(args.offset!==undefined && args.offset!==null) query.set("offset",String(args.offset));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/experiments/${encodeURIComponent(String(args.run_id))}/cases/content`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
 };}

@@ -17,15 +17,15 @@ from cutback.cli_workflows import register
 app = typer.Typer(
     no_args_is_help=True,
     pretty_exceptions_enable=False,
-    help="Evidence-aware AI cost discovery and observation.",
+    help="Find AI calls, compare cost and quality, and review changes. Start with: cutback demo",
 )
-collector = typer.Typer(no_args_is_help=True)
+collector = typer.Typer(no_args_is_help=True, help="Run and inspect a self-hosted collector.")
 app.add_typer(collector, name="collector")
-db_app = typer.Typer(no_args_is_help=True)
+db_app = typer.Typer(no_args_is_help=True, help="Apply PostgreSQL schema migrations.")
 app.add_typer(db_app, name="db")
-project_app = typer.Typer(no_args_is_help=True)
+project_app = typer.Typer(no_args_is_help=True, help="Create scoped collector projects.")
 app.add_typer(project_app, name="projects")
-keys_app = typer.Typer(no_args_is_help=True)
+keys_app = typer.Typer(no_args_is_help=True, help="Create scoped credentials in a private file.")
 app.add_typer(keys_app, name="keys")
 
 
@@ -90,7 +90,69 @@ def main(
 
 
 @app.command()
+def demo(port: int = typer.Option(8766, min=1024, max=65535), open_browser: bool = True):
+    """Explore a complete support-desk sample. Requires Docker; no API key or paid calls."""
+    try:
+        from cutback.demo import launch_demo
+
+        launch_demo(port, open_browser)
+    except ImportError:
+        fail(
+            "DEMO_EXTRAS_REQUIRED",
+            (
+                "Install cutback[server,openai] or run uv sync --locked --all-"
+                "extras --dev in the repository."
+            ),
+        )
+    except (ValueError, OSError, subprocess.SubprocessError):
+        fail(
+            "DEMO_SETUP_FAILED",
+            (
+                "Start Docker Desktop, check the selected port, and retry. No "
+                "application or provider credentials are needed."
+            ),
+        )
+
+
+@app.command()
+def sample(destination: Path):
+    """Copy an independent synthetic support-desk project for offline scanning."""
+    import shutil
+
+    from cutback.demo import sample_cases
+
+    root = Path(__file__).parent / "sample_app"
+    if destination.exists():
+        fail(
+            "SAMPLE_DESTINATION_EXISTS",
+            "Choose a new directory; existing files are never overwritten.",
+        )
+    destination.mkdir(parents=True)
+    shutil.copyfile(root / "app.py", destination / "app.py")
+    (destination / "cases.jsonl").write_text(
+        "\n".join(json.dumps(case) for case in sample_cases()) + "\n", encoding="utf-8"
+    )
+    (destination / ".gitignore").write_text(".cutback/\n.env\n.venv/\n", encoding="utf-8")
+    (destination / "README.md").write_text(
+        "# Support-desk sample\n\nOwned synthetic cases; no customer data.\n\n"
+        "Run `cutback scan .` and `cutback opportunities --target .` here."
+        " These parse files without running the app.\n\nRun `cutback demo` "
+        "for the complete PostgreSQL/collector/worker/dashboard "
+        "walkthrough. Docker must be running; install "
+        "cutback[server,openai]. No provider key or paid call is needed.\n\n"
+        "The app accepts an explicit native SDK HTTP client. Do not "
+        "replace its synthetic transport with a real provider without "
+        "permitted data and a bounded approved budget.\n",
+        encoding="utf-8",
+    )
+    typer.echo(
+        f"Sample created: {destination}\nNext: cutback scan {destination}\nThen: cutback demo"
+    )
+
+
+@app.command()
 def doctor(json_output: Annotated[bool, typer.Option("--json")] = False):
+    """Check installation, optional dependencies and offline defaults."""
     from cutback.pricing import Catalog
 
     result = {
@@ -112,6 +174,7 @@ def doctor(json_output: Annotated[bool, typer.Option("--json")] = False):
 
 @app.command("init")
 def initialize(mode: Literal["local"] = "local", target: Path = Path(".")):
+    """Create safe local configuration without changing application code."""
     from cutback.core.config import LocalConfig
 
     path = target.resolve() / ".cutback" / "config.yaml"
@@ -132,6 +195,7 @@ def scan_command(
     language: Annotated[list[str] | None, typer.Option("--language")] = None,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ):
+    """Find AI calls by parsing source; never runs the application."""
     from cutback.scanner import scan
 
     try:
@@ -175,6 +239,7 @@ def report(
     group_by: Literal["model", "provider", "workflow", "environment", "day"] = "model",
     destination: Annotated[Path | None, typer.Option("--output")] = None,
 ):
+    """Summarize inventory or observed collector usage."""
     if source == "scan":
         from cutback.scanner import scan
 
@@ -205,7 +270,9 @@ def opportunities(
     project: str | None = None,
     period: str = "7d",
     endpoint: str = "http://127.0.0.1:8080",
+    json_output: Annotated[bool, typer.Option("--json")] = False,
 ):
+    """Explain what to measure and evaluate at each AI call site."""
     if source == "collector":
         from uuid import UUID
 
@@ -227,7 +294,21 @@ def opportunities(
     result = scan(target)
     from cutback.optimizer import static_opportunities
 
-    output(static_opportunities(result))
+    findings = static_opportunities(result)
+    if json_output:
+        output(findings)
+    else:
+        typer.echo("AI call sites to investigate (source inventory, not measured savings):")
+        for item in findings["opportunities"]:
+            typer.echo(
+                f"  {item['source']}  model: {item['baseline_model'] or 'resolved at runtime'}"
+                "  quality: not evaluated"
+            )
+        typer.echo("Spend and savings: unknown until usage and quality are measured.")
+        typer.echo(
+            "Next: run 'cutback demo' to see observation and evaluation, or "
+            "follow docs/application-onboarding.md for your application."
+        )
 
 
 @app.command()
@@ -238,6 +319,7 @@ def instrument(
     apply: bool = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ):
+    """Prepare a reviewable instrumentation diff and rollback."""
     import ast
 
     root = target.resolve(strict=True)
@@ -279,7 +361,7 @@ def instrument(
         else:
             break
     bootstrap = (
-        "\n# cutback:bootstrap — observation only; requires CUTBACK_ENABLED=true\n"
+        "\n# cutback:bootstrap - observation only; requires CUTBACK_ENABLED=true\n"
         "import os as _cutback_os\n"
         'if _cutback_os.getenv("CUTBACK_ENABLED", "false").lower() == "true":\n'
         "    try:\n"
@@ -328,6 +410,7 @@ def instrument(
 
 @collector.command("serve")
 def serve(host: str = "127.0.0.1", port: int = 8080, dev_http: bool = False):
+    """Serve using the configured scoped credentials."""
     import uvicorn
 
     from cutback.server.api import create_app
@@ -348,6 +431,7 @@ def serve(host: str = "127.0.0.1", port: int = 8080, dev_http: bool = False):
 
 @collector.command("up")
 def collector_up(profile: Literal["dev"] = "dev"):
+    """Collector up using the configured scoped credentials."""
     path = Path(__file__).resolve().parents[2] / "infra/compose/docker-compose.yml"
     if not path.exists():
         fail("COMPOSE_SOURCE_REQUIRED", "use the source distribution and follow docs/deployment.md")
@@ -359,11 +443,13 @@ def collector_up(profile: Literal["dev"] = "dev"):
 
 @collector.command("status")
 def collector_status(endpoint: str = "http://127.0.0.1:8080"):
+    """Collector status using the configured scoped credentials."""
     output(request("GET", endpoint, "/v1/health/ready"))
 
 
 @db_app.command("migrate")
 def migrate():
+    """Migrate using the configured scoped credentials."""
     from cutback.server.migrate import CURRENT_REVISION
     from cutback.server.migrate import migrate as run
 
@@ -381,6 +467,7 @@ def migrate():
 def create_project(
     slug: str, environment: str = "staging", endpoint: str = "http://127.0.0.1:8080"
 ):
+    """Create project using the configured scoped credentials."""
     output(
         request(
             "POST",
@@ -404,6 +491,7 @@ def create_key(
     expires_in_days: int = 30,
 ):
     # Exclusive file creation prevents overwriting existing secrets; tokens never printed.
+    """Create key using the configured scoped credentials."""
     fd = os.open(destination, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
     try:
         result = request(

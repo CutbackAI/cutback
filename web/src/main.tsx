@@ -15,6 +15,7 @@ import { explain } from "./ui";
 import { Training } from "./training";
 import { SSO, handleSSOReturn } from "./sso";
 import "./style.css";
+import { SampleGuide } from "./demo";
 
 async function request(token: string, path: string, options: RequestInit = {}) {
   const response = await fetch("/v1" + path, {
@@ -47,6 +48,7 @@ type Inventory = components["schemas"]["Inventory"];
 type RecordData = Record<string, any>;
 type RequestAPI = (path: string, options?: RequestInit) => Promise<any>;
 const views = [
+  "Sample",
   "Overview",
   "Inventory",
   "Costs",
@@ -93,6 +95,15 @@ function Download({ data, name }: { data: unknown; name: string }) {
 }
 
 function App() {
+  const [demo, setDemo] = useState<RecordData | null>(null);
+  useEffect(() => {
+    fetch("/v1/demo", { cache: "no-store", credentials: "omit" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((value) => {
+        if (value?.available) setDemo(value);
+      })
+      .catch(() => {});
+  }, []);
   const [token, setToken] = useState("");
   const [connected, setConnected] = useState(false);
   const [projects, setProjects] = useState<RecordData[]>([]);
@@ -346,16 +357,18 @@ function App() {
       ["owner", "admin"].includes(String(role)),
     );
   const availableViews = views.filter((name) =>
-    name === "Security"
-      ? admin
-      : name === "Training"
-        ? analyst
-        : ["Teams", "Billing"].includes(name)
-          ? identity.bootstrap ||
-            Object.values(identity.organizations || {}).some((role) =>
-              ["owner", "admin"].includes(String(role)),
-            )
-          : true,
+    name === "Sample"
+      ? !!demo
+      : name === "Security"
+        ? admin
+        : name === "Training"
+          ? analyst
+          : ["Teams", "Billing"].includes(name)
+            ? identity.bootstrap ||
+              Object.values(identity.organizations || {}).some((role) =>
+                ["owner", "admin"].includes(String(role)),
+              )
+            : true,
   );
   const base = "/projects/" + encodeURIComponent(project);
   return (
@@ -381,6 +394,40 @@ function App() {
             Inspect observed usage, test alternatives, and review changes.
             Source scans alone cannot show historical spend.
           </p>
+          {demo && (
+            <section className="demo-start">
+              <h2>Try the support-desk sample</h2>
+              <p>
+                Explore a working application, compare a safe and unsafe
+                candidate, and inspect the decision. Every provider reply is
+                synthetic.
+              </p>
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch("/v1/demo/connect", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        "X-Cutback-Demo": "connect",
+                      },
+                      body: "{}",
+                      credentials: "omit",
+                    });
+                    if (!response.ok)
+                      throw new Error("DEMO_CONNECTION_REFUSED");
+                    const value = await response.json();
+                    await connect(value.token);
+                    setView("Sample");
+                  } catch (e) {
+                    setError(explain(e));
+                  }
+                }}
+              >
+                Explore sample
+              </button>
+            </section>
+          )}
           <SSO connected={connect} />
           <form onSubmit={login}>
             <label htmlFor="token">Control API key</label>
@@ -479,6 +526,12 @@ function App() {
             </p>
           </aside>
           <main id="main">
+            {demo && (
+              <p className="disclosure">
+                Synthetic sample workspace · no provider charges · fixture
+                results are not customer savings.
+              </p>
+            )}
             <div className="page-title">
               <div>
                 <p className="eyebrow">PROJECT EVIDENCE</p>
@@ -562,6 +615,26 @@ function App() {
                 data={data}
                 reload={load}
                 admin={admin}
+              />
+            )}
+            {view === "Sample" && demo && (
+              <SampleGuide
+                demo={demo}
+                api={api}
+                navigate={setView}
+                evidence={(detail) => (
+                  <>
+                    <RunEvidence detail={detail} />
+                    {detail.results?.case_outputs_retained && admin && (
+                      <CaseEvidence
+                        key={detail.id}
+                        api={api}
+                        base={base}
+                        runId={detail.id}
+                      />
+                    )}
+                  </>
+                )}
               />
             )}
             {view === "Teams" && (
@@ -777,7 +850,7 @@ function InventoryView({ inventory }: { inventory: Inventory | null }) {
           {sites.length} of {inventory.call_sites.length} call sites
         </span>
       </div>
-      <div className="table-scroll">
+      <div className="table-scroll" tabIndex={0}>
         <table>
           <caption>Discovered candidate call sites</caption>
           <thead>
@@ -873,7 +946,7 @@ function Costs({ report }: { report: RecordData }) {
               </g>
             ))}
           </svg>
-          <div className="table-scroll">
+          <div className="table-scroll" tabIndex={0}>
             <table>
               <caption>Observed usage by {report.group_by}</caption>
               <thead>
@@ -1206,6 +1279,14 @@ function Experiments({
         <>
           <h2>Operation result</h2>
           <RunEvidence detail={detail} />
+          {detail.results?.case_outputs_retained && admin && (
+            <CaseEvidence
+              key={`${base}:${detail.id}`}
+              api={api}
+              base={base}
+              runId={detail.id}
+            />
+          )}
           <details>
             <summary>Reproducible experiment record</summary>
             <JSONView data={detail} />
@@ -1223,13 +1304,43 @@ function RunEvidence({ detail }: { detail: RecordData }) {
   return (
     <>
       <p>
-        {result.sample_n ?? result.models[0]?.quality?.n ?? "Unknown"} held-out
-        cases ·{" "}
+        {result.sample_n ?? result.models[0]?.quality?.sample_n ?? "Unknown"}{" "}
+        {result.plan?.split === "validation"
+          ? "validation cases"
+          : "held-out cases"}{" "}
+        ·{" "}
         {result.billing_complete
           ? "Complete modeled call accounting"
           : "Cost completeness unknown"}
       </p>
-      <div className="table-scroll">
+      {result.recommendations?.map((item: RecordData) => (
+        <article className="row" key={item.candidate.key}>
+          <h3>
+            {item.candidate.key}:{" "}
+            {item.quality_gate_passed ? "Passes sample gates" : "Not eligible"}
+          </h3>
+          <p>
+            {item.decision_reason?.replaceAll("_", " ") || item.status}{" "}
+            {item.failed_criteria?.length
+              ? `Failed criteria: ${item.failed_criteria.join(", ")}.`
+              : ""}
+          </p>
+          <p>
+            Modeled sample difference:{" "}
+            {money(item.sample_modeled_cost_difference_usd)}. Monthly savings
+            remain unknown. Production approval is separate.
+          </p>
+          {item.paired_delta && (
+            <p>
+              Paired case scores: {item.paired_delta.improved} improved,{" "}
+              {item.paired_delta.regressed} regressed, {item.paired_delta.tied}{" "}
+              tied. This describes the first repeat on this dataset; it is not
+              population verification.
+            </p>
+          )}
+        </article>
+      ))}
+      <div className="table-scroll" tabIndex={0}>
         <table>
           <caption>Paired model evaluation evidence</caption>
           <thead>
@@ -1260,12 +1371,14 @@ function RunEvidence({ detail }: { detail: RecordData }) {
                     : Number(row.quality.value).toFixed(4)}
                 </td>
                 <td>
-                  {row.quality.confidence_95
+                  {row.quality.confidence_95?.low != null &&
+                  row.quality.confidence_95?.high != null
                     ? `${row.quality.confidence_95.low.toFixed(4)} – ${row.quality.confidence_95.high.toFixed(4)}`
                     : "Unknown"}
                 </td>
                 <td>
-                  {row.metric_min} – {row.metric_max}
+                  {Number(row.metric_min).toFixed(4)} –{" "}
+                  {Number(row.metric_max).toFixed(4)}
                 </td>
                 <td>{money(row.known_cost_subtotal_usd)}</td>
                 <td>
@@ -1279,11 +1392,152 @@ function RunEvidence({ detail }: { detail: RecordData }) {
         </table>
       </div>
       <p className="hint">
-        Repeated outputs, judge diagnostics, uncertainty assumptions and frozen
-        contracts are included in the downloadable record. Synthetic and
-        reference-only results do not verify customer business quality.
+        Aggregate repeated metrics, judge diagnostics, uncertainty assumptions
+        and frozen contracts are included in the downloadable record. Case
+        outputs require a separate authorized encrypted-content read. Synthetic
+        and reference-only results do not verify customer business quality.
       </p>
+      {result.models.map((row: RecordData) => (
+        <section key={row.model.key}>
+          {!!row.criteria?.length && (
+            <>
+              <h3>{row.model.key}: quality scorecard</h3>
+              <div className="table-scroll" tabIndex={0}>
+                <table>
+                  <caption>Criteria for {row.model.key}</caption>
+                  <thead>
+                    <tr>
+                      <th>Criterion</th>
+                      <th>Score</th>
+                      <th>Minimum</th>
+                      <th>Required</th>
+                      <th>Result</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {row.criteria.map((item: RecordData) => (
+                      <tr key={item.key}>
+                        <th scope="row">{item.key}</th>
+                        <td>{item.value.toFixed(3)}</td>
+                        <td>{item.minimum}</td>
+                        <td>{item.required ? "Yes" : "No"}</td>
+                        <td>{item.passed ? "Pass" : "Fail"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+          {!!row.slices?.length && (
+            <details>
+              <summary>
+                Results by ticket category or segment: {row.model.key}
+              </summary>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Segment</th>
+                    <th>Cases</th>
+                    <th>Score</th>
+                    <th>Failures</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {row.slices.map((item: RecordData) => (
+                    <tr key={item.stratum}>
+                      <th scope="row">{item.stratum}</th>
+                      <td>{item.sample_n}</td>
+                      <td>{item.value.toFixed(3)}</td>
+                      <td>{item.failures}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </details>
+          )}
+        </section>
+      ))}
     </>
+  );
+}
+function CaseEvidence({
+  api,
+  base,
+  runId,
+}: {
+  api: RequestAPI;
+  base: string;
+  runId: string;
+}) {
+  const [rows, setRows] = useState<RecordData[]>([]);
+  const [error, setError] = useState("");
+  const [purpose, setPurpose] = useState("");
+  const [offset, setOffset] = useState(0);
+  const [more, setMore] = useState(false);
+  const read = async (next: number) => {
+    try {
+      const result = await api(
+        `${base}/experiments/${runId}/cases/content?offset=${next}&limit=25`,
+        { method: "POST", body: JSON.stringify({ purpose }) },
+      );
+      setRows(result.cases);
+      setOffset(next);
+      setMore(result.more_possible);
+      setError("");
+    } catch (e) {
+      setError(explain(e));
+    }
+  };
+  return (
+    <section>
+      <h3>Inspect encrypted case evidence</h3>
+      <p>
+        Admin access, an active policy and a purpose reference (for example
+        sample-review) are required. Content stays in this page memory; each
+        read is audited.
+      </p>
+      <label>
+        Purpose for reading case evidence
+        <input
+          value={purpose}
+          maxLength={200}
+          onChange={(e) => setPurpose(e.target.value)}
+        />
+      </label>
+      <button
+        disabled={!/^[A-Za-z0-9_.:/-]{3,200}$/.test(purpose)}
+        onClick={() => read(0)}
+      >
+        Read authorized case outputs
+      </button>
+      {error && <p role="alert">{error}</p>}
+      {rows.map((row, i) => (
+        <details key={i}>
+          <summary>
+            {row.case.id} · {row.model_key} · repetition {row.repeat + 1}
+          </summary>
+          <p>Input: {row.case.input}</p>
+          <p>
+            Expected:{" "}
+            {JSON.stringify(row.case.gold ?? row.case.reference ?? "Unknown")}
+          </p>
+          <pre tabIndex={0}>{row.output ?? "Incomplete response"}</pre>
+          {row.criteria?.map((item: RecordData) => (
+            <p key={item.key}>
+              {item.key}: {item.value >= item.minimum ? "Pass" : "Fail"} (
+              {item.value}; minimum {item.minimum})
+            </p>
+          ))}
+        </details>
+      ))}
+      {offset > 0 && (
+        <button onClick={() => read(Math.max(0, offset - 25))}>
+          Previous cases
+        </button>
+      )}
+      {more && <button onClick={() => read(offset + 25)}>Next cases</button>}
+    </section>
   );
 }
 function Changes({
@@ -1379,7 +1633,7 @@ function Integrations({ health }: { health: RecordData }) {
           initialization, and flush behavior.
         </Empty>
       ) : (
-        <div className="table-scroll">
+        <div className="table-scroll" tabIndex={0}>
           <table>
             <caption>
               Reported SDK instances (counters since process startup)
