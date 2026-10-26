@@ -3,7 +3,11 @@
   "date": "2026-10-26",
   "kind": "LOCAL_SYNTHETIC_ACCEPTANCE",
   "host": "Windows",
-  "python_tests": {"passed": 163, "skipped_legacy": 4, "failed": 0},
+  "python_tests": {
+    "passed": 163,
+    "skipped_legacy": 4,
+    "failed": 0
+  },
   "real_postgresql": true,
   "authenticated_browser_axe_mobile_pkce": "passed",
   "native_isolated_cpu_training": "passed",
@@ -26,6 +30,30 @@
   "customer_payloads_captured": 0,
   "production_deployments": 0,
   "real_customer_quality_verified": false,
-  "hosted_ci": "pending",
-  "publication": "pending"
+  "hosted_ci": {
+    "status": "passed",
+    "source_commit": "c6c8fd2ba09db8e91e395ed12b39bebc2bb63135",
+    "ci": "https://github.com/CutbackAI/cutback/actions/runs/40390289103",
+    "security": "https://github.com/CutbackAI/cutback/actions/runs/40390289214",
+    "python_3_11": {
+      "passed": 163,
+      "skipped_legacy": 4,
+      "native_cpu_training": "passed"
+    },
+    "python_3_13": {
+      "passed": 162,
+      "skipped": 5
+    },
+    "legacy_each_python_passed": 21,
+    "open_codeql_alerts": 0
+  },
+  "publication": {
+    "status": "published_and_verified",
+    "version": "0.1.0.dev3",
+    "run": "https://github.com/CutbackAI/cutback/actions/runs/40390742938",
+    "fresh_pypi_core_install": "passed",
+    "artifact_sha256_match": true,
+    "cryptographic_provenance": "passed"
+  },
+  "fresh_minimal_server_openai_wheel_sample": "passed"
 }

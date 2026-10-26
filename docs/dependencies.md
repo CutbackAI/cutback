@@ -27,7 +27,7 @@ psycopg/binary LGPL obligations and image OS packages before publishing images.
 | colorama | 0.4.6 | OSI Approved :: BSD License |
 | coverage | 7.17.0 | Apache-2.0 |
 | cryptography | 50.0.2 | Apache-2.0 OR BSD-3-Clause |
-| cutback | 0.1.0.dev2 | Apache-2.0 |
+| cutback | 0.1.0.dev3 | Apache-2.0 |
 | cyclonedx-python-lib | 11.12.0 | Apache-2.0 |
 | defusedxml | 0.7.1 | PSFL |
 | distro | 1.9.0 | Apache License, Version 2.0 |

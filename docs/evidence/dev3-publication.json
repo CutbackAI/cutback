@@ -1,0 +1,30 @@
+{
+  "version": "0.1.0.dev3",
+  "source_commit": "c6c8fd2ba09db8e91e395ed12b39bebc2bb63135",
+  "publishing_run": "https://github.com/CutbackAI/cutback/actions/runs/40390742938",
+  "source": "https://pypi.org/pypi/cutback/0.1.0.dev3/json",
+  "workflow_artifacts_match_pypi_sha256": true,
+  "files": [
+    {
+      "name": "cutback-0.1.0.dev3-py3-none-any.whl",
+      "sha256": "8da93bce1f6a4c9d67a978279154d7ff0270063277637f233aabfd9569c71352",
+      "uploaded_at": "2026-10-26T19:56:49.299655Z",
+      "provenance_url": "https://pypi.org/integrity/cutback/0.1.0.dev3/cutback-0.1.0.dev3-py3-none-any.whl/provenance"
+    },
+    {
+      "name": "cutback-0.1.0.dev3.tar.gz",
+      "sha256": "731d90b4e285a2df3f5c87c326c2a12be772c3924a91e21ecdb689209f083173",
+      "uploaded_at": "2026-10-26T19:56:50.777556Z",
+      "provenance_url": "https://pypi.org/integrity/cutback/0.1.0.dev3/cutback-0.1.0.dev3.tar.gz/provenance"
+    }
+  ],
+  "cryptographic_provenance_verification": "passed",
+  "fresh_pypi_install": "passed",
+  "paid_provider_calls": 0,
+  "production_deployments": 0,
+  "verification_tool": "pypi-attestations==0.0.30",
+  "offline_scan": "passed",
+  "core_optional_dependency_isolation": "passed",
+  "ci": "https://github.com/CutbackAI/cutback/actions/runs/40390289103",
+  "security": "https://github.com/CutbackAI/cutback/actions/runs/40390289214"
+}
