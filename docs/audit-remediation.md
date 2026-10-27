@@ -28,3 +28,7 @@ The 26 October review found defects beyond the existing dev3 regression suite. T
 Engineering completion requires executed tests, generated API/types, a built dashboard, authenticated browser/accessibility acceptance, real PostgreSQL migrations and tenant tests, release/archive privacy checks, a fresh built-wheel consumer and an independent synthetic multi-workflow application. External user studies, paid provider benchmarks, customer data rights and production deployment cannot be manufactured by tests.
 
 Local execution is recorded in [dev4 acceptance](evidence/dev4-acceptance.json), with fresh browser screenshots and an operator-run image/recovery script. Hosted checks and publication are separate gates; a local pass is not represented as a remote CI result. No paid inference, customer payload capture or production deployment occurred. Native SDK support remains the documented exact matrix; broader SDK support requires qualification, not an untested compatibility claim.
+
+[Hosted CI, security, Trusted Publishing and fresh public-index acceptance](evidence/dev4-publication.json) passed for the released dev4 source. The publication receipt includes exact hashes and certified source commit. Remote/customer/market gates above remain external.
+
+[Hosted CI, security, Trusted Publishing and fresh public-index acceptance](evidence/dev4-publication.json) passed for the released dev4 source. The publication receipt includes exact hashes and certified source commit. Remote/customer/market gates above remain external.

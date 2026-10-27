@@ -1,0 +1,61 @@
+{
+  "version": "0.1.0.dev4",
+  "source_commit": "21d1a395c6a5e9cf3cdf2c1d5dd138ee882d8f7c",
+  "publishing_run": "https://github.com/CutbackAI/cutback/actions/runs/40441655220",
+  "source": "https://pypi.org/pypi/cutback/0.1.0.dev4/json",
+  "workflow_artifacts_match_pypi_sha256": true,
+  "files": [
+    {
+      "name": "cutback-0.1.0.dev4-py3-none-any.whl",
+      "sha256": "e2f7b545139ae6dc76d825b732dfdc84c7cbfa11b71e0b18e7193cd88898fcd5",
+      "uploaded_at": "2026-10-27T03:05:50.215913Z",
+      "provenance_url": "https://pypi.org/integrity/cutback/0.1.0.dev4/cutback-0.1.0.dev4-py3-none-any.whl/provenance"
+    },
+    {
+      "name": "cutback-0.1.0.dev4.tar.gz",
+      "sha256": "0c8d9f57bb8f1615ed9190569fcd519b588eec7f6b1d1e8c05a4b881199c6aab",
+      "uploaded_at": "2026-10-27T03:05:51.924819Z",
+      "provenance_url": "https://pypi.org/integrity/cutback/0.1.0.dev4/cutback-0.1.0.dev4.tar.gz/provenance"
+    }
+  ],
+  "cryptographic_provenance_verification": "passed",
+  "fresh_pypi_install": "passed",
+  "offline_scan": "passed",
+  "core_optional_dependency_isolation": "passed",
+  "verification_tool": "pypi-attestations==0.0.30",
+  "ci": "https://github.com/CutbackAI/cutback/actions/runs/40441286970",
+  "security": "https://github.com/CutbackAI/cutback/actions/runs/40441286959",
+  "paid_provider_calls": 0,
+  "production_deployments": 0,
+  "certified_release_commit_and_publisher": "passed",
+  "hosted_python_tests": {
+    "3.11.18": {
+      "passed": 206,
+      "skipped": 4
+    },
+    "3.13.18": {
+      "passed": 205,
+      "skipped": 5
+    },
+    "legacy_per_lane": 21
+  },
+  "public_pypi_minimal_sample": {
+    "version": "0.1.0.dev4",
+    "installation": "public PyPI server,openai distribution",
+    "independent_temporary_workspace": true,
+    "application_repository_accessed": false,
+    "application_observations": 12,
+    "source_workflows": 2,
+    "compact_sample_gate": "passed",
+    "unsafe_required_priority_gate": "rejected",
+    "current_evaluator_evidence": "deterministic-v3",
+    "encrypted_paired_cases": "passed",
+    "encrypted_source_diff_and_rollback": "passed",
+    "paid_provider_calls": 0,
+    "production_deployed": false,
+    "authenticated_browser_axe_mobile": "passed",
+    "interrupt_cleanup": "passed"
+  },
+  "publication_boundary_source_reachable_history_and_archives": "passed",
+  "public_marker_findings": 0
+}
