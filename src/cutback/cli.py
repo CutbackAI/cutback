@@ -338,7 +338,7 @@ def instrument(
 
             location = private_directory(root, ".cutback")
             write_private(location / "source-map.json", proposal["source_map"])
-            (root / proposal["source_file"]).write_text(proposal["after"], encoding="utf-8")
+            (root / proposal["source_file"]).write_bytes(proposal["after"].encode("utf-8"))
         if json_output:
             output(
                 {

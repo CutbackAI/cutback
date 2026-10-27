@@ -1,5 +1,6 @@
 """Private, atomic metadata checkpoints; no application imports or optional dependencies."""
 
+import importlib
 import json
 import os
 from contextlib import contextmanager
@@ -65,12 +66,10 @@ def workspace_lock(directory: Path):
         stream.seek(0)
         try:
             if os.name == "nt":
-                import msvcrt
+                msvcrt = importlib.import_module("msvcrt")
 
                 msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
             else:
-                import importlib
-
                 fcntl = importlib.import_module("fcntl")
 
                 fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -81,12 +80,10 @@ def workspace_lock(directory: Path):
         finally:
             stream.seek(0)
             if os.name == "nt":
-                import msvcrt
+                msvcrt = importlib.import_module("msvcrt")
 
                 msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
             else:
-                import importlib
-
                 fcntl = importlib.import_module("fcntl")
 
                 fcntl.flock(fd, fcntl.LOCK_UN)

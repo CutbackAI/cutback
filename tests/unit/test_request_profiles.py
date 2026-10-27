@@ -65,6 +65,22 @@ def test_unqualified_dynamic_or_custom_destination_abstains(tmp_path, change):
         inspect(tmp_path, change(SOURCE))
 
 
+@pytest.mark.parametrize(
+    "mutation",
+    ["messages.append({'role':'user','content':text})", "messages[0]['content']='changed'"],
+)
+def test_mutated_messages_are_not_replayed_as_their_old_literal(tmp_path, mutation):
+    source = """from openai import OpenAI
+client=OpenAI()
+def classify(text):
+    messages=[{"role":"user","content":text}]
+    MUTATION
+    return client.chat.completions.create(model="gpt-4.1", messages=messages,max_tokens=64)
+""".replace("MUTATION", mutation)
+    with pytest.raises(ValueError, match="REQUIRES_REVIEW"):
+        inspect(tmp_path, source)
+
+
 def test_rendered_request_budget_is_checked_before_executor_or_reservation():
     from cutback.core.request_profiles import RequestContract
     from cutback.evals.experiments import Budget, BudgetLedger

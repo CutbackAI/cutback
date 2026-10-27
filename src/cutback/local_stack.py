@@ -167,7 +167,7 @@ def up(root: Path, *, port=8080, allow_payloads=False):
         (location / "failure.json").unlink(missing_ok=True)
         # Secret values never enter argv or a captured log. Child startup reports fixed codes only.
         options = (
-            {"creationflags": subprocess.CREATE_NO_WINDOW}
+            {"creationflags": getattr(subprocess, "CREATE_NO_WINDOW")}
             if os.name == "nt"
             else {"start_new_session": True}
         )

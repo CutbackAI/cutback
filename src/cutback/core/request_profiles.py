@@ -261,10 +261,21 @@ class Resolver:
                             else []
                         )
                     )
-                    if any(isinstance(t, ast.Name) and t.id == name for t in targets) and (
-                        id(write) not in direct or isinstance(write, (ast.AugAssign, ast.NamedExpr))
+                    if any(
+                        any(isinstance(n, ast.Name) and n.id == name for n in ast.walk(t))
+                        for t in targets
+                    ) and (
+                        id(write) not in direct
+                        or isinstance(write, (ast.AugAssign, ast.NamedExpr))
+                        or any(not isinstance(t, ast.Name) for t in targets)
                     ):
                         raise ValueError("CONDITIONAL_REQUEST_VALUE_REQUIRES_REVIEW")
+                    if (
+                        isinstance(write, ast.Call)
+                        and isinstance(write.func, ast.Attribute)
+                        and (isinstance(write.func.value, ast.Name) and write.func.value.id == name)
+                    ):
+                        raise ValueError("MUTATED_REQUEST_VALUE_REQUIRES_REVIEW")
             values = [
                 n.value
                 for n in [*tree.body, *scope]
@@ -313,6 +324,17 @@ class Resolver:
             and len(node.func.value.args) == 1
             and not node.args
         ):
+            if node.func.value.keywords or any(k.arg != "encoding" for k in node.keywords):
+                raise ValueError("PROMPT_FILE_OPTIONS_REQUIRE_REVIEW")
+            if node.keywords and ast.literal_eval(node.keywords[0].value) not in {"utf-8", "utf8"}:
+                raise ValueError("PROMPT_FILE_ENCODING_REQUIRES_REVIEW")
+            if not any(
+                isinstance(item, ast.ImportFrom)
+                and item.module == "pathlib"
+                and any(alias.name == "Path" and alias.asname is None for alias in item.names)
+                for item in self.module(relative).body
+            ):
+                raise ValueError("PROMPT_PATH_BINDING_REQUIRES_REVIEW")
             name = ast.literal_eval(node.func.value.args[0])
             if not isinstance(name, str):
                 raise ValueError("DYNAMIC_PROMPT_PATH")
@@ -368,12 +390,19 @@ class Resolver:
                 ],
             }
         if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+            items = [
+                self.template(n, relative, before, parameters, depth + 1)
+                for n in (node.left, node.right)
+            ]
+            if any(
+                item["op"] not in {"join", "parameter"}
+                and not (item["op"] == "literal" and isinstance(item["value"], str))
+                for item in items
+            ):
+                raise ValueError("NON_TEXT_CONCATENATION_REQUIRES_REVIEW")
             return {
                 "op": "join",
-                "items": [
-                    self.template(n, relative, before, parameters, depth + 1)
-                    for n in (node.left, node.right)
-                ],
+                "items": items,
             }
         if (
             isinstance(node, ast.Subscript)
