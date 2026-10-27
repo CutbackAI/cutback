@@ -1,5 +1,7 @@
 # Product completion ledger
 
+**Scope correction, 27 October 2026:** this is a historical ledger for bounded engineering releases. It does not establish a complete evaluation/monitoring product or market readiness. The expanded [120-requirement baseline](market-baseline.md) records material missing/partial workflows; [the implementation sequence](implementation-roadmap.md) remains planned. Current accepted engineering evidence is in [progress](progress.md). Keep historical results below as release-specific evidence, not a blanket completion claim.
+
 26 October usability follow-up: prior engineering completion did not establish a comprehensible newcomer experience. The new independent support-desk application, one-command persistent local demo, guided comparison, encrypted case viewer and beginner README address that gap. Required scorecards, YAML variants, paired segment evidence and separately approved stages are implemented and tested. Full Windows acceptance: **163 passed/four legacy skips**, separate legacy **21 passed**, browser/axe/mobile and native CPU training included. Use [the sample testing checklist](testing-the-sample.md) to assess the experience yourself; customer/provider/production acceptance below remains separate.
 
 Started 24 October 2026 after the request to finish the complete product. This ledger supersedes any interpretation that publishing dev1 completed the master specification. Released dev1 remains immutable. The engineering release below is published as 0.1.0.dev2; real customer/production acceptance remains separate.
