@@ -18,8 +18,8 @@ The 26 October review found defects beyond the existing dev3 regression suite. T
 | A12 | Evidence-tier-specific primary result wording | Technical-only primary wording and unknown intervals tested in browser |
 | A13 | Integration diagnostics, clear CLI opportunities, consistent docs | Guided diagnostics, fresh zero counters, final health and CLI grouping implemented |
 | A14 | Enforced repository/release and secret protections | Secret switches, required PR checks, main protection and immutable tags verified via API |
-| A15 | Exact-release security workflow dependencies and toolchain checks | Publish depends on exact-revision CI and security; toolchain regression added |
-| A16 | Maintenance isolation and bounded load/recovery acceptance | Failure isolation, 100001-row retention and concurrent two-tenant Linux smoke passed; no production SLA claimed |
+| A15 | Exact-release security workflow dependencies and toolchain checks | Publish depends on exact-revision CI and security; toolchain and fail-closed SARIF gate regressions added |
+| A16 | Maintenance isolation and bounded load/recovery acceptance | Single-pass SQL metadata extraction, failure isolation, 100001-row retention and concurrent two-tenant Linux smoke passed; no production SLA claimed |
 | A17 | Supported ecosystem/coexistence and agent-client qualification | Scoped OTLP JSON profile, native/OTel context and overlap refusal tested; actual third-party clients remain external qualification |
 | A18 | Adversarial regressions and independent consumer acceptance | Adversarial regressions, independent wheel consumer and native framework examples passed locally |
 | A19 | Object/key recovery and clean-host acceptance | Linux database/object/key recovery passed; remote S3/PITR/IdP/cluster acceptance remains external |

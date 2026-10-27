@@ -9,7 +9,7 @@ from uuid import NAMESPACE_URL, UUID, uuid5
 
 from fastapi import Depends, HTTPException, Query
 from pydantic import Field
-from sqlalchemy import case, delete, func, select, text
+from sqlalchemy import case, delete, func, select, text, true
 from sqlalchemy.dialects.postgresql import insert
 
 from cutback.core.health import HealthBatch
@@ -27,7 +27,7 @@ from cutback.server.db import (
     StoredEvent,
     WorkflowRecord,
 )
-from cutback.server.repository import render_usage, usage_columns
+from cutback.server.repository import event_metadata, render_usage, usage_columns
 
 
 def enforce_quota(sessions, key: str, limit: int):
@@ -99,19 +99,22 @@ def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False
                 .limit(1)
             ):
                 raise ValueError("LATE_EVENT_FOR_ARCHIVED_DAY: reconcile before pruning")
+            metadata = event_metadata()
             dimensions = [
-                StoredEvent.event["environment"].as_string(),
+                metadata.c.environment,
                 func.coalesce(StoredEvent.workflow_id, "workflow_unattributed"),
                 StoredEvent.provider,
                 func.coalesce(StoredEvent.model_actual, "unknown_model"),
-                func.coalesce(StoredEvent.event["traffic_kind"].as_string(), "unknown"),
-                func.coalesce(StoredEvent.event["call_site_id"].as_string(), "unattributed"),
+                func.coalesce(metadata.c.traffic_kind, "unknown"),
+                func.coalesce(metadata.c.call_site_id, "unattributed"),
             ]
             groups = session.execute(
                 select(
                     *(value.label("dimension_" + str(i)) for i, value in enumerate(dimensions)),
-                    *usage_columns(),
+                    *usage_columns(StoredEvent, metadata),
                 )
+                .select_from(StoredEvent)
+                .join(metadata, true())
                 .where(*day_scope)
                 .group_by(*dimensions)
                 .limit(10001)

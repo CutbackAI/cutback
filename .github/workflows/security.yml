@@ -39,6 +39,7 @@ jobs:
       contents: read
       security-events: write
     strategy:
+      fail-fast: false
       matrix:
         language: [python, javascript-typescript]
     steps:
@@ -48,3 +49,7 @@ jobs:
           languages: ${{ matrix.language }}
           build-mode: none
       - uses: github/codeql-action/analyze@793b778da9c9275a0f276522b27cb5fc14bba279
+        with:
+          output: .cutback/codeql-results
+      - name: Reject CodeQL findings before release
+        run: python3 scripts/check_codeql_results.py .cutback/codeql-results

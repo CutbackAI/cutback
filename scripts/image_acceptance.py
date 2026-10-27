@@ -24,6 +24,7 @@ from backup_restore import backup, compose, restore
 from psycopg import sql
 
 ROOT = Path(__file__).resolve().parents[1]
+PREAMBLE = "import json,os,sys\nos.environ.update(json.load(sys.stdin))\n"
 
 
 def checked(command, *, source=None, timeout=180, env=None):
@@ -35,7 +36,17 @@ def checked(command, *, source=None, timeout=180, env=None):
     return result.stdout
 
 
+def inside(container, code, values):
+    return checked(
+        ["docker", "exec", "-i", container, "/app/.venv/bin/python", "-c", PREAMBLE + code],
+        source=json.dumps(values),
+    )
+
+
 def main(image):
+    from cutback.server.migrate import CURRENT_REVISION
+
+    image_id = json.loads(checked(["docker", "image", "inspect", image]))[0]["Id"]
     password = (ROOT / "infra/compose/secrets/db_password").read_text().strip()
     kwargs = dict(host="127.0.0.1", port=55432, user="cutback", password=password, dbname="cutback")
     names = ["cutback_image_" + uuid4().hex, "cutback_recovered_" + uuid4().hex]
@@ -67,50 +78,50 @@ def main(image):
     with psycopg.connect(**kwargs, autocommit=True) as conn:
         for name in names:
             conn.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(name)))
+    server_process = None
     try:
         with tempfile.TemporaryDirectory(prefix="cutback-image-acceptance-") as temporary:
             directory = Path(temporary)
             values = {
-                "database": (
+                "CUTBACK_DATABASE_URL": (
                     f"postgresql+psycopg://cutback:{quote(password, safe='')}"
                     f"@postgres:5432/{names[0]}"
                 ),
-                "admin": admin,
-                "payload": base64.b64encode(os.urandom(32)).decode(),
+                "CUTBACK_ADMIN_TOKEN": admin,
+                "CUTBACK_PAYLOAD_KEY": base64.b64encode(os.urandom(32)).decode(),
             }
-            for name, value in values.items():
-                path = directory / name
-                path.write_text(value, encoding="utf-8")
-                path.chmod(0o600)
-            checked(
+            # Secrets cross an anonymous stdin pipe, never a host file, command argument,
+            # Docker Config.Env entry or captured console output.
+            server_process = subprocess.Popen(
                 [
                     "docker",
                     "run",
                     "--rm",
-                    "-d",
+                    "-i",
                     "--name",
                     container,
                     "--network",
                     network,
                     "-p",
                     f"127.0.0.1:{port}:8080",
-                    "--mount",
-                    f"type=bind,source={directory.resolve()},target=/run/cutback-secrets,readonly",
-                    "-e",
-                    "CUTBACK_DATABASE_URL_FILE=/run/cutback-secrets/database",
-                    "-e",
-                    "CUTBACK_ADMIN_TOKEN_FILE=/run/cutback-secrets/admin",
-                    "-e",
-                    "CUTBACK_PAYLOAD_KEY_FILE=/run/cutback-secrets/payload",
                     "-e",
                     "CUTBACK_PAYLOAD_DIR=/tmp/encrypted",
                     "-e",
                     "CUTBACK_ALLOW_PAYLOADS=true",
                     "-e",
                     "CUTBACK_DEV_HTTP=true",
-                    image,
-                ]
+                    image_id,
+                    "/app/.venv/bin/python",
+                    "-c",
+                    PREAMBLE + "from cutback.server.boot import main; main()",
+                ],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                text=True,
             )
+            server_process.stdin.write(json.dumps(values))
+            server_process.stdin.close()
             endpoint = f"http://127.0.0.1:{port}"
             with httpx.Client(
                 base_url=endpoint,
@@ -140,14 +151,7 @@ app.state.artifact_store=configured_store()
 manifest=seed_support_desk(app,"http://127.0.0.1:8080",os.environ["CUTBACK_ADMIN_TOKEN"],Path("/tmp/owned-support-desk"))
 print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":manifest["paid_provider_calls"]}))
 """
-                manifest = json.loads(
-                    checked(
-                        ["docker", "exec", "-i", container, "/app/.venv/bin/python", "-"],
-                        source=code,
-                    )
-                    .strip()
-                    .splitlines()[-1]
-                )
+                manifest = json.loads(inside(container, code, values).strip().splitlines()[-1])
                 base = "/v1/projects/" + manifest["project_id"]
                 usage = client.get(
                     base + "/usage?traffic_kind=application&group_by=workflow"
@@ -191,14 +195,7 @@ with sessions() as session:
 print(json.dumps({"restored_and_rekeyed_objects":len(rows),"database_pointers_preserved":True}))
 engine.dispose()
 """.replace("RECOVERED", repr(names[1]))
-                recovered = json.loads(
-                    checked(
-                        ["docker", "exec", "-i", container, "/app/.venv/bin/python", "-"],
-                        source=recovery,
-                    )
-                    .strip()
-                    .splitlines()[-1]
-                )
+                recovered = json.loads(inside(container, recovery, values).strip().splitlines()[-1])
 
                 def counts(name):
                     with psycopg.connect(**{**kwargs, "dbname": name}) as conn:
@@ -218,6 +215,11 @@ engine.dispose()
 
                 before, after = counts(names[0]), counts(names[1])
                 assert before == after
+                with psycopg.connect(**{**kwargs, "dbname": names[1]}) as connection:
+                    revision = connection.execute(
+                        "SELECT version_num FROM alembic_version"
+                    ).fetchone()[0]
+                assert revision == CURRENT_REVISION
                 # Two concurrent tenants, replayed receipts and unknown pricing, over real HTTP.
                 from concurrent.futures import ThreadPoolExecutor
 
@@ -305,9 +307,10 @@ engine.dispose()
                 )
                 result = {
                     "image": image,
+                    "image_id": image_id,
                     "uid": 10001,
                     "python": "3.11.18",
-                    "migration": "0006",
+                    "migration": revision,
                     "sample_application_calls": 12,
                     "source_workflows": 2,
                     "paid_provider_calls": 0,
@@ -315,6 +318,7 @@ engine.dispose()
                     "row_counts_match": True,
                     **recovered,
                     "production_changed": False,
+                    "secret_delivery": "anonymous_stdin_pipes",
                     "independent_otel_producer_and_replay": "passed",
                     "concurrent_load": {
                         "tenants": 2,
@@ -330,6 +334,12 @@ engine.dispose()
         subprocess.run(
             ["docker", "rm", "-f", container], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
         )
+        if server_process is not None:
+            try:
+                server_process.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                server_process.kill()
+                server_process.wait()
         with psycopg.connect(**kwargs, autocommit=True) as conn:
             for name in names:
                 conn.execute(sql.SQL("DROP DATABASE {} WITH (FORCE)").format(sql.Identifier(name)))

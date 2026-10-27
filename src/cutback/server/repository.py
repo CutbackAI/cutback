@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Protocol
 from uuid import UUID, uuid4
 
-from sqlalchemy import BigInteger, Float, String, cast, func, select
+from sqlalchemy import BigInteger, Float, String, cast, column, func, select, true
 from sqlalchemy.dialects.postgresql import insert
 
 from cutback.core.models import EventBatch, IngestReceipt
@@ -11,18 +11,38 @@ from cutback.pricing import Catalog
 from cutback.server.db import DailyUsage, RateOverride, StoredEvent
 
 
-def usage_columns(table=StoredEvent):
-    duration = cast(table.event["duration_ms"].as_string(), Float)
-    input_tokens = cast(table.event["input_tokens"].as_string(), BigInteger)
-    output_tokens = cast(table.event["output_tokens"].as_string(), BigInteger)
-    reported = table.event["usage_source"].as_string() == "provider_reported"
+def event_metadata(table=StoredEvent):
+    """Parse each JSON event once in PostgreSQL, rather than once per aggregate expression."""
+    fields = {
+        "environment": String,
+        "traffic_kind": String,
+        "call_site_id": String,
+        "duration_ms": Float,
+        "input_tokens": BigInteger,
+        "output_tokens": BigInteger,
+        "usage_source": String,
+        "logical_request_id": String,
+        "status": String,
+        "sampling_policy_id": String,
+    }
+    return (
+        func.json_to_record(table.event)
+        .table_valued(*(column(name, kind) for name, kind in fields.items()))
+        .render_derived(name="event_metadata", with_types=True)
+        .lateral()
+    )
+
+
+def usage_columns(table, metadata):
+    duration = metadata.c.duration_ms
+    input_tokens = metadata.c.input_tokens
+    output_tokens = metadata.c.output_tokens
+    reported = metadata.c.usage_source == "provider_reported"
     return [
         func.count().label("requests"),
         func.count(
             func.distinct(
-                func.coalesce(
-                    table.event["logical_request_id"].as_string(), cast(table.event_id, String)
-                )
+                func.coalesce(metadata.c.logical_request_id, cast(table.event_id, String))
             )
         ).label("operations"),
         func.count(table.cost_usd).label("priced_requests"),
@@ -35,9 +55,9 @@ def usage_columns(table=StoredEvent):
         func.count()
         .filter(input_tokens.is_(None) | output_tokens.is_(None))
         .label("missing_usage"),
-        func.count().filter(table.event["status"].as_string() == "error").label("errors"),
+        func.count().filter(metadata.c.status == "error").label("errors"),
         func.count()
-        .filter(table.event["sampling_policy_id"].as_string() == "external-otel-spans-v1")
+        .filter(metadata.c.sampling_policy_id == "external-otel-spans-v1")
         .label("external_otel"),
         func.percentile_cont(0.5).within_group(duration).label("p50"),
         func.percentile_cont(0.95).within_group(duration).label("p95"),
@@ -162,33 +182,34 @@ class PostgresEventRepository:
         if not session.in_transaction():
             session.connection(execution_options={"isolation_level": "REPEATABLE READ"})
         table = StoredEvent
+        metadata = event_metadata(table)
         group = {
             "model": table.model_actual,
             "provider": table.provider,
             "workflow": func.coalesce(table.workflow_id, "workflow_unattributed"),
-            "environment": table.event["environment"].as_string(),
+            "environment": metadata.c.environment,
             "day": func.date_trunc("day", table.occurred_at),
-            "call_site": func.coalesce(table.event["call_site_id"].as_string(), "unattributed"),
-            "traffic": func.coalesce(table.event["traffic_kind"].as_string(), "unknown"),
+            "call_site": func.coalesce(metadata.c.call_site_id, "unattributed"),
+            "traffic": func.coalesce(metadata.c.traffic_kind, "unknown"),
         }[group_by]
-        selected = usage_columns(table)
+        selected = usage_columns(table, metadata)
         scope = [
             table.project_id == project_id,
             table.occurred_at >= start,
             table.occurred_at < end,
         ]
         if traffic_kind:
-            scope.append(
-                func.coalesce(table.event["traffic_kind"].as_string(), "unknown") == traffic_kind
-            )
+            scope.append(func.coalesce(metadata.c.traffic_kind, "unknown") == traffic_kind)
         if call_site:
-            scope.append(
-                func.coalesce(table.event["call_site_id"].as_string(), "unattributed") == call_site
-            )
+            scope.append(func.coalesce(metadata.c.call_site_id, "unattributed") == call_site)
 
-        total = session.execute(select(*selected).where(*scope)).one()
+        total = session.execute(
+            select(*selected).select_from(table).join(metadata, true()).where(*scope)
+        ).one()
         groups = session.execute(
             select(group.label("key"), *selected)
+            .select_from(table)
+            .join(metadata, true())
             .where(*scope)
             .group_by(group)
             .order_by(func.sum(table.cost_usd).desc().nullslast(), func.count().desc())
@@ -196,6 +217,8 @@ class PostgresEventRepository:
         ).all()
         unknown_reasons = session.execute(
             select(table.cost_reason, func.count())
+            .select_from(table)
+            .join(metadata, true())
             .where(*scope, table.cost_usd.is_(None))
             .group_by(table.cost_reason)
         ).all()
