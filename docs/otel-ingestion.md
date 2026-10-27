@@ -2,11 +2,13 @@
 
 Cutback accepts a deliberately bounded **OTLP/HTTP JSON GenAI metadata profile** at `POST /v1/ingest/otel/v1/traces`. It uses the existing scoped ingestion key, shared quotas, PostgreSQL transaction, idempotency and reporting path. The key determines the project and environment; neither comes from an untrusted project identifier in the body. This is an optional alternative to native SDK observation, not a general tracing backend.
 
+Source checkouts also provide a separate [whole-workflow metadata projection](workflow-tracing.md) for generic agent/tool/retrieval spans and sessions. Its endpoint, contracts and unknown-status semantics are distinct from this older priced GenAI profile. It is not yet in PyPI dev5.
+
 The wire shape follows [OTLP 1.11.1 HTTP/JSON](https://opentelemetry.io/docs/specs/otlp/) with the [GenAI attribute registry](https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/). Trace/span IDs use hexadecimal strings; 64-bit timestamps accept decimal strings or JSON integers. Up to 200 completed spans and 1 MiB are accepted per request. Empty exports succeed. Unsupported provider/non-GenAI spans produce explicit `partialSuccess.rejectedSpans`; malformed or unsafe metadata rejects the entire batch without retaining any span. JSON only: protobuf, gRPC, metrics, logs, arbitrary span events and links are outside this profile.
 
 ## Configure the producer
 
-Export only approved GenAI metadata through a filtered branch of your existing pipeline. Keep your ordinary tracing backend. Do not enable Cutback's native hooks for the same calls: a second export path would duplicate observations. Existing SDK wrappers are deliberately refused by native initialization; OTLP reuse avoids that conflict.
+Export only approved GenAI metadata through a filtered branch of your existing pipeline. Keep your ordinary tracing backend. Prefer one source per call. Source checkouts exclude retained external mirrors from cost reports when exact project/environment/trace/span native identity exists; different IDs cannot be reconciled, and legacy daily summaries cannot be deduplicated after identities expire. Existing SDK wrappers are deliberately refused by native initialization; OTLP reuse avoids that conflict.
 
 Use an HTTPS destination and `Authorization: Bearer SCOPED_INGEST_KEY` from your runtime secret manager. Local development permits loopback HTTP. Configure the complete traces URL above, or an OTLP HTTP/JSON base endpoint ending in `/v1/ingest/otel` when your exporter appends `/v1/traces`. Confirm the actual exporter protocol and destination in your own environment; an SDK that only exports protobuf needs a reviewed JSON-capable collector/exporter branch.
 

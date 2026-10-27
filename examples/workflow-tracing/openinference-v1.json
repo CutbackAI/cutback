@@ -1,0 +1,197 @@
+{
+  "resourceSpans": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "synthetic-support"
+            }
+          },
+          {
+            "key": "deployment.environment.name",
+            "value": {
+              "stringValue": "staging"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "cutback.synthetic.openinference",
+            "version": "1"
+          },
+          "spans": [
+            {
+              "traceId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "spanId": "0000000000000002",
+              "parentSpanId": "0000000000000001",
+              "name": "Synthetic content \u2014 discarded",
+              "kind": 1,
+              "startTimeUnixNano": "1793131200100000000",
+              "endTimeUnixNano": "1793131200200000000",
+              "attributes": [
+                {
+                  "key": "session.id",
+                  "value": {
+                    "stringValue": "synthetic-session"
+                  }
+                },
+                {
+                  "key": "cutback.workflow_id",
+                  "value": {
+                    "stringValue": "support.answer"
+                  }
+                },
+                {
+                  "key": "openinference.span.kind",
+                  "value": {
+                    "stringValue": "RETRIEVER"
+                  }
+                },
+                {
+                  "key": "cutback.operation",
+                  "value": {
+                    "stringValue": "retrieve.policy"
+                  }
+                },
+                {
+                  "key": "input.value",
+                  "value": {
+                    "stringValue": "SYNTHETIC_CONTENT_NOT_RETAINED"
+                  }
+                }
+              ],
+              "status": {},
+              "flags": 256
+            },
+            {
+              "traceId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "spanId": "0000000000000003",
+              "parentSpanId": "0000000000000001",
+              "name": "Synthetic content \u2014 discarded",
+              "kind": 1,
+              "startTimeUnixNano": "1793131200200000000",
+              "endTimeUnixNano": "1793131200300000000",
+              "attributes": [
+                {
+                  "key": "session.id",
+                  "value": {
+                    "stringValue": "synthetic-session"
+                  }
+                },
+                {
+                  "key": "cutback.workflow_id",
+                  "value": {
+                    "stringValue": "support.answer"
+                  }
+                },
+                {
+                  "key": "openinference.span.kind",
+                  "value": {
+                    "stringValue": "TOOL"
+                  }
+                },
+                {
+                  "key": "cutback.operation",
+                  "value": {
+                    "stringValue": "lookup.order"
+                  }
+                },
+                {
+                  "key": "input.value",
+                  "value": {
+                    "stringValue": "SYNTHETIC_CONTENT_NOT_RETAINED"
+                  }
+                }
+              ],
+              "status": {},
+              "flags": 256
+            },
+            {
+              "traceId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "spanId": "0000000000000004",
+              "parentSpanId": "0000000000000001",
+              "name": "Synthetic content \u2014 discarded",
+              "kind": 1,
+              "startTimeUnixNano": "1793131200300000000",
+              "endTimeUnixNano": "1793131200400000000",
+              "attributes": [
+                {
+                  "key": "session.id",
+                  "value": {
+                    "stringValue": "synthetic-session"
+                  }
+                },
+                {
+                  "key": "cutback.workflow_id",
+                  "value": {
+                    "stringValue": "support.answer"
+                  }
+                },
+                {
+                  "key": "openinference.span.kind",
+                  "value": {
+                    "stringValue": "LLM"
+                  }
+                },
+                {
+                  "key": "cutback.operation",
+                  "value": {
+                    "stringValue": "compose.answer"
+                  }
+                },
+                {
+                  "key": "input.value",
+                  "value": {
+                    "stringValue": "SYNTHETIC_CONTENT_NOT_RETAINED"
+                  }
+                }
+              ],
+              "status": {},
+              "flags": 256
+            },
+            {
+              "traceId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "spanId": "0000000000000001",
+              "name": "Synthetic user request \u2014 discarded",
+              "kind": 1,
+              "startTimeUnixNano": "1793131200000000000",
+              "endTimeUnixNano": "1793131200500000000",
+              "attributes": [
+                {
+                  "key": "session.id",
+                  "value": {
+                    "stringValue": "synthetic-session"
+                  }
+                },
+                {
+                  "key": "cutback.workflow_id",
+                  "value": {
+                    "stringValue": "support.answer"
+                  }
+                },
+                {
+                  "key": "openinference.span.kind",
+                  "value": {
+                    "stringValue": "AGENT"
+                  }
+                },
+                {
+                  "key": "cutback.operation",
+                  "value": {
+                    "stringValue": "support.answer"
+                  }
+                }
+              ],
+              "status": {},
+              "flags": 256
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -28,6 +28,14 @@ from cutback.server.enterprise_db import (
     RolloutRecord,
     TrainingJob,
 )
+from cutback.server.trace_db import (
+    ExecutionSession,
+    ExecutionSpan,
+    ExecutionTrace,
+    ExternalEvaluation,
+    SessionTrace,
+    TraceContent,
+)
 
 
 def install_privacy(app, sessions, authorize, scope):
@@ -47,6 +55,12 @@ def install_privacy(app, sessions, authorize, scope):
         def records():
             with sessions() as session:
                 for cls in (
+                    ExecutionTrace,
+                    ExecutionSpan,
+                    ExecutionSession,
+                    SessionTrace,
+                    ExternalEvaluation,
+                    TraceContent,
                     ProjectSettings,
                     ExperimentSchedule,
                     RolloutRecord,

@@ -76,6 +76,9 @@ export function SampleGuide({
         <button onClick={() => navigate("Changes")}>
           Review source change
         </button>
+        <button onClick={() => navigate("Traces")}>
+          Investigate a failed session
+        </button>
       </div>
       {error && <p role="alert">{error}</p>}
       {loading && <p role="status">Loading sample evidence…</p>}

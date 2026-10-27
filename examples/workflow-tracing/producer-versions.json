@@ -1,0 +1,6 @@
+{
+  "opentelemetry-sdk": "1.45.1",
+  "opentelemetry-proto": "1.45.1",
+  "opentelemetry-exporter-otlp-proto-common": "1.45.1",
+  "openinference-semantic-conventions": "0.1.42"
+}

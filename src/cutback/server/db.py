@@ -343,3 +343,4 @@ def database(url: str):
 
 # Register the additive shared control-plane models only after Base and foundation classes exist.
 importlib.import_module("cutback.server.enterprise_db")
+importlib.import_module("cutback.server.trace_db")

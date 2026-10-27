@@ -26,7 +26,7 @@ Evidence for expectations: [Phoenix](https://github.com/Arize-ai/phoenix), [Brai
 | F03 | An unfamiliar developer completes the sample without maintainer intervention and explains why a candidate failed | External | Automated sample evidence exists; observed first-user trials do not |
 | F04 | Existing coding agent can discover commands, prepare work and resume an interrupted workflow | Bounded | `agent.py`, `cli_agent.py`, packaged agent workflows; client discovery still needs independent acceptance |
 | F05 | Setup diagnoses unsupported source/request contracts and offers a concrete next action | Partial | Request-profile rejection reasons exist; guided resolution/adapters remain narrow |
-| F06 | Read an existing OTel/OpenInference producer without requiring a new model client | Partial | `server/otel.py`; strict metadata JSON profile, not full exporter/convention compatibility |
+| F06 | Read an existing OTel/OpenInference producer without requiring a new model client | Bounded | `server/workflow_otel.py`, pinned OpenTelemetry 1.45.1 / OpenInference 0.1.42 producer; explicit bounded JSON metadata projection, not all exporters |
 | F07 | Import a qualified existing trace export while preserving provenance and unknown fields | Missing | No qualified Langfuse/Phoenix/Braintrust export adapters |
 | F08 | Import an existing evaluation suite with declared inputs/expected outputs/criteria | Partial | `evals/records.py` maps JSON/JSONL/CSV and `datasets.py` freezes native cases; no qualified external suite adapters |
 | F09 | Produce a portable result consumable in another workspace or CI runner | Partial | Canonical server reports exist; local workflow journal/gate binds the original workspace/source |
@@ -39,15 +39,15 @@ Evidence: [OpenInference](https://arize-ai.github.io/openinference/spec/), [Phoe
 | ID | Acceptance requirement | Cutback state | Current anchor / remaining work |
 |---|---|---|---|
 | T01 | Observe supported native LLM calls without altering native response/stream semantics | Bounded | `instrumentation/`; pinned Python SDK qualification only |
-| T02 | Retain agent, chain, tool, retrieval, reranker and evaluator steps with parent identity | Missing | `LLMEvent`/OTLP currently retain qualified LLM calls, not a generic operation graph |
-| T03 | View one trace as an ordered tree/waterfall with per-step timing and status | Missing | Trace/span IDs exist; no complete operation investigation workflow |
-| T04 | Group multiple traces into a conversation/session with ordering and pagination | Missing | Workflow grouping is not a session model |
-| T05 | Preserve late/out-of-order spans and show missing parents without inventing edges | Missing | Requires generic span identity and explicit completeness semantics |
-| T06 | Distinguish unknown status, transport success and business-task success | Partial | LLM metering/status is conservative; workflow outcomes are not first class |
+| T02 | Retain agent, chain, tool, retrieval, reranker and evaluator steps with parent identity | Bounded | `core/traces.py`, `server/trace_db.py`; generic metadata spans separate from priced native attempts |
+| T03 | View one trace as an ordered tree/waterfall with per-step timing and status | Bounded | `web/src/traces.tsx`; authenticated tree/waterfall, nanosecond-safe timings, explicit page limits |
+| T04 | Group multiple traces into a conversation/session with ordering and pagination | Bounded | Environment-scoped session/trace associations and receipt-time keyset pagination; capture coverage remains unknown |
+| T05 | Preserve late/out-of-order spans and show missing parents without inventing edges | Bounded | Immutable scoped identities, late parents/results, visible cycles/orphans/skew/truncation; real PG concurrency tests |
+| T06 | Distinguish unknown status, transport success and business-task success | Bounded | Unknown/OK/error/incomplete execution status is separate from externally asserted task outcome; business success stays unknown |
 | T07 | Correlate retries with logical operations while preserving aggregate external-span uncertainty | Bounded | `core/models.py`, `server/repository.py`; external OTLP cannot infer attempts inside a span |
-| T08 | Filter/search recent traces by time, environment, workflow, model, error, session and release | Partial | Usage/time/workflow dimensions exist; trace/session search and release comparison incomplete |
-| T09 | Compare a failed workflow with a successful one and inspect where their paths diverged | Missing | Paired single-call case review is not trajectory comparison |
-| T10 | Display permitted content through purpose-scoped reads, while metadata-only users see useful structure | Partial | Encrypted case content reads exist; generic trace content plane not implemented |
+| T08 | Filter/search recent traces by time, environment, workflow, model, error, session and release | Bounded | Trace search by scoped environment, observed start window, workflow/service/release/native model/error/session; retained data only |
+| T09 | Compare a failed workflow with a successful one and inspect where their paths diverged | Bounded | Same-environment retained operation/kind ancestry/occurrence comparison, explicit unmatched/truncated paths; task quality not inferred |
+| T10 | Display permitted content through purpose-scoped reads, while metadata-only users see useful structure | Bounded | Separate opt-in encrypted span input/output, current policy/sampling/quota/expiry, audited purpose and admin-only reads; viewers retain useful structure |
 
 ## 3. Operational monitoring and incident response — core baseline / platform expansion
 
@@ -59,8 +59,8 @@ Evidence: [Datadog](https://docs.datadoghq.com/llm_observability/), [Logfire liv
 | O02 | Separate application traffic from evaluation, judge and optimizer overhead | Partial | Application/evaluation/judge dimensions exist; future optimizer calls must use the same accounting boundary |
 | O03 | Expose exporter drops/outages and avoid presenting partial telemetry as full population coverage | Bounded | SDK health/collector reports; coverage remains unknown where not measurable |
 | O04 | Define immutable/versioned online evaluation rules with sampling, scope and a budget ceiling | Missing | Experiment schedules do not constitute production evaluation rules |
-| O05 | Join delayed scores/feedback to the exact span, trace or session without tenant ambiguity | Missing | Needs durable target references, deduplication and late-result behavior |
-| O06 | Distinguish evaluator errors, missing data, invalid scores and actual application failures | Partial | Experiment reports separate failures; no unified live-eval result lifecycle |
+| O05 | Join delayed scores/feedback to the exact span, trace or session without tenant ambiguity | Bounded | Versioned immutable external result IDs, exact project/environment/trace/span/session targets and delayed joins |
+| O06 | Distinguish evaluator errors, missing data, invalid scores and actual application failures | Partial | External passed/failed/error/unknown shapes and absent results remain distinct; budgeted online evaluation execution is still Release 4 work |
 | O07 | Create alert rules with windows, minimum sample size, cooldown, deduplication and recovery | Missing | Health/rollout guardrails are not an incident/alert product |
 | O08 | Acknowledge/resolve an incident with owner, evidence links and an audit trail | Missing | No incident record or operator workflow |
 | O09 | Deliver configured webhooks/notifications with signed payloads, retries and delivery status | Missing | External messaging is not authorized by implementation alone; provide opt-in integration |
@@ -95,7 +95,7 @@ Evidence: [Promptfoo assertions](https://www.promptfoo.dev/docs/configuration/ex
 | E04 | Compare paired baseline/candidate cases and slices with grouped uncertainty | Bounded | `evals/comparisons.py`, `server/case_evidence.py`; sample adequacy still matters |
 | E05 | Repeat stochastic tasks and expose variation without hiding failed attempts | Bounded | Experiment repetitions and cost/completeness reporting |
 | E06 | Run the application's real local regression contract against a proposed change | Missing | Native request replay is not executing and verifying the whole application's behavior |
-| E07 | Accept precomputed outputs without secretly rerunning an application/model | Partial | Dataset references exist; generic externally executed evaluation-result import needs qualification |
+| E07 | Accept precomputed outputs without secretly rerunning an application/model | Partial | External scalar results can be ingested without inference; qualified external application-output/suite imports remain Release 2 work |
 | E08 | Produce machine-readable CI/JUnit outcomes with exact artifact/source provenance | Partial | `workflow gate` provides an exit status for same-workspace evidence; portable JUnit/PR pipeline absent |
 | E09 | Compare changed and unchanged workflows when a shared config/prompt is modified | Partial | `changes.py` warns about consumers; automatic impact regression testing missing |
 | E10 | Reproduce an experiment from pinned data, evaluator, native request and price snapshots | Bounded | Frozen native contract; identical stochastic outputs are not promised |

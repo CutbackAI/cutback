@@ -70,6 +70,8 @@ Use Cutback when you want a reviewable answer to “Can this workflow use a chea
 
 ## Explore further
 
+- [Unreleased whole-workflow investigation](https://github.com/CutbackAI/cutback/blob/main/docs/workflow-tracing.md): generic spans, sessions, an error waterfall and externally asserted delayed results, with an independent no-inference sample. Use a source checkout; the published dev5 wheel does not contain it.
+
 - [Product research and roadmap](https://github.com/CutbackAI/cutback/blob/main/docs/product-research.md): expanded market research, a [120-requirement baseline](https://github.com/CutbackAI/cutback/blob/main/docs/market-baseline.md), material missing workflows and the proposed reason to choose Cutback. The broader platform is not complete. [Unreleased optimization search](https://github.com/CutbackAI/cutback/blob/main/docs/optimization-search.md) adds model/output-limit portfolios, separate confirmation, trade-offs and an evidence gate in source checkouts.
 
 - [Other examples](https://github.com/CutbackAI/cutback/blob/v0.1.0.dev5/examples/README.md): sync/async/streams, FastAPI, Django, Lambda, workers and Node.

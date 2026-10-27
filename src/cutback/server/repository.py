@@ -3,12 +3,30 @@ from decimal import Decimal
 from typing import Protocol
 from uuid import UUID, uuid4
 
-from sqlalchemy import BigInteger, Float, String, cast, column, func, select, true
+from sqlalchemy import BigInteger, Float, String, cast, column, exists, func, select, true
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.orm import aliased
 
 from cutback.core.models import EventBatch, IngestReceipt
 from cutback.pricing import Catalog
 from cutback.server.db import DailyUsage, RateOverride, StoredEvent
+
+
+def canonical_attempt(table=StoredEvent):
+    """Prefer retained native attempts to an external mirror with exact scoped identity."""
+    native = aliased(StoredEvent)
+    external = table.event["sampling_policy_id"].as_string() == "external-otel-spans-v1"
+    mirror = exists(
+        select(native.id).where(
+            native.project_id == table.project_id,
+            native.environment_id == table.environment_id,
+            native.event["trace_id"].as_string() == table.event["trace_id"].as_string(),
+            native.event["span_id"].as_string() == table.event["span_id"].as_string(),
+            func.coalesce(native.event["sampling_policy_id"].as_string(), "")
+            != "external-otel-spans-v1",
+        )
+    ).correlate(table)
+    return ~func.coalesce(external, False) | ~mirror
 
 
 def event_metadata(table=StoredEvent):
@@ -194,6 +212,7 @@ class PostgresEventRepository:
         }[group_by]
         selected = usage_columns(table, metadata)
         scope = [
+            canonical_attempt(table),
             table.project_id == project_id,
             table.occurred_at >= start,
             table.occurred_at < end,
@@ -308,7 +327,9 @@ class PostgresEventRepository:
         if partial:
             result["summary"]["modeled_cost_usd"] = None
         result["coverage"]["external_span_semantics"] = (
-            "external spans may aggregate retries; do not export the same calls through both paths"
+            "external spans may aggregate retries; retained native attempts take precedence over "
+            "external mirrors only at exact project/environment/trace/span identity; "
+            "legacy retained daily summaries cannot be reconciled after raw identities expire"
         )
         return result
 

@@ -4,6 +4,8 @@
 
 The examples below are supplementary compatibility and integration references.
 
+Source checkouts also include [whole-workflow investigation](workflow-tracing/README.md): four synthetic agent/retrieval/tool/LLM steps, a failed tool and a delayed external score, viewed through real PostgreSQL and the Traces dashboard. This is separate from PyPI dev5's native single-call demo.
+
 Start from the repository with `uv sync --locked --all-extras --dev`. The runnable examples below use the **installed pinned native SDKs**, with provider HTTP intercepted by explicitly synthetic transports. They make no paid provider request or model download. Framework development servers bind loopback; they are examples, not production deployments.
 
 | Example | Run | What it demonstrates |

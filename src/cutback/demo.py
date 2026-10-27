@@ -145,6 +145,11 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
                 "expires_at": (datetime.now(UTC) + timedelta(days=1)).isoformat(),
             },
         )
+        from cutback.demo_traces import seed_execution_sample
+
+        execution_samples = seed_execution_sample(
+            control, project["id"], ingest, policy["id"], workflow
+        )
         cases = sample_cases()
         dataset = call(
             base + "/datasets",
@@ -344,6 +349,7 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
                 "sample_source": "cutback/sample_app/app.py",
                 "source_diff": patch,
                 "paid_provider_calls": 0,
+                "execution_samples": execution_samples,
             }
             workspace.mkdir(parents=True, exist_ok=True)
             (workspace / "sample-report.json").write_text(

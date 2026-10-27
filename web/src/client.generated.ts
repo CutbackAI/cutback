@@ -296,4 +296,60 @@ export function createSDK(request:Request) {return {
   ingest_v1_ingest_otel_v1_traces_post: (args:{body:components["schemas"]["TraceExport"]}) => {
     const query=new URLSearchParams();
     return request(`/ingest/otel/v1/traces`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  environments_v1_projects__project_id__environments_get: (args:{project_id:string;before?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.before!==undefined && args.before!==null) query.set("before",String(args.before));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/environments`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  environment_create_v1_projects__project_id__environments_post: (args:{project_id:string;body:components["schemas"]["EnvironmentInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/environments`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  workflow_spans_v1_ingest_spans_post: (args:{body:components["schemas"]["SpanBatch"]}) => {
+    const query=new URLSearchParams();
+    return request(`/ingest/spans`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  external_evaluations_v1_ingest_evaluations_post: (args:{body:components["schemas"]["EvaluationBatch"]}) => {
+    const query=new URLSearchParams();
+    return request(`/ingest/evaluations`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  traces_v1_projects__project_id__traces_get: (args:{project_id:string;environment_id:string;session_record_id?:string | null;before?:string | null;errors_only?:boolean;workflow?:string | null;service?:string | null;release?:string | null;model?:string | null;start?:string | null;end?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.environment_id!==undefined && args.environment_id!==null) query.set("environment_id",String(args.environment_id));
+    if(args.session_record_id!==undefined && args.session_record_id!==null) query.set("session_record_id",String(args.session_record_id));
+    if(args.before!==undefined && args.before!==null) query.set("before",String(args.before));
+    if(args.errors_only!==undefined && args.errors_only!==null) query.set("errors_only",String(args.errors_only));
+    if(args.workflow!==undefined && args.workflow!==null) query.set("workflow",String(args.workflow));
+    if(args.service!==undefined && args.service!==null) query.set("service",String(args.service));
+    if(args.release!==undefined && args.release!==null) query.set("release",String(args.release));
+    if(args.model!==undefined && args.model!==null) query.set("model",String(args.model));
+    if(args.start!==undefined && args.start!==null) query.set("start",String(args.start));
+    if(args.end!==undefined && args.end!==null) query.set("end",String(args.end));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/traces`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  detail_v1_projects__project_id__traces__trace_record_id__get: (args:{project_id:string;trace_record_id:string;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/traces/${encodeURIComponent(String(args.trace_record_id))}`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  compare_v1_projects__project_id__traces__trace_record_id__compare__other_trace_id__get: (args:{project_id:string;trace_record_id:string;other_trace_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/traces/${encodeURIComponent(String(args.trace_record_id))}/compare/${encodeURIComponent(String(args.other_trace_id))}`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  session_list_v1_projects__project_id__sessions_get: (args:{project_id:string;environment_id:string;before?:string | null;errors_only?:boolean;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.environment_id!==undefined && args.environment_id!==null) query.set("environment_id",String(args.environment_id));
+    if(args.before!==undefined && args.before!==null) query.set("before",String(args.before));
+    if(args.errors_only!==undefined && args.errors_only!==null) query.set("errors_only",String(args.errors_only));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/sessions`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  session_evaluations_v1_projects__project_id__sessions__session_record_id__evaluations_get: (args:{project_id:string;session_record_id:string;before?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.before!==undefined && args.before!==null) query.set("before",String(args.before));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/sessions/${encodeURIComponent(String(args.session_record_id))}/evaluations`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  projected_traces_v1_ingest_workflow_otel_v1_traces_post: (args:{body:components["schemas"]["TraceExport"]}) => {
+    const query=new URLSearchParams();
+    return request(`/ingest/workflow-otel/v1/traces`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  capture_v1_ingest_trace_content_post: (args:{body:components["schemas"]["TraceContentInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/ingest/trace-content`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  read_v1_projects__project_id__traces__trace_record_id__spans__span_id__content_post: (args:{project_id:string;trace_record_id:string;span_id:string;body:components["schemas"]["ContentPurpose"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/traces/${encodeURIComponent(String(args.trace_record_id))}/spans/${encodeURIComponent(String(args.span_id))}/content`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
 };}

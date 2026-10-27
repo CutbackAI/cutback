@@ -1,9 +1,11 @@
 """Actual React build -> real authenticated HTTP API -> disposable PostgreSQL; no inference."""
 
 import os
+import runpy
 import secrets
 import shutil
 import subprocess
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
 
@@ -65,6 +67,44 @@ def test_dashboard_authenticated_accessibility(postgres_url, tmp_path, event, mo
             ).status_code
             == 200
         )
+        fixture = runpy.run_path(str(root / "examples/workflow-tracing/sample.py"))
+        spans, evaluations = fixture["demonstration"]()
+        for path, data in (
+            ("/v1/ingest/evaluations", evaluations),
+            ("/v1/ingest/workflow-otel/v1/traces", spans),
+        ):
+            response = client.post(path, headers={"Authorization": "Bearer " + writer}, json=data)
+            assert response.status_code == 200, response.text
+        policy = client.post(
+            f"/v1/projects/{project}/capture-policies",
+            headers=headers,
+            json={
+                "enabled": True,
+                "approval_ref": "synthetic-browser-trace",
+                "rights_basis": "synthetic",
+                "environments": ["staging"],
+                "workflows": ["support.answer"],
+                "allowed_providers": ["local"],
+                "expires_at": (datetime.now(UTC) + timedelta(days=1)).isoformat(),
+                "sample_rate": 1,
+            },
+        ).json()["id"]
+        original = spans["resourceSpans"][0]["scopeSpans"][0]["spans"][0]
+        response = client.post(
+            "/v1/ingest/trace-content",
+            headers={"Authorization": "Bearer " + writer},
+            json={
+                "policy_id": policy,
+                "sample_id": str(uuid4()),
+                "trace_id": original["traceId"],
+                "span_id": original["spanId"],
+                "provider": "local",
+                "input": "Browser synthetic input",
+                "output": "<script>synthetic</script>",
+                "provenance_ref": "owned-browser-fixture",
+            },
+        )
+        assert response.status_code == 201, response.text
         result = subprocess.run(
             [shutil.which("npm.cmd") or shutil.which("npm") or "npm", "test"],
             cwd=root / "web",
