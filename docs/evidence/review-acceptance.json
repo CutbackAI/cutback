@@ -1,0 +1,39 @@
+{
+  "contract": "cutback.review-acceptance.v1",
+  "date": "2026-10-27",
+  "scope": "bounded_import_blind_review_and_cross_version_lineage",
+  "publication": "source_only_unreleased_pypi_dev5_unchanged",
+  "migrations": ["0008", "0009"],
+  "released_migrations_preserved_through": "0007",
+  "local_full_regression": {
+    "passed": 302,
+    "skipped": 5,
+    "skip_reasons": ["four legacy SDK cases run in a separate environment", "one Windows symlink privilege unavailable"],
+    "browser": true,
+    "postgresql": true,
+    "cpu_training": true,
+    "owned_local_docker": true
+  },
+  "post_full_review_and_migration_followup": {"passed": 9},
+  "separate_legacy_sdk": {"passed": 21},
+  "frontend_units": {"passed": 7},
+  "installed_server_wheel": {"origin_verified": true, "postgres_and_browser_passed": 17, "final_review_and_migration_followup_passed": 9},
+  "core_only_wheel_consumer": "passed_without_server_or_provider_sdks",
+  "static_checks": ["ruff", "ruff-format", "mypy_98_modules", "lock", "generated_openapi_client_types", "react_production_build"],
+  "archive_checks": ["wheel_and_sdist_build", "twine", "release_identity_license_reproducibility_inputs", "private_publication_boundary"],
+  "qualified_profiles": ["cutback-jsonl.v1", "openinference-otlp-json.v1", "promptfoo-0.125.1-results.v3"],
+  "actual_promptfoo_producer": {"version": "0.125.1", "synthetic_custom_provider": true, "minimal_isolated_environment": true, "compatible_rows": 2, "rejected_rows": 0},
+  "limitations": [
+    "source assertions remain externally asserted and historical outputs remain references",
+    "separate credentials do not establish independent human participation",
+    "human independence is explicitly owner attested and synthetic provenance is retained",
+    "semantic duplicates and arbitrary external formats are not universally detected",
+    "expired or deleted legacy content cannot be reconstructed",
+    "independent judge calibration and automatic scenario generation remain open",
+    "roadmap releases three through seven remain unfinished",
+    "hosted exact-head CI and security remain mandatory before merge"
+  ],
+  "paid_provider_requests": 0,
+  "production_deployed": false,
+  "customer_savings_verified": false
+}

@@ -95,6 +95,21 @@ def register(app, output, request, fail):
 
         output({"fixtures": discover_fixtures(target), "content_read": False, "uploaded": False})
 
+    @datasets.command("preview-import")
+    def preview_import(file: Path, profile: Annotated[str, typer.Option()]):
+        """Inspect a qualified format offline. No content upload or evaluator execution."""
+        from cutback.evals.importers import import_profile, preview_file
+
+        try:
+            selected = import_profile(profile)
+            output(preview_file(file, selected).preview())
+        except (ValueError, OSError):
+            fail(
+                "IMPORT_PREVIEW_REJECTED",
+                "Check the explicit versioned profile and bounded UTF-8 file; "
+                "nothing was uploaded.",
+            )
+
     @datasets.command("prepare")
     def prepare_records(
         file: Path,

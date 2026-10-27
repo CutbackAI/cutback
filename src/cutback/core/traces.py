@@ -171,6 +171,7 @@ class ObservedSpan(StrictModel):
     issues: list[str]
     native: NativeObservation | None
     content_available: bool = False
+    content_id: UUID | None = None
 
 
 class AssertedEvaluation(EvaluationResult):

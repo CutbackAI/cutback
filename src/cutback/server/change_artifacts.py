@@ -48,6 +48,12 @@ def install_changes(app, sessions, authorize, scope):
         store, ref = require_store(app), None
         try:
             with sessions.begin() as session:
+                from cutback.server.dataset_lineage import (
+                    lock_lineage,
+                    require_current_test_evidence,
+                )
+
+                lock_lineage(session, project_id)
                 rec = session.get(RecommendationRecord, recommendation_id)
                 if not rec or rec.project_id != project_id:
                     raise HTTPException(404, "RECOMMENDATION_NOT_FOUND")
@@ -65,6 +71,12 @@ def install_changes(app, sessions, authorize, scope):
                 plan = session.get(ExperimentPlanRecord, run.plan_id)
                 if plan.specification["public_specification"]["split"] != "test":
                     raise HTTPException(409, "VALIDATION_SEARCH_REQUIRES_TEST_CONFIRMATION")
+                if rec.evidence.get("lineage", {}).get("fresh_test_claim") is not True:
+                    raise HTTPException(409, "TEST_LINEAGE_REAPPROVAL_REQUIRED")
+                try:
+                    require_current_test_evidence(session, store, rec)
+                except ValueError:
+                    raise HTTPException(409, "TEST_LINEAGE_REAPPROVAL_REQUIRED") from None
                 _, policy = active_policy(
                     session, project_id, UUID(plan.specification["policy_id"])
                 )

@@ -37,6 +37,7 @@ def recommendation(profile):
         "status": "accepted_for_staging",
         "evidence": {
             "evaluator_version": "deterministic-v3",
+            "lineage": {"contract": "cutback.lineage.v1", "fresh_test_claim": True},
             "quality_gate_passed": True,
             "cheaper_on_sample": True,
             "status": "PROMISING",

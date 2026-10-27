@@ -247,6 +247,9 @@ class DatasetItem(Base):
     payload_id: Mapped[UUID] = mapped_column(ForeignKey("payload_samples.id"))
     split: Mapped[str] = mapped_column(String(20))
     group_hash: Mapped[str] = mapped_column(String(64))
+    lineage_group_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("dataset_families.id", name="fk_dataset_item_lineage", ondelete="SET NULL")
+    )
 
 
 class ExperimentPlanRecord(Base):
@@ -344,3 +347,5 @@ def database(url: str):
 # Register the additive shared control-plane models only after Base and foundation classes exist.
 importlib.import_module("cutback.server.enterprise_db")
 importlib.import_module("cutback.server.trace_db")
+importlib.import_module("cutback.server.lineage_db")
+importlib.import_module("cutback.server.review_db")

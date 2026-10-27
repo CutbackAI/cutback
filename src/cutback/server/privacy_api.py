@@ -28,6 +28,14 @@ from cutback.server.enterprise_db import (
     RolloutRecord,
     TrainingJob,
 )
+from cutback.server.lineage_db import DatasetAlias, DatasetExposure, DatasetFamily
+from cutback.server.review_db import (
+    ReviewItem,
+    ReviewLease,
+    ReviewQueue,
+    ReviewResolution,
+    ReviewVote,
+)
 from cutback.server.trace_db import (
     ExecutionSession,
     ExecutionSpan,
@@ -61,6 +69,15 @@ def install_privacy(app, sessions, authorize, scope):
                     SessionTrace,
                     ExternalEvaluation,
                     TraceContent,
+                    PayloadSample,
+                    DatasetFamily,
+                    DatasetAlias,
+                    DatasetExposure,
+                    ReviewQueue,
+                    ReviewItem,
+                    ReviewLease,
+                    ReviewVote,
+                    ReviewResolution,
                     ProjectSettings,
                     ExperimentSchedule,
                     RolloutRecord,
@@ -83,6 +100,7 @@ def install_privacy(app, sessions, authorize, scope):
                         data = {
                             column.name: getattr(row, column.name)
                             for column in cls.__table__.columns
+                            if cls is not PayloadSample or column.name != "object_ref"
                         }
                         yield (
                             json.dumps({"table": cls.__tablename__, "record": data}, default=str)
@@ -160,6 +178,11 @@ def install_privacy(app, sessions, authorize, scope):
             from cutback.server.db import ChangeProposal, DatasetItem, RecommendationRecord
 
             for cls in (
+                ReviewResolution,
+                ReviewVote,
+                ReviewLease,
+                ReviewItem,
+                ReviewQueue,
                 CacheEntry,
                 TrainingJob,
                 ExperimentSchedule,

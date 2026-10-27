@@ -84,6 +84,25 @@ test("authenticated session to failing step, delayed scores, mobile and accessib
   await expect(
     page.getByRole("table", { name: /Retained traces/ }),
   ).toBeVisible();
+  await page
+    .getByRole("button", { name: /Open trace/ })
+    .first()
+    .click();
+  await page.getByLabel("Execution status").selectOption("all");
+  await page
+    .getByRole("button", { name: "Prepare review of this step" })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Review queues", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Captured step content ID")).not.toHaveValue("");
+  await page
+    .getByRole("button", { name: "List captured review source" })
+    .click();
+  await expect(
+    page.getByRole("checkbox", { name: /Example 1 · captured_trace/ }),
+  ).toBeVisible();
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 
 test("trace loading, empty, error and retry states never show stale evidence", async ({

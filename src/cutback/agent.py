@@ -696,6 +696,7 @@ def proposal(root, control, *, purpose, candidate=None):
             if r["run_id"] == state["run_id"]
             and r["evidence"].get("quality_gate_passed")
             and r["evidence"].get("cheaper_on_sample")
+            and r["evidence"].get("lineage", {}).get("fresh_test_claim") is True
             and (candidate is None or r["evidence"]["candidate"]["key"] == candidate)
         ]
         if not choices:

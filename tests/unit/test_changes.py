@@ -21,6 +21,7 @@ def test_source_bound_patch_is_reviewed_reversible_and_refuses_stale_input(tmp_p
         "status": "accepted_for_staging",
         "evidence": {
             "evaluator_version": "deterministic-v3",
+            "lineage": {"contract": "cutback.lineage.v1", "fresh_test_claim": True},
             "quality_gate_passed": True,
             "cheaper_on_sample": True,
             "status": "PROMISING",
@@ -51,6 +52,18 @@ def test_source_bound_patch_is_reviewed_reversible_and_refuses_stale_input(tmp_p
     assert "+c.responses.create(model='gpt-4.1-mini'" in result["diff"]
     assert '+c.responses.create(model="gpt-4.1"' in result["rollback_diff"]
     assert path.read_bytes() == before
+    reused = {
+        **recommendation,
+        "evidence": {**recommendation["evidence"], "lineage": {"fresh_test_claim": False}},
+    }
+    with pytest.raises(ValueError, match="TEST_LINEAGE_REAPPROVAL_REQUIRED"):
+        model_patch(
+            tmp_path,
+            inventory,
+            inventory["call_sites"][0]["call_site_id"],
+            reused,
+            expected_source_sha256=hashlib.sha256(before).hexdigest(),
+        )
     legacy = {
         **recommendation,
         "evidence": {**recommendation["evidence"], "evaluator_version": "deterministic-v2"},

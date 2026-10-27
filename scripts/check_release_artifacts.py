@@ -58,6 +58,12 @@ def check(directory: Path):
             "docs/testing-the-sample.md",
             "docs/experiment-files.md",
             "examples/support_desk/README.md",
+            "docs/imports-and-review.md",
+            "examples/review-workflow/README.md",
+            "examples/review-workflow/generate_promptfoo_fixture.py",
+            "tests/fixtures/imports/promptfoo-0.125.1-v3.json",
+            "src/cutback/server/migrations/versions/0008_dataset_lineage.py",
+            "src/cutback/server/migrations/versions/0009_reviews.py",
             "src/cutback/sample_app/app.py",
         ):
             if not any(name.endswith("/" + required) for name in source_names):
