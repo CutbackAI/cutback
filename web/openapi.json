@@ -4149,6 +4149,829 @@
           }
         }
       }
+    },
+    "/v1/projects/{project_id}/environments": {
+      "get": {
+        "summary": "Environments",
+        "operationId": "environments_v1_projects__project_id__environments_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Before"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Environment Create",
+        "operationId": "environment_create_v1_projects__project_id__environments_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnvironmentInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ingest/spans": {
+      "post": {
+        "summary": "Workflow Spans",
+        "operationId": "workflow_spans_v1_ingest_spans_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpanBatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ingest/evaluations": {
+      "post": {
+        "summary": "External Evaluations",
+        "operationId": "external_evaluations_v1_ingest_evaluations_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluationBatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/traces": {
+      "get": {
+        "summary": "Traces",
+        "operationId": "traces_v1_projects__project_id__traces_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "environment_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Environment Id"
+            }
+          },
+          {
+            "name": "session_record_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Record Id"
+            }
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Before"
+            }
+          },
+          {
+            "name": "errors_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Errors Only"
+            }
+          },
+          {
+            "name": "workflow",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Workflow"
+            }
+          },
+          {
+            "name": "service",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Service"
+            }
+          },
+          {
+            "name": "release",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Release"
+            }
+          },
+          {
+            "name": "model",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Model"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 25,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TracePage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/traces/{trace_record_id}": {
+      "get": {
+        "summary": "Detail",
+        "operationId": "detail_v1_projects__project_id__traces__trace_record_id__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "trace_record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Trace Record Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 1000,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TraceDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/traces/{trace_record_id}/compare/{other_trace_id}": {
+      "get": {
+        "summary": "Compare",
+        "operationId": "compare_v1_projects__project_id__traces__trace_record_id__compare__other_trace_id__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "trace_record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Trace Record Id"
+            }
+          },
+          {
+            "name": "other_trace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Other Trace Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TraceComparison"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/sessions": {
+      "get": {
+        "summary": "Session List",
+        "operationId": "session_list_v1_projects__project_id__sessions_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "environment_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Environment Id"
+            }
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Before"
+            }
+          },
+          {
+            "name": "errors_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Errors Only"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 25,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/sessions/{session_record_id}/evaluations": {
+      "get": {
+        "summary": "Session Evaluations",
+        "operationId": "session_evaluations_v1_projects__project_id__sessions__session_record_id__evaluations_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "session_record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Record Id"
+            }
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Before"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ingest/workflow-otel/v1/traces": {
+      "post": {
+        "summary": "Projected Traces",
+        "operationId": "projected_traces_v1_ingest_workflow_otel_v1_traces_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TraceExport"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ingest/trace-content": {
+      "post": {
+        "summary": "Capture",
+        "operationId": "capture_v1_ingest_trace_content_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TraceContentInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/traces/{trace_record_id}/spans/{span_id}/content": {
+      "post": {
+        "summary": "Read",
+        "operationId": "read_v1_projects__project_id__traces__trace_record_id__spans__span_id__content_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "trace_record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Trace Record Id"
+            }
+          },
+          {
+            "name": "span_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{16}$",
+              "title": "Span Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentPurpose"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4209,6 +5032,150 @@
           "purpose"
         ],
         "title": "ArtifactAccess"
+      },
+      "AssertedEvaluation": {
+        "properties": {
+          "result_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Result Id"
+          },
+          "source": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Source"
+          },
+          "evaluator": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Evaluator"
+          },
+          "evaluator_version": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Evaluator Version"
+          },
+          "trace_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trace Id"
+          },
+          "span_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{16}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Span Id"
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          },
+          "score_type": {
+            "type": "string",
+            "enum": [
+              "boolean",
+              "numeric",
+              "categorical",
+              "none"
+            ],
+            "title": "Score Type"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "passed",
+              "failed",
+              "error",
+              "unknown"
+            ],
+            "title": "Outcome"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Observed At"
+          },
+          "evidence": {
+            "type": "string",
+            "const": "externally_asserted",
+            "title": "Evidence",
+            "default": "externally_asserted"
+          },
+          "target_in_retained_page": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target In Retained Page"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "result_id",
+          "source",
+          "evaluator",
+          "evaluator_version",
+          "score_type",
+          "outcome",
+          "observed_at"
+        ],
+        "title": "AssertedEvaluation"
       },
       "Attribute": {
         "properties": {
@@ -5210,6 +6177,206 @@
           "baseline"
         ],
         "title": "DraftInput"
+      },
+      "EnvironmentInput": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.-]{1,100}$",
+            "title": "Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "EnvironmentInput"
+      },
+      "EvaluationBatch": {
+        "properties": {
+          "profile": {
+            "type": "string",
+            "const": "cutback.evaluation.v1",
+            "title": "Profile",
+            "default": "cutback.evaluation.v1"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/EvaluationResult"
+            },
+            "type": "array",
+            "maxItems": 200,
+            "minItems": 1,
+            "title": "Results"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "results"
+        ],
+        "title": "EvaluationBatch"
+      },
+      "EvaluationPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AssertedEvaluation"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "EvaluationPage"
+      },
+      "EvaluationResult": {
+        "properties": {
+          "result_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Result Id"
+          },
+          "source": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Source"
+          },
+          "evaluator": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Evaluator"
+          },
+          "evaluator_version": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Evaluator Version"
+          },
+          "trace_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trace Id"
+          },
+          "span_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{16}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Span Id"
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          },
+          "score_type": {
+            "type": "string",
+            "enum": [
+              "boolean",
+              "numeric",
+              "categorical",
+              "none"
+            ],
+            "title": "Score Type"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "passed",
+              "failed",
+              "error",
+              "unknown"
+            ],
+            "title": "Outcome"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Observed At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "result_id",
+          "source",
+          "evaluator",
+          "evaluator_version",
+          "score_type",
+          "outcome",
+          "observed_at"
+        ],
+        "title": "EvaluationResult"
       },
       "EventBatch": {
         "properties": {
@@ -6377,6 +7544,208 @@
         ],
         "title": "ModelSpec"
       },
+      "NativeObservation": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "canonical_native",
+              "canonical_external",
+              "ambiguous",
+              "not_observed"
+            ],
+            "title": "Status"
+          },
+          "observations": {
+            "type": "integer",
+            "title": "Observations"
+          },
+          "observation_page_truncated": {
+            "type": "boolean",
+            "title": "Observation Page Truncated"
+          },
+          "event_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Id"
+          },
+          "cost_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Usd"
+          },
+          "cost_status": {
+            "type": "string",
+            "title": "Cost Status"
+          },
+          "replay_supported": {
+            "type": "boolean",
+            "const": false,
+            "title": "Replay Supported",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "observations",
+          "observation_page_truncated",
+          "event_id",
+          "cost_usd",
+          "cost_status"
+        ],
+        "title": "NativeObservation"
+      },
+      "ObservedSpan": {
+        "properties": {
+          "trace_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "title": "Trace Id"
+          },
+          "span_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{16}$",
+            "title": "Span Id"
+          },
+          "parent_span_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{16}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Span Id"
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          },
+          "operation": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Operation"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "service": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Service"
+          },
+          "workflow": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workflow"
+          },
+          "release": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release"
+          },
+          "started_ns": {
+            "type": "string",
+            "title": "Started Ns"
+          },
+          "ended_ns": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended Ns"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "issues": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Issues"
+          },
+          "native": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NativeObservation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "content_available": {
+            "type": "boolean",
+            "title": "Content Available",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "trace_id",
+          "span_id",
+          "parent_span_id",
+          "session_id",
+          "operation",
+          "kind",
+          "service",
+          "workflow",
+          "release",
+          "started_ns",
+          "ended_ns",
+          "status",
+          "issues",
+          "native"
+        ],
+        "title": "ObservedSpan"
+      },
       "OrganizationInput": {
         "properties": {
           "name": {
@@ -7104,6 +8473,79 @@
         "type": "object",
         "title": "ScopeSpans"
       },
+      "SessionPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SessionSummary"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "order": {
+            "type": "string",
+            "const": "received_at_desc",
+            "title": "Order",
+            "default": "received_at_desc"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "SessionPage"
+      },
+      "SessionSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "session_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Session Id"
+          },
+          "received_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Received At"
+          },
+          "retained_traces": {
+            "type": "integer",
+            "title": "Retained Traces"
+          },
+          "observed_execution_errors": {
+            "type": "integer",
+            "title": "Observed Execution Errors"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "session_id",
+          "received_at",
+          "retained_traces",
+          "observed_execution_errors"
+        ],
+        "title": "SessionSummary"
+      },
       "SourceBinding": {
         "properties": {
           "version": {
@@ -7271,6 +8713,299 @@
         ],
         "title": "Span"
       },
+      "SpanBatch": {
+        "properties": {
+          "profile": {
+            "type": "string",
+            "const": "cutback.workflow.v1",
+            "title": "Profile",
+            "default": "cutback.workflow.v1"
+          },
+          "spans": {
+            "items": {
+              "$ref": "#/components/schemas/WorkflowSpan"
+            },
+            "type": "array",
+            "maxItems": 200,
+            "minItems": 1,
+            "title": "Spans"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "spans"
+        ],
+        "title": "SpanBatch"
+      },
+      "TraceAlignment": {
+        "properties": {
+          "operation_path": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Operation Path"
+          },
+          "left_span_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{16}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Left Span Id"
+          },
+          "right_span_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{16}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Right Span Id"
+          },
+          "alignment": {
+            "type": "string",
+            "enum": [
+              "matched_path_occurrence",
+              "left_only",
+              "right_only"
+            ],
+            "title": "Alignment"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "operation_path",
+          "left_span_id",
+          "right_span_id",
+          "alignment"
+        ],
+        "title": "TraceAlignment"
+      },
+      "TraceComparison": {
+        "properties": {
+          "left": {
+            "$ref": "#/components/schemas/TraceDetail"
+          },
+          "right": {
+            "$ref": "#/components/schemas/TraceDetail"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/TraceAlignment"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "semantics": {
+            "type": "string",
+            "const": "exact_retained_operation_kind_ancestry_and_occurrence",
+            "title": "Semantics"
+          },
+          "task_quality_comparison": {
+            "type": "string",
+            "const": "not_verified",
+            "title": "Task Quality Comparison",
+            "default": "not_verified"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "left",
+          "right",
+          "rows",
+          "semantics"
+        ],
+        "title": "TraceComparison"
+      },
+      "TraceContentInput": {
+        "properties": {
+          "policy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Policy Id"
+          },
+          "sample_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sample Id"
+          },
+          "trace_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "title": "Trace Id"
+          },
+          "span_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{16}$",
+            "title": "Span Id"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "anthropic",
+              "local"
+            ],
+            "title": "Provider"
+          },
+          "input": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input"
+          },
+          "output": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output"
+          },
+          "provenance_ref": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Provenance Ref"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "policy_id",
+          "sample_id",
+          "trace_id",
+          "span_id",
+          "provider",
+          "provenance_ref"
+        ],
+        "title": "TraceContentInput"
+      },
+      "TraceDetail": {
+        "properties": {
+          "profile": {
+            "type": "string",
+            "const": "cutback.workflow.v1",
+            "title": "Profile",
+            "default": "cutback.workflow.v1"
+          },
+          "trace_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "title": "Trace Id"
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Environment Id"
+          },
+          "spans": {
+            "items": {
+              "$ref": "#/components/schemas/ObservedSpan"
+            },
+            "type": "array",
+            "title": "Spans"
+          },
+          "integrity": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Integrity"
+          },
+          "truncated": {
+            "type": "boolean",
+            "title": "Truncated"
+          },
+          "returned_spans": {
+            "type": "integer",
+            "title": "Returned Spans"
+          },
+          "observed_execution_errors": {
+            "type": "integer",
+            "title": "Observed Execution Errors"
+          },
+          "business_success": {
+            "type": "string",
+            "const": "unknown",
+            "title": "Business Success",
+            "default": "unknown"
+          },
+          "full_trace_cost_usd": {
+            "type": "null",
+            "title": "Full Trace Cost Usd"
+          },
+          "page_known_llm_cost_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Known Llm Cost Usd"
+          },
+          "cost_coverage": {
+            "type": "string",
+            "const": "partial_observations_only",
+            "title": "Cost Coverage",
+            "default": "partial_observations_only"
+          },
+          "replay_supported": {
+            "type": "boolean",
+            "const": false,
+            "title": "Replay Supported",
+            "default": false
+          },
+          "evaluations": {
+            "items": {
+              "$ref": "#/components/schemas/AssertedEvaluation"
+            },
+            "type": "array",
+            "title": "Evaluations"
+          },
+          "evaluations_truncated": {
+            "type": "boolean",
+            "title": "Evaluations Truncated"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "trace_id",
+          "environment_id",
+          "spans",
+          "integrity",
+          "truncated",
+          "returned_spans",
+          "observed_execution_errors",
+          "page_known_llm_cost_usd",
+          "evaluations",
+          "evaluations_truncated"
+        ],
+        "title": "TraceDetail"
+      },
       "TraceExport": {
         "properties": {
           "resourceSpans": {
@@ -7285,6 +9020,97 @@
         "additionalProperties": false,
         "type": "object",
         "title": "TraceExport"
+      },
+      "TracePage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TraceSummary"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "order": {
+            "type": "string",
+            "const": "received_at_desc",
+            "title": "Order",
+            "default": "received_at_desc"
+          },
+          "profile": {
+            "type": "string",
+            "const": "cutback.workflow.v1",
+            "title": "Profile",
+            "default": "cutback.workflow.v1"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "TracePage"
+      },
+      "TraceSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "trace_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "title": "Trace Id"
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Environment Id"
+          },
+          "received_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Received At"
+          },
+          "retained_spans": {
+            "type": "integer",
+            "title": "Retained Spans"
+          },
+          "observed_execution_errors": {
+            "type": "integer",
+            "title": "Observed Execution Errors"
+          },
+          "capture_coverage": {
+            "type": "string",
+            "const": "unknown",
+            "title": "Capture Coverage",
+            "default": "unknown"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "trace_id",
+          "environment_id",
+          "received_at",
+          "retained_spans",
+          "observed_execution_errors"
+        ],
+        "title": "TraceSummary"
       },
       "TrainingInput": {
         "properties": {
@@ -7583,6 +9409,137 @@
           "schema_failure_rate"
         ],
         "title": "Window"
+      },
+      "WorkflowSpan": {
+        "properties": {
+          "trace_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "title": "Trace Id"
+          },
+          "span_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{16}$",
+            "title": "Span Id"
+          },
+          "parent_span_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{16}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Span Id"
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          },
+          "operation": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Operation"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "agent",
+              "chain",
+              "llm",
+              "tool",
+              "retriever",
+              "reranker",
+              "embedding",
+              "guardrail",
+              "evaluator",
+              "prompt",
+              "unknown"
+            ],
+            "title": "Kind",
+            "default": "unknown"
+          },
+          "service": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Service"
+          },
+          "workflow": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workflow"
+          },
+          "release": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release"
+          },
+          "started_ns": {
+            "type": "integer",
+            "maximum": 9.223372036854776e+18,
+            "exclusiveMinimum": 0.0,
+            "title": "Started Ns"
+          },
+          "ended_ns": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 9.223372036854776e+18,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended Ns"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "error",
+              "cancelled",
+              "incomplete",
+              "unknown"
+            ],
+            "title": "Status",
+            "default": "unknown"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "trace_id",
+          "span_id",
+          "operation",
+          "service",
+          "started_ns"
+        ],
+        "title": "WorkflowSpan"
       }
     }
   }

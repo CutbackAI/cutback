@@ -566,6 +566,9 @@ def create_app(
     from cutback.server.otel import install_otel
 
     install_otel(app, sessions, authorize, scope, repository)
+    from cutback.server.traces import install_traces
+
+    install_traces(app, sessions, authorize, scope)
     from fastapi.staticfiles import StaticFiles
 
     dashboard = files("cutback").joinpath("dashboard")

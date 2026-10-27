@@ -27,7 +27,7 @@ from cutback.server.db import (
     StoredEvent,
     WorkflowRecord,
 )
-from cutback.server.repository import event_metadata, render_usage, usage_columns
+from cutback.server.repository import canonical_attempt, event_metadata, render_usage, usage_columns
 
 
 def enforce_quota(sessions, key: str, limit: int):
@@ -87,6 +87,7 @@ def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False
             .limit(100)
         ).all()
         count = 0
+        prune_scopes = []
         for project, day in days:
             day_scope = [
                 StoredEvent.project_id == project,
@@ -115,7 +116,7 @@ def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False
                 )
                 .select_from(StoredEvent)
                 .join(metadata, true())
-                .where(*day_scope)
+                .where(*day_scope, canonical_attempt())
                 .group_by(*dimensions)
                 .limit(10001)
             ).all()
@@ -143,8 +144,15 @@ def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False
                     )
                 count += group.requests
             if apply:
-                session.execute(delete(StoredEvent).where(*day_scope))
+                prune_scopes.append(day_scope)
         if apply:
+            # Keep exact native identities visible until every day's mirror selection is frozen.
+            # Deleting an earlier native day first would make a later mirror appear canonical.
+            for day_scope in prune_scopes:
+                session.execute(delete(StoredEvent).where(*day_scope))
+            from cutback.server.traces import prune_traces
+
+            prune_traces(session, cutoff, selected)
             session.execute(
                 delete(DailyUsage).where(
                     DailyUsage.day < now - timedelta(days=aggregate_days),

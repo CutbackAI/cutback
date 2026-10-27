@@ -1,6 +1,6 @@
 # Build sequence after the market audit
 
-Status: engineering plan, 27 October 2026. These releases are **not completed**. Existing tested functionality stays supported. [Baseline IDs](market-baseline.md) identify acceptance requirements; [differentiation](differentiation.md) identifies the outcomes to prove. There is no calendar estimate until the implementation and external acceptance effort are measured.
+Status: engineering sequence, 27 October 2026. Implementation is recorded per release below; the remaining roadmap releases are **not completed**. Existing tested functionality stays supported. [Baseline IDs](market-baseline.md) identify acceptance requirements; [differentiation](differentiation.md) identifies the outcomes to prove. There is no calendar estimate until the implementation and external acceptance effort are measured.
 
 ## Preserve the foundation
 
@@ -9,6 +9,8 @@ Keep the independent Apache-2.0 package, offline parse-only scanner, native prov
 New data models need project/environment scope, compound identity constraints, indexed query paths, deterministic/idempotent writes, bounded batches/windows, retention/export/delete, safe audit fields, concurrent mutation behavior and sanitized errors. New content belongs under the existing rights/purpose/expiry/quota boundary, not in arbitrary JSON metadata. New dashboards require generated API/types, a production React build, authenticated browser/mobile and accessibility acceptance. A worker/optimizer change needs crash and uncertain-charge tests, not just a successful mocked response.
 
 ## Release 1 — understand a whole workflow
+
+Implementation: the bounded source-checkout workflow is now implemented; see [walkthrough](workflow-tracing.md) and [actual acceptance/publication state](progress.md). This does not close the later releases or qualify every exporter.
 
 **Baseline:** F06, T02–T10, O05, O06. **User outcome:** open a failed session and identify its failing step without rebuilding the application around Cutback.
 

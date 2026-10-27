@@ -1258,6 +1258,194 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/environments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Environments */
+        get: operations["environments_v1_projects__project_id__environments_get"];
+        put?: never;
+        /** Environment Create */
+        post: operations["environment_create_v1_projects__project_id__environments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ingest/spans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Workflow Spans */
+        post: operations["workflow_spans_v1_ingest_spans_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ingest/evaluations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** External Evaluations */
+        post: operations["external_evaluations_v1_ingest_evaluations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/traces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Traces */
+        get: operations["traces_v1_projects__project_id__traces_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/traces/{trace_record_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Detail */
+        get: operations["detail_v1_projects__project_id__traces__trace_record_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/traces/{trace_record_id}/compare/{other_trace_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Compare */
+        get: operations["compare_v1_projects__project_id__traces__trace_record_id__compare__other_trace_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Session List */
+        get: operations["session_list_v1_projects__project_id__sessions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/sessions/{session_record_id}/evaluations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Session Evaluations */
+        get: operations["session_evaluations_v1_projects__project_id__sessions__session_record_id__evaluations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ingest/workflow-otel/v1/traces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Projected Traces */
+        post: operations["projected_traces_v1_ingest_workflow_otel_v1_traces_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ingest/trace-content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Capture */
+        post: operations["capture_v1_ingest_trace_content_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/traces/{trace_record_id}/spans/{span_id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Read */
+        post: operations["read_v1_projects__project_id__traces__trace_record_id__spans__span_id__content_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1280,6 +1468,53 @@ export interface components {
         ArtifactAccess: {
             /** Purpose */
             purpose: string;
+        };
+        /** AssertedEvaluation */
+        AssertedEvaluation: {
+            /**
+             * Result Id
+             * Format: uuid
+             */
+            result_id: string;
+            /** Source */
+            source: string;
+            /** Evaluator */
+            evaluator: string;
+            /** Evaluator Version */
+            evaluator_version: string;
+            /** Trace Id */
+            trace_id?: string | null;
+            /** Span Id */
+            span_id?: string | null;
+            /** Session Id */
+            session_id?: string | null;
+            /**
+             * Score Type
+             * @enum {string}
+             */
+            score_type: "boolean" | "numeric" | "categorical" | "none";
+            /** Score */
+            score?: boolean | string | null;
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "passed" | "failed" | "error" | "unknown";
+            /** Error Code */
+            error_code?: string | null;
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
+            /**
+             * Evidence
+             * @default externally_asserted
+             * @constant
+             */
+            evidence: "externally_asserted";
+            /** Target In Retained Page */
+            target_in_retained_page?: boolean | null;
         };
         /** Attribute */
         Attribute: {
@@ -1693,6 +1928,68 @@ export interface components {
              * @default 300
              */
             max_wall_seconds: number;
+        };
+        /** EnvironmentInput */
+        EnvironmentInput: {
+            /** Name */
+            name: string;
+        };
+        /** EvaluationBatch */
+        EvaluationBatch: {
+            /**
+             * Profile
+             * @default cutback.evaluation.v1
+             * @constant
+             */
+            profile: "cutback.evaluation.v1";
+            /** Results */
+            results: components["schemas"]["EvaluationResult"][];
+        };
+        /** EvaluationPage */
+        EvaluationPage: {
+            /** Items */
+            items: components["schemas"]["AssertedEvaluation"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** EvaluationResult */
+        EvaluationResult: {
+            /**
+             * Result Id
+             * Format: uuid
+             */
+            result_id: string;
+            /** Source */
+            source: string;
+            /** Evaluator */
+            evaluator: string;
+            /** Evaluator Version */
+            evaluator_version: string;
+            /** Trace Id */
+            trace_id?: string | null;
+            /** Span Id */
+            span_id?: string | null;
+            /** Session Id */
+            session_id?: string | null;
+            /**
+             * Score Type
+             * @enum {string}
+             */
+            score_type: "boolean" | "numeric" | "categorical" | "none";
+            /** Score */
+            score?: boolean | number | string | null;
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "passed" | "failed" | "error" | "unknown";
+            /** Error Code */
+            error_code?: string | null;
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
         };
         /** EventBatch */
         EventBatch: {
@@ -2136,6 +2433,65 @@ export interface components {
             prompt_cache?: ("anthropic-5m" | "anthropic-1h") | null;
             request_contract?: components["schemas"]["RequestContract"] | null;
         };
+        /** NativeObservation */
+        NativeObservation: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "canonical_native" | "canonical_external" | "ambiguous" | "not_observed";
+            /** Observations */
+            observations: number;
+            /** Observation Page Truncated */
+            observation_page_truncated: boolean;
+            /** Event Id */
+            event_id: string | null;
+            /** Cost Usd */
+            cost_usd: string | null;
+            /** Cost Status */
+            cost_status: string;
+            /**
+             * Replay Supported
+             * @default false
+             * @constant
+             */
+            replay_supported: false;
+        };
+        /** ObservedSpan */
+        ObservedSpan: {
+            /** Trace Id */
+            trace_id: string;
+            /** Span Id */
+            span_id: string;
+            /** Parent Span Id */
+            parent_span_id: string | null;
+            /** Session Id */
+            session_id: string | null;
+            /** Operation */
+            operation: string;
+            /** Kind */
+            kind: string;
+            /** Service */
+            service: string;
+            /** Workflow */
+            workflow: string | null;
+            /** Release */
+            release: string | null;
+            /** Started Ns */
+            started_ns: string;
+            /** Ended Ns */
+            ended_ns: string | null;
+            /** Status */
+            status: string;
+            /** Issues */
+            issues: string[];
+            native: components["schemas"]["NativeObservation"] | null;
+            /**
+             * Content Available
+             * @default false
+             */
+            content_available: boolean;
+        };
         /** OrganizationInput */
         OrganizationInput: {
             /** Name */
@@ -2420,6 +2776,38 @@ export interface components {
             /** Spans */
             spans?: components["schemas"]["Span"][];
         };
+        /** SessionPage */
+        SessionPage: {
+            /** Items */
+            items: components["schemas"]["SessionSummary"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+            /**
+             * Order
+             * @default received_at_desc
+             * @constant
+             */
+            order: "received_at_desc";
+        };
+        /** SessionSummary */
+        SessionSummary: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Session Id */
+            session_id: string;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+            /** Retained Traces */
+            retained_traces: number;
+            /** Observed Execution Errors */
+            observed_execution_errors: number;
+        };
         /** SourceBinding */
         SourceBinding: {
             /**
@@ -2474,10 +2862,182 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** SpanBatch */
+        SpanBatch: {
+            /**
+             * Profile
+             * @default cutback.workflow.v1
+             * @constant
+             */
+            profile: "cutback.workflow.v1";
+            /** Spans */
+            spans: components["schemas"]["WorkflowSpan"][];
+        };
+        /** TraceAlignment */
+        TraceAlignment: {
+            /** Operation Path */
+            operation_path: string[];
+            /** Left Span Id */
+            left_span_id: string | null;
+            /** Right Span Id */
+            right_span_id: string | null;
+            /**
+             * Alignment
+             * @enum {string}
+             */
+            alignment: "matched_path_occurrence" | "left_only" | "right_only";
+        };
+        /** TraceComparison */
+        TraceComparison: {
+            left: components["schemas"]["TraceDetail"];
+            right: components["schemas"]["TraceDetail"];
+            /** Rows */
+            rows: components["schemas"]["TraceAlignment"][];
+            /**
+             * Semantics
+             * @constant
+             */
+            semantics: "exact_retained_operation_kind_ancestry_and_occurrence";
+            /**
+             * Task Quality Comparison
+             * @default not_verified
+             * @constant
+             */
+            task_quality_comparison: "not_verified";
+        };
+        /** TraceContentInput */
+        TraceContentInput: {
+            /**
+             * Policy Id
+             * Format: uuid
+             */
+            policy_id: string;
+            /**
+             * Sample Id
+             * Format: uuid
+             */
+            sample_id: string;
+            /** Trace Id */
+            trace_id: string;
+            /** Span Id */
+            span_id: string;
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "openai" | "anthropic" | "local";
+            /** Input */
+            input?: string | null;
+            /** Output */
+            output?: string | null;
+            /** Provenance Ref */
+            provenance_ref: string;
+        };
+        /** TraceDetail */
+        TraceDetail: {
+            /**
+             * Profile
+             * @default cutback.workflow.v1
+             * @constant
+             */
+            profile: "cutback.workflow.v1";
+            /** Trace Id */
+            trace_id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            /** Spans */
+            spans: components["schemas"]["ObservedSpan"][];
+            /** Integrity */
+            integrity: string[];
+            /** Truncated */
+            truncated: boolean;
+            /** Returned Spans */
+            returned_spans: number;
+            /** Observed Execution Errors */
+            observed_execution_errors: number;
+            /**
+             * Business Success
+             * @default unknown
+             * @constant
+             */
+            business_success: "unknown";
+            /** Full Trace Cost Usd */
+            full_trace_cost_usd?: null;
+            /** Page Known Llm Cost Usd */
+            page_known_llm_cost_usd: string | null;
+            /**
+             * Cost Coverage
+             * @default partial_observations_only
+             * @constant
+             */
+            cost_coverage: "partial_observations_only";
+            /**
+             * Replay Supported
+             * @default false
+             * @constant
+             */
+            replay_supported: false;
+            /** Evaluations */
+            evaluations: components["schemas"]["AssertedEvaluation"][];
+            /** Evaluations Truncated */
+            evaluations_truncated: boolean;
+        };
         /** TraceExport */
         TraceExport: {
             /** Resourcespans */
             resourceSpans?: components["schemas"]["ResourceSpans"][];
+        };
+        /** TracePage */
+        TracePage: {
+            /** Items */
+            items: components["schemas"]["TraceSummary"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+            /**
+             * Order
+             * @default received_at_desc
+             * @constant
+             */
+            order: "received_at_desc";
+            /**
+             * Profile
+             * @default cutback.workflow.v1
+             * @constant
+             */
+            profile: "cutback.workflow.v1";
+        };
+        /** TraceSummary */
+        TraceSummary: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Trace Id */
+            trace_id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+            /** Retained Spans */
+            retained_spans: number;
+            /** Observed Execution Errors */
+            observed_execution_errors: number;
+            /**
+             * Capture Coverage
+             * @default unknown
+             * @constant
+             */
+            capture_coverage: "unknown";
         };
         /** TrainingInput */
         TrainingInput: {
@@ -2603,6 +3163,41 @@ export interface components {
             cost_per_request_usd?: number | null;
             /** Business Quality */
             business_quality?: number | null;
+        };
+        /** WorkflowSpan */
+        WorkflowSpan: {
+            /** Trace Id */
+            trace_id: string;
+            /** Span Id */
+            span_id: string;
+            /** Parent Span Id */
+            parent_span_id?: string | null;
+            /** Session Id */
+            session_id?: string | null;
+            /** Operation */
+            operation: string;
+            /**
+             * Kind
+             * @default unknown
+             * @enum {string}
+             */
+            kind: "agent" | "chain" | "llm" | "tool" | "retriever" | "reranker" | "embedding" | "guardrail" | "evaluator" | "prompt" | "unknown";
+            /** Service */
+            service: string;
+            /** Workflow */
+            workflow?: string | null;
+            /** Release */
+            release?: string | null;
+            /** Started Ns */
+            started_ns: number;
+            /** Ended Ns */
+            ended_ns?: number | null;
+            /**
+             * Status
+             * @default unknown
+             * @enum {string}
+             */
+            status: "ok" | "error" | "cancelled" | "incomplete" | "unknown";
         };
     };
     responses: never;
@@ -5406,6 +6001,425 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["TraceExport"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    environments_v1_projects__project_id__environments_get: {
+        parameters: {
+            query?: {
+                before?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    environment_create_v1_projects__project_id__environments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnvironmentInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    workflow_spans_v1_ingest_spans_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpanBatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    external_evaluations_v1_ingest_evaluations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvaluationBatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    traces_v1_projects__project_id__traces_get: {
+        parameters: {
+            query: {
+                environment_id: string;
+                session_record_id?: string | null;
+                before?: string | null;
+                errors_only?: boolean;
+                workflow?: string | null;
+                service?: string | null;
+                release?: string | null;
+                model?: string | null;
+                start?: string | null;
+                end?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TracePage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    detail_v1_projects__project_id__traces__trace_record_id__get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                trace_record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TraceDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    compare_v1_projects__project_id__traces__trace_record_id__compare__other_trace_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                trace_record_id: string;
+                other_trace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TraceComparison"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    session_list_v1_projects__project_id__sessions_get: {
+        parameters: {
+            query: {
+                environment_id: string;
+                before?: string | null;
+                errors_only?: boolean;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    session_evaluations_v1_projects__project_id__sessions__session_record_id__evaluations_get: {
+        parameters: {
+            query?: {
+                before?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                session_record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvaluationPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    projected_traces_v1_ingest_workflow_otel_v1_traces_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TraceExport"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    capture_v1_ingest_trace_content_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TraceContentInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_v1_projects__project_id__traces__trace_record_id__spans__span_id__content_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                trace_record_id: string;
+                span_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentPurpose"];
             };
         };
         responses: {

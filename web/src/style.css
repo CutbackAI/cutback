@@ -48,6 +48,7 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 pre:focus-visible,
+.table-scroll:focus-visible,
 summary:focus-visible {
   outline: 3px solid #aa5200;
   outline-offset: 3px;
@@ -757,4 +758,31 @@ table {
 .decision-comparison .row {
   margin: 0;
   min-width: 0;
+}
+
+.trace-identity {
+  overflow-wrap: anywhere;
+}
+.trace-investigation {
+  margin-top: 2rem;
+  border-top: 1px solid #cdd8cf;
+  padding-top: 1rem;
+}
+.trace-waterfall svg {
+  display: block;
+  width: 100%;
+  min-width: 150px;
+  height: 24px;
+}
+.trace-waterfall td {
+  vertical-align: top;
+}
+.trace-waterfall details p {
+  overflow-wrap: anywhere;
+}
+.waterfall-bar {
+  fill: #24603b;
+}
+.waterfall-error {
+  fill: #932d28;
 }

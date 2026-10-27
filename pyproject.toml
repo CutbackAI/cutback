@@ -83,6 +83,7 @@ include = [
   "/docs/agent-integration.md", "/docs/demo.md", "/docs/product-completion.md",
   "/docs/product-research.md", "/docs/optimization-search.md",
   "/docs/market-baseline.md", "/docs/differentiation.md", "/docs/implementation-roadmap.md", "/docs/research",
+  "/docs/workflow-tracing.md",
   "/docs/identity-and-teams.md", "/docs/hosted-billing.md", "/docs/continuous-operations.md",
   "/docs/advanced-optimization.md", "/docs/local-training.md", "/docs/adr", "/docs/assets", "/packages/js-sdk/index.mjs", "/packages/js-sdk/index.d.ts",
   "/packages/js-sdk/package.json", "/packages/js-sdk/package-lock.json",
@@ -131,6 +132,9 @@ select = ["E", "F", "I", "UP", "B"]
 "src/cutback/server/case_evidence.py" = ["B008"]
 "src/cutback/server/change_artifacts.py" = ["B008"]
 "src/cutback/server/otel.py" = ["B008"]
+"src/cutback/server/traces.py" = ["B008"]
+"src/cutback/server/workflow_otel.py" = ["B008"]
+"src/cutback/server/trace_content.py" = ["B008"]
 
 [tool.mypy]
 python_version = "3.11"

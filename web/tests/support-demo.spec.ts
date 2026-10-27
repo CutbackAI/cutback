@@ -147,6 +147,35 @@ test("newcomer explores real sample decisions, unknown intervals, private cases 
   await expect(
     page.getByRole("rowheader", { name: /app.py · needs_escalation/ }),
   ).toBeVisible();
+  await page.getByRole("button", { name: "Traces", exact: true }).click();
+  await expect(
+    page.getByRole("table", { name: /Retained traces/ }).getByRole("row"),
+  ).toHaveCount(3);
+  await page.getByLabel("Only executions with errors").check();
+  await expect(
+    page.getByRole("table", { name: /Retained traces/ }).getByRole("row"),
+  ).toHaveCount(2);
+  await page.getByLabel("Only executions with errors").uncheck();
+  await page
+    .getByRole("button", { name: /Open trace/ })
+    .first()
+    .click();
+  const candidates = page
+    .getByLabel("Compare selected trace with")
+    .locator("option");
+  await expect(candidates).toHaveCount(2);
+  await page
+    .getByLabel("Compare selected trace with")
+    .selectOption((await candidates.nth(1).getAttribute("value"))!);
+  await expect(
+    page.getByRole("table", { name: "Execution path differences" }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("table", { name: "Execution path differences" })
+      .getByRole("row"),
+  ).toHaveCount(5);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.reload();
   await expect(
     page.getByRole("button", { name: "Explore sample", exact: true }),

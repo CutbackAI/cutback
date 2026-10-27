@@ -19,6 +19,7 @@ import { SampleGuide } from "./demo";
 import { PatchReview } from "./change-review";
 import { CaseEvidence } from "./case-evidence";
 import { AgentWorkflow } from "./agent-workflow";
+import { Traces } from "./traces";
 import { decisionLabel, criterionLabel, experimentTitle } from "./evidence";
 
 async function request(token: string, path: string, options: RequestInit = {}) {
@@ -55,6 +56,7 @@ const views = [
   "Sample",
   "Overview",
   "Agent workflow",
+  "Traces",
   "Inventory",
   "Costs",
   "Opportunities",
@@ -674,6 +676,9 @@ function App() {
                   created={refreshProjects}
                 />
               </details>
+            )}
+            {view === "Traces" && project && (
+              <Traces key={project} api={api} project={project} allowContent={admin} />
             )}
             {view === "Training" && data.jobs && (
               <Training
