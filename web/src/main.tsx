@@ -20,6 +20,8 @@ import { PatchReview } from "./change-review";
 import { CaseEvidence } from "./case-evidence";
 import { AgentWorkflow } from "./agent-workflow";
 import { Traces } from "./traces";
+import { Imports } from "./imports";
+import { Reviews } from "./reviews";
 import { decisionLabel, criterionLabel, experimentTitle } from "./evidence";
 
 async function request(token: string, path: string, options: RequestInit = {}) {
@@ -61,6 +63,7 @@ const views = [
   "Costs",
   "Opportunities",
   "Experiments",
+  "Review",
   "Changes",
   "Integrations",
   "Security",
@@ -118,6 +121,10 @@ function App() {
   const [organizations, setOrganizations] = useState<RecordData[]>([]);
   const initial = new URLSearchParams(location.search);
   const [project, setProject] = useState(initial.get("project") || "");
+  const [reviewSource, setReviewSource] = useState<{
+    project: string;
+    id: string;
+  } | null>(null);
   const [view, setView] = useState(
     views.includes(initial.get("view") || "")
       ? initial.get("view")!
@@ -228,6 +235,7 @@ function App() {
           runs,
           plans,
           schedules: await api(base + "/schedules"),
+          imports: await api(base + "/imports"),
           policies: ["admin", "project_admin"].includes(
             identity.project_roles?.[project] || identity.role,
           )
@@ -242,6 +250,19 @@ function App() {
           api(base + "/datasets"),
         ]);
         result = { jobs, config, datasets };
+      }
+      if (view === "Review") {
+        const isAdmin = ["admin", "project_admin"].includes(
+          identity.project_roles?.[project] || identity.role,
+        );
+        result = {
+          queues: await api(base + "/reviews"),
+          datasets: await api(base + "/datasets"),
+          policies: isAdmin ? await api(base + "/capture-policies") : [],
+          principals: isAdmin
+            ? await api(base + "/reviews/principals")
+            : { items: [] },
+        };
       }
       if (view === "Changes")
         result = {
@@ -678,7 +699,16 @@ function App() {
               </details>
             )}
             {view === "Traces" && project && (
-              <Traces key={project} api={api} project={project} allowContent={admin} />
+              <Traces
+                key={project}
+                api={api}
+                project={project}
+                allowContent={admin}
+                onReview={(id) => {
+                  setReviewSource({ project, id });
+                  setView("Review");
+                }}
+              />
             )}
             {view === "Training" && data.jobs && (
               <Training
@@ -778,6 +808,22 @@ function App() {
                 reload={load}
                 admin={admin}
                 analyst={analyst}
+              />
+            )}
+            {view === "Review" && data.queues && (
+              <Reviews
+                key={project}
+                api={api}
+                base={base}
+                data={data}
+                admin={admin}
+                analyst={analyst}
+                reload={load}
+                traceSource={
+                  reviewSource?.project === project
+                    ? reviewSource.id
+                    : undefined
+                }
               />
             )}
             {view === "Changes" && data.recommendations && (
@@ -1313,6 +1359,14 @@ function Experiments({
         provider calls. Each approved budget permits one queued run; execution
         is disabled by default.
       </p>
+      <Imports
+        api={api}
+        base={base}
+        policies={data.policies || []}
+        rows={data.imports}
+        analyst={analyst}
+        reload={reload}
+      />
       <h2>Frozen datasets</h2>
       {!data.datasets.length ? (
         <Empty>No authorized datasets imported.</Empty>

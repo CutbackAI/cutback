@@ -24,6 +24,8 @@ Add versioned external evaluation-result metadata with exact targets, source/eva
 
 ## Release 2 — turn failures into trusted regression data
 
+Implementation: the bounded import/review/lineage workflow is implemented in the working source; [walkthrough and limits](imports-and-review.md), [independent example](../examples/review-workflow/README.md) and [acceptance/publication state](progress.md). Qualification of final archives and hosted checks remains required before publication. This does not implement Releases 3–7 or the scenario generator in A09.
+
 **Baseline:** F07/F08, D05–D10, E07, A09. **User outcome:** select failures, distribute review, and create a maintained test dataset with provenance.
 
 Add a versioned importer interface with qualified native JSONL plus initially selected Phoenix/OpenInference and Promptfoo/other evaluation-suite formats. Actual adapters need pinned real-format synthetic fixtures; merely accepting arbitrary JSON is not compatibility. Preview mapping, rejected fields and content rights before import. Preserve original source identity and externally asserted metrics; never relabel historical output as gold.

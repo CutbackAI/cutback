@@ -133,7 +133,12 @@ def infer_task(body: DatasetImport) -> dict:
     }
 
 
-def prepare_dataset(body: DatasetImport) -> dict:
+def normalized_input(value: str) -> str:
+    text = unicodedata.normalize("NFKC", value).casefold()
+    return re.sub(r"\d+", "#", re.sub(r"\s+", " ", text)).strip()
+
+
+def prepare_dataset(body: DatasetImport, *, lineage_groups: dict[str, str] | None = None) -> dict:
     ids = [case.id for case in body.cases]
     if len(ids) != len(set(ids)):
         raise ValueError("duplicate case IDs")
@@ -141,9 +146,7 @@ def prepare_dataset(body: DatasetImport) -> dict:
     for case in body.cases:
         # Numbers, whitespace and case variations share a group. Supplied customer/user groups
         # are unioned with duplicate groups, preventing the caller from splitting duplicates.
-        text = unicodedata.normalize("NFKC", case.input).casefold()
-        text = re.sub(r"\d+", "#", re.sub(r"\s+", " ", text)).strip()
-        normalized.append(digest(text))
+        normalized.append(digest(normalized_input(case.input)))
     parents = list(range(len(body.cases)))
 
     def find(i):
@@ -157,6 +160,8 @@ def prepare_dataset(body: DatasetImport) -> dict:
         keys = ["duplicate:" + normalized[i]]
         if case.group:
             keys.append("group:" + case.group)
+        if lineage_groups and case.id in lineage_groups:
+            keys.append("lineage:" + lineage_groups[case.id])
         for key in keys:
             if key in seen:
                 parents[find(i)] = find(seen[key])

@@ -133,6 +133,10 @@ nav button {
   color: #344f45;
   border-color: transparent;
 }
+nav button:hover {
+  background: #e4eee7;
+  color: #123f30;
+}
 nav button[aria-current="page"] {
   background: #d4e6db;
   color: #123f30;
@@ -785,4 +789,27 @@ table {
 }
 .waterfall-error {
   fill: #932d28;
+}
+
+.import-examples pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.review-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 28rem;
+  overflow: auto;
+}
+.review-queue-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  padding-block: 0.75rem;
+}
+.review-source-list {
+  max-height: 20rem;
+  overflow: auto;
+  padding: 1rem;
 }

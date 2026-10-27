@@ -1,0 +1,9 @@
+{
+  "description": "Owned synthetic fixture; no inference",
+  "prompts": ["{{input}}"],
+  "providers": ["file://synthetic-provider.cjs"],
+  "tests": [
+    {"vars": {"input": "Synthetic urgent ticket"}, "assert": [{"type": "equals", "value": "urgent"}]},
+    {"vars": {"input": "Synthetic ordinary ticket"}, "assert": [{"type": "equals", "value": "normal"}]}
+  ]
+}

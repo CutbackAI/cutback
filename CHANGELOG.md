@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased source after dev5
+
+Qualified model/output-cap validation search and separate confirmation; generic metadata traces/sessions, delayed external results, a waterfall and explicit encrypted trace-content reads; qualified native/OpenInference/Promptfoo import preview, frozen blind review queues, immutable judgments/adjudication and new regression datasets. Persistent cross-version dataset families and exposure receipts block recycled test claims; older unknown lineage requires authorized conservative reconciliation. New migration revisions preserve released migrations. These source capabilities are not in the published dev5 wheel. The broader platform roadmap remains unfinished; synthetic acceptance is not customer quality or production validation.
+
 ## 0.1.0.dev5
 
 Resumable agent preparation, broader bounded fixtures/mappings, a persistent wheel-native local collector, exact native request/source binding and review-only model/config diffs. Application-only Opportunities separate evaluator overhead. The dashboard guides the agent workflow and shows bound plans/runs. Outstanding older frozen plans require fresh approval; their schema/hash authority is never silently upgraded. Synthetic validation remains separate from real-provider/customer qualification.

@@ -27,8 +27,8 @@ Evidence for expectations: [Phoenix](https://github.com/Arize-ai/phoenix), [Brai
 | F04 | Existing coding agent can discover commands, prepare work and resume an interrupted workflow | Bounded | `agent.py`, `cli_agent.py`, packaged agent workflows; client discovery still needs independent acceptance |
 | F05 | Setup diagnoses unsupported source/request contracts and offers a concrete next action | Partial | Request-profile rejection reasons exist; guided resolution/adapters remain narrow |
 | F06 | Read an existing OTel/OpenInference producer without requiring a new model client | Bounded | `server/workflow_otel.py`, pinned OpenTelemetry 1.45.1 / OpenInference 0.1.42 producer; explicit bounded JSON metadata projection, not all exporters |
-| F07 | Import a qualified existing trace export while preserving provenance and unknown fields | Missing | No qualified Langfuse/Phoenix/Braintrust export adapters |
-| F08 | Import an existing evaluation suite with declared inputs/expected outputs/criteria | Partial | `evals/records.py` maps JSON/JSONL/CSV and `datasets.py` freezes native cases; no qualified external suite adapters |
+| F07 | Import a qualified existing trace export while preserving provenance and unknown fields | Bounded | `evals/importers.py`: actual pinned OpenInference OTLP JSON projection, source hash/mapping/rejections; no universal Phoenix/Langfuse/Braintrust export claim |
+| F08 | Import an existing evaluation suite with declared inputs/expected outputs/criteria | Bounded | Actual Promptfoo 0.125.1 version-3 result projection, literal unreviewed expectations, historical output and externally asserted score/error distinctions; no external code or unsupported criteria execution |
 | F09 | Produce a portable result consumable in another workspace or CI runner | Partial | Canonical server reports exist; local workflow journal/gate binds the original workspace/source |
 | F10 | Versioned documentation tells installed-wheel users which commands are unreleased | Bounded | `docs/optimization-search.md`, release artifact validation; maintain on every release |
 
@@ -74,14 +74,14 @@ Evidence: [Braintrust review](https://www.braintrust.dev/docs/annotate/human-rev
 |---|---|---|---|
 | D01 | Create frozen dataset versions with stable case identities and import provenance | Bounded | `evals/datasets.py`, `evals/records.py`, `server/evaluation_api.py` |
 | D02 | Distinguish independent gold labels, historical references, generated cases and user feedback | Bounded | Dataset attestations/evidence tiers; feedback is not automatically gold |
-| D03 | Prevent duplicate/customer groups leaking between train/validation/test | Bounded | Declared group and selected duplicate detection; semantic duplicates not universally detected |
+| D03 | Prevent duplicate/customer groups leaking between train/validation/test | Bounded | Persistent cross-version normalized-input/customer families, transitive merges, pre-call exposure/protected confirmation and legacy abstention; semantic duplicates are not universally detected |
 | D04 | Show split/class/stratum coverage and refuse inadequate independent evidence | Bounded | Dataset split metadata and verification criteria |
-| D05 | Turn a permitted production failure into a reviewed new regression dataset version | Partial | Case correction creates new version for experiment cases; generic trace promotion missing |
-| D06 | Assign review items and safely claim/release work with reviewer authorization | Missing | `server/case_evidence.py` provides admin case inspection/correction, not assignment queues |
-| D07 | Collect independent blind reviews without showing earlier reviewers' answers | Missing | Requires reviewer-scoped responses and immutable votes |
-| D08 | Detect disagreement and adjudicate without overwriting original judgments | Missing | No multi-review/adjudication records |
-| D09 | Version rubrics and measure judge/reviewer agreement on an untouched calibration set | Missing | Randomized/blind pairwise judge execution exists, but customer calibration lifecycle does not |
-| D10 | Track item lineage through import, review, correction, evaluation and deletion | Partial | Dataset/hash/policy lineage exists; full cross-tool/review/trace lineage incomplete |
+| D05 | Turn a permitted production failure into a reviewed new regression dataset version | Bounded | Captured trace content → frozen blind review → immutable resolution → new dataset; requires active rights and actual captured input, with synthetic acceptance only |
+| D06 | Assign review items and safely claim/release work with reviewer authorization | Bounded | `server/review_api.py`: current scoped-key/OIDC assignments, bounded queues, concurrent quorum claims, expiry/release/revocation and explicit queue closure |
+| D07 | Collect independent blind reviews without showing earlier reviewers' answers | Bounded | Server withholds peer answers/source gold; immutable votes and separate adjudicator; separate credentials are not proven separate humans, independence remains owner-attested |
+| D08 | Detect disagreement and adjudicate without overwriting original judgments | Bounded | Exact categorical consensus or designated adjudication adds a resolution while preserving every original vote; no averaged categorical gold |
+| D09 | Version rubrics and measure judge/reviewer agreement on an untouched calibration set | Partial | Frozen rubric/assignments, blind known-gold calibration and completed exact-match counts; queues cannot promote; independent judge/customer calibration qualification remains open |
+| D10 | Track item lineage through import, review, correction, evaluation and deletion | Bounded | Qualified source hashes, review/source/vote/resolution receipts, frozen assignment hashes and retained exposure identities with project export/deletion; unsupported tools/semantic identity remain unqualified |
 
 ## 5. Offline evaluations and regression enforcement — core baseline
 
@@ -95,7 +95,7 @@ Evidence: [Promptfoo assertions](https://www.promptfoo.dev/docs/configuration/ex
 | E04 | Compare paired baseline/candidate cases and slices with grouped uncertainty | Bounded | `evals/comparisons.py`, `server/case_evidence.py`; sample adequacy still matters |
 | E05 | Repeat stochastic tasks and expose variation without hiding failed attempts | Bounded | Experiment repetitions and cost/completeness reporting |
 | E06 | Run the application's real local regression contract against a proposed change | Missing | Native request replay is not executing and verifying the whole application's behavior |
-| E07 | Accept precomputed outputs without secretly rerunning an application/model | Partial | External scalar results can be ingested without inference; qualified external application-output/suite imports remain Release 2 work |
+| E07 | Accept precomputed outputs without secretly rerunning an application/model | Bounded | External scalar results plus qualified native/OpenInference/Promptfoo historical outputs import with zero inference; source assertions remain unverified and unsupported evaluator code never executes |
 | E08 | Produce machine-readable CI/JUnit outcomes with exact artifact/source provenance | Partial | `workflow gate` provides an exit status for same-workspace evidence; portable JUnit/PR pipeline absent |
 | E09 | Compare changed and unchanged workflows when a shared config/prompt is modified | Partial | `changes.py` warns about consumers; automatic impact regression testing missing |
 | E10 | Reproduce an experiment from pinned data, evaluator, native request and price snapshots | Bounded | Frozen native contract; identical stochastic outputs are not promised |

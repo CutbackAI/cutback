@@ -15,6 +15,7 @@ from cutback.core.models import Identifier, StrictModel
 from cutback.evals.artifacts import configured_store
 from cutback.evals.datasets import (
     CapturePolicy,
+    Case,
     DatasetImport,
     Sample,
     digest,
@@ -88,6 +89,10 @@ class ContentPurpose(StrictModel):
     purpose: Identifier
 
 
+class LineageReconciliation(ContentPurpose):
+    immutable_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+
+
 def require_store(app):
     if os.getenv("CUTBACK_ALLOW_PAYLOADS", "false").lower() != "true":
         raise HTTPException(403, "PAYLOAD_STORAGE_DISABLED")
@@ -117,7 +122,193 @@ def dataset_manifest(session, dataset):
     }
 
 
+def persist_dataset(session, store, project_id, body, actor, stored, *, provenance_extra=None):
+    from cutback.server.dataset_lineage import lock_lineage, register_groups
+
+    lock_lineage(session, project_id)
+    try:
+        policy_id = UUID(body.policy_id)
+    except ValueError:
+        raise HTTPException(422, "INVALID_POLICY_ID") from None
+    _, policy = active_policy(session, project_id, policy_id)
+    if not policy.permits(body.environment, body.workflow):
+        raise HTTPException(403, "CAPTURE_SCOPE_DENIED")
+    if body.source_type == "synthetic_fixture" and policy.rights_basis != "synthetic":
+        raise HTTPException(422, "SYNTHETIC_PROVENANCE_POLICY_MISMATCH")
+    session.get(CapturePolicyRecord, policy_id, with_for_update=True)
+    existing = policy_object_count(session, policy_id)
+    if existing + len(body.cases) > policy.max_samples:
+        raise HTTPException(429, "CAPTURE_SAMPLE_QUOTA_EXCEEDED")
+    # Serialize policy consumption across concurrent imports before checking quota.
+    clean = DatasetImport.model_validate(
+        redact(body.model_dump(mode="json"), policy.never_capture_fields)
+    )
+    lineage = register_groups(session, project_id, clean.cases, actor=actor)
+    prepared = prepare_dataset(
+        clean, lineage_groups={key: str(value) for key, value in lineage.items()}
+    )
+    provenance = clean.model_dump(mode="json", exclude={"cases"})
+    provenance.update(
+        {
+            "split_counts": prepared["split_counts"],
+            "task_inference": prepared["task_inference"],
+            "split_strategy": prepared["split_strategy"],
+            "group_count": prepared["group_count"],
+            "strata": prepared["strata"],
+            "warnings": prepared["warnings"],
+            "case_count": len(clean.cases),
+            "max_input_bytes": max(len(case.input.encode()) for case in clean.cases),
+            "redaction": policy.redaction_version,
+        }
+    )
+    provenance.update(provenance_extra or {})
+    from cutback.server.dataset_lineage import dataset_version_hash
+
+    assignment_hash = digest(
+        [
+            [i, item["split"], item["group_hash"], str(lineage[item["case"]["id"]])]
+            for i, item in enumerate(prepared["items"])
+        ]
+    )
+    provenance.update(
+        {
+            "hash_scheme": "cutback.dataset.lineage.v1",
+            "content_hash": prepared["immutable_hash"],
+            "assignment_hash": assignment_hash,
+            "provenance_extension_keys": sorted(provenance_extra or {}),
+        }
+    )
+    dataset = DatasetRecord(
+        project_id=project_id,
+        workflow_id=body.workflow,
+        immutable_hash=dataset_version_hash(
+            provenance, prepared["immutable_hash"], assignment_hash
+        ),
+        provenance=provenance,
+    )
+    session.add(dataset)
+    session.flush()
+    for ordinal, item in enumerate(prepared["items"]):
+        blob = json.dumps(item["case"]).encode()
+        if len(blob) > policy.max_payload_bytes:
+            raise HTTPException(413, "SAMPLE_EXCEEDS_POLICY_BYTES")
+        ref = store.put(project_id, blob, policy.retention_days)
+        stored.append(ref)
+        payload = PayloadSample(
+            project_id=project_id,
+            policy_id=policy_id,
+            object_ref=ref,
+            content_hash=digest(item["case"]),
+            expires_at=min(
+                policy.expires_at, datetime.now(UTC) + timedelta(days=policy.retention_days)
+            ),
+            metadata_safe={"redaction": policy.redaction_version, "ordinal": ordinal},
+        )
+        session.add(payload)
+        session.flush()
+        session.add(
+            DatasetItem(
+                dataset_id=dataset.id,
+                payload_id=payload.id,
+                split=item["split"],
+                group_hash=item["group_hash"],
+                lineage_group_id=lineage[item["case"]["id"]],
+            )
+        )
+    session.add(
+        AuditEvent(
+            project_id=project_id,
+            actor=actor,
+            action="dataset_imported",
+            details={"dataset_id": str(dataset.id), "cases": len(clean.cases)},
+        )
+    )
+    return {
+        "id": str(dataset.id),
+        "immutable_hash": dataset.immutable_hash,
+        "provenance": provenance,
+        "content": "encrypted_separate_store",
+    }
+
+
 def install_evaluation(app, sessions, authorize, scope):
+    @app.post("/v1/projects/{project_id}/datasets/{dataset_id}/lineage/reconcile")
+    def reconcile_lineage(
+        project_id: UUID, dataset_id: UUID, body: LineageReconciliation, auth=Depends(authorize)
+    ):
+        """Supplement legacy identities without editing their frozen content, splits or hashes."""
+        from cutback.server.dataset_lineage import (
+            lock_lineage,
+            register_groups,
+            require_unreserved_groups,
+        )
+        from cutback.server.lineage_db import DatasetExposure
+        from cutback.server.worker import load_dataset
+
+        scope(auth, project_id, ("admin",))
+        store = require_store(app)
+        with sessions.begin() as session:
+            lock_lineage(session, project_id)
+            dataset = session.get(DatasetRecord, dataset_id, with_for_update=True)
+            if not dataset or dataset.project_id != project_id:
+                raise HTTPException(404, "DATASET_NOT_FOUND")
+            if dataset.immutable_hash != body.immutable_hash:
+                raise HTTPException(409, "DATASET_HASH_CHANGED")
+            rows = session.scalars(
+                select(DatasetItem)
+                .where(DatasetItem.dataset_id == dataset_id)
+                .order_by(DatasetItem.id)
+            ).all()
+            if all(r.lineage_group_id is not None for r in rows):
+                return {"status": "already_known", "frozen_dataset_changed": False}
+            if dataset.provenance.get("hash_scheme") == "cutback.dataset.lineage.v1":
+                raise HTTPException(409, "FROZEN_LINEAGE_ASSIGNMENT_MISSING")
+            try:
+                loaded, _ = load_dataset(session, dataset, store)
+                cases = [Case.model_validate(item["case"]) for item in loaded["items"]]
+                families = register_groups(session, project_id, cases, actor=auth["actor"])
+                require_unreserved_groups(session, project_id, set(families.values()))
+            except (ValueError, OSError):
+                raise HTTPException(409, "LEGACY_CONTENT_UNAVAILABLE_OR_GROUP_RESERVED") from None
+            for row in rows:
+                payload = session.get(PayloadSample, row.payload_id)
+                case = cases[payload.metadata_safe["ordinal"]]
+                if row.lineage_group_id is not None and row.lineage_group_id != families[case.id]:
+                    raise HTTPException(409, "PARTIAL_LEGACY_LINEAGE_CONFLICT")
+                row.lineage_group_id = families[case.id]
+            for family in set(families.values()):
+                session.add(
+                    DatasetExposure(
+                        project_id=project_id,
+                        family_id=family,
+                        dataset_id=dataset.id,
+                        run_id=None,
+                        source_ref="legacy-reconciliation:" + str(dataset.id),
+                        mode="validation",
+                        protected=False,
+                    )
+                )
+            session.add(
+                AuditEvent(
+                    project_id=project_id,
+                    actor=auth["actor"],
+                    action="legacy_dataset_lineage_reconciled",
+                    details={
+                        "dataset_id": str(dataset.id),
+                        "purpose": body.purpose,
+                        "groups": len(set(families.values())),
+                        "fresh_claim": False,
+                        "frozen_dataset_changed": False,
+                    },
+                )
+            )
+            return {
+                "status": "reconciled_conservatively_exposed",
+                "groups": len(set(families.values())),
+                "frozen_dataset_changed": False,
+                "fresh_test_claim": False,
+            }
+
     @app.get("/v1/ingest/capture-policies/{policy_id}")
     def capture_policy_for_sdk(policy_id: UUID, auth=Depends(authorize)):
         if auth["role"] != "ingest":
@@ -288,87 +479,10 @@ def install_evaluation(app, sessions, authorize, scope):
     def import_dataset(project_id: UUID, body: DatasetImport, auth=Depends(authorize)):
         scope(auth, project_id, ("analyst",))
         store = require_store(app)
-        stored = []
+        stored: list[str] = []
         try:
             with sessions.begin() as session:
-                try:
-                    policy_id = UUID(body.policy_id)
-                except ValueError:
-                    raise HTTPException(422, "INVALID_POLICY_ID") from None
-                _, policy = active_policy(session, project_id, policy_id)
-                if not policy.permits(body.environment, body.workflow):
-                    raise HTTPException(403, "CAPTURE_SCOPE_DENIED")
-                if body.source_type == "synthetic_fixture" and policy.rights_basis != "synthetic":
-                    raise HTTPException(422, "SYNTHETIC_PROVENANCE_POLICY_MISMATCH")
-                session.get(CapturePolicyRecord, policy_id, with_for_update=True)
-                existing = policy_object_count(session, policy_id)
-                if existing + len(body.cases) > policy.max_samples:
-                    raise HTTPException(429, "CAPTURE_SAMPLE_QUOTA_EXCEEDED")
-                # Serialize policy consumption across concurrent imports before checking quota.
-                clean = DatasetImport.model_validate(
-                    redact(body.model_dump(mode="json"), policy.never_capture_fields)
-                )
-                prepared = prepare_dataset(clean)
-                provenance = clean.model_dump(mode="json", exclude={"cases"})
-                provenance.update(
-                    {
-                        "split_counts": prepared["split_counts"],
-                        "task_inference": prepared["task_inference"],
-                        "split_strategy": prepared["split_strategy"],
-                        "group_count": prepared["group_count"],
-                        "strata": prepared["strata"],
-                        "warnings": prepared["warnings"],
-                        "case_count": len(clean.cases),
-                        "max_input_bytes": max(len(case.input.encode()) for case in clean.cases),
-                        "redaction": policy.redaction_version,
-                    }
-                )
-                dataset = DatasetRecord(
-                    project_id=project_id,
-                    workflow_id=body.workflow,
-                    immutable_hash=prepared["immutable_hash"],
-                    provenance=provenance,
-                )
-                session.add(dataset)
-                session.flush()
-                for ordinal, item in enumerate(prepared["items"]):
-                    blob = json.dumps(item["case"]).encode()
-                    if len(blob) > policy.max_payload_bytes:
-                        raise HTTPException(413, "SAMPLE_EXCEEDS_POLICY_BYTES")
-                    ref = store.put(project_id, blob, policy.retention_days)
-                    stored.append(ref)
-                    payload = PayloadSample(
-                        project_id=project_id,
-                        policy_id=policy_id,
-                        object_ref=ref,
-                        content_hash=digest(item["case"]),
-                        expires_at=datetime.now(UTC) + timedelta(days=policy.retention_days),
-                        metadata_safe={"redaction": policy.redaction_version, "ordinal": ordinal},
-                    )
-                    session.add(payload)
-                    session.flush()
-                    session.add(
-                        DatasetItem(
-                            dataset_id=dataset.id,
-                            payload_id=payload.id,
-                            split=item["split"],
-                            group_hash=item["group_hash"],
-                        )
-                    )
-                session.add(
-                    AuditEvent(
-                        project_id=project_id,
-                        actor=auth["actor"],
-                        action="dataset_imported",
-                        details={"dataset_id": str(dataset.id), "cases": len(clean.cases)},
-                    )
-                )
-            return {
-                "id": str(dataset.id),
-                "immutable_hash": dataset.immutable_hash,
-                "provenance": provenance,
-                "content": "encrypted_separate_store",
-            }
+                return persist_dataset(session, store, project_id, body, auth["actor"], stored)
         except BaseException:
             for ref in stored:
                 store.delete(project_id, ref)
@@ -571,6 +685,9 @@ def install_evaluation(app, sessions, authorize, scope):
     def queue_run(project_id: UUID, body: QueueInput, auth=Depends(authorize)):
         scope(auth, project_id, ("analyst",))
         with sessions.begin() as session:
+            from cutback.server.dataset_lineage import lock_lineage, reserve_evaluation
+
+            lock_lineage(session, project_id)
             plan = session.get(ExperimentPlanRecord, body.plan_id, with_for_update=True)
             if not plan or plan.project_id != project_id:
                 raise HTTPException(404, "PLAN_NOT_FOUND")
@@ -579,11 +696,12 @@ def install_evaluation(app, sessions, authorize, scope):
             from cutback.server.stages import validate_stage
 
             try:
+                frozen = load_plan(require_store(app), project_id, plan.specification)
                 validate_stage(
                     session,
                     require_store(app),
                     project_id,
-                    load_plan(require_store(app), project_id, plan.specification),
+                    frozen,
                 )
             except ValueError as exc:
                 raise HTTPException(409, str(exc)) from None
@@ -595,6 +713,14 @@ def install_evaluation(app, sessions, authorize, scope):
             )
             session.add(row)
             session.flush()
+            try:
+                row.results = {
+                    "lineage": reserve_evaluation(
+                        session, project_id, plan.dataset_id, frozen, row.id
+                    )
+                }
+            except ValueError as exc:
+                raise HTTPException(409, str(exc)) from None
             session.add(JobRecord(project_id=project_id, run_id=row.id, status="QUEUED"))
             session.add(
                 AuditEvent(
@@ -742,6 +868,9 @@ def install_evaluation(app, sessions, authorize, scope):
     ):
         scope(auth, project_id, ("editor",))
         with sessions.begin() as session:
+            from cutback.server.dataset_lineage import lock_lineage, require_current_test_evidence
+
+            lock_lineage(session, project_id)
             row = session.get(RecommendationRecord, recommendation_id, with_for_update=True)
             if not row or row.project_id != project_id:
                 raise HTTPException(404, "RECOMMENDATION_NOT_FOUND")
@@ -762,6 +891,12 @@ def install_evaluation(app, sessions, authorize, scope):
                 plan = session.get(ExperimentPlanRecord, run.plan_id)
                 if plan.specification["public_specification"]["split"] != "test":
                     raise HTTPException(409, "VALIDATION_SEARCH_REQUIRES_TEST_CONFIRMATION")
+                if row.evidence.get("lineage", {}).get("fresh_test_claim") is not True:
+                    raise HTTPException(409, "TEST_LINEAGE_REAPPROVAL_REQUIRED")
+                try:
+                    require_current_test_evidence(session, require_store(app), row)
+                except ValueError:
+                    raise HTTPException(409, "TEST_LINEAGE_REAPPROVAL_REQUIRED") from None
             row.status = body.decision
             session.add(
                 AuditEvent(

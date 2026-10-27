@@ -80,11 +80,13 @@ function Investigation({
   base,
   id,
   allowContent,
+  onReview,
 }: {
   api: API;
   base: string;
   id: string;
   allowContent: boolean;
+  onReview?: (contentID: string) => void;
 }) {
   const [data, setData] = useState<Detail | null>(null);
   const [error, setError] = useState("");
@@ -225,6 +227,11 @@ function Investigation({
                             access.
                           </p>
                         ))}
+                      {allowContent && span.content_id && onReview && (
+                        <button onClick={() => onReview(span.content_id!)}>
+                          Prepare review of this step
+                        </button>
+                      )}
                       {span.issues.map((issue) => (
                         <p className="criterion-failed" key={issue}>
                           {issue.replaceAll("_", " ")}
@@ -296,10 +303,12 @@ export function Traces({
   api,
   project,
   allowContent,
+  onReview,
 }: {
   api: API;
   project: string;
   allowContent: boolean;
+  onReview?: (contentID: string) => void;
 }) {
   const base = "/projects/" + encodeURIComponent(project);
   const [environments, setEnvironments] = useState<
@@ -733,6 +742,7 @@ export function Traces({
           base={base}
           id={selected}
           allowContent={allowContent}
+          onReview={onReview}
         />
       )}
     </section>

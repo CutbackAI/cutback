@@ -3,6 +3,8 @@ export type Evidence = Record<string, any>;
 export function decisionLabel(item: Evidence): string {
   if (item.evaluator_version !== "deterministic-v3")
     return "Evaluation version requires a new comparison";
+  if (item.decision_reason === "test_group_lineage_not_fresh")
+    return "Test groups already exposed or unknown; new confirmation required";
   if (
     !item.failed_criteria?.length &&
     (item.insufficient_criteria?.length ||

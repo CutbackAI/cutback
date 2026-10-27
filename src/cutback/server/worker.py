@@ -52,17 +52,38 @@ def load_dataset(session, dataset, store, *, now=None):
         ordered.append(
             (
                 payload.metadata_safe["ordinal"],
-                {"case": case, "split": item.split, "group_hash": item.group_hash},
+                {
+                    "case": case,
+                    "split": item.split,
+                    "group_hash": item.group_hash,
+                    "lineage_group_id": str(item.lineage_group_id)
+                    if item.lineage_group_id
+                    else None,
+                },
             )
         )
     ordered.sort(key=lambda pair: pair[0])
     fields = set(DatasetImport.model_fields) - {"cases"}
     original = {k: v for k, v in dataset.provenance.items() if k in fields}
     original["cases"] = [item["case"] for _, item in ordered]
-    if (
-        digest(DatasetImport.model_validate(original).model_dump(mode="json"))
-        != dataset.immutable_hash
-    ):
+    content_hash = digest(DatasetImport.model_validate(original).model_dump(mode="json"))
+    expected_hash = content_hash
+    if dataset.provenance.get("hash_scheme") == "cutback.dataset.lineage.v1":
+        from cutback.server.dataset_lineage import dataset_version_hash
+
+        assignment_hash = digest(
+            [
+                [ordinal, row["split"], row["group_hash"], row["lineage_group_id"]]
+                for ordinal, row in ordered
+            ]
+        )
+        if (
+            content_hash != dataset.provenance["content_hash"]
+            or assignment_hash != dataset.provenance["assignment_hash"]
+        ):
+            raise ValueError("DATASET_LINEAGE_ASSIGNMENT_INTEGRITY_FAILURE")
+        expected_hash = dataset_version_hash(dataset.provenance, content_hash, assignment_hash)
+    if expected_hash != dataset.immutable_hash:
         raise ValueError("DATASET_INTEGRITY_FAILURE")
     return {
         "immutable_hash": dataset.immutable_hash,
@@ -200,6 +221,9 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
             )
         try:
             with sessions() as session:
+                from cutback.server.dataset_lineage import lock_lineage
+
+                lock_lineage(session, project_id)
                 dataset_row = session.get(DatasetRecord, dataset_id)
                 dataset, policy = load_dataset(session, dataset_row, store)
                 if any(
@@ -210,6 +234,9 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
                 from cutback.server.stages import validate_stage
 
                 validate_stage(session, store, project_id, plan, run_id=run_id)
+                from cutback.server.dataset_lineage import evaluation_receipt
+
+                evaluation_receipt(session, project_id, dataset_id, plan, run_id)
 
             def reserve(amount):
                 require_payloads_enabled()
@@ -257,9 +284,6 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
                     else None,
                 )
             results["case_outputs_retained"] = plan.retain_case_outputs
-            from cutback.evals.search import sample_frontier
-
-            results["search_frontier"] = sample_frontier(results)
         except Exception:
             results = {
                 "status": "FAILED",
@@ -267,9 +291,32 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
                 "recommendations": [],
             }
         with sessions.begin() as session:
+            from cutback.server.dataset_lineage import (
+                LineageViolation,
+                apply_lineage_result,
+                evaluation_receipt,
+                lock_lineage,
+            )
+
+            lock_lineage(session, project_id)
             record = session.get(ExperimentRunRecord, run_id, with_for_update=True)
             job = session.get(JobRecord, job_id)
             results = public_config(results)
+            if results.get("status") == "COMPLETED":
+                try:
+                    lineage = evaluation_receipt(session, project_id, dataset_id, plan, run_id)
+                except LineageViolation as exc:
+                    lineage = {
+                        "contract": "cutback.lineage.v1",
+                        "complete": False,
+                        "fresh_test_claim": False,
+                        "invalidated_after_execution": True,
+                        "code": str(exc),
+                    }
+                apply_lineage_result(results, lineage, plan.split)
+                from cutback.evals.search import sample_frontier
+
+                results["search_frontier"] = sample_frontier(results)
             record.results = results
             if record.status == "RUNNING":
                 record.status = results["status"]

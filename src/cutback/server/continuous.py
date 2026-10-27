@@ -3,6 +3,7 @@
 import os
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from types import SimpleNamespace
 from typing import Literal
 from uuid import UUID
 
@@ -118,7 +119,15 @@ def queue_schedules(sessions, *, enabled=False, now=None):
             .with_for_update(skip_locked=True)
             .limit(10)
         ).all()
+        rows = sorted(rows, key=lambda r: (str(r.project_id), r.next_run_at, str(r.id)))
         for row in rows:
+            from cutback.server.dataset_lineage import (
+                LineageViolation,
+                lock_lineage,
+                reserve_evaluation,
+            )
+
+            lock_lineage(session, row.project_id)
             spec = row.specification
             plan = session.get(ExperimentPlanRecord, row.plan_id)
             current_price = Catalog()
@@ -158,8 +167,35 @@ def queue_schedules(sessions, *, enabled=False, now=None):
             record = ExperimentRunRecord(
                 project_id=row.project_id, plan_id=row.plan_id, status="QUEUED", results={}
             )
-            session.add(record)
-            session.flush()
+            public = plan.specification["public_specification"]
+            frozen = SimpleNamespace(
+                split=public["split"],
+                pilot_samples=public.get("pilot_samples", 0),
+                predecessor_run_id=public.get("predecessor_run_id"),
+                staged=public.get("staged", False),
+                stage=public.get("stage"),
+            )
+            try:
+                with session.begin_nested():
+                    session.add(record)
+                    session.flush()
+                    record.results = {
+                        "lineage": reserve_evaluation(
+                            session, row.project_id, plan.dataset_id, frozen, record.id
+                        )
+                    }
+            except LineageViolation as exc:
+                row.enabled = False
+                row.runs_queued -= 1
+                row.reserved_usd -= cap
+                audit(
+                    session,
+                    row.project_id,
+                    "scheduler",
+                    "schedule_lineage_blocked",
+                    {"schedule_id": str(row.id), "code": str(exc)},
+                )
+                continue
             session.add(JobRecord(project_id=row.project_id, run_id=record.id, status="QUEUED"))
             audit(
                 session,
@@ -209,6 +245,13 @@ def install_continuous(app, sessions, authorize, scope):
             if not plan or plan.project_id != project_id:
                 raise HTTPException(404, "PLAN_NOT_FOUND")
             budget = plan.specification["public_specification"]["budget"]
+            public = plan.specification["public_specification"]
+            if public.get("split") == "test" and (
+                public.get("predecessor_run_id")
+                or public.get("staged")
+                and public.get("stage") == "full"
+            ):
+                raise HTTPException(409, "INDEPENDENT_TEST_CANNOT_BE_RECURRING")
             if (
                 Decimal(budget["max_usd"]) * body.max_runs > body.max_total_usd
                 or budget["max_requests"] * body.max_runs > body.max_total_requests
@@ -313,6 +356,10 @@ def install_continuous(app, sessions, authorize, scope):
     def create_rollout(project_id: UUID, body: RolloutInput, auth=Depends(authorize)):
         scope(auth, project_id, ("editor",))
         with sessions.begin() as session:
+            from cutback.server.dataset_lineage import lock_lineage, require_current_test_evidence
+            from cutback.server.evaluation_api import require_store
+
+            lock_lineage(session, project_id)
             rec = session.get(RecommendationRecord, body.recommendation_id)
             if not rec or rec.project_id != project_id or rec.status != "accepted_for_staging":
                 raise HTTPException(409, "REVIEWED_RECOMMENDATION_REQUIRED")
@@ -322,6 +369,12 @@ def install_continuous(app, sessions, authorize, scope):
                 raise HTTPException(409, "REQUIRED_COST_AND_QUALITY_GATES_NOT_PASSED")
             if rec.evidence.get("evaluator_version") != "deterministic-v3":
                 raise HTTPException(409, "EVALUATOR_REAPPROVAL_REQUIRED")
+            if rec.evidence.get("lineage", {}).get("fresh_test_claim") is not True:
+                raise HTTPException(409, "TEST_LINEAGE_REAPPROVAL_REQUIRED")
+            try:
+                require_current_test_evidence(session, require_store(app), rec)
+            except ValueError:
+                raise HTTPException(409, "TEST_LINEAGE_REAPPROVAL_REQUIRED") from None
             row = RolloutRecord(
                 project_id=project_id,
                 recommendation_id=rec.id,

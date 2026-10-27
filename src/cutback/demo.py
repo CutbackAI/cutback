@@ -203,6 +203,7 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
                     )
                     assert result == expected
             specification = {
+                "split": "validation",
                 "workflow": workflow,
                 "dataset_hash": dataset["immutable_hash"],
                 "baseline": {
@@ -310,7 +311,7 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
             recommendation = next(
                 item
                 for item in control.get(base + "/recommendations").json()
-                if item["run_id"] == comparison_id
+                if item["run_id"] == stages[-1]["run_id"]
                 and item["evidence"]["candidate"]["key"] == "compact"
             )
             call(

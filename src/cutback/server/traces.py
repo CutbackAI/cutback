@@ -221,13 +221,13 @@ def trace_detail(session, row, limit):
     ).all()
     truncated = len(retained) > limit
     spans = [r.metadata_record for r in retained[:limit]]
-    content_ids = set(
-        session.scalars(
-            select(TraceContent.span_id).where(
+    content_ids = dict(
+        session.execute(
+            select(TraceContent.span_id, TraceContent.id).where(
                 TraceContent.trace_record_id == row.id,
                 TraceContent.span_id.in_([s["span_id"] for s in spans]),
             )
-        )
+        ).all()
     )
     flags, issues = graph_issues(spans, truncated)
     native = native_evidence(
@@ -260,6 +260,7 @@ def trace_detail(session, row, limit):
                 "issues": issues[s["span_id"]],
                 "native": native.get(s["span_id"]),
                 "content_available": s["span_id"] in content_ids,
+                "content_id": content_ids.get(s["span_id"]),
             }
             for s in spans
         ],

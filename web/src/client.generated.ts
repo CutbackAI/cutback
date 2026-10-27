@@ -86,6 +86,9 @@ export function createSDK(request:Request) {return {
     if(args.start!==undefined && args.start!==null) query.set("start",String(args.start));
     if(args.end!==undefined && args.end!==null) query.set("end",String(args.end));
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/opportunities`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  reconcile_lineage_v1_projects__project_id__datasets__dataset_id__lineage_reconcile_post: (args:{project_id:string;dataset_id:string;body:components["schemas"]["LineageReconciliation"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/datasets/${encodeURIComponent(String(args.dataset_id))}/lineage/reconcile`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   capture_policy_for_sdk_v1_ingest_capture_policies__policy_id__get: (args:{policy_id:string}) => {
     const query=new URLSearchParams();
     return request(`/ingest/capture-policies/${encodeURIComponent(String(args.policy_id))}`+(query.size?"?"+query.toString():""),{method:"GET"});},
@@ -151,6 +154,73 @@ export function createSDK(request:Request) {return {
   review_v1_projects__project_id__recommendations__recommendation_id__review_post: (args:{project_id:string;recommendation_id:string;body:components["schemas"]["ReviewInput"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/recommendations/${encodeURIComponent(String(args.recommendation_id))}/review`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  preview_v1_projects__project_id__imports_preview_post: (args:{project_id:string;body:components["schemas"]["ImportPreviewInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/imports/preview`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  previews_v1_projects__project_id__imports_get: (args:{project_id:string;before?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.before!==undefined && args.before!==null) query.set("before",String(args.before));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/imports`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  content_v1_projects__project_id__imports__preview_id__content_post: (args:{project_id:string;preview_id:string;body:components["schemas"]["ContentPurpose"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/imports/${encodeURIComponent(String(args.preview_id))}/content`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  metadata_v1_projects__project_id__imports__preview_id__get: (args:{project_id:string;preview_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/imports/${encodeURIComponent(String(args.preview_id))}`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  commit_v1_projects__project_id__imports__preview_id__commit_post: (args:{project_id:string;preview_id:string;body:components["schemas"]["ImportCommitInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/imports/${encodeURIComponent(String(args.preview_id))}/commit`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  principals_v1_projects__project_id__reviews_principals_get: (args:{project_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/reviews/principals`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  close_queue_v1_projects__project_id__reviews__queue_id__close_post: (args:{project_id:string;queue_id:string;body:components["schemas"]["ReviewClose"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/reviews/${encodeURIComponent(String(args.queue_id))}/close`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  source_items_v1_projects__project_id__review_sources_get: (args:{project_id:string;dataset_id?:string | null;trace_content_id?:string | null;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.dataset_id!==undefined && args.dataset_id!==null) query.set("dataset_id",String(args.dataset_id));
+    if(args.trace_content_id!==undefined && args.trace_content_id!==null) query.set("trace_content_id",String(args.trace_content_id));
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/review-sources`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  create_v1_projects__project_id__reviews_post: (args:{project_id:string;body:components["schemas"]["ReviewQueueInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/reviews`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  queues_v1_projects__project_id__reviews_get: (args:{project_id:string;before?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.before!==undefined && args.before!==null) query.set("before",String(args.before));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/reviews`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  items_v1_projects__project_id__reviews__queue_id__items_get: (args:{project_id:string;queue_id:string;before?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.before!==undefined && args.before!==null) query.set("before",String(args.before));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/reviews/${encodeURIComponent(String(args.queue_id))}/items`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  claim_v1_projects__project_id__reviews__queue_id__claim_post: (args:{project_id:string;queue_id:string;body:components["schemas"]["ReviewClaim"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/reviews/${encodeURIComponent(String(args.queue_id))}/claim`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  content_v1_projects__project_id__reviews__queue_id__items__item_id__content_post: (args:{project_id:string;queue_id:string;item_id:string;body:components["schemas"]["ContentPurpose"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/reviews/${encodeURIComponent(String(args.queue_id))}/items/${encodeURIComponent(String(args.item_id))}/content`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  release_v1_projects__project_id__reviews__queue_id__items__item_id__release_post: (args:{project_id:string;queue_id:string;item_id:string;body:components["schemas"]["ReviewRelease"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/reviews/${encodeURIComponent(String(args.queue_id))}/items/${encodeURIComponent(String(args.item_id))}/release`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  vote_v1_projects__project_id__reviews__queue_id__items__item_id__votes_post: (args:{project_id:string;queue_id:string;item_id:string;body:components["schemas"]["ReviewSubmission"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/reviews/${encodeURIComponent(String(args.queue_id))}/items/${encodeURIComponent(String(args.item_id))}/votes`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  adjudication_content_v1_projects__project_id__reviews__queue_id__items__item_id__adjudication_content_post: (args:{project_id:string;queue_id:string;item_id:string;body:components["schemas"]["ContentPurpose"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/reviews/${encodeURIComponent(String(args.queue_id))}/items/${encodeURIComponent(String(args.item_id))}/adjudication-content`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  adjudicate_v1_projects__project_id__reviews__queue_id__items__item_id__adjudicate_post: (args:{project_id:string;queue_id:string;item_id:string;body:components["schemas"]["ReviewAdjudication"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/reviews/${encodeURIComponent(String(args.queue_id))}/items/${encodeURIComponent(String(args.item_id))}/adjudicate`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  promote_v1_projects__project_id__reviews__queue_id__promote_post: (args:{project_id:string;queue_id:string;body:components["schemas"]["ReviewPromotion"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/reviews/${encodeURIComponent(String(args.queue_id))}/promote`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  calibration_v1_projects__project_id__reviews__queue_id__calibration_post: (args:{project_id:string;queue_id:string;body:components["schemas"]["ContentPurpose"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/reviews/${encodeURIComponent(String(args.queue_id))}/calibration`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   export_v1_projects__project_id__export_get: (args:{project_id:string}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/export`+(query.size?"?"+query.toString():""),{method:"GET"});},

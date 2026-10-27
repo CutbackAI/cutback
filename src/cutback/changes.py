@@ -30,6 +30,8 @@ def model_patch(
         raise ValueError("EVALUATOR_REAPPROVAL_REQUIRED")
     if not evidence.get("quality_gate_passed") or not evidence.get("cheaper_on_sample"):
         raise ValueError("CANDIDATE_DID_NOT_PASS_COST_AND_QUALITY_GATES")
+    if evidence.get("lineage", {}).get("fresh_test_claim") is not True:
+        raise ValueError("TEST_LINEAGE_REAPPROVAL_REQUIRED")
     sites = [site for site in inventory["call_sites"] if site["call_site_id"] == call_site_id]
     if len(sites) != 1:
         raise ValueError("CALL_SITE_NOT_UNIQUE")

@@ -44,6 +44,7 @@ def test_evaluated_cap_patch_changes_only_exact_literal_and_preserves_original(
         "status": "pending",
         "evidence": {
             "evaluator_version": "deterministic-v3",
+            "lineage": {"contract": "cutback.lineage.v1", "fresh_test_claim": True},
             "quality_gate_passed": True,
             "cheaper_on_sample": True,
             "source_binding": profile.binding.model_dump(mode="json"),

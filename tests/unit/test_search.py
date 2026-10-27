@@ -138,6 +138,8 @@ def test_ci_gate_fails_closed_for_search_stale_unknown_or_provisional_evidence()
         statistical_gate_passed=True,
         status="VERIFIED_ON_HELDOUT_DATASET",
     )
+    assert not regression_gate(report, expected_plan_hash=expected)["passed"]
+    report["lineage"] = {"contract": "cutback.lineage.v1", "fresh_test_claim": True}
     assert regression_gate(report, expected_plan_hash=expected)["passed"]
     report["plan"]["split"] = "validation"
     assert not regression_gate(report, expected_plan_hash=expected, sample_only=True)["passed"]

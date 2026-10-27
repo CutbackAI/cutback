@@ -147,6 +147,8 @@ def regression_gate(report, *, expected_plan_hash, candidate=None, sample_only=F
         reasons.append("frozen_plan_mismatch")
     if report.get("plan", {}).get("split") != "test":
         reasons.append("independent_test_confirmation_required")
+    if not sample_only and report.get("lineage", {}).get("fresh_test_claim") is not True:
+        reasons.append("independent_test_lineage_unknown_or_exposed")
     choices = [
         r
         for r in report.get("recommendations", [])

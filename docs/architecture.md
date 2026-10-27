@@ -8,6 +8,12 @@ Telemetry keys are environment/project write-only. Control roles, separate boots
 
 Content is a denied-by-default separate plane. Approved examples and prompt/rubric artifacts are encrypted in customer file/S3 storage; PostgreSQL keeps safe pointers/hashes/provenance. Policy rights/vendor/environment/workflow scope, expiry, quotas and redaction precede capture/import. Provider credentials never enter events or browser responses.
 
+Qualified import adapters project bounded native JSONL, pinned OpenInference OTLP JSON and Promptfoo result exports without executing the source's config, providers or graders. Offline preview returns metadata only; encrypted preview/commit uses explicit rights and an exact source hash. Historical outputs and externally asserted scores do not become independent gold.
+
+Frozen review queues authorize individual current scoped-key/OIDC principals. Encrypted rubric/source/judgment objects are separate from safe queue/item/lease/vote/resolution records. Reviewer endpoints enforce blind answers; designated adjudicators see completed disagreements, and promotion creates a new frozen dataset with exact receipts. Source and destination rights remain necessary for content access; safe status metadata and closure remain available after content expiry.
+
+Persistent per-project input/customer-group families and pre-call exposure receipts prevent reimports from resetting a consumed holdout. Transitive family discoveries never rewrite old content or split assignments. The dataset hash binds those frozen assignments and provenance. Current lineage is rechecked before accepting staging/patch/rollout evidence. Legacy identities require authorized conservative reconciliation; unknown history cannot be silently declared fresh. Additive migrations 0007–0009 introduce workflow traces, dataset lineage and review records while preserving released earlier migrations.
+
 Paired evaluations use a durable pre-call ledger. Jobs use row locks/leases; uncertain operations fail rather than replaying potential charges. Hash approval authorizes one run. Evidence tiers distinguish contracts, references, judges and independent labels. Changes include rollback and never deploy themselves.
 
 Compose provides collector/worker/PostgreSQL, generated secrets and persistent volumes. A separate TLS reference adds pinned Caddy/private networking/exact proxy trust. Customer DB/secrets/identity remain supported. The free core has no hosted-account gate or company endpoint.

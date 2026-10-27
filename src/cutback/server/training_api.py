@@ -159,6 +159,9 @@ def install_training(app, sessions, authorize, scope):
     def approve(project_id: UUID, training_id: UUID, body: Approval, auth=Depends(authorize)):
         scope(auth, project_id, ("admin",))
         with sessions.begin() as session:
+            from cutback.server.dataset_lineage import expose, lock_lineage
+
+            lock_lineage(session, project_id)
             row = session.get(TrainingJob, training_id, with_for_update=True)
             if not row or row.project_id != project_id:
                 raise HTTPException(404, "TRAINING_NOT_FOUND")
@@ -169,6 +172,13 @@ def install_training(app, sessions, authorize, scope):
             ):
                 raise HTTPException(409, "TRAINING_STATE_OR_HASH_MISMATCH")
             spec = TrainingSpec.model_validate(row.specification)
+            try:
+                lineage = expose(
+                    session, project_id, row.dataset_id, "train", "training:" + str(row.id)
+                )
+            except ValueError as exc:
+                raise HTTPException(409, str(exc)) from None
+            row.results = {**row.results, "lineage": lineage}
             row.reserved_usd = spec.reservation()
             row.status = "QUEUED"
             session.add(
