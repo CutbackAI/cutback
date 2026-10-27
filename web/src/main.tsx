@@ -18,6 +18,7 @@ import "./style.css";
 import { SampleGuide } from "./demo";
 import { PatchReview } from "./change-review";
 import { CaseEvidence } from "./case-evidence";
+import { AgentWorkflow } from "./agent-workflow";
 import { decisionLabel, criterionLabel, experimentTitle } from "./evidence";
 
 async function request(token: string, path: string, options: RequestInit = {}) {
@@ -53,6 +54,7 @@ type RequestAPI = (path: string, options?: RequestInit) => Promise<any>;
 const views = [
   "Sample",
   "Overview",
+  "Agent workflow",
   "Inventory",
   "Costs",
   "Opportunities",
@@ -146,6 +148,7 @@ function App() {
   );
   const [offset, setOffset] = useState(0);
   const [data, setData] = useState<RecordData>({});
+  const [agentFocus, setAgentFocus] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [updated, setUpdated] = useState("");
@@ -194,6 +197,14 @@ function App() {
           api(base + "/health"),
         ]);
         result = { report, health };
+      }
+      if (view === "Agent workflow") {
+        const [source, plans, runs] = await Promise.all([
+          api(base + "/inventory"),
+          api(base + "/experiments/plans"),
+          api(base + "/experiments"),
+        ]);
+        result = { inventory: source.inventory, plans, runs };
       }
       if (view === "Inventory")
         result = await api(
@@ -720,7 +731,20 @@ function App() {
               <Billing api={api} organizations={organizations} />
             )}
             {view === "Overview" && data.report && (
-              <Overview report={data.report} health={data.health} />
+              <Overview
+                report={data.report}
+                health={data.health}
+                openAgent={() => setView("Agent workflow")}
+              />
+            )}
+            {view === "Agent workflow" && data.plans && (
+              <AgentWorkflow
+                inventory={data.inventory}
+                plans={data.plans}
+                runs={data.runs}
+                project={project}
+                focus={agentFocus}
+              />
             )}
             {view === "Costs" && data.report && <Costs report={data.report} />}
             {view === "Inventory" && "inventory" in data && (
@@ -731,7 +755,14 @@ function App() {
               />
             )}
             {view === "Opportunities" && data.opportunities && (
-              <Opportunities items={data.opportunities} />
+              <Opportunities
+                items={data.opportunities}
+                overhead={data.overhead}
+                prepare={(workflow) => {
+                  setAgentFocus(workflow);
+                  setView("Agent workflow");
+                }}
+              />
             )}
             {view === "Experiments" && data.datasets && (
               <Experiments
@@ -810,13 +841,20 @@ function App() {
 function Overview({
   report,
   health,
+  openAgent,
 }: {
   report: RecordData;
   health: RecordData;
+  openAgent: () => void;
 }) {
   const s = report.summary;
   return (
     <>
+      <p>
+        Start in your application. Your coding agent can prepare discovery,
+        instrumentation and a bounded evaluation, then bring the evidence here.
+      </p>
+      <button onClick={openAgent}>Start the agent workflow</button>
       <p>
         Observed period: <time>{report.period.from}</time> to{" "}
         <time>{report.period.to}</time>.
@@ -1117,13 +1155,31 @@ function Costs({ report }: { report: RecordData }) {
     </>
   );
 }
-function Opportunities({ items }: { items: RecordData[] }) {
+function Opportunities({
+  items,
+  overhead,
+  prepare,
+}: {
+  items: RecordData[];
+  overhead?: RecordData;
+  prepare: (workflow: string) => void;
+}) {
   const [tier, setTier] = useState("all");
   const filtered = items.filter(
     (row) => tier === "all" || String(row.evidence_tier) === tier,
   );
   return (
     <>
+      <p>
+        Ranked from application traffic. Evaluation and judge traffic are
+        accounted for separately.
+      </p>
+      {overhead && (
+        <details>
+          <summary>Evaluation overhead and unknown traffic</summary>
+          <JSONView data={overhead} />
+        </details>
+      )}
       <label>
         Evidence tier filter
         <select value={tier} onChange={(e) => setTier(e.target.value)}>
@@ -1145,7 +1201,7 @@ function Opportunities({ items }: { items: RecordData[] }) {
           <article className="row" key={i}>
             <h2>{item.strategy.replaceAll("_", " ")}</h2>
             <p>
-              {item.target} · tier {item.evidence_tier} · quality{" "}
+              {item.label || item.target} · tier {item.evidence_tier} · quality{" "}
               {item.quality_status}
             </p>
             <p>{item.reason.replaceAll("_", " ")}</p>
@@ -1157,6 +1213,9 @@ function Opportunities({ items }: { items: RecordData[] }) {
               <summary>View source evidence</summary>
               <JSONView data={item.evidence} />
             </details>
+            <button onClick={() => prepare(item.target)}>
+              Prepare with agent
+            </button>
           </article>
         ))
       )}
@@ -1749,6 +1808,11 @@ function Integrations({ health }: { health: RecordData }) {
   return (
     <>
       <h2>Connect an application</h2>
+      <p>
+        Use <strong>Agent workflow</strong> for automatic preparation inside the
+        application. The steps below are the manual runtime configuration
+        reference.
+      </p>
       <ol className="integration-steps">
         <li>
           <strong>Discover the code.</strong> Run{" "}

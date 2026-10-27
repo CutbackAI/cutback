@@ -7,7 +7,7 @@ This walkthrough uses a complete, independent application with owned synthetic t
 Use Python 3.11–3.13 in a fresh virtual environment and start Docker Desktop with Linux containers. No Node setup or provider key is needed.
 
 ```sh
-python -m pip install "cutback[server,openai]==0.1.0.dev4"
+python -m pip install "cutback[server,openai]==0.1.0.dev5"
 cutback demo
 ```
 

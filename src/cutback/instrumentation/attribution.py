@@ -104,6 +104,9 @@ def build_source_map(root, inventory, *, replacements=None):
             data = replacements.get(relative)
             if data is None:
                 data = (root / relative).read_text(encoding="utf-8")
+            else:
+                # Version 1 maps hash Python's universal-newline text representation.
+                data = data.replace("\r\n", "\n").replace("\r", "\n")
             files[relative] = {
                 "path": relative,
                 "sha256": hashlib.sha256(data.encode()).hexdigest(),

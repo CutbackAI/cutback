@@ -51,6 +51,7 @@ def test_dashboard_authenticated_accessibility(postgres_url, tmp_path, event, mo
                 "event_id": uuid4(),
                 "requested_model": "unknown-synthetic",
                 "response_model": "unknown-synthetic",
+                "traffic_kind": "application",
             }
         )
         assert (

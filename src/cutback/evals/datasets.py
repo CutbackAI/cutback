@@ -256,10 +256,7 @@ def discover_fixtures(root, *, max_files=1000, max_entries=20000, max_seconds=5)
         return result
 
     load_ignore(root)
-    for name in ("tests", "fixtures", "examples"):
-        base = root / name
-        if not base.is_dir() or base.is_symlink() or ignored(base, True):
-            continue
+    for base in (root,):
         for directory, dirs, files in os.walk(base, followlinks=False):
             folder = Path(directory)
             entries += len(dirs) + len(files)
@@ -269,12 +266,38 @@ def discover_fixtures(root, *, max_files=1000, max_entries=20000, max_seconds=5)
             dirs[:] = sorted(
                 d
                 for d in dirs
-                if d not in SKIP and not (folder / d).is_symlink() and not ignored(folder / d, True)
+                if d not in SKIP
+                and not d.startswith(".")
+                and d.lower() not in {"secrets", "credentials"}
+                and not (folder / d).is_symlink()
+                and not ignored(folder / d, True)
             )
             for filename in sorted(files):
                 path = folder / filename
+                hints = {
+                    "test",
+                    "tests",
+                    "fixtures",
+                    "examples",
+                    "data",
+                    "datasets",
+                    "eval",
+                    "evals",
+                    "benchmarks",
+                    "samples",
+                }
+                suggestive = (
+                    path.suffix.lower() in {".jsonl", ".ndjson"}
+                    or any(part.lower() in hints for part in path.relative_to(root).parts[:-1])
+                    or any(
+                        word in path.stem.lower()
+                        for word in ("case", "fixture", "dataset", "sample", "gold", "eval")
+                    )
+                )
                 if (
-                    path.suffix.lower() not in {".json", ".jsonl", ".csv"}
+                    path.suffix.lower() not in {".json", ".jsonl", ".ndjson", ".csv"}
+                    or not suggestive
+                    or filename.startswith(".")
                     or path.is_symlink()
                     or ignored(path)
                     or not path.resolve().is_relative_to(root)
@@ -293,6 +316,7 @@ def discover_fixtures(root, *, max_files=1000, max_entries=20000, max_seconds=5)
                         "size": size,
                         "within_import_bound": size <= 1048576,
                         "status": "unreviewed_no_content_read_or_uploaded",
+                        "mapping": "prepare_locally_after_content_permission",
                     }
                 )
                 if len(found) >= max_files:

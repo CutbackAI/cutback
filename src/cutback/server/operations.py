@@ -491,5 +491,32 @@ def install_operations(app, sessions, authorize, scope, repository):
         ):
             raise HTTPException(422, "INVALID_TIME_RANGE")
         with sessions() as session:
-            report = repository.query_usage(session, project_id, start, end, "workflow")
-            return observed_opportunities(report)
+            report = repository.query_usage(
+                session, project_id, start, end, "workflow", traffic_kind="application"
+            )
+            result = observed_opportunities(report)
+            from cutback.core.inventory import workflow_identity
+            from cutback.server.db import ScanRun
+
+            latest = session.scalar(
+                select(ScanRun)
+                .where(ScanRun.project_id == project_id)
+                .order_by(ScanRun.created_at.desc())
+                .limit(1)
+            )
+            labels = {}
+            if latest:
+                for site in latest.inventory["call_sites"]:
+                    for entry in site["entry_points"]:
+                        key, symbol = workflow_identity(entry["file"], entry["symbol"])
+                        labels[key] = f"{entry['file']} · {symbol}"
+            for opportunity in result["opportunities"]:
+                opportunity["label"] = labels.get(opportunity["target"], opportunity["target"])
+            result["traffic_kind"] = "application"
+            result["overhead"] = {
+                kind: repository.query_usage(
+                    session, project_id, start, end, "workflow", traffic_kind=kind
+                )["summary"]
+                for kind in ("evaluation", "judge", "unknown")
+            }
+            return result

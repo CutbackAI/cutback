@@ -1931,6 +1931,35 @@
               "format": "uuid",
               "title": "Project Id"
             }
+          },
+          {
+            "name": "run_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100000,
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
           }
         ],
         "responses": {
@@ -5419,6 +5448,16 @@
             "const": "deterministic-v3",
             "title": "Evaluator Version",
             "default": "deterministic-v3"
+          },
+          "source_binding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceBinding"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -5499,7 +5538,7 @@
             "type": "string",
             "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
             "title": "Sdk Version",
-            "default": "0.1.0.dev4"
+            "default": "0.1.0.dev5"
           },
           "counters": {
             "additionalProperties": {
@@ -5604,6 +5643,14 @@
             },
             "type": "array",
             "title": "Limitations"
+          },
+          "request_profiles": {
+            "items": {
+              "$ref": "#/components/schemas/SourceBinding"
+            },
+            "type": "array",
+            "title": "Request Profiles",
+            "default": []
           }
         },
         "additionalProperties": false,
@@ -5687,7 +5734,7 @@
             "type": "string",
             "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
             "title": "Sdk Version",
-            "default": "0.1.0.dev4"
+            "default": "0.1.0.dev5"
           },
           "trace_id": {
             "type": "string",
@@ -6309,6 +6356,16 @@
               }
             ],
             "title": "Prompt Cache"
+          },
+          "request_contract": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RequestContract"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -6626,6 +6683,51 @@
           "plan_id"
         ],
         "title": "QueueInput"
+      },
+      "RequestContract": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "native-text-v1",
+            "title": "Version",
+            "default": "native-text-v1"
+          },
+          "sdk_surface": {
+            "type": "string",
+            "enum": [
+              "responses.create",
+              "chat.completions.create",
+              "messages.create"
+            ],
+            "title": "Sdk Surface"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Payload"
+          },
+          "options": {
+            "additionalProperties": true,
+            "type": "object",
+            "maxProperties": 8,
+            "title": "Options"
+          },
+          "parameters": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Parameters"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "sdk_surface",
+          "payload"
+        ],
+        "title": "RequestContract"
       },
       "Resource": {
         "properties": {
@@ -7001,6 +7103,85 @@
         },
         "type": "object",
         "title": "ScopeSpans"
+      },
+      "SourceBinding": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "request-profile-v1",
+            "title": "Version",
+            "default": "request-profile-v1"
+          },
+          "workflow_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Workflow Id"
+          },
+          "call_site_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Call Site Id"
+          },
+          "source_file": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Source File"
+          },
+          "source_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Source Sha256"
+          },
+          "source_commit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{7,40}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Commit"
+          },
+          "dependencies": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "maxProperties": 64,
+            "title": "Dependencies"
+          },
+          "request_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Request Sha256"
+          },
+          "model_binding": {
+            "additionalProperties": true,
+            "type": "object",
+            "maxProperties": 8,
+            "title": "Model Binding"
+          },
+          "profile_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Profile Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "workflow_id",
+          "call_site_id",
+          "source_file",
+          "source_sha256",
+          "dependencies",
+          "request_sha256",
+          "model_binding",
+          "profile_sha256"
+        ],
+        "title": "SourceBinding"
       },
       "Span": {
         "properties": {

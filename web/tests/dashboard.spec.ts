@@ -59,6 +59,19 @@ test("authenticated API parity, navigation, accessibility and credential lifetim
   await expect(
     page.getByRole("heading", { name: "resolve pricing" }),
   ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Prepare with agent" })
+    .first()
+    .click();
+  await expect(
+    page.getByRole("heading", {
+      name: "Let your coding agent handle the setup",
+    }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Request for your coding agent")).toHaveValue(
+    /cutback optimize/,
+  );
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await demoPause();
   await page.getByRole("button", { name: "Experiments", exact: true }).click();
   await expect(page.getByText("No experiment runs.")).toBeVisible();
@@ -191,13 +204,11 @@ test("guided policy, CSV dataset, frozen plan approval, queue and cancellation r
     (_, i) =>
       `Synthetic ${String.fromCharCode(65 + Math.floor(i / 26))}${String.fromCharCode(65 + (i % 26))} input,${i % 2 ? "A" : "B"}`,
   ).join("\n");
-  await dataset
-    .getByLabel("Example file")
-    .setInputFiles({
-      name: "owned-synthetic.csv",
-      mimeType: "text/csv",
-      buffer: Buffer.from("input,gold\n" + rows),
-    });
+  await dataset.getByLabel("Example file").setInputFiles({
+    name: "owned-synthetic.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from("input,gold\n" + rows),
+  });
   await dataset.getByLabel("Dataset workflow").fill("classify");
   await dataset
     .getByLabel("Provenance reference")

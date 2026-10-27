@@ -4,6 +4,7 @@ import hashlib
 from typing import Any, Literal
 
 from cutback.core.models import StrictModel
+from cutback.core.request_profiles import SourceBinding
 
 
 def workflow_identity(relative: str, qualified: str) -> tuple[str, str]:
@@ -63,3 +64,4 @@ class Inventory(StrictModel):
     warnings: list[dict[str, Any]]
     unknowns: list[dict[str, Any]]
     limitations: list[str]
+    request_profiles: list[SourceBinding] = []

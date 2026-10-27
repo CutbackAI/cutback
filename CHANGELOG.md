@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.0.dev5
+
+Resumable agent preparation, broader bounded fixtures/mappings, a persistent wheel-native local collector, exact native request/source binding and review-only model/config diffs. Application-only Opportunities separate evaluator overhead. The dashboard guides the agent workflow and shows bound plans/runs. Outstanding older frozen plans require fresh approval; their schema/hash authority is never silently upgraded. Synthetic validation remains separate from real-provider/customer qualification.
+
 ## 0.1.0.dev4 — audit remediation
 
 Fixed global and field-level content-policy enforcement, per-criterion evidence/regression gates, incomplete judge votes, blocked-job fairness and maintenance failure isolation. Added immutable paired-case correction versions, named experiments, purpose-separated accounting, exact source/workflow maps, a scoped metadata-only OTLP/HTTP JSON profile, bounded serverless shutdown, encrypted source-diff review and additive migrations 0005/0006. The two-workflow support-desk sample now opens at its actual comparison and documents a wheel-first onboarding path. Added restored-object/key rotation acceptance and a fresh non-root Linux pipeline/recovery drill. Patched installer/interpreter/image pins and made publishing depend on both exact-revision CI and security. Released plans and PyPI files remain immutable; recreate/reapprove v2 evaluator plans under deterministic-v3. No paid inference or production deployment.

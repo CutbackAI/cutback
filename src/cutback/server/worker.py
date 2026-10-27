@@ -4,8 +4,9 @@ import json
 import os
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from uuid import UUID
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, or_, select, true
 
 from cutback.core.observation import observation_scope
 from cutback.evals.datasets import CapturePolicy, DatasetImport, digest
@@ -89,7 +90,8 @@ def reserve_request(sessions, run_id, job_id, budget, amount):
         record.requests_used += 1
 
 
-def run_one(sessions, store, *, executor=None, execution_enabled=False):
+def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run_id=None):
+    only_run_id = UUID(str(only_run_id)) if only_run_id is not None else None
     if not execution_enabled:
         return {"status": "EXPERIMENT_EXECUTION_DISABLED", "provider_calls": 0}
     owned_executor = executor is None
@@ -107,6 +109,7 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False):
             expired = session.scalars(
                 select(JobRecord)
                 .where(JobRecord.status == "RUNNING", JobRecord.lease_until < now)
+                .where(JobRecord.run_id == only_run_id if only_run_id else true())
                 .with_for_update(skip_locked=True)
                 .limit(100)
             ).all()
@@ -132,6 +135,7 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False):
                         and_(JobRecord.status == "BLOCKED", JobRecord.available_at <= now),
                     )
                 )
+                .where(JobRecord.run_id == only_run_id if only_run_id else true())
                 .order_by(JobRecord.created_at, JobRecord.id)
                 .with_for_update(skip_locked=True)
                 .limit(1)

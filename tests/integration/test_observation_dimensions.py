@@ -11,6 +11,38 @@ from cutback.server.repository import PostgresEventRepository
 pytestmark = pytest.mark.postgres
 
 
+def test_opportunities_rank_application_only_and_explain_overhead(api, tenant, event):
+    client, _, _ = api
+    project, ingest, viewer = tenant
+    entries = [
+        event.model_copy(
+            update={
+                "event_id": uuid4(),
+                "traffic_kind": kind,
+                "workflow_id": "workflow:owned" if kind == "application" else None,
+            }
+        )
+        for kind in ["application", *(["evaluation"] * 12), "judge", "unknown"]
+    ]
+    assert (
+        client.post(
+            "/v1/ingest/events",
+            headers=ingest,
+            json={
+                "project_id": project,
+                "events": [row.model_dump(mode="json") for row in entries],
+            },
+        ).status_code
+        == 200
+    )
+    report = client.get(f"/v1/projects/{project}/opportunities", headers=viewer).json()
+    assert report["traffic_kind"] == "application"
+    assert {r["target"] for r in report["opportunities"]} == {"workflow:owned"}
+    assert report["opportunities"][0]["evidence"]["group"]["observed_attempts"] == 1
+    assert report["overhead"]["evaluation"]["observed_attempts"] == 12
+    assert report["overhead"]["unknown"]["observed_attempts"] == 1
+
+
 def test_traffic_and_callsite_totals_reconcile_before_and_after_retention(api, tenant, event):
     client, _, app = api
     project, ingest, viewer = tenant

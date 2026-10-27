@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cutback"
-version = "0.1.0.dev4"
+version = "0.1.0.dev5"
 description = "Independent, evidence-aware AI application cost observation and optimization"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -89,7 +89,7 @@ include = [
   "/infra/README.md", "/infra/helm", "/infra/terraform/kubernetes/*.tf",
   "/infra/terraform/kubernetes/.terraform.lock.hcl", "/infra/terraform/kubernetes/tests",
   "/infra/training/Dockerfile", "/infra/training/pyproject.toml", "/infra/training/uv.lock",
-  "/scripts/check_public_boundary.py", "/docs/application-onboarding.md",
+  "/scripts/check_public_boundary.py", "/docs/application-onboarding.md", "/docs/agent-workflow.md",
   "/web/public", "/web/unit", "/scripts/create_training_fixture.py", "/scripts/scale_smoke.py",
   "/SECURITY.md", "/GOVERNANCE.md", "/.github", "/src", "/tests", "/examples", "/README.md", "/LICENSE", "/NOTICE",
   "/docs/audit-remediation.md", "/docs/otel-ingestion.md", "/docs/operating-and-recovering.md", "/scripts/check_toolchain.py", "/scripts/check_codeql_results.py", "/scripts/audit_training.py", "/scripts/image_acceptance.py", "/infra/training/.python-version",

@@ -11,7 +11,7 @@ def test_source_bound_patch_is_reviewed_reversible_and_refuses_stale_input(tmp_p
     path = tmp_path / "main.py"
     path.write_text(
         "from openai import OpenAI\nc=OpenAI()\n"
-        'c.responses.create(model="gpt-4.1", input="synthetic")\n'
+        'c.responses.create(model="gpt-4.1", input="synthetic", max_output_tokens=64)\n'
     )
     before = path.read_bytes()
     inventory = scan(tmp_path)
@@ -29,6 +29,16 @@ def test_source_bound_patch_is_reviewed_reversible_and_refuses_stale_input(tmp_p
             "candidate": {"provider": "openai", "model": "gpt-4.1-mini"},
             "rollback": {"baseline": {"provider": "openai", "model": "gpt-4.1"}},
         },
+    }
+    from cutback.core.request_profiles import prepare_profile
+
+    profile = prepare_profile(tmp_path, inventory["call_sites"][0])
+    recommendation["evidence"]["source_binding"] = profile.binding.model_dump(mode="json")
+    recommendation["evidence"]["rollback"]["baseline"] = profile.baseline()
+    recommendation["evidence"]["candidate"] = {
+        **profile.baseline(),
+        "key": "compact",
+        "model": "gpt-4.1-mini",
     }
     result = model_patch(
         tmp_path,

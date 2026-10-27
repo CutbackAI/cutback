@@ -1799,6 +1799,7 @@ export interface components {
              * @constant
              */
             evaluator_version: "deterministic-v3";
+            source_binding?: components["schemas"]["SourceBinding"] | null;
         };
         /** GrantInput */
         GrantInput: {
@@ -1837,7 +1838,7 @@ export interface components {
             service_name: string;
             /**
              * Sdk Version
-             * @default 0.1.0.dev4
+             * @default 0.1.0.dev5
              */
             sdk_version: string;
             /** Counters */
@@ -1878,6 +1879,11 @@ export interface components {
             }[];
             /** Limitations */
             limitations: string[];
+            /**
+             * Request Profiles
+             * @default []
+             */
+            request_profiles: components["schemas"]["SourceBinding"][];
         };
         /** KeyInput */
         KeyInput: {
@@ -1921,7 +1927,7 @@ export interface components {
             service_name: string;
             /**
              * Sdk Version
-             * @default 0.1.0.dev4
+             * @default 0.1.0.dev5
              */
             sdk_version: string;
             /** Trace Id */
@@ -2128,6 +2134,7 @@ export interface components {
             routes?: components["schemas"]["RouteSpec"][];
             /** Prompt Cache */
             prompt_cache?: ("anthropic-5m" | "anthropic-1h") | null;
+            request_contract?: components["schemas"]["RequestContract"] | null;
         };
         /** OrganizationInput */
         OrganizationInput: {
@@ -2221,6 +2228,30 @@ export interface components {
              * Format: uuid
              */
             plan_id: string;
+        };
+        /** RequestContract */
+        RequestContract: {
+            /**
+             * Version
+             * @default native-text-v1
+             * @constant
+             */
+            version: "native-text-v1";
+            /**
+             * Sdk Surface
+             * @enum {string}
+             */
+            sdk_surface: "responses.create" | "chat.completions.create" | "messages.create";
+            /** Payload */
+            payload: {
+                [key: string]: unknown;
+            };
+            /** Options */
+            options?: {
+                [key: string]: unknown;
+            };
+            /** Parameters */
+            parameters?: string[];
         };
         /** Resource */
         Resource: {
@@ -2388,6 +2419,37 @@ export interface components {
         ScopeSpans: {
             /** Spans */
             spans?: components["schemas"]["Span"][];
+        };
+        /** SourceBinding */
+        SourceBinding: {
+            /**
+             * Version
+             * @default request-profile-v1
+             * @constant
+             */
+            version: "request-profile-v1";
+            /** Workflow Id */
+            workflow_id: string;
+            /** Call Site Id */
+            call_site_id: string;
+            /** Source File */
+            source_file: string;
+            /** Source Sha256 */
+            source_sha256: string;
+            /** Source Commit */
+            source_commit?: string | null;
+            /** Dependencies */
+            dependencies: {
+                [key: string]: string;
+            };
+            /** Request Sha256 */
+            request_sha256: string;
+            /** Model Binding */
+            model_binding: {
+                [key: string]: unknown;
+            };
+            /** Profile Sha256 */
+            profile_sha256: string;
         };
         /** Span */
         Span: {
@@ -3828,7 +3890,10 @@ export interface operations {
     };
     recommendations_v1_projects__project_id__recommendations_get: {
         parameters: {
-            query?: never;
+            query?: {
+                run_id?: string | null;
+                offset?: number;
+            };
             header?: never;
             path: {
                 project_id: string;
