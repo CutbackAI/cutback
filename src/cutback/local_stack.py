@@ -9,6 +9,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Any, cast
 from uuid import uuid4
 
 from cutback.core.workspace import private_directory, read_private, workspace_lock, write_private
@@ -167,7 +168,7 @@ def up(root: Path, *, port=8080, allow_payloads=False):
         (location / "failure.json").unlink(missing_ok=True)
         # Secret values never enter argv or a captured log. Child startup reports fixed codes only.
         options = (
-            {"creationflags": getattr(subprocess, "CREATE_NO_WINDOW")}
+            {"creationflags": cast(Any, subprocess).CREATE_NO_WINDOW}
             if os.name == "nt"
             else {"start_new_session": True}
         )
