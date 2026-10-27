@@ -21,12 +21,21 @@ The product hypothesis to test is: **ask your coding agent to reduce the cost of
 | [LiteLLM](https://docs.litellm.ai/docs/proxy/provider_budget_routing) | Provider/model/tag budget routing and shared Redis budget tracking | Budget controls are essential infrastructure, not a unique selling point. Preserve Cutback's durable pre-call experiment reservations. |
 | [TensorZero](https://www.tensorzero.com/docs/optimization) | Model fine-tuning integrations, GEPA prompt optimization, inference-time strategies and custom optimization recipes | Automatic optimization and multiple strategies already exist. Cutback must connect its optimization to existing application source and independent acceptance evidence. This page was available through the search index; direct retrieval was robots-blocked. |
 | [Opik Agent Optimizer](https://www.comet.com/docs/opik/development/optimization-runs/overview) | Multiple optimizers, parameter tuning, tool/agent optimization, trial evidence and local execution | “Automatic prompt optimization” cannot be presented as novel. A hardcoded cheaper-model pair is a major functional gap. |
+| [Bifrost](https://github.com/maximhq/bifrost) | Gateway failover, load balancing, semantic caching, virtual keys, budgets and MCP Code Mode | Generic cost reduction and MCP overhead controls are competitive territory too. A semantic cache needs workload/privacy evidence; it is not interchangeable with Cutback's scoped exact cache. |
 | [Promptfoo](https://www.promptfoo.dev/docs/configuration/expected-outputs/) and [red teaming](https://www.promptfoo.dev/docs/red-team/quickstart/) | Deterministic/model-graded assertions, cost/latency checks, CI and adversarial testing | Ordinary accuracy does not cover security or agent behavior. Provide explicit acceptance gates and interoperate with established security evaluation. |
 | [Not Diamond](https://docs.notdiamond.ai/docs/what-is-model-routing) | Quality/cost/latency routing, pretrained and customer-trained routers | A byte-length routing rule is a bounded mechanism, not a competitive learned-router claim. Measure route quality and all routing overhead. |
 | [RouteLLM](https://github.com/lm-sys/RouteLLM) | Open routing framework, trained routers and benchmark/evaluation tooling | Routing and cost/quality trade-offs have existing open implementations. Published benchmark results are specific to their datasets; they are not Cutback savings claims. |
 | [DSPy](https://dspy.ai/) | Composable LM programs and optimization from task examples/metrics | Integrating a qualified optimizer may be better than implementing every search algorithm. Do not make the scanner depend on it. |
 
 No ranking by stars, funding or vendor marketing savings was used. This review does not establish competitive superiority, market size, willingness to pay or fundraising prospects.
+
+### Closest overlap: code-changing agents already exist
+
+[Opik's product page](https://www.comet.com/site/products/opik/) advertises source-code fixes through Ollie, natural-language test assertions and local Agent Playground execution. Its [pricing/capability page](https://www.comet.com/site/pricing/) describes `opik connect`, proposed edits subject to review and rerunning an agent against a failing trace. These are documented vendor capabilities, not a hands-on acceptance result. An agent that reads traces and proposes a code fix is therefore **not an established Cutback differentiator**.
+
+Opik also documents a separate [Cost Intelligence](https://www.comet.com/docs/opik/cost-intelligence/overview) product: a local per-developer forwarding daemon with metadata-only reporting and coding-agent cost attribution/policy controls. Local execution and metadata privacy alone do not establish uniqueness either. Cutback's application-SDK scanner/collector architecture differs, but architecture differences matter commercially only if they produce a better customer outcome.
+
+The narrower hypothesis is a portable optimization change record: exact native request/source fidelity, explicitly budgeted search, an independently confirmed selected change, a reproducible diff/rollback, and measured cost per successful application task while retaining the customer's existing tools. Several components already exist elsewhere. The combination must win an observed comparison; it is currently a hypothesis, not a moat.
 
 ## Common-feature audit
 
@@ -82,6 +91,8 @@ An example target journey: a developer asks their existing coding agent to optim
 Rows are engineering priorities, not completed-feature claims or reliable calendar estimates. Existing features must remain usable throughout; do not replace PostgreSQL, weaken privacy, mutate released migrations or widen SDK support to make a demo work.
 
 ## Customer and launch evidence still needed
+
+Use the same rights-cleared application task to compare Cutback with the customer's incumbent process and a relevant competitor workflow. Predeclare the acceptance criteria and independent confirmation groups. Record time to the first useful reviewed change, human interventions, source/request fidelity, all optimizer/judge/target-call overhead, cost completeness, quality regressions, and ability to reproduce/roll back the result. Include a shared-config regression and an uncertain-charge interruption. Treat an unavailable measurement as unknown. Do not substitute provider token counts for invoice or infrastructure costs, or synthetic correctness for a real business outcome. A hands-on comparative trial requiring accounts, private data or paid inference needs the relevant authorization first.
 
 Start with engineers already paying meaningful inference bills for bounded text/structured workflows, who can supply rights-cleared examples and independent success criteria. This is a proposed initial customer profile, not validated demand. Interview and observe several such teams before generalizing to all agents.
 
