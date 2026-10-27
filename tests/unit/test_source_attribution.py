@@ -34,6 +34,26 @@ class MemoryExporter:
     close = flush
 
 
+def test_source_map_replacement_matches_universal_newlines_on_every_platform(tmp_path):
+    from cutback.instrumentation.attribution import SourceMap, build_source_map
+
+    source = tmp_path / "app.py"
+    text = (
+        'from openai import OpenAI\nc=OpenAI()\nc.responses.create(model="gpt-4.1",input="owned")\n'
+    )
+    source.write_bytes(text.encode())
+    inventory = scan(tmp_path)
+    directory = tmp_path / ".cutback"
+    directory.mkdir()
+    for ending in ("\n", "\r\n"):
+        replacement = text.replace("\n", ending)
+        mapping = build_source_map(tmp_path, inventory, replacements={"app.py": replacement})
+        source.write_bytes(replacement.encode())
+        path = directory / "source-map.json"
+        path.write_text(json.dumps(mapping))
+        assert len(SourceMap(path).sites) == 1
+
+
 @pytest.mark.parametrize("asynchronous", [False, True])
 @pytest.mark.parametrize("streaming", [False, True])
 def test_generated_bootstrap_links_two_workflows_and_preserves_native_results(
