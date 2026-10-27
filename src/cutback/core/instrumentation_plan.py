@@ -32,7 +32,7 @@ def instrument_plan(target: Path, entrypoint: Path | None = None, handler: str |
         or path.stat().st_size > 1_048_576
     ):
         reject("UNSAFE_ENTRYPOINT", "choose a small Python source file inside target")
-    before = path.read_text(encoding="utf-8")
+    before = path.read_bytes().decode("utf-8")
     tree = ast.parse(before)
     if handler and not any(
         isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == handler
