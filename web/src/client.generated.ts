@@ -143,8 +143,10 @@ export function createSDK(request:Request) {return {
   recheck_blocked_v1_projects__project_id__experiments__run_id__recheck_post: (args:{project_id:string;run_id:string}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/experiments/${encodeURIComponent(String(args.run_id))}/recheck`+(query.size?"?"+query.toString():""),{method:"POST"});},
-  recommendations_v1_projects__project_id__recommendations_get: (args:{project_id:string}) => {
+  recommendations_v1_projects__project_id__recommendations_get: (args:{project_id:string;run_id?:string | null;offset?:number}) => {
     const query=new URLSearchParams();
+    if(args.run_id!==undefined && args.run_id!==null) query.set("run_id",String(args.run_id));
+    if(args.offset!==undefined && args.offset!==null) query.set("offset",String(args.offset));
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/recommendations`+(query.size?"?"+query.toString():""),{method:"GET"});},
   review_v1_projects__project_id__recommendations__recommendation_id__review_post: (args:{project_id:string;recommendation_id:string;body:components["schemas"]["ReviewInput"]}) => {
     const query=new URLSearchParams();

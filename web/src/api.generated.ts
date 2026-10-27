@@ -1838,7 +1838,7 @@ export interface components {
             service_name: string;
             /**
              * Sdk Version
-             * @default 0.1.0.dev4
+             * @default 0.1.0.dev5
              */
             sdk_version: string;
             /** Counters */
@@ -1927,7 +1927,7 @@ export interface components {
             service_name: string;
             /**
              * Sdk Version
-             * @default 0.1.0.dev4
+             * @default 0.1.0.dev5
              */
             sdk_version: string;
             /** Trace Id */
@@ -3890,7 +3890,10 @@ export interface operations {
     };
     recommendations_v1_projects__project_id__recommendations_get: {
         parameters: {
-            query?: never;
+            query?: {
+                run_id?: string | null;
+                offset?: number;
+            };
             header?: never;
             path: {
                 project_id: string;

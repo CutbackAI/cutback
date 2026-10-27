@@ -46,7 +46,7 @@ For an existing approved HTTPS collector, use `--endpoint URL --project UUID` wi
 
 ## Approve once, resume the same bounded run
 
-Review the returned plan hash, qualified vendor/models, frozen source and dataset, quality scope, modeled worst-case amount, request count and ceiling. A zero/insufficient budget cannot authorize execution. A frozen contract cannot silently change.
+Review the returned plan hash, qualified vendor/models, frozen source and dataset, quality scope, modeled worst-case amount, request count and ceiling. A zero/insufficient budget cannot authorize execution. A frozen contract cannot silently change. To revise criteria or start another optimization after a terminal run, use `cutback optimize . --new-session --json`. The old metadata journal is archived privately; the new session inherits no paid approval. Active or uncertain approvals/runs must be reconciled or cancelled first. Nonbillable partial preparation can be archived, with its policy/dataset references retained for inspection and expiry.
 
 ```sh
 cutback workflow continue --plan-hash EXACT_HASH --approval-reference actual-budget-review

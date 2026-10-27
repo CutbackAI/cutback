@@ -1931,6 +1931,35 @@
               "format": "uuid",
               "title": "Project Id"
             }
+          },
+          {
+            "name": "run_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100000,
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
           }
         ],
         "responses": {
@@ -5509,7 +5538,7 @@
             "type": "string",
             "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
             "title": "Sdk Version",
-            "default": "0.1.0.dev4"
+            "default": "0.1.0.dev5"
           },
           "counters": {
             "additionalProperties": {
@@ -5705,7 +5734,7 @@
             "type": "string",
             "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
             "title": "Sdk Version",
-            "default": "0.1.0.dev4"
+            "default": "0.1.0.dev5"
           },
           "trace_id": {
             "type": "string",

@@ -3,7 +3,7 @@
 import hashlib
 from datetime import UTC, datetime
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from cutback.core.inventory import workflow_identity
 from cutback.core.request_profiles import fingerprint, prepare_profile
@@ -107,7 +107,7 @@ def public_session(state):
     }
 
 
-def analyze(root: Path, *, workflow: str | None = None):
+def analyze(root: Path, *, workflow: str | None = None, new_session=False):
     from cutback.evals.datasets import discover_fixtures
     from cutback.optimizer import static_opportunities
     from cutback.scanner import scan
@@ -156,6 +156,21 @@ def analyze(root: Path, *, workflow: str | None = None):
             if (directory / "session.json").exists()
             else None
         )
+        previous_id = None
+        if prior and (new_session or prior["analysis_sha256"] != signature):
+            active = prior["phase"] in {"APPROVING", "QUEUEING", "QUEUED", "RUNNING"}
+            if active:
+                if new_session:
+                    raise ValueError("ACTIVE_WORKFLOW_MUST_BE_RECONCILED_OR_CANCELLED")
+                prior["source_status"] = "CHANGED_RESCAN_AFTER_RUN"
+                prior["observed_analysis_sha256"] = signature
+                save_session(directory, prior)
+                return public_session(prior)
+            previous_id = str(UUID(prior["id"]))
+            archive = directory / f"session-{previous_id}.json"
+            if not archive.exists():
+                write_private(archive, prior, exclusive=True)
+            prior = None
         if prior and prior["analysis_sha256"] == signature:
             return public_session(prior)
         state = {
@@ -176,6 +191,8 @@ def analyze(root: Path, *, workflow: str | None = None):
             "provider_calls": 0,
         }
         state["strategies"] = strategy_assessments(profiles)
+        if previous_id:
+            state["previous_session_id"] = previous_id
         if not profiles:
             state["decisions_required"].append("request_contract_qualification")
         if not fixtures:
@@ -183,7 +200,9 @@ def analyze(root: Path, *, workflow: str | None = None):
         inventory["request_profiles"] = [p["binding"] for p in profiles]
         write_private(directory / "inventory.json", inventory)
         prepare_instrumentation(root, directory, state)
-        save_session(directory, state, "SOURCE_CHANGED" if prior else "ANALYZED")
+        save_session(
+            directory, state, "SOURCE_CHANGED" if previous_id and not new_session else "ANALYZED"
+        )
         return public_session(state)
 
 
@@ -423,7 +442,7 @@ def prepare(
         )
         if state["phase"] == "PLAN_READY":
             if state["preparation_sha256"] != identity:
-                raise ValueError("FROZEN_PLAN_CHANGED_REANALYZE_FIRST")
+                raise ValueError("FROZEN_PLAN_CHANGED_START_NEW_SESSION")
             return public_session(state)
         base = f"/v1/projects/{project}"
         state.update(
@@ -472,6 +491,12 @@ def advance(root, control, *, plan_hash=None, approval_ref=None):
             selected_profile(root, state, state["selected_workflow"])
             if plan_hash != state["plan"]["plan_hash"] or not approval_ref:
                 raise ValueError("EXACT_PLAN_HASH_AND_APPROVAL_REFERENCE_REQUIRED")
+            from pydantic import TypeAdapter
+
+            from cutback.core.models import Identifier
+
+            TypeAdapter(Identifier).validate_python(approval_ref)
+            state["provider_calls"] = None
             # A lost response cannot cause a new approval/run on resume.
             save_session(directory, state, "APPROVING")
             control(
@@ -503,6 +528,8 @@ def advance(root, control, *, plan_hash=None, approval_ref=None):
                 key: report[key]
                 for key in ("id", "status", "reserved_usd", "spent_usd", "requests")
             }
+            # Reservations are known; whether each request reached a paid provider may be unknown.
+            state["provider_calls"] = None if report["requests"] else 0
             state["decisions"] = report["results"].get("recommendations", [])
             phase = report["status"]
             save_session(
@@ -539,7 +566,7 @@ def proposal(root, control, *, purpose):
         control(
             "POST", base + f"/experiments/plans/{state['plan']['id']}/content", {"purpose": purpose}
         )
-        records = control("GET", base + "/recommendations?limit=100")
+        records = control("GET", base + f"/recommendations?run_id={state['run_id']}")
         choices = [
             r
             for r in records

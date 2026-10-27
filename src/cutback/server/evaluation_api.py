@@ -711,7 +711,12 @@ def install_evaluation(app, sessions, authorize, scope):
         return {"status": "QUEUED", "provider_calls": 0}
 
     @app.get("/v1/projects/{project_id}/recommendations")
-    def recommendations(project_id: UUID, auth=Depends(authorize)):
+    def recommendations(
+        project_id: UUID,
+        run_id: UUID | None = None,
+        offset: int = Query(0, ge=0, le=100000),
+        auth=Depends(authorize),
+    ):
         scope(auth, project_id)
         with sessions() as session:
             return [
@@ -724,7 +729,9 @@ def install_evaluation(app, sessions, authorize, scope):
                 for row in session.scalars(
                     select(RecommendationRecord)
                     .where(RecommendationRecord.project_id == project_id)
+                    .where(*([RecommendationRecord.run_id == run_id] if run_id else []))
                     .order_by(RecommendationRecord.id)
+                    .offset(offset)
                     .limit(100)
                 )
             ]

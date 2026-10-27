@@ -26,6 +26,11 @@ def test_fresh_app_agent_plan_native_worker_bound_patch_without_demo(
     )
     with pytest.raises(ValueError, match="EXACT_PLAN_HASH"):
         advance(root, control, plan_hash="a" * 64, approval_ref="wrong-plan")
+    with pytest.raises(ValueError):
+        advance(
+            root, control, plan_hash=state["plan"]["plan_hash"], approval_ref="invalid reference"
+        )
+    assert load_session(root)["phase"] == "PLAN_READY"
     queued = advance(
         root,
         control,
@@ -50,6 +55,7 @@ def test_fresh_app_agent_plan_native_worker_bound_patch_without_demo(
     assert outcome["status"] == "COMPLETED", outcome
     completed = advance(root, control)
     assert completed["phase"] == "COMPLETED" and completed["report"]["requests"] > 0
+    assert completed["provider_calls"] is None
     before = (root / "app.py").read_bytes()
     artifact = proposal(root, control, purpose="owned-synthetic-review")
     assert artifact["review_status"] == "human_review_required"

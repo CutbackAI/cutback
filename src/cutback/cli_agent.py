@@ -38,11 +38,12 @@ def register_agent(app, output, fail):
         target: Annotated[Path, typer.Argument()] = Path("."),
         workflow: str | None = None,
         json_output: Annotated[bool, typer.Option("--json")] = False,
+        new_session: bool = False,
     ):
         """Discover contracts and examples offline; save a resumable job with next actions."""
         from cutback.agent import analyze
 
-        output(analyze(target, workflow=workflow))
+        output(analyze(target, workflow=workflow, new_session=new_session))
 
     @group.command("status")
     @guarded

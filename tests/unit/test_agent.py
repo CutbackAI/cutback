@@ -66,3 +66,29 @@ def test_agent_workspace_refuses_symlink(tmp_path):
     with pytest.raises(ValueError, match="UNSAFE_WORKSPACE_DIRECTORY"):
         analyze(tmp_path)
     assert not list(outside.iterdir())
+
+
+def test_new_session_archives_old_plan_but_never_discards_active_authority(tmp_path):
+    from uuid import uuid4
+
+    from cutback.core.workspace import write_private
+
+    fresh_application(tmp_path)
+    original = analyze(tmp_path)
+    state = load_session(tmp_path)
+    state.update(phase="PLAN_READY", plan={"id": str(uuid4()), "plan_hash": "a" * 64})
+    write_private(tmp_path / ".cutback/agent/session.json", state)
+    fresh = analyze(tmp_path, new_session=True)
+    assert fresh["id"] != original["id"] and fresh["previous_session_id"] == original["id"]
+    assert "plan" not in fresh and fresh["phase"] == "ANALYZED"
+    assert (tmp_path / f".cutback/agent/session-{original['id']}.json").exists()
+    active = load_session(tmp_path)
+    active.update(phase="QUEUED", run_id=str(uuid4()))
+    write_private(tmp_path / ".cutback/agent/session.json", active)
+    with pytest.raises(ValueError, match="ACTIVE_WORKFLOW_MUST_BE_RECONCILED"):
+        analyze(tmp_path, new_session=True)
+    path = tmp_path / "app.py"
+    path.write_text(path.read_text() + "# changed while running\n")
+    changed = analyze(tmp_path)
+    assert changed["phase"] == "QUEUED" and changed["run_id"] == active["run_id"]
+    assert changed["source_status"] == "CHANGED_RESCAN_AFTER_RUN"
