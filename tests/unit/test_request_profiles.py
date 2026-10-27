@@ -49,6 +49,21 @@ def recommendation(profile):
     }
 
 
+def test_patch_context_never_emits_a_known_secret_pattern(tmp_path):
+    source = SOURCE.replace(
+        "client=OpenAI()", 'client=OpenAI(api_key="sk-ownedSyntheticSentinel123456789")'
+    )
+    inventory, site, profile = inspect(tmp_path, source)
+    with pytest.raises(ValueError, match="PATCH_CONTEXT_REQUIRES_MINIMAL_PRIVATE_REVIEW"):
+        model_patch(
+            tmp_path,
+            inventory,
+            site["call_site_id"],
+            recommendation(profile),
+            expected_source_sha256=profile.binding.source_sha256,
+        )
+
+
 @pytest.mark.parametrize(
     "change",
     [

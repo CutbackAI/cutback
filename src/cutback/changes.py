@@ -142,6 +142,10 @@ def model_patch(
         )
 
     patch = diff(source, after)
+    from cutback.evals.datasets import redact
+
+    if redact(patch, []) != patch or redact(diff(after, source), []) != diff(after, source):
+        raise ValueError("PATCH_CONTEXT_REQUIRES_MINIMAL_PRIVATE_REVIEW")
     from cutback.core.inventory import workflow_identity
 
     affected = {binding.workflow_id}
