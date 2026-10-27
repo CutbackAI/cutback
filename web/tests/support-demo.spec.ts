@@ -32,6 +32,12 @@ test("newcomer explores real sample decisions, unknown intervals, private cases 
     page.getByRole("heading", { name: "unsafe: Not eligible", exact: true }),
   ).toBeVisible();
   await expect(
+    page.getByRole("table", { name: "Optimization candidate trade-offs" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Optimization trade-offs" }),
+  ).toContainText("independent confirmation");
+  await expect(
     page.getByText("Failed criteria: priority.", { exact: false }),
   ).toBeVisible();
   await page

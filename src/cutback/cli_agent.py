@@ -70,6 +70,7 @@ def register_agent(app, output, fail):
         endpoint: str | None = None,
         project: str | None = None,
         mapping: Path | None = None,
+        search: bool = False,
     ):
         """Prepare permitted examples and the request in an approved encrypted store."""
         from cutback.agent import prepare as run
@@ -92,6 +93,7 @@ def register_agent(app, output, fail):
                 independent_labels=independent_labels,
                 representative=representative,
                 mapping=read_json(mapping) if mapping else None,
+                search=search,
             )
         )
 
@@ -111,13 +113,55 @@ def register_agent(app, output, fail):
 
     @group.command("proposal")
     @guarded
-    def proposal(target: Path = Path("."), purpose: str = typer.Option(..., "--purpose-reference")):
+    def proposal(
+        target: Path = Path("."),
+        purpose: str = typer.Option(..., "--purpose-reference"),
+        candidate: str | None = None,
+    ):
         """Read authorized evidence; produce a diff/rollback for review without applying it."""
         from cutback.agent import proposal as run
         from cutback.agent_control import connect
 
         control, _ = connect(target)
-        output(run(target, control, purpose=purpose))
+        output(run(target, control, purpose=purpose, candidate=candidate))
+
+    @group.command("confirm")
+    @guarded
+    def confirm(
+        target: Path = Path("."),
+        candidate: str = typer.Option(...),
+        max_usd: str = typer.Option(..., "--max-usd"),
+        max_requests: int = 100,
+        purpose: str = typer.Option(..., "--purpose-reference"),
+    ):
+        """Freeze one search candidate for separately approved untouched test groups."""
+        from cutback.agent import confirm as run
+        from cutback.agent_control import connect
+
+        control, _ = connect(target)
+        output(
+            run(
+                target,
+                control,
+                candidate=candidate,
+                max_usd=max_usd,
+                max_requests=max_requests,
+                purpose=purpose,
+            )
+        )
+
+    @group.command("gate")
+    @guarded
+    def gate(target: Path = Path("."), candidate: str | None = None, sample_only: bool = False):
+        """CI check of canonical evidence and current source; exit 1 on insufficient evidence."""
+        from cutback.agent import gate as run
+        from cutback.agent_control import connect
+
+        control, _ = connect(target)
+        result = run(target, control, candidate=candidate, sample_only=sample_only)
+        output(result)
+        if not result["passed"]:
+            raise typer.Exit(1)
 
     @group.command("work")
     @guarded

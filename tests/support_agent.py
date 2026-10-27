@@ -105,7 +105,7 @@ def native_response(request):
     )
 
 
-def prepare_fresh(api, tenant, tmp_path, monkeypatch, kind="classifier"):
+def prepare_fresh(api, tenant, tmp_path, monkeypatch, kind="classifier", *, search=False):
     import os
 
     from cutback.agent import analyze, prepare
@@ -130,6 +130,7 @@ def prepare_fresh(api, tenant, tmp_path, monkeypatch, kind="classifier"):
         workflow=workflow,
         minimum=0.7,
         independent_labels=True,
+        search=search,
     )
     result = prepare(root, control, tenant[0], **args)
     return root, control, result, args

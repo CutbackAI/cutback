@@ -81,10 +81,7 @@ def model_patch(
         raise ValueError("SOURCE_REQUEST_PROFILE_CHANGED")
     baseline = evidence["rollback"]["baseline"]
     candidate = evidence["candidate"]
-    if any(
-        candidate.get(key) != baseline.get(key)
-        for key in ("max_output_tokens", "routes", "prompt_cache")
-    ):
+    if any(candidate.get(key) != baseline.get(key) for key in ("routes", "prompt_cache")):
         raise ValueError("REQUEST_VARIANT_REQUIRES_SEPARATE_PATCH")
     if candidate["provider"] != site["provider"] or baseline["provider"] != site["provider"]:
         raise ValueError("PROVIDER_CHANGE_REQUIRES_MANUAL_REVIEW")
@@ -127,7 +124,55 @@ def model_patch(
     lines = source.encode().splitlines(keepends=True)
     start = sum(map(len, lines[: literal.lineno - 1])) + literal.col_offset
     end = sum(map(len, lines[: literal.end_lineno - 1])) + literal.end_col_offset
-    after = (raw[:start] + repr(candidate["model"]).encode() + raw[end:]).decode()
+    edits = (
+        [(start, end, repr(candidate["model"]).encode())]
+        if candidate["model"] != baseline["model"]
+        else []
+    )
+    transformations = ["model"] if edits else []
+    if candidate.get("max_output_tokens") != baseline.get("max_output_tokens"):
+        cap = candidate.get("max_output_tokens")
+        if type(cap) is not int or not 16 <= cap < profile.max_output_tokens:
+            raise ValueError("OUTPUT_CAP_PATCH_REQUIRES_EVALUATED_REDUCTION")
+        # A separate imported cap/config needs a multi-file patch contract. Never guess
+        # another assignment from equal literal values elsewhere in the application.
+        if site["source_file"] != edit["file"]:
+            raise ValueError("OUTPUT_CAP_REQUIRES_SAME_FILE_LITERAL_PATCH")
+        key = (
+            "max_output_tokens"
+            if profile.request.sdk_surface == "responses.create"
+            else "max_tokens"
+        )
+        calls = [
+            n
+            for n in ast.walk(ast.parse(source))
+            if isinstance(n, ast.Call)
+            and n.lineno == site["line"]
+            and isinstance(n.func, ast.Attribute)
+            and n.func.attr == "create"
+        ]
+        caps = [k.value for call in calls for k in call.keywords if k.arg == key]
+        if len(calls) != 1 or len(caps) != 1 or not isinstance(caps[0], ast.Constant):
+            raise ValueError("OUTPUT_CAP_REQUIRES_SAME_FILE_LITERAL_PATCH")
+        node = caps[0]
+        if type(node.value) is not int or node.value != profile.max_output_tokens:
+            raise ValueError("EVALUATED_OUTPUT_CAP_DOES_NOT_MATCH_SOURCE")
+        if node.end_lineno is None or node.end_col_offset is None:
+            raise ValueError("SOURCE_RANGE_UNAVAILABLE")
+        edits.append(
+            (
+                sum(map(len, lines[: node.lineno - 1])) + node.col_offset,
+                sum(map(len, lines[: node.end_lineno - 1])) + node.end_col_offset,
+                str(cap).encode(),
+            )
+        )
+        transformations.append("output_cap")
+    if not edits:
+        raise ValueError("NO_EVALUATED_SOURCE_CHANGE")
+    changed = raw
+    for begin, finish, replacement in sorted(edits, reverse=True):
+        changed = changed[:begin] + replacement + changed[finish:]
+    after = changed.decode()
     ast.parse(after)
     relative = path.relative_to(root).as_posix()
 
@@ -180,6 +225,7 @@ def model_patch(
         "dataset_hash": evidence["dataset_hash"],
         "plan_hash": evidence["plan_hash"],
         "quality_scope": evidence["status"],
+        "transformations": transformations,
         "production_deployed": False,
         "verification": {
             "kind": "source_integrity_and_syntax_not_business_quality",

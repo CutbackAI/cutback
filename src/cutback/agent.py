@@ -81,6 +81,15 @@ def next_action(state):
             "requeue": False,
         }
     if phase in {"COMPLETED", "PROPOSAL_READY"}:
+        if state.get("search_mode") == "model_and_output_cap" and not state.get("confirmation"):
+            return {
+                "code": "SELECT_CANDIDATE_AND_FREEZE_CONFIRMATION",
+                "tool": "cutback workflow confirm",
+                "requires": ["candidate_key", "confirmation_budget", "purpose_reference"],
+                "effects": ["freeze_single_candidate_for_untouched_test_groups"],
+                "provider_calls": 0,
+                "new_exact_approval_required": True,
+            }
         return {
             "code": "REVIEW_EVIDENCE_AND_CHANGE",
             "tool": "cutback workflow proposal",
@@ -298,6 +307,12 @@ def permitted_file(root, relative):
     return path
 
 
+def search_candidates(baseline):
+    from cutback.evals.search import candidate_portfolio
+
+    return candidate_portfolio(baseline)
+
+
 def prepare(
     root,
     control,
@@ -313,6 +328,7 @@ def prepare(
     independent_labels=False,
     representative=False,
     mapping=None,
+    search=False,
 ):
     """Read only explicitly permitted files; upload to the chosen encrypted collector; no calls."""
     from datetime import timedelta
@@ -398,7 +414,12 @@ def prepare(
             raise ValueError("REQUEST_EXCEEDS_QUALIFIED_INPUT_BOUND")
         baseline = baseline.model_copy(update={"max_input_tokens": max(8192, bound)})
         spec = draft_plan(
-            metadata, baseline, minimum=minimum, max_usd=max_usd, max_requests=max_requests
+            metadata,
+            baseline,
+            minimum=minimum,
+            max_usd=max_usd,
+            max_requests=max_requests,
+            candidates=search_candidates(baseline) if search else None,
         )
         criteria = []
         if (
@@ -424,6 +445,7 @@ def prepare(
                 **spec.model_dump(mode="json"),
                 "source_binding": profile.binding.model_dump(mode="json"),
                 "criteria": [c.model_dump(mode="json") for c in criteria],
+                "split": "validation" if search else "test",
             }
         )
         summary = plan_summary(spec, prepared)
@@ -450,6 +472,7 @@ def prepare(
             endpoint=control.endpoint,
             selected_workflow=body.workflow,
             preparation_sha256=identity,
+            search_mode="model_and_output_cap" if search else "qualified_model_swap",
             permitted_files=identities,
             rights_ref=rights_ref,
             quality_scope="heldout_independent_labels"
@@ -465,6 +488,7 @@ def prepare(
         body = body.model_copy(update={"policy_id": policy["id"]})
         dataset = control("POST", base + "/datasets", body.model_dump(mode="json"))
         state["dataset_id"] = dataset["id"]
+        state["dataset_split_counts"] = dataset["provenance"]["split_counts"]
         save_session(directory, state)
         spec = ExperimentPlan.model_validate(
             {**spec.model_dump(mode="json"), "dataset_hash": dataset["immutable_hash"]}
@@ -531,6 +555,9 @@ def advance(root, control, *, plan_hash=None, approval_ref=None):
             # Reservations are known; whether each request reached a paid provider may be unknown.
             state["provider_calls"] = None if report["requests"] else 0
             state["decisions"] = report["results"].get("recommendations", [])
+            from cutback.evals.search import sample_frontier
+
+            state["search_results"] = sample_frontier(report["results"])
             phase = report["status"]
             save_session(
                 directory,
@@ -544,12 +571,106 @@ def advance(root, control, *, plan_hash=None, approval_ref=None):
                 else "STOPPED",
             )
             if phase == "COMPLETED":
-                state["next_review"] = "cutback workflow proposal --purpose-reference REVIEW"
+                state["next_review"] = (
+                    "cutback workflow confirm --candidate KEY --max-usd CEILING "
+                    "--purpose-reference REVIEW"
+                    if state.get("search_mode") == "model_and_output_cap"
+                    and not state.get("confirmation")
+                    else "cutback workflow proposal --purpose-reference REVIEW"
+                )
                 save_session(directory, state)
         return public_session(state)
 
 
-def proposal(root, control, *, purpose):
+def gate(root, control, *, candidate=None, sample_only=False):
+    """Read current canonical evidence and current source; no inference or content reads."""
+    from cutback.evals.search import regression_gate
+
+    root, directory = workspace(root)
+    with workspace_lock(directory):
+        state = load_session(root)
+        if state["phase"] not in {"COMPLETED", "PROPOSAL_READY"}:
+            raise ValueError("COMPLETED_RUN_REQUIRED")
+        if state["endpoint"] != control.endpoint:
+            raise ValueError("COLLECTOR_DESTINATION_MISMATCH")
+        selected_profile(root, state, state["selected_workflow"])
+        report = control("GET", f"/v1/projects/{state['project_id']}/experiments/{state['run_id']}")
+        return regression_gate(
+            report["results"],
+            expected_plan_hash=state["plan"]["plan_hash"],
+            candidate=candidate,
+            sample_only=sample_only,
+        )
+
+
+def confirm(root, control, *, candidate, max_usd, max_requests=100, purpose):
+    """Freeze one validation winner for a separately approved untouched test run."""
+    from cutback.evals.experiments import Budget, ExperimentPlan, plan_summary
+
+    root, directory = workspace(root)
+    with workspace_lock(directory):
+        state = load_session(root)
+        if state["endpoint"] != control.endpoint:
+            raise ValueError("COLLECTOR_DESTINATION_MISMATCH")
+        if (
+            state["phase"] != "COMPLETED"
+            or state.get("confirmation")
+            or state.get("search_mode") != "model_and_output_cap"
+        ):
+            raise ValueError("COMPLETED_SEARCH_REQUIRED")
+        selected_profile(root, state, state["selected_workflow"])
+        base = f"/v1/projects/{state['project_id']}"
+        content = control(
+            "POST", base + f"/experiments/plans/{state['plan']['id']}/content", {"purpose": purpose}
+        )
+        spec = content["specification"]
+        matches = [m for m in spec["candidates"] if m["key"] == candidate]
+        if len(matches) != 1 or spec["split"] != "validation":
+            raise ValueError("SELECT_ONE_FROZEN_SEARCH_CANDIDATE")
+        decision: dict = next(
+            (r for r in state.get("decisions", []) if r["candidate"]["key"] == candidate), {}
+        )
+        if not decision.get("quality_gate_passed") or not decision.get("cheaper_on_sample"):
+            raise ValueError("SELECTED_SEARCH_CANDIDATE_DID_NOT_PASS_GATES")
+        spec.update(
+            candidates=matches,
+            split="test",
+            predecessor_run_id=state["run_id"],
+            budget=Budget(max_usd=max_usd, max_requests=max_requests).model_dump(mode="json"),
+        )
+        spec = ExperimentPlan.model_validate(spec)
+        summary = plan_summary(
+            spec,
+            {
+                "immutable_hash": spec.dataset_hash,
+                "items": [{"split": "test"}] * state["dataset_split_counts"].get("test", 0),
+            },
+        )
+        if not summary["fits_budget"]:
+            raise ValueError("CONFIRMATION_EXCEEDS_BUDGET_OR_HAS_NO_TEST_GROUPS")
+        state["confirmation"] = {
+            "search_run_id": state["run_id"],
+            "search_plan_id": state["plan"]["id"],
+            "selected_candidate": candidate,
+        }
+        # A lost nonbillable preparation reply stops visibly; it never requeues a run.
+        save_session(directory, state, "PREPARING_CONFIRMATION")
+        plan = control(
+            "POST",
+            base + "/experiments/plans",
+            {
+                "dataset_id": state["dataset_id"],
+                "specification": spec.model_dump(mode="json"),
+            },
+        )
+        state["plan"] = plan
+        for field in ("run_id", "report", "decisions", "search_results", "proposal"):
+            state.pop(field, None)
+        save_session(directory, state, "PLAN_READY")
+        return public_session(state)
+
+
+def proposal(root, control, *, purpose, candidate=None):
     """Regenerate a concrete local diff in memory; no acceptance, upload or apply implied."""
     from cutback.changes import model_patch
 
@@ -563,9 +684,11 @@ def proposal(root, control, *, purpose):
         if state["endpoint"] != control.endpoint:
             raise ValueError("COLLECTOR_DESTINATION_MISMATCH")
         # Content purpose and current rights are checked and audited by the collector.
-        control(
+        content = control(
             "POST", base + f"/experiments/plans/{state['plan']['id']}/content", {"purpose": purpose}
         )
+        if content["specification"]["split"] != "test":
+            raise ValueError("SEARCH_REQUIRES_INDEPENDENT_CONFIRMATION_BEFORE_PATCH")
         records = control("GET", base + f"/recommendations?run_id={state['run_id']}")
         choices = [
             r
@@ -573,9 +696,18 @@ def proposal(root, control, *, purpose):
             if r["run_id"] == state["run_id"]
             and r["evidence"].get("quality_gate_passed")
             and r["evidence"].get("cheaper_on_sample")
+            and (candidate is None or r["evidence"]["candidate"]["key"] == candidate)
         ]
         if not choices:
             raise ValueError("NO_SOURCE_PATCH_CANDIDATE_PASSED_GATES")
+        from decimal import Decimal
+
+        choices.sort(
+            key=lambda r: (
+                -Decimal(r["evidence"]["sample_modeled_cost_difference_usd"]),
+                r["evidence"]["candidate"]["key"],
+            )
+        )
         artifact = model_patch(
             root,
             read_private(directory / "inventory.json"),
