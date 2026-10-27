@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from sqlalchemy import func, select
+from support_evaluation import authorized_dataset
 
 from cutback.server.db import CapturePolicyRecord, DatasetItem, DatasetRecord, PayloadSample
 from cutback.server.review_db import (
@@ -14,7 +15,6 @@ from cutback.server.review_db import (
     ReviewVote,
 )
 from cutback.server.worker import load_dataset
-from tests.support_evaluation import authorized_dataset
 
 pytestmark = pytest.mark.postgres
 
