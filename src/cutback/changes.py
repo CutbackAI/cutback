@@ -23,6 +23,8 @@ def model_patch(
     if recommendation.get("status") != "accepted_for_staging":
         raise ValueError("RECOMMENDATION_REQUIRES_REVIEW")
     evidence = recommendation["evidence"]
+    if evidence.get("evaluator_version") != "deterministic-v3":
+        raise ValueError("EVALUATOR_REAPPROVAL_REQUIRED")
     if not evidence.get("quality_gate_passed") or not evidence.get("cheaper_on_sample"):
         raise ValueError("CANDIDATE_DID_NOT_PASS_COST_AND_QUALITY_GATES")
     sites = [site for site in inventory["call_sites"] if site["call_site_id"] == call_site_id]

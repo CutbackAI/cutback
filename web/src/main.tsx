@@ -1707,7 +1707,8 @@ function Changes({
                 <button
                   disabled={
                     !r.evidence.quality_gate_passed ||
-                    !r.evidence.cheaper_on_sample
+                    !r.evidence.cheaper_on_sample ||
+                    r.evidence.evaluator_version !== "deterministic-v3"
                   }
                   onClick={() => review(r.id, "accepted_for_staging")}
                 >

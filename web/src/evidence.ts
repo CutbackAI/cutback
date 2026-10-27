@@ -1,6 +1,8 @@
 export type Evidence = Record<string, any>;
 
 export function decisionLabel(item: Evidence): string {
+  if (item.evaluator_version !== "deterministic-v3")
+    return "Evaluation version requires a new comparison";
   if (
     !item.failed_criteria?.length &&
     (item.insufficient_criteria?.length ||
@@ -30,6 +32,8 @@ export function experimentTitle(spec: Evidence = {}): string {
 }
 
 export function criterionLabel(item: Evidence): string {
+  if (item.evidence_sufficient === undefined)
+    return "Legacy check; evidence limits unknown";
   if (item.sample_gate_passed === false) return "Fail";
   if (item.evidence_sufficient === false)
     return "More samples or groups required";

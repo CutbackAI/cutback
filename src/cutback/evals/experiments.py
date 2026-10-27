@@ -812,6 +812,7 @@ def rank_results(plan, results, representative):
         ranked.append(
             {
                 "candidate": candidate["model"],
+                "evaluator_version": plan.evaluator_version,
                 "failed_criteria": criterion_failures,
                 "insufficient_criteria": insufficient_criteria,
                 "decision_reason": "required_quality_criterion_failed"

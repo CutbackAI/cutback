@@ -726,6 +726,11 @@ def install_evaluation(app, sessions, authorize, scope):
                 raise HTTPException(404, "RECOMMENDATION_NOT_FOUND")
             if row.status != "pending":
                 raise HTTPException(409, "RECOMMENDATION_ALREADY_REVIEWED")
+            if (
+                body.decision == "accepted_for_staging"
+                and row.evidence.get("evaluator_version") != "deterministic-v3"
+            ):
+                raise HTTPException(409, "EVALUATOR_REAPPROVAL_REQUIRED")
             if body.decision == "accepted_for_staging" and (
                 not row.evidence.get("quality_gate_passed")
                 or not row.evidence.get("cheaper_on_sample")

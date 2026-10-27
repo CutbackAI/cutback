@@ -60,6 +60,8 @@ def install_changes(app, sessions, authorize, scope):
                         409, "RECOMMENDATION_REQUIRES_COST_QUALITY_AND_HUMAN_REVIEW"
                     )
                 run = session.get(ExperimentRunRecord, rec.run_id)
+                if rec.evidence.get("evaluator_version") != "deterministic-v3":
+                    raise HTTPException(409, "EVALUATOR_REAPPROVAL_REQUIRED")
                 plan = session.get(ExperimentPlanRecord, run.plan_id)
                 _, policy = active_policy(
                     session, project_id, UUID(plan.specification["policy_id"])

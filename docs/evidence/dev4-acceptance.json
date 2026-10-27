@@ -4,7 +4,7 @@
   "kind": "LOCAL_SYNTHETIC_ACCEPTANCE",
   "python": "3.11.18",
   "python_tests": {
-    "passed": 204,
+    "passed": 206,
     "skipped_legacy": 4,
     "failed": 0
   },
@@ -13,7 +13,7 @@
   "native_isolated_cpu_training": "passed",
   "separate_legacy_sdk_and_scanner_passed": 21,
   "native_node_passed": 9,
-  "browser_unit_passed": 4,
+  "browser_unit_passed": 5,
   "generated_api_types_react_build": "passed",
   "ruff_format_mypy": "passed",
   "retention_load": {
@@ -23,7 +23,7 @@
   },
   "linux_image_and_recovery": {
     "image": "cutback-remediation:dev4",
-    "image_id": "sha256:b4c0f5e62e372d38958eb24c05881f82028500c4b2447bc01add889681aa216d",
+    "image_id": "sha256:c74638a6c4f58bbcfcf06c5b48d3cb17090d9046d3889b4b261d1ce7f1b63eeb",
     "uid": 10001,
     "python": "3.11.18",
     "migration": "0006",
@@ -41,7 +41,7 @@
       "tenants": 2,
       "accepted": 2000,
       "duplicates": 2000,
-      "seconds": 4.172,
+      "seconds": 4.078,
       "production_sla": false
     }
   },
@@ -57,5 +57,6 @@
     "remote IdP/S3/PITR/cluster recovery and load acceptance",
     "independent user studies, brand review and launch decisions"
   ],
-  "codeql_gate": "generated SARIF must be present, successful and free of findings"
+  "codeql_gate": "generated SARIF must be present, successful and free of findings",
+  "historical_evaluator_cannot_authorize_new_changes": "passed"
 }
