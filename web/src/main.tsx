@@ -1529,6 +1529,70 @@ function RunEvidence({ detail }: { detail: RecordData }) {
           ? "Complete modeled call accounting"
           : "Cost completeness unknown"}
       </p>
+      {result.search_frontier?.candidates?.length > 0 && (
+        <section aria-label="Optimization trade-offs">
+          <h3>Cost, quality and latency trade-offs</h3>
+          <p>
+            These are comparisons on the same sample. Frontier candidates pass
+            the declared sample gates and are not dominated on all three
+            measures. They still need independent confirmation and staging.
+            Unknown measurements stay unknown; production savings are unknown.
+          </p>
+          <div className="table-scroll" tabIndex={0}>
+            <table>
+              <caption>Optimization candidate trade-offs</caption>
+              <thead>
+                <tr>
+                  {[
+                    "Candidate",
+                    "Output limit",
+                    "Minimum quality score",
+                    "Modeled cost / request",
+                    "Mean latency",
+                    "Result",
+                  ].map((label) => (
+                    <th key={label}>{label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {result.search_frontier.candidates.map((row: RecordData) => (
+                  <tr key={row.key}>
+                    <th scope="row">
+                      {row.model}
+                      <br />
+                      <span className="hint">{row.key}</span>
+                    </th>
+                    <td>{row.max_output_tokens} tokens</td>
+                    <td>
+                      {row.sample_quality_min == null
+                        ? "Unknown"
+                        : Number(row.sample_quality_min).toFixed(4)}
+                    </td>
+                    <td>{money(row.cost_per_request_usd)}</td>
+                    <td>
+                      {row.mean_latency_ms == null
+                        ? "Unknown"
+                        : `${Number(row.mean_latency_ms).toFixed(1)} ms`}
+                    </td>
+                    <td>
+                      {row.baseline
+                        ? "Baseline"
+                        : !row.eligible
+                          ? "Not eligible: " + row.reason.replaceAll("_", " ")
+                          : row.on_frontier === true
+                            ? "Sample frontier"
+                            : row.on_frontier === false
+                              ? "Dominated on sample"
+                              : "Trade-off evidence incomplete"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
       <div className="decision-comparison">
         {result.recommendations?.map((item: RecordData) => (
           <article className="row" key={item.candidate.key}>

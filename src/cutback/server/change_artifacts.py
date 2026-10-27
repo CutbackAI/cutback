@@ -63,6 +63,8 @@ def install_changes(app, sessions, authorize, scope):
                 if rec.evidence.get("evaluator_version") != "deterministic-v3":
                     raise HTTPException(409, "EVALUATOR_REAPPROVAL_REQUIRED")
                 plan = session.get(ExperimentPlanRecord, run.plan_id)
+                if plan.specification["public_specification"]["split"] != "test":
+                    raise HTTPException(409, "VALIDATION_SEARCH_REQUIRES_TEST_CONFIRMATION")
                 _, policy = active_policy(
                     session, project_id, UUID(plan.specification["policy_id"])
                 )

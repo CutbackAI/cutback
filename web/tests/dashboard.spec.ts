@@ -71,6 +71,9 @@ test("authenticated API parity, navigation, accessibility and credential lifetim
   await expect(page.getByLabel("Request for your coding agent")).toHaveValue(
     /cutback optimize/,
   );
+  await expect(page.getByLabel("Request for your coding agent")).toHaveValue(
+    /workflow confirm/,
+  );
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await demoPause();
   await page.getByRole("button", { name: "Experiments", exact: true }).click();

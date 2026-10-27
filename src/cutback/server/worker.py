@@ -209,7 +209,7 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
                 provenance = dataset_row.provenance
                 from cutback.server.stages import validate_stage
 
-                validate_stage(session, store, project_id, plan)
+                validate_stage(session, store, project_id, plan, run_id=run_id)
 
             def reserve(amount):
                 require_payloads_enabled()
@@ -257,6 +257,9 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
                     else None,
                 )
             results["case_outputs_retained"] = plan.retain_case_outputs
+            from cutback.evals.search import sample_frontier
+
+            results["search_frontier"] = sample_frontier(results)
         except Exception:
             results = {
                 "status": "FAILED",

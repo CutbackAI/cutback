@@ -757,6 +757,11 @@ def install_evaluation(app, sessions, authorize, scope):
                 or not row.evidence.get("cheaper_on_sample")
             ):
                 raise HTTPException(409, "REQUIRED_COST_AND_QUALITY_GATES_NOT_PASSED")
+            if body.decision == "accepted_for_staging":
+                run = session.get(ExperimentRunRecord, row.run_id)
+                plan = session.get(ExperimentPlanRecord, run.plan_id)
+                if plan.specification["public_specification"]["split"] != "test":
+                    raise HTTPException(409, "VALIDATION_SEARCH_REQUIRES_TEST_CONFIRMATION")
             row.status = body.decision
             session.add(
                 AuditEvent(
