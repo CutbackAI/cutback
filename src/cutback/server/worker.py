@@ -5,10 +5,12 @@ import os
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 
+from cutback.core.observation import observation_scope
 from cutback.evals.datasets import CapturePolicy, DatasetImport, digest
 from cutback.evals.experiments import provider_models, run
+from cutback.server.content_policy import require_payloads_enabled
 from cutback.server.db import (
     AuditEvent,
     CapturePolicyRecord,
@@ -24,6 +26,7 @@ from cutback.server.plan_artifacts import load_plan, public_config
 
 
 def load_dataset(session, dataset, store, *, now=None):
+    require_payloads_enabled()
     now = now or datetime.now(UTC)
     policy_row = session.get(CapturePolicyRecord, dataset.provenance["policy_id"])
     if not policy_row or policy_row.project_id != dataset.project_id or not policy_row.enabled:
@@ -42,6 +45,9 @@ def load_dataset(session, dataset, store, *, now=None):
         expiries.append(payload.expires_at)
         if digest(case) != payload.content_hash:
             raise ValueError("PAYLOAD_INTEGRITY_FAILURE")
+        from cutback.server.content_policy import policy_content
+
+        policy_content(case, policy, preserve_semantics=True)
         ordered.append(
             (
                 payload.metadata_safe["ordinal"],
@@ -120,15 +126,20 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False):
                 )
             job = session.scalar(
                 select(JobRecord)
-                .where(JobRecord.status == "QUEUED")
-                .order_by(JobRecord.id)
+                .where(
+                    or_(
+                        JobRecord.status == "QUEUED",
+                        and_(JobRecord.status == "BLOCKED", JobRecord.available_at <= now),
+                    )
+                )
+                .order_by(JobRecord.created_at, JobRecord.id)
                 .with_for_update(skip_locked=True)
                 .limit(1)
             )
             if not job:
                 return {"status": "IDLE"}
             record = session.get(ExperimentRunRecord, job.run_id, with_for_update=True)
-            if record.status != "QUEUED":
+            if record.status not in {"QUEUED", "BLOCKED"}:
                 job.status = record.status
                 return {"status": record.status}
             plan_row = session.get(ExperimentPlanRecord, record.plan_id)
@@ -157,9 +168,12 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False):
                     or ("local" in providers and not os.getenv("CUTBACK_LOCAL_INFERENCE_ENDPOINT"))
                 )
                 if missing:
+                    record.status = job.status = "BLOCKED"
+                    job.available_at = now + timedelta(seconds=30)
                     record.results = {
                         "code": "NO_EXPERIMENT_KEY_OR_LOCAL_ENDPOINT",
                         "next_action": "configure approved worker credentials; no calls made",
+                        "retry_after": job.available_at.isoformat(),
                     }
                     return {
                         "status": "BLOCKED",
@@ -167,6 +181,7 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False):
                         "provider_calls": 0,
                     }
             record.status, job.status = "RUNNING", "RUNNING"
+            job.available_at = None
             job.attempts += 1
             job.lease_until = now + timedelta(seconds=plan.budget.max_wall_seconds + 60)
             run_id, job_id, project_id = record.id, job.id, record.project_id
@@ -193,6 +208,7 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False):
                 validate_stage(session, store, project_id, plan)
 
             def reserve(amount):
+                require_payloads_enabled()
                 if datetime.now(UTC) >= min(
                     datetime.fromisoformat(dataset["expires_at"]),
                     datetime.fromisoformat(plan_row.specification["expires_at"]),
@@ -201,31 +217,41 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False):
                 # Recheck revocation/expiry between calls, not only at run startup.
                 with sessions() as session:
                     row = session.get(CapturePolicyRecord, provenance["policy_id"])
+                    current_policy = CapturePolicy.model_validate(row.policy) if row else None
                     if (
                         not row
+                        or current_policy is None
                         or not row.enabled
-                        or not CapturePolicy.model_validate(row.policy).permits(
-                            provenance["environment"], plan.workflow
+                        or row.project_id != project_id
+                        or not current_policy.permits(provenance["environment"], plan.workflow)
+                        or any(
+                            provider not in current_policy.allowed_providers
+                            for provider in plan.approved_providers
                         )
+                        or set(current_policy.never_capture_fields)
+                        - set(policy.never_capture_fields)
                     ):
                         raise ValueError("CAPTURE_POLICY_REVOKED_OR_EXPIRED")
                 reserve_request(sessions, run_id, job_id, plan.budget, amount)
 
             from cutback.server.case_evidence import recorder
 
-            results = run(
-                plan,
-                dataset,
-                executor,
-                approval_hash=plan_row.specification["plan_hash"],
-                independent_labels=provenance["independent_labels"],
-                representative=provenance["representative"]
-                and provenance["source_type"] != "synthetic_fixture",
-                reserve=reserve,
-                record_case=recorder(sessions, store, project_id, run_id, provenance["policy_id"])
-                if plan.retain_case_outputs
-                else None,
-            )
+            with observation_scope("evaluation", run_id=run_id):
+                results = run(
+                    plan,
+                    dataset,
+                    executor,
+                    approval_hash=plan_row.specification["plan_hash"],
+                    independent_labels=provenance["independent_labels"],
+                    representative=provenance["representative"]
+                    and provenance["source_type"] != "synthetic_fixture",
+                    reserve=reserve,
+                    record_case=recorder(
+                        sessions, store, project_id, run_id, provenance["policy_id"]
+                    )
+                    if plan.retain_case_outputs
+                    else None,
+                )
             results["case_outputs_retained"] = plan.retain_case_outputs
         except Exception:
             results = {
@@ -250,6 +276,9 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False):
                             run_id=run_id,
                             status="pending",
                             evidence={
+                                "experiment_name": plan.name,
+                                "workflow": plan.workflow,
+                                "stage": plan.stage,
                                 "dataset_hash": plan.dataset_hash,
                                 "plan_hash": plan_row.specification["plan_hash"],
                                 **recommendation,

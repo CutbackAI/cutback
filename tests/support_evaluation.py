@@ -71,7 +71,7 @@ class SyntheticExecutor:
         )
 
 
-def authorized_dataset(api, tenant, tmp_path, monkeypatch):
+def authorized_dataset(api, tenant, tmp_path, monkeypatch, *, store=None):
     import os
     from datetime import UTC, datetime, timedelta
 
@@ -81,7 +81,7 @@ def authorized_dataset(api, tenant, tmp_path, monkeypatch):
     project = tenant[0]
     path = f"/v1/projects/{project}"
     monkeypatch.setenv("CUTBACK_ALLOW_PAYLOADS", "true")
-    store = EncryptedFileStore(tmp_path, os.urandom(32))
+    store = store or EncryptedFileStore(tmp_path, os.urandom(32))
     app.state.artifact_store = store
     policy = client.post(
         path + "/capture-policies",

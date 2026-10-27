@@ -9,7 +9,7 @@ from cutback.server.plan_artifacts import load_plan
 
 def stage_contract(plan):
     value = plan.model_dump(mode="json")
-    for key in ("stage", "split", "sample_limit", "predecessor_run_id", "budget"):
+    for key in ("name", "stage", "split", "sample_limit", "predecessor_run_id", "budget"):
         value.pop(key, None)
     return digest(value)
 
@@ -32,6 +32,8 @@ def validate_stage(session, store, project_id, plan):
         raise ValueError("PREVIOUS_STAGE_QUALITY_GATE_FAILED")
     for model in models:
         if model["metric_min"] < prior.metric.minimum or any(
-            not item["passed"] for item in model.get("criteria", []) if item["required"]
+            not item.get("sample_gate_passed", item["passed"])
+            for item in model.get("criteria", [])
+            if item["required"]
         ):
             raise ValueError("PREVIOUS_STAGE_QUALITY_GATE_FAILED")

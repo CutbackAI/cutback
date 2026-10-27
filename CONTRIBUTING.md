@@ -1,6 +1,6 @@
 # Contributing
 
-Use Python 3.11+, uv, Node 24 and PostgreSQL 17 for the full suite.
+Use the reviewed Python 3.11.18 or 3.13.18, uv 0.13.6, Node 24 and PostgreSQL 17 for the full suite.
 
 ```sh
 uv sync --locked --all-extras --dev
@@ -19,3 +19,7 @@ Ordinary provider data is labeled synthetic. Live calls require vendor/data/budg
 Node SDK: `npm ci --ignore-scripts`, `npm test`, `npm run check` in packages/js-sdk. Dashboard import parser: `npm run test:unit` in web. Helm 4 render contracts use strict Kubernetes schemas; Terraform 1.17 uses `init -backend=false`, `validate`, and mocked `test` without a cluster. See infra/README.md.
 
 Native training acceptance needs the isolated `infra/training/uv.lock` runtime. Set `CUTBACK_TEST_TRAINING_PYTHON` to its Python executable; never install Torch into the scanner core. The test creates an owned random model locally and runs two CPU optimizer steps without downloading a model or using a paid GPU.
+
+Start with a narrow contribution: an independent scanner fixture covering an unresolved binding, a native SDK counterexample inside the supported matrix, a paired-case accessibility improvement, or a clearer step in the sample walkthrough. Explain the expected observable behavior before changing code. Preserve parse-only core installation; do not install server/training dependencies merely to scan.
+
+For a complete local check, prepare the owned Compose PostgreSQL instance with `python infra/compose/prepare.py`, then start its postgres service. `scripts/check.py` creates and removes a unique test database; it never mutates the configured base database. Set `CUTBACK_TEST_BROWSER=true` after installing Chromium to include authenticated desktop/mobile/axe/PKCE checks. See [operator recovery](docs/operating-and-recovering.md) for queue, retention, object and key acceptance. Hosted CI and security must pass on the exact PR revision before merge. A sole maintainer cannot provide independent peer review; passing checks do not make that claim.

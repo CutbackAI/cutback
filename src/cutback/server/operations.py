@@ -9,7 +9,7 @@ from uuid import NAMESPACE_URL, UUID, uuid5
 
 from fastapi import Depends, HTTPException, Query
 from pydantic import Field
-from sqlalchemy import case, delete, select, text
+from sqlalchemy import case, delete, func, select, text
 from sqlalchemy.dialects.postgresql import insert
 
 from cutback.core.health import HealthBatch
@@ -19,6 +19,7 @@ from cutback.server.db import (
     AuditEvent,
     DailyUsage,
     Environment,
+    Project,
     RateBucket,
     RateOverride,
     ScanRun,
@@ -26,6 +27,7 @@ from cutback.server.db import (
     StoredEvent,
     WorkflowRecord,
 )
+from cutback.server.repository import render_usage, usage_columns
 
 
 def enforce_quota(sessions, key: str, limit: int):
@@ -72,98 +74,56 @@ def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False
     now = now or datetime.now(UTC)
     cutoff = (now - timedelta(days=raw_days)).replace(hour=0, minute=0, second=0, microsecond=0)
     with sessions() as session:
+        session.connection(execution_options={"isolation_level": "REPEATABLE READ"})
         if apply and not session.scalar(text("SELECT pg_try_advisory_xact_lock(1638366141)")):
             return {"apply": False, "status": "ANOTHER_RETENTION_WORKER_ACTIVE"}
-        rows = session.scalars(
-            select(StoredEvent)
+        days = session.execute(
+            select(
+                StoredEvent.project_id, func.date_trunc("day", StoredEvent.occurred_at).label("day")
+            )
             .where(StoredEvent.occurred_at < cutoff, selected(StoredEvent.project_id))
-            .order_by(StoredEvent.occurred_at)
-            .limit(10000)
+            .group_by(StoredEvent.project_id, "day")
+            .order_by("day", StoredEvent.project_id)
+            .limit(100)
         ).all()
-        # Retain complete days as one idempotent aggregate, never a partial overwrite.
-        days = {
-            (row.project_id, row.occurred_at.replace(hour=0, minute=0, second=0, microsecond=0))
-            for row in rows
-        }
         count = 0
         for project, day in days:
-            complete = session.scalars(
-                select(StoredEvent)
-                .where(
-                    StoredEvent.project_id == project,
-                    StoredEvent.occurred_at >= day,
-                    StoredEvent.occurred_at < day + timedelta(days=1),
+            day_scope = [
+                StoredEvent.project_id == project,
+                StoredEvent.occurred_at >= day,
+                StoredEvent.occurred_at < day + timedelta(days=1),
+            ]
+            if session.scalar(
+                select(DailyUsage.id)
+                .where(DailyUsage.project_id == project, DailyUsage.day == day)
+                .limit(1)
+            ):
+                raise ValueError("LATE_EVENT_FOR_ARCHIVED_DAY: reconcile before pruning")
+            dimensions = [
+                StoredEvent.event["environment"].as_string(),
+                func.coalesce(StoredEvent.workflow_id, "workflow_unattributed"),
+                StoredEvent.provider,
+                func.coalesce(StoredEvent.model_actual, "unknown_model"),
+                func.coalesce(StoredEvent.event["traffic_kind"].as_string(), "unknown"),
+                func.coalesce(StoredEvent.event["call_site_id"].as_string(), "unattributed"),
+            ]
+            groups = session.execute(
+                select(
+                    *(value.label("dimension_" + str(i)) for i, value in enumerate(dimensions)),
+                    *usage_columns(),
                 )
-                .limit(100001)
+                .where(*day_scope)
+                .group_by(*dimensions)
+                .limit(10001)
             ).all()
-            if len(complete) > 100000:
-                raise ValueError("DAY_EXCEEDS_RETENTION_BATCH_LIMIT: partition before pruning")
-            grouped: dict[tuple, list] = {}
-            for row in complete:
-                key = (
-                    row.event["environment"],
-                    row.workflow_id or "workflow_unattributed",
-                    row.provider,
-                    row.model_actual or "unknown_model",
-                )
-                grouped.setdefault(key, []).append(row)
-            for key, group in grouped.items():
-                known = [row.cost_usd for row in group if row.cost_usd is not None]
+            if len(groups) > 10000:
+                raise ValueError("DAY_EXCEEDS_DIMENSION_BOUND: partition before pruning")
+            for group in groups:
+                key = tuple(group[:6])
                 identity = uuid5(NAMESPACE_URL, json.dumps([str(project), day.isoformat(), *key]))
-                report = {
-                    "observed_requests": len(group),
-                    "observed_attempts": len(group),
-                    "logical_operations": len(
-                        {row.event.get("logical_request_id") or str(row.event_id) for row in group}
-                    ),
-                    "known_modeled_cost_subtotal_usd": str(sum(known, Decimal(0)))
-                    if known
-                    else None,
-                    "unpriced_requests": len(group) - len(known),
-                    "priced_requests": len(known),
-                    "modeled_cost_usd": str(sum(known, Decimal(0)))
-                    if known and len(known) == len(group)
-                    else None,
-                    "price_snapshot_ids": sorted(
-                        {row.price_snapshot_id for row in group if row.price_snapshot_id}
-                    ),
-                    "input_tokens_observed": _sum_known(
-                        row.event.get("input_tokens")
-                        for row in group
-                        if row.event["usage_source"] == "provider_reported"
-                    ),
-                    "output_tokens_observed": _sum_known(
-                        row.event.get("output_tokens")
-                        for row in group
-                        if row.event["usage_source"] == "provider_reported"
-                    ),
-                    "missing_usage_count": sum(
-                        row.event.get("input_tokens") is None
-                        or row.event.get("output_tokens") is None
-                        for row in group
-                    ),
-                    "errors": sum(row.event["status"] == "error" for row in group),
-                    "input_tokens_counted_or_estimated": _sum_known(
-                        row.event.get("input_tokens")
-                        for row in group
-                        if row.event["usage_source"] != "provider_reported"
-                    ),
-                    "output_tokens_counted_or_estimated": _sum_known(
-                        row.event.get("output_tokens")
-                        for row in group
-                        if row.event["usage_source"] != "provider_reported"
-                    ),
-                    "non_provider_usage_count": sum(
-                        row.event["usage_source"] != "provider_reported" for row in group
-                    ),
-                    "latest_observation": max(row.occurred_at for row in group).isoformat(),
-                    "latency_p50_ms": percentile([row.event["duration_ms"] for row in group], 0.5),
-                    "latency_p95_ms": percentile([row.event["duration_ms"] for row in group], 0.95),
-                    "population_coverage_percent": None,
-                }
+                report = render_usage(group)
+                report["population_coverage_percent"] = None
                 if apply:
-                    if session.get(DailyUsage, identity):
-                        raise ValueError("LATE_EVENT_FOR_ARCHIVED_DAY: reconcile before pruning")
                     session.execute(
                         insert(DailyUsage).values(
                             id=identity,
@@ -173,13 +133,14 @@ def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False
                             workflow=key[1],
                             provider=key[2],
                             model=key[3],
+                            traffic_kind=key[4],
+                            call_site=key[5],
                             report=report,
                         )
                     )
-                    session.execute(
-                        delete(StoredEvent).where(StoredEvent.id.in_([row.id for row in group]))
-                    )
-                count += len(group)
+                count += group.requests
+            if apply:
+                session.execute(delete(StoredEvent).where(*day_scope))
         if apply:
             session.execute(
                 delete(DailyUsage).where(
@@ -220,21 +181,36 @@ def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False
 def maintain_all(sessions, **options):
     from cutback.server.enterprise_db import ProjectSettings
 
+    results: list[dict] = []
+    failures: list[dict] = []
+    configured = 0
     with sessions() as session:
-        configured = [
-            (row.project_id, row.raw_days, row.aggregate_days)
-            for row in session.scalars(select(ProjectSettings))
-        ]
-    results = [maintain(sessions, **options)]
-    for project, raw, aggregate in configured:
-        results.append(
-            maintain(
-                sessions,
-                **{**options, "raw_days": raw, "aggregate_days": aggregate},
-                project_id=project,
-            )
-        )
-    return {"projects_with_custom_retention": len(configured), "results": results}
+        projects = session.execute(
+            select(Project.id, ProjectSettings.raw_days, ProjectSettings.aggregate_days)
+            .outerjoin(ProjectSettings, ProjectSettings.project_id == Project.id)
+            .order_by(Project.id)
+        ).yield_per(100)
+        for project, raw, aggregate in projects:
+            scoped = {**options, "project_id": project}
+            if raw is not None:
+                configured += 1
+                scoped.update(raw_days=raw, aggregate_days=aggregate)
+            try:
+                result = maintain(sessions, **scoped)
+                if len(results) < 1000:
+                    results.append(result)
+            except Exception:
+                # One project's poisoned day cannot prevent another project's retention.
+                if len(failures) < 100:
+                    failures.append(
+                        {"project_id": str(project), "code": "RETENTION_PROJECT_FAILED"}
+                    )
+    return {
+        "projects_with_custom_retention": configured,
+        "results": results,
+        "failures": failures,
+        "details_bounded": True,
+    }
 
 
 def _sum_known(values):
@@ -351,8 +327,21 @@ def install_operations(app, sessions, authorize, scope, repository):
         return {"scan_id": str(row.id), "sites": len(body.call_sites)}
 
     @app.get("/v1/projects/{project_id}/inventory")
-    def inventory(project_id: UUID, auth=Depends(authorize)):
+    def inventory(
+        project_id: UUID,
+        start: datetime | None = None,
+        end: datetime | None = None,
+        auth=Depends(authorize),
+    ):
         scope(auth, project_id)
+        end = end or datetime.now(UTC)
+        start = start or end - timedelta(days=7)
+        if (
+            not start.tzinfo
+            or not end.tzinfo
+            or not timedelta(0) < end - start <= timedelta(days=395)
+        ):
+            raise HTTPException(422, "INVALID_TIME_RANGE")
         with sessions() as session:
             row = session.scalar(
                 select(ScanRun)
@@ -360,11 +349,24 @@ def install_operations(app, sessions, authorize, scope, repository):
                 .order_by(ScanRun.created_at.desc())
                 .limit(1)
             )
-            return (
-                {"scan_id": str(row.id), "inventory": row.inventory}
-                if row
-                else {"scan_id": None, "inventory": None, "status": "NO_SCAN"}
+            if not row:
+                return {"scan_id": None, "inventory": None, "status": "NO_SCAN"}
+            report = repository.query_usage(
+                session, project_id, start, end, "call_site", traffic_kind="application"
             )
+            runtime = {group["key"]: group for group in report["groups"]}
+            known = {site["call_site_id"] for site in row.inventory["call_sites"]}
+            return {
+                "scan_id": str(row.id),
+                "inventory": row.inventory,
+                "runtime_by_call_site": runtime,
+                "runtime_period": report["period"],
+                "runtime_groups_truncated": report["groups_truncated"],
+                "unmatched_observed_attempts": sum(
+                    item["observed_attempts"] for key, item in runtime.items() if key not in known
+                ),
+                "source_binding": "reported_call_site_identity_not_exhaustive_coverage",
+            }
 
     @app.get("/v1/projects/{project_id}/workflows")
     def workflows(project_id: UUID, auth=Depends(authorize)):

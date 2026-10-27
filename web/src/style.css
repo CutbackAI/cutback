@@ -701,3 +701,60 @@ input[type="file"]::file-selector-button {
 fieldset {
   min-width: 0;
 }
+.case-controls,
+.paired-outputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  gap: 1.25rem;
+}
+.paired-case,
+.patch-review {
+  margin-block: 1.5rem;
+  border-top: 1px solid var(--line, #d8ddd7);
+  padding-top: 1rem;
+}
+.paired-outputs > section {
+  min-width: 0;
+  border-left: 3px solid #cdd8cf;
+  padding-left: 1rem;
+}
+.paired-outputs pre,
+.patch-review pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.case-input {
+  padding-block: 0.5rem;
+  max-width: 75ch;
+}
+.case-correction {
+  margin-top: 1rem;
+}
+.criterion-failed {
+  color: #932d28;
+  font-weight: 600;
+}
+.criterion-passed {
+  color: #24603b;
+}
+.integration-steps {
+  max-width: 80ch;
+  padding-left: 1.5rem;
+}
+.integration-steps li {
+  margin-block: 1rem;
+  line-height: 1.65;
+}
+table {
+  font-variant-numeric: tabular-nums;
+}
+
+.decision-comparison {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 1.5rem;
+}
+.decision-comparison .row {
+  margin: 0;
+  min-width: 0;
+}

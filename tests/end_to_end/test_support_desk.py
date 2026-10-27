@@ -40,7 +40,28 @@ def test_support_desk_decisions_stages_encrypted_cases_and_browser(
         assert decisions["compact"]["quality_gate_passed"]
         assert not decisions["unsafe"]["quality_gate_passed"]
         assert "priority" in decisions["unsafe"]["failed_criteria"]
+        unsafe_rec = next(
+            item
+            for item in client.get(base + "/recommendations").json()
+            if item["run_id"] == run_id and item["evidence"]["candidate"]["key"] == "unsafe"
+        )
+        assert (
+            client.post(
+                base + f"/recommendations/{unsafe_rec['id']}/review",
+                json={"decision": "accepted_for_staging", "reason": "must-not-bypass-priority"},
+            ).status_code
+            == 409
+        )
         assert manifest["paid_provider_calls"] == 0
+        usage = client.get(base + "/usage?traffic_kind=application&group_by=workflow").json()
+        assert usage["summary"]["observed_attempts"] == 12
+        assert len(usage["groups"]) == 2
+        inventory = client.get(base + "/inventory").json()
+        assert (
+            sum(row["observed_attempts"] for row in inventory["runtime_by_call_site"].values())
+            == 12
+        )
+        assert client.get(base + "/changes").json()
         assert [s["stage"] for s in manifest["stages"]] == ["smoke", "pilot", "full"]
         assert manifest["source_diff"]["diff"] and manifest["source_diff"]["rollback_diff"]
         assert "Synthetic ticket" not in json.dumps(report)

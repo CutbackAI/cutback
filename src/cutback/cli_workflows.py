@@ -264,6 +264,9 @@ def register(app, output, request, fail):
         source_sha256: str,
         destination: Annotated[Path | None, typer.Option("--output")] = None,
         dry_run: bool = True,
+        upload_project: UUID | None = None,
+        approval_ref: str | None = None,
+        endpoint: str = "http://127.0.0.1:8080",
     ):
         """Patch using the configured scoped credentials."""
         from cutback.changes import model_patch
@@ -285,6 +288,21 @@ def register(app, output, request, fail):
             fail(
                 "PATCH_REFUSED",
                 "check review status, source hash, commit and literal model compatibility",
+            )
+        if upload_project:
+            if not approval_ref:
+                fail(
+                    "UPLOAD_REQUIRES_APPROVAL_REFERENCE",
+                    "source diffs contain application content; "
+                    "authorize encrypted upload explicitly",
+                )
+            result["uploaded_change"] = request(
+                "POST",
+                endpoint,
+                f"/v1/projects/{upload_project}/recommendations/"
+                f"{result['recommendation_id']}/patches",
+                token_env="CUTBACK_ADMIN_TOKEN",
+                json={"approval_ref": approval_ref, "artifact": result},
             )
         output(result, destination)
 

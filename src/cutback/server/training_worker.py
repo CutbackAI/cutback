@@ -15,6 +15,7 @@ from sqlalchemy import select
 
 from cutback.evals.datasets import CapturePolicy, digest
 from cutback.evals.training import TrainingSpec, registered_model
+from cutback.server.content_policy import require_payloads_enabled
 from cutback.server.db import AuditEvent, CapturePolicyRecord, DatasetRecord
 from cutback.server.enterprise_db import TrainingJob
 from cutback.server.training_api import authorize_dataset
@@ -165,6 +166,7 @@ def run_training_one(sessions, store, *, execution_enabled=False):
             ) as process:
                 try:
                     while process.poll() is None:
+                        require_payloads_enabled()
                         if (
                             time.monotonic() - child_started >= spec.max_wall_seconds
                             or datetime.now(UTC) >= expiry
@@ -225,6 +227,7 @@ def run_training_one(sessions, store, *, execution_enabled=False):
                 chunks, checksum = [], hashlib.sha256()
                 with path.open("rb") as stream:
                     while chunk := stream.read(500000):
+                        require_payloads_enabled()
                         checksum.update(chunk)
                         ref = store.put(project_id, chunk, spec.retention_days)
                         created_refs.append(ref)

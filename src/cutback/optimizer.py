@@ -64,6 +64,9 @@ def static_opportunities(inventory):
                 "next_action": "observe_runtime_then_import_authorized_representative_examples",
             }
         )
+    for finding in findings:
+        finding["call_site_id"] = finding["id"]
+        finding["id"] += ":" + finding["strategy"]
     return {
         "schema_version": "1.0",
         "opportunities": findings,

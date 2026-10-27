@@ -35,11 +35,13 @@ export function createSDK(request:Request) {return {
   ingest_v1_ingest_events_post: (args:{body:components["schemas"]["EventBatch"]}) => {
     const query=new URLSearchParams();
     return request(`/ingest/events`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
-  usage_v1_projects__project_id__usage_get: (args:{project_id:string;start?:string | null;end?:string | null;group_by?:"model" | "provider" | "workflow" | "environment" | "day"}) => {
+  usage_v1_projects__project_id__usage_get: (args:{project_id:string;start?:string | null;end?:string | null;group_by?:"model" | "provider" | "workflow" | "environment" | "day" | "call_site" | "traffic";traffic_kind?:"application" | "evaluation" | "judge" | "unknown" | null;call_site?:string | null}) => {
     const query=new URLSearchParams();
     if(args.start!==undefined && args.start!==null) query.set("start",String(args.start));
     if(args.end!==undefined && args.end!==null) query.set("end",String(args.end));
     if(args.group_by!==undefined && args.group_by!==null) query.set("group_by",String(args.group_by));
+    if(args.traffic_kind!==undefined && args.traffic_kind!==null) query.set("traffic_kind",String(args.traffic_kind));
+    if(args.call_site!==undefined && args.call_site!==null) query.set("call_site",String(args.call_site));
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/usage`+(query.size?"?"+query.toString():""),{method:"GET"});},
   events_v1_projects__project_id__events_get: (args:{project_id:string;limit?:number;offset?:number}) => {
     const query=new URLSearchParams();
@@ -60,8 +62,10 @@ export function createSDK(request:Request) {return {
   upload_scan_v1_projects__project_id__scans_post: (args:{project_id:string;body:components["schemas"]["Inventory"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/scans`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
-  inventory_v1_projects__project_id__inventory_get: (args:{project_id:string}) => {
+  inventory_v1_projects__project_id__inventory_get: (args:{project_id:string;start?:string | null;end?:string | null}) => {
     const query=new URLSearchParams();
+    if(args.start!==undefined && args.start!==null) query.set("start",String(args.start));
+    if(args.end!==undefined && args.end!==null) query.set("end",String(args.end));
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/inventory`+(query.size?"?"+query.toString():""),{method:"GET"});},
   workflows_v1_projects__project_id__workflows_get: (args:{project_id:string}) => {
     const query=new URLSearchParams();
@@ -136,6 +140,9 @@ export function createSDK(request:Request) {return {
   cancel_v1_projects__project_id__experiments__run_id__cancel_post: (args:{project_id:string;run_id:string}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/experiments/${encodeURIComponent(String(args.run_id))}/cancel`+(query.size?"?"+query.toString():""),{method:"POST"});},
+  recheck_blocked_v1_projects__project_id__experiments__run_id__recheck_post: (args:{project_id:string;run_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/experiments/${encodeURIComponent(String(args.run_id))}/recheck`+(query.size?"?"+query.toString():""),{method:"POST"});},
   recommendations_v1_projects__project_id__recommendations_get: (args:{project_id:string}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/recommendations`+(query.size?"?"+query.toString():""),{method:"GET"});},
@@ -256,9 +263,35 @@ export function createSDK(request:Request) {return {
   artifact_v1_projects__project_id__training__training_id__artifacts__artifact_index__post: (args:{project_id:string;training_id:string;artifact_index:number;body:components["schemas"]["ArtifactAccess"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/training/${encodeURIComponent(String(args.training_id))}/artifacts/${encodeURIComponent(String(args.artifact_index))}`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
-  content_v1_projects__project_id__experiments__run_id__cases_content_post: (args:{project_id:string;run_id:string;limit?:number;offset?:number;body:components["schemas"]["ContentPurpose"]}) => {
+  paired_v1_projects__project_id__experiments__run_id__cases_paired_post: (args:{project_id:string;run_id:string;limit?:number;offset?:number;failed_only?:boolean;model_key?:string | null;stratum?:string | null;criterion?:string | null;body:components["schemas"]["ContentPurpose"]}) => {
     const query=new URLSearchParams();
     if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
     if(args.offset!==undefined && args.offset!==null) query.set("offset",String(args.offset));
+    if(args.failed_only!==undefined && args.failed_only!==null) query.set("failed_only",String(args.failed_only));
+    if(args.model_key!==undefined && args.model_key!==null) query.set("model_key",String(args.model_key));
+    if(args.stratum!==undefined && args.stratum!==null) query.set("stratum",String(args.stratum));
+    if(args.criterion!==undefined && args.criterion!==null) query.set("criterion",String(args.criterion));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/experiments/${encodeURIComponent(String(args.run_id))}/cases/paired`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  correct_v1_projects__project_id__experiments__run_id__cases_correct_post: (args:{project_id:string;run_id:string;body:components["schemas"]["CorrectionInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/experiments/${encodeURIComponent(String(args.run_id))}/cases/correct`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  content_v1_projects__project_id__experiments__run_id__cases_content_post: (args:{project_id:string;run_id:string;limit?:number;offset?:number;legacy_only?:boolean;body:components["schemas"]["ContentPurpose"]}) => {
+    const query=new URLSearchParams();
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    if(args.offset!==undefined && args.offset!==null) query.set("offset",String(args.offset));
+    if(args.legacy_only!==undefined && args.legacy_only!==null) query.set("legacy_only",String(args.legacy_only));
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/experiments/${encodeURIComponent(String(args.run_id))}/cases/content`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  upload_v1_projects__project_id__recommendations__recommendation_id__patches_post: (args:{project_id:string;recommendation_id:string;body:components["schemas"]["PatchUpload"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/recommendations/${encodeURIComponent(String(args.recommendation_id))}/patches`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  list_changes_v1_projects__project_id__changes_get: (args:{project_id:string;offset?:number}) => {
+    const query=new URLSearchParams();
+    if(args.offset!==undefined && args.offset!==null) query.set("offset",String(args.offset));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/changes`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  content_v1_projects__project_id__changes__change_id__content_post: (args:{project_id:string;change_id:string;body:components["schemas"]["ContentPurpose"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/changes/${encodeURIComponent(String(args.change_id))}/content`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  ingest_v1_ingest_otel_v1_traces_post: (args:{body:components["schemas"]["TraceExport"]}) => {
+    const query=new URLSearchParams();
+    return request(`/ingest/otel/v1/traces`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
 };}

@@ -299,11 +299,18 @@ def opportunities(
         output(findings)
     else:
         typer.echo("AI call sites to investigate (source inventory, not measured savings):")
+        previous = None
         for item in findings["opportunities"]:
-            typer.echo(
-                f"  {item['source']}  model: {item['baseline_model'] or 'resolved at runtime'}"
-                "  quality: not evaluated"
-            )
+            if item["source"] != previous:
+                typer.echo(
+                    f"  {item['source']}  model: {item['baseline_model'] or 'resolved at runtime'}"
+                )
+                previous = item["source"]
+            typer.echo(f"    Strategy: {item['strategy']}  quality: not evaluated")
+            if item.get("candidates"):
+                typer.echo("    Candidates to evaluate: " + ", ".join(item["candidates"]))
+            typer.echo("    Evidence limit: " + item["reason"].replace("_", " "))
+            typer.echo("    Next: " + item["next_action"].replace("_", " "))
         typer.echo("Spend and savings: unknown until usage and quality are measured.")
         typer.echo(
             "Next: run 'cutback demo' to see observation and evaluation, or "
@@ -318,6 +325,7 @@ def instrument(
     plan: bool = True,
     apply: bool = False,
     json_output: Annotated[bool, typer.Option("--json")] = False,
+    handler: str | None = None,
 ):
     """Prepare a reviewable instrumentation diff and rollback."""
     import ast
@@ -345,6 +353,14 @@ def instrument(
         fail("UNSAFE_ENTRYPOINT", "choose a small Python source file inside target")
     before = path.read_text(encoding="utf-8")
     tree = ast.parse(before)
+    if handler and not any(
+        isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == handler
+        for node in tree.body
+    ):
+        fail("HANDLER_NOT_FOUND", "choose the inspected top-level serverless handler")
+    map_path = root / ".cutback" / "source-map.json"
+    if map_path.is_symlink() or map_path.parent.is_symlink():
+        fail("UNSAFE_SOURCE_MAP", "use an ordinary .cutback directory inside the application")
     if "# cutback:bootstrap" in before:
         fail(
             "ALREADY_INSTRUMENTED", "inspect existing bootstrap and avoid duplicate instrumentation"
@@ -366,11 +382,17 @@ def instrument(
         'if _cutback_os.getenv("CUTBACK_ENABLED", "false").lower() == "true":\n'
         "    try:\n"
         "        import cutback as _cutback\n"
+        "        from pathlib import Path as _cutback_Path\n"
         "        _cutback_observer = _cutback.init(\n"
         '            service_name=_cutback_os.environ["CUTBACK_SERVICE_NAME"],\n'
         '            environment=_cutback_os.environ["CUTBACK_ENVIRONMENT"],\n'
         "            capture_content=False,\n"
+        "            source_map=str(_cutback_Path(__file__).resolve()\n"
+        f"                .parents[{len(path.relative_to(root).parts) - 1}] "
+        '/ ".cutback" / "source-map.json"),\n'
         "        )\n"
+        "        import atexit as _cutback_atexit\n"
+        "        _cutback_atexit.register(_cutback_observer.close, 0.3)\n"
         "    except Exception:\n"
         "        import warnings as _cutback_warnings\n"
         '        _cutback_warnings.warn("Cutback initialization failed; inference continues",\n'
@@ -378,8 +400,25 @@ def instrument(
     )
     lines = before.splitlines(keepends=True)
     after = "".join(lines[:insert_after]) + bootstrap + "".join(lines[insert_after:])
+    if handler:
+        after += (
+            '\nif "_cutback_observer" in globals():\n'
+            "    from cutback.instrumentation.serverless import (\n"
+            "        instrument_handler as _cutback_handler)\n"
+            f"    {handler} = _cutback_handler(\n"
+            f"        _cutback_observer, max_flush_seconds=0.1)({handler})\n"
+        )
     ast.parse(after)
     relative = path.relative_to(root).as_posix()
+    from cutback.instrumentation.attribution import build_source_map
+    from cutback.scanner import scan
+
+    inventory = scan(root)
+    for site in inventory["call_sites"]:
+        if site["source_file"] == relative and site["line"] > insert_after:
+            site["line"] += len(bootstrap.splitlines())
+            site["end_line"] += len(bootstrap.splitlines())
+    source_map = build_source_map(root, inventory, replacements={relative: after})
     diff = "".join(
         difflib.unified_diff(
             before.splitlines(keepends=True),
@@ -389,6 +428,8 @@ def instrument(
         )
     )
     if apply:
+        map_path.parent.mkdir(exist_ok=True)
+        map_path.write_text(json.dumps(source_map, indent=2), encoding="utf-8")
         path.write_text(after, encoding="utf-8")
     if json_output:
         output(
@@ -397,6 +438,11 @@ def instrument(
                 "diff": diff,
                 "content_capture": False,
                 "deployment": "not_performed",
+                "source_map": source_map,
+                "source_map_path": ".cutback/source-map.json",
+                "lifecycle": "bounded_handler_flush_and_process_close"
+                if handler
+                else "bounded_process_close; serverless needs --handler",
                 "prerequisites": [
                     "install pinned cutback[openai]",
                     "set scoped collector environment",

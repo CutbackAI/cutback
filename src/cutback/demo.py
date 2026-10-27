@@ -87,19 +87,26 @@ def fixture_response(request):
 def seed_support_desk(app, endpoint, admin, workspace: Path):
     """Use actual scoped HTTP APIs and the durable worker, retaining the sample project."""
     import hashlib
+    import runpy
+    import shutil
 
     import httpx
 
     import cutback
     from cutback.changes import model_patch
     from cutback.evals.executors import OpenAIExecutor
-    from cutback.instrumentation import workflow
-    from cutback.sample_app.app import triage
+    from cutback.instrumentation.attribution import build_source_map
     from cutback.scanner import scan
     from cutback.server.worker import run_one
 
-    sample = Path(__file__).parent / "sample_app"
+    sample = workspace / "support-desk"
+    sample.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(Path(__file__).parent / "sample_app/app.py", sample / "app.py")
     inventory = scan(sample)
+    map_path = sample / ".cutback/source-map.json"
+    map_path.parent.mkdir(exist_ok=True)
+    map_path.write_text(json.dumps(build_source_map(sample, inventory)), encoding="utf-8")
+    application = runpy.run_path(str((sample / "app.py").resolve()))
     site = next(
         item for item in inventory["call_sites"] if item["sdk_surface"] == "responses.create"
     )
@@ -165,24 +172,26 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
                 endpoint=endpoint + "/v1/ingest/events",
                 providers=("openai",),
                 capture_content=False,
+                source_map=map_path,
             )
             executor = OpenAIExecutor(
                 http_client=httpx.Client(
                     transport=httpx.MockTransport(fixture_response), trust_env=False
                 )
             )
-            for case in cases[:12]:
-                with workflow("support-triage", call_site_id=site["call_site_id"]):
-                    assert (
-                        triage(
-                            case["input"],
-                            api_key="synthetic-no-provider-key",
-                            http_client=httpx.Client(
-                                transport=httpx.MockTransport(fixture_response), trust_env=False
-                            ),
-                        )
-                        == case["gold"]
+            for case in cases[:6]:
+                for name in ("triage", "needs_escalation"):
+                    result = application[name](
+                        case["input"],
+                        api_key="synthetic-no-provider-key",
+                        http_client=httpx.Client(
+                            transport=httpx.MockTransport(fixture_response), trust_env=False
+                        ),
                     )
+                    expected = (
+                        case["gold"] if name == "triage" else case["gold"]["priority"] == "urgent"
+                    )
+                    assert result == expected
             specification = {
                 "workflow": "support-triage",
                 "dataset_hash": dataset["immutable_hash"],
@@ -207,6 +216,7 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
                         "max_output_tokens": 64,
                     },
                 ],
+                "name": "Support desk quality and cost",
                 "metric": {"kind": "field_f1", "minimum": 0.9, "max_regression": 0.02},
                 "criteria": [
                     {
@@ -275,6 +285,7 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
                 {
                     **specification,
                     "candidates": specification["candidates"][:1],
+                    "name": "Technical response check only",
                     "metric": {"kind": "nonempty", "minimum": 1},
                     "criteria": [],
                     "retain_case_outputs": False,
@@ -299,6 +310,10 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
                 site["call_site_id"],
                 {**recommendation, "status": "accepted_for_staging"},
                 expected_source_sha256=hashlib.sha256((sample / "app.py").read_bytes()).hexdigest(),
+            )
+            call(
+                base + f"/recommendations/{recommendation['id']}/patches",
+                {"approval_ref": "owned-synthetic-diff-review", "artifact": patch},
             )
             if not observer.flush(5):
                 raise ValueError("SAMPLE_OBSERVATION_FLUSH_FAILED")

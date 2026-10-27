@@ -109,6 +109,13 @@ class Module:
                         f"{scope}.{alias.asname or alias.name}".strip("."),
                         ("symbol", f"{target}.{alias.name}"),
                     )
+            elif isinstance(node, (ast.With, ast.AsyncWith)):
+                for item in node.items:
+                    if isinstance(item.optional_vars, ast.Name):
+                        bind(
+                            f"{scope}.{item.optional_vars.id}".strip("."),
+                            ("expr", item.context_expr, scope),
+                        )
             elif isinstance(node, (ast.Assign, ast.AnnAssign)):
                 targets = node.targets if isinstance(node, ast.Assign) else [node.target]
                 for assignment_target in targets:
@@ -629,6 +636,7 @@ def scan(root: str | Path, *, languages: list[str] | None = None) -> dict[str, A
                     "source_file": module.path,
                     "source_symbol": scope or "<module>",
                     "line": node.lineno,
+                    "end_line": node.end_lineno or node.lineno,
                     "workflow_hint": caller,
                     "workflow_attribution": "heuristic",
                     "confidence": "medium" if heuristics else "high",
@@ -660,6 +668,16 @@ def scan(root: str | Path, *, languages: list[str] | None = None) -> dict[str, A
                     continue
                 definition = module.definitions.get(qualified[len(prefix) :])
                 if isinstance(definition, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    if not graph.get(qualified):
+                        site["entry_points"].append(
+                            {
+                                "symbol": qualified,
+                                "file": module.path,
+                                "line": definition.lineno,
+                                "kind": "function_root",
+                                "confidence": "heuristic",
+                            }
+                        )
                     for decorator in definition.decorator_list:
                         if (
                             isinstance(decorator, ast.Call)
@@ -677,6 +695,25 @@ def scan(root: str | Path, *, languages: list[str] | None = None) -> dict[str, A
                                 }
                             )
     sites.extend(external_sites)
+    for module in modules.values():
+        imports_sdk = any(
+            isinstance(node, ast.ImportFrom)
+            and node.module in {"openai", "anthropic"}
+            or isinstance(node, ast.Import)
+            and any(alias.name in {"openai", "anthropic"} for alias in node.names)
+            for node, _ in module.nodes
+        )
+        if imports_sdk and not any(site["source_file"] == module.path for site in sites):
+            warnings.append(
+                {
+                    "code": "SDK_IMPORT_WITHOUT_RESOLVED_CALL_SITE",
+                    "file": module.path,
+                    "meaning": (
+                        "no local resolved calls; dynamic or shared-wrapper "
+                        "coverage remains unknown"
+                    ),
+                }
+            )
     sites.sort(key=lambda site: (site["source_file"], site["line"]))
     if counts["other_source_files"]:
         warnings.append({"code": "UNSUPPORTED_LANGUAGES", "count": counts["other_source_files"]})

@@ -9,6 +9,7 @@ from typing import Annotated, Literal, Protocol
 from pydantic import Field, model_validator
 
 from cutback.core.models import Identifier, StrictModel
+from cutback.core.observation import observation_scope
 from cutback.evals.datasets import digest
 from cutback.evals.metrics import MetricSpec, evaluate, grouped_confidence
 from cutback.pricing import Catalog
@@ -80,6 +81,9 @@ class Budget(StrictModel):
 
 class ExperimentPlan(StrictModel):
     schema_version: Literal["1.0"] = "1.0"
+    name: str | None = Field(
+        default=None, min_length=1, max_length=100, pattern=r"^[A-Za-z0-9][A-Za-z0-9 .:/_-]*$"
+    )
     workflow: Identifier
     dataset_hash: Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
     baseline: ModelSpec
@@ -108,7 +112,7 @@ class ExperimentPlan(StrictModel):
     price_sha256: Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")] = Field(
         default_factory=lambda: Catalog().sha256
     )
-    evaluator_version: Literal["deterministic-v2"] = "deterministic-v2"
+    evaluator_version: Literal["deterministic-v3"] = "deterministic-v3"
 
     @model_validator(mode="after")
     def eligibility(self):
@@ -296,7 +300,9 @@ class BudgetLedger:
     def remaining_seconds(self):
         return self.budget.max_wall_seconds - (time.monotonic() - self.started)
 
-    def call(self, executor: Executor, model: ModelSpec, text: str) -> Execution:
+    def call(
+        self, executor: Executor, model: ModelSpec, text: str, *, traffic_kind="evaluation"
+    ) -> Execution:
         if Catalog().sha256 != self.price_sha256:
             raise ValueError("PRICE_CONTRACT_CHANGED_REAPPROVAL_REQUIRED")
         # UTF-8 bytes plus generous message framing bounds supported text input tokens.
@@ -316,7 +322,8 @@ class BudgetLedger:
             self.persist_reservation(bound)  # Durable commit before any network I/O.
         self.requests += 1
         self.reserved += bound  # Reservations never refunded after errors/unknown billing.
-        result = executor.execute(model, text, min(30, self.remaining_seconds()))
+        with observation_scope(traffic_kind):
+            result = executor.execute(model, text, min(30, self.remaining_seconds()))
         if result.cost_usd is None or result.cost_usd < 0 or result.cost_usd > bound:
             raise ValueError("ACTUAL_USAGE_OUTSIDE_MODELED_BUDGET_BOUND")
         self.spent += result.cost_usd
@@ -404,10 +411,18 @@ def run(
                                     "repeat": _,
                                     "output": result.output if result.complete else None,
                                     "complete": result.complete,
+                                    "metric_minimum": plan.metric.minimum,
+                                    "metric_value": evaluate(
+                                        [case],
+                                        [result.output if result.complete else None],
+                                        plan.metric,
+                                        independent_labels=independent_labels,
+                                    )["value"],
                                     "criteria": [
                                         {
                                             "key": criterion.key,
                                             "minimum": criterion.metric.minimum,
+                                            "required": criterion.required,
                                             "value": evaluate(
                                                 [case],
                                                 [result.output if result.complete else None],
@@ -437,11 +452,29 @@ def run(
             scorecard = []
             for criterion in plan.criteria:
                 scores = [
-                    evaluate(
-                        cases, answer_set, criterion.metric, independent_labels=independent_labels
+                    grouped_confidence(
+                        cases,
+                        answer_set,
+                        groups,
+                        criterion.metric,
+                        evaluate(
+                            cases,
+                            answer_set,
+                            criterion.metric,
+                            independent_labels=independent_labels,
+                        ),
                     )
                     for answer_set in outputs[model.key]
                 ]
+                sample_passed = all(
+                    score["value"] >= criterion.metric.minimum and not score["failures"]
+                    for score in scores
+                )
+                sufficient = all(
+                    score["sample_n"] >= criterion.metric.min_test_samples
+                    and score["independent_group_n"] >= criterion.metric.min_test_groups
+                    for score in scores
+                )
                 scorecard.append(
                     {
                         "key": criterion.key,
@@ -450,10 +483,24 @@ def run(
                         "minimum": criterion.metric.minimum,
                         "max_regression": criterion.metric.max_regression,
                         "value": min(score["value"] for score in scores),
-                        "passed": all(
-                            score["value"] >= criterion.metric.minimum and not score["failures"]
-                            for score in scores
+                        "value_max": max(score["value"] for score in scores),
+                        "sample_gate_passed": sample_passed,
+                        "evidence_sufficient": sufficient,
+                        "passed": sample_passed and sufficient,
+                        "min_test_samples": criterion.metric.min_test_samples,
+                        "min_test_groups": criterion.metric.min_test_groups,
+                        "sample_n": min(score["sample_n"] for score in scores),
+                        "independent_group_n": min(
+                            score["independent_group_n"] for score in scores
                         ),
+                        "confidence_95": {
+                            "low": min(score["confidence_95"]["low"] for score in scores)
+                            if all(score["confidence_95"]["low"] is not None for score in scores)
+                            else None,
+                            "high": max(score["confidence_95"]["high"] for score in scores)
+                            if all(score["confidence_95"]["high"] is not None for score in scores)
+                            else None,
+                        },
                         "evidence_tier": min(score["evidence_tier"] for score in scores),
                     }
                 )
@@ -544,8 +591,12 @@ def run(
                             "B": pair[1],
                         }
                     )
-                    vote = ledger.call(executor, plan.judge, prompt)
+                    vote = ledger.call(executor, plan.judge, prompt, traffic_kind="judge")
+                    invalid_reason = None
                     try:
+                        if not vote.complete:
+                            invalid_reason = "incomplete_response"
+                            raise ValueError("INCOMPLETE_JUDGE_RESPONSE")
                         parsed_vote = json.loads(vote.output)
                         winner = parsed_vote["winner"]
                         quote = parsed_vote.get("evidence_quote")
@@ -556,11 +607,14 @@ def run(
                         )
                         if plan.judge_require_evidence and not grounded:
                             winner = "invalid"
+                            invalid_reason = "unsupported_evidence_quote"
                         if winner not in {"A", "B", "tie"}:
                             winner = "invalid"
+                            invalid_reason = invalid_reason or "invalid_winner"
                     except (ValueError, KeyError, TypeError):
                         winner = "invalid"
                         grounded = False
+                        invalid_reason = invalid_reason or "invalid_response"
                     votes.append(
                         {
                             "case_id": case["id"],
@@ -568,6 +622,7 @@ def run(
                             "order": order,
                             "evidence_quote_verified": grounded,
                             "winner": winner,
+                            "invalid_reason": invalid_reason,
                             "candidate_position": "A" if reverse else "B",
                         }
                     )
@@ -687,16 +742,30 @@ def rank_results(plan, results, representative):
             and not any(r["failures"] for r in candidate["repeats"])
         )
         baseline_criteria = {item["key"]: item for item in baseline.get("criteria", [])}
+        for item in candidate.get("criteria", []):
+            item["regression_passed"] = (
+                item["value"]
+                >= baseline_criteria[item["key"]]["value_max"] - item["max_regression"]
+            )
+            item["passed"] = item["passed"] and item["regression_passed"]
         criterion_failures = [
             item["key"]
             for item in candidate.get("criteria", [])
             if item["required"]
             and (
-                not item["passed"]
-                or item["value"] < baseline_criteria[item["key"]]["value"] - item["max_regression"]
+                not item["sample_gate_passed"]
+                or item["value"]
+                < baseline_criteria[item["key"]]["value_max"] - item["max_regression"]
             )
         ]
-        passed = passed and not criterion_failures
+        insufficient_criteria = [
+            item["key"]
+            for item in candidate.get("criteria", [])
+            if item["required"] and not item["evidence_sufficient"]
+        ]
+        early_stage = plan.staged and plan.stage != "full"
+        enough = enough and (early_stage or not insufficient_criteria)
+        passed = passed and not criterion_failures and (early_stage or enough)
         lows = [r["confidence_95"]["low"] for r in candidate["repeats"]]
         highs = [r["confidence_95"]["high"] for r in baseline["repeats"]]
         low = min(lows) if all(value is not None for value in lows) else None
@@ -707,6 +776,23 @@ def rank_results(plan, results, representative):
             and low >= plan.metric.minimum
             and low >= high_baseline - plan.metric.max_regression
         )
+        for item in candidate.get("criteria", []):
+            if not item["required"]:
+                continue
+            baseline_item = baseline_criteria[item["key"]]
+            criterion_low = item["confidence_95"]["low"]
+            baseline_high = baseline_item["confidence_95"]["high"]
+            reliable = (
+                reliable
+                and item["evidence_sufficient"]
+                and baseline_item["evidence_sufficient"]
+                and (
+                    criterion_low is not None
+                    and baseline_high is not None
+                    and criterion_low >= item["minimum"]
+                    and criterion_low >= baseline_high - item["max_regression"]
+                )
+            )
         cost = Decimal(candidate["known_cost_subtotal_usd"])
         base_cost = Decimal(baseline["known_cost_subtotal_usd"])
         costs_known = candidate["cost_complete"] and baseline["cost_complete"]
@@ -727,8 +813,13 @@ def rank_results(plan, results, representative):
             {
                 "candidate": candidate["model"],
                 "failed_criteria": criterion_failures,
+                "insufficient_criteria": insufficient_criteria,
                 "decision_reason": "required_quality_criterion_failed"
                 if criterion_failures
+                else "required_criterion_evidence_insufficient"
+                if insufficient_criteria and not early_stage
+                else "primary_metric_evidence_insufficient"
+                if not enough and not early_stage
                 else "sample_cost_and_quality_gates_passed"
                 if passed
                 else "quality_or_accounting_requires_validation",

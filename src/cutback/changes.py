@@ -107,6 +107,8 @@ def model_patch(
         "rollback_diff": diff(after, source),
         "diff_sha256": hashlib.sha256(patch.encode()).hexdigest(),
         "source_sha256": expected_source_sha256,
+        "source_file": relative,
+        "call_site_id": call_site_id,
         "source_commit": commit,
         "recommendation_id": recommendation["id"],
         "run_id": recommendation["run_id"],

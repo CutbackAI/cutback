@@ -1,0 +1,24 @@
+name: Reproducible bug
+description: Report a defect using an independent synthetic reproduction.
+body:
+  - type: markdown
+    attributes:
+      value: Never include private application names, source, prompts, payloads, keys or deployment details. Report security vulnerabilities through SECURITY.md.
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal synthetic reproduction and command
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Cutback, Python, SDK and operating system versions
+    validations:
+      required: true

@@ -1,8 +1,16 @@
 """Versioned scanner contract. Static evidence can never contain measured usage."""
 
+import hashlib
 from typing import Any, Literal
 
 from cutback.core.models import StrictModel
+
+
+def workflow_identity(relative: str, qualified: str) -> tuple[str, str]:
+    module = relative.removesuffix(".py").replace("/", ".").removesuffix(".__init__")
+    symbol = qualified.removeprefix(module + ".")
+    identity = "workflow:" + hashlib.sha256((relative + ":" + symbol).encode()).hexdigest()[:24]
+    return identity, symbol
 
 
 class PromptReference(StrictModel):
@@ -29,6 +37,7 @@ class CallSite(StrictModel):
     source_file: str
     source_symbol: str
     line: int
+    end_line: int | None = None
     workflow_hint: str
     workflow_attribution: Literal["heuristic", "unknown", "exact"]
     confidence: Literal["high", "medium", "low"]

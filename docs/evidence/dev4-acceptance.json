@@ -1,0 +1,58 @@
+{
+  "version": "0.1.0.dev4",
+  "date": "2026-10-26",
+  "kind": "LOCAL_SYNTHETIC_ACCEPTANCE",
+  "python": "3.11.18",
+  "python_tests": {
+    "passed": 199,
+    "skipped_legacy": 4,
+    "failed": 0
+  },
+  "real_postgresql_migration": "0006",
+  "authenticated_browser_axe_mobile_pkce": "passed",
+  "native_isolated_cpu_training": "passed",
+  "separate_legacy_sdk_and_scanner_passed": 21,
+  "native_node_passed": 9,
+  "browser_unit_passed": 4,
+  "generated_api_types_react_build": "passed",
+  "ruff_format_mypy": "passed",
+  "retention_load": {
+    "observations": 100001,
+    "aggregate_and_atomic_prune_seconds": 4.859,
+    "production_sla": false
+  },
+  "linux_image_and_recovery": {
+    "image": "cutback-remediation:dev4",
+    "uid": 10001,
+    "python": "3.11.18",
+    "migration": "0006",
+    "sample_application_calls": 12,
+    "source_workflows": 2,
+    "paid_provider_calls": 0,
+    "restored_tables": 33,
+    "row_counts_match": true,
+    "restored_and_rekeyed_objects": 507,
+    "database_pointers_preserved": true,
+    "production_changed": false,
+    "independent_otel_producer_and_replay": "passed",
+    "concurrent_load": {
+      "tenants": 2,
+      "accepted": 2000,
+      "duplicates": 2000,
+      "seconds": 4.796,
+      "production_sla": false
+    }
+  },
+  "runtime_training_and_npm_known_advisories": 0,
+  "training_advisory_mapping": "torch +cpu mapped to upstream release; original CPU installation hashes unchanged",
+  "paid_provider_calls": 0,
+  "customer_payloads_captured": 0,
+  "production_deployed": false,
+  "external_gates": [
+    "real provider and serverless acceptance with an explicit budget",
+    "rights-cleared representative examples and independent quality criteria",
+    "actual agent-client discovery and third-party producer qualification",
+    "remote IdP/S3/PITR/cluster recovery and load acceptance",
+    "independent user studies, brand review and launch decisions"
+  ]
+}

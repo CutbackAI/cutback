@@ -16,6 +16,9 @@ import { Training } from "./training";
 import { SSO, handleSSOReturn } from "./sso";
 import "./style.css";
 import { SampleGuide } from "./demo";
+import { PatchReview } from "./change-review";
+import { CaseEvidence } from "./case-evidence";
+import { decisionLabel, criterionLabel, experimentTitle } from "./evidence";
 
 async function request(token: string, path: string, options: RequestInit = {}) {
   const response = await fetch("/v1" + path, {
@@ -122,11 +125,24 @@ function App() {
       : "7d",
   );
   const [groupBy, setGroupBy] = useState(
-    ["model", "provider", "workflow", "environment", "day"].includes(
-      initial.get("group") || "",
-    )
+    [
+      "model",
+      "provider",
+      "workflow",
+      "environment",
+      "day",
+      "call_site",
+      "traffic",
+    ].includes(initial.get("group") || "")
       ? initial.get("group")!
       : "model",
+  );
+  const [traffic, setTraffic] = useState(
+    ["application", "evaluation", "judge", "unknown"].includes(
+      initial.get("traffic") || "",
+    )
+      ? initial.get("traffic")!
+      : "all",
   );
   const [offset, setOffset] = useState(0);
   const [data, setData] = useState<RecordData>({});
@@ -143,11 +159,16 @@ function App() {
     [token],
   );
   useEffect(() => {
-    const params = new URLSearchParams({ view, period, group: groupBy });
+    const params = new URLSearchParams({
+      view,
+      period,
+      group: groupBy,
+      traffic,
+    });
     if (project) params.set("project", project);
     history.replaceState(null, "", "?" + params);
     setOffset(0);
-  }, [view, project, period, groupBy]);
+  }, [view, project, period, groupBy, traffic]);
   const load = useCallback(async () => {
     if (!connected || !project || ["Teams", "Billing"].includes(view)) return;
     const version = ++requestVersion.current;
@@ -165,7 +186,8 @@ function App() {
         "/usage?start=" +
         encodeURIComponent(from) +
         "&group_by=" +
-        encodeURIComponent(groupBy);
+        encodeURIComponent(groupBy) +
+        (traffic === "all" ? "" : "&traffic_kind=" + traffic);
       if (view === "Overview") {
         const [report, health] = await Promise.all([
           api(base + usage),
@@ -173,7 +195,10 @@ function App() {
         ]);
         result = { report, health };
       }
-      if (view === "Inventory") result = await api(base + "/inventory");
+      if (view === "Inventory")
+        result = await api(
+          base + "/inventory?start=" + encodeURIComponent(from),
+        );
       if (view === "Costs") result = { report: await api(base + usage) };
       if (view === "Opportunities")
         result = await api(
@@ -208,6 +233,7 @@ function App() {
       if (view === "Changes")
         result = {
           recommendations: await api(base + "/recommendations"),
+          patches: await api(base + "/changes"),
           rollouts: await api(base + "/rollouts"),
         };
       if (view === "Integrations")
@@ -240,7 +266,17 @@ function App() {
     } finally {
       if (version === requestVersion.current) setLoading(false);
     }
-  }, [connected, project, view, period, groupBy, offset, api, identity]);
+  }, [
+    connected,
+    project,
+    view,
+    period,
+    groupBy,
+    traffic,
+    offset,
+    api,
+    identity,
+  ]);
   useEffect(() => {
     setData({});
     load();
@@ -542,17 +578,21 @@ function App() {
               </button>
             </div>
             <div className="toolbar">
-              <label>
-                Period
-                <select
-                  value={period}
-                  onChange={(e) => setPeriod(e.target.value)}
-                >
-                  {["1h", "7d", "30d", "395d"].map((p) => (
-                    <option key={p}>{p}</option>
-                  ))}
-                </select>
-              </label>
+              {["Overview", "Inventory", "Costs", "Opportunities"].includes(
+                view,
+              ) && (
+                <label>
+                  Period
+                  <select
+                    value={period}
+                    onChange={(e) => setPeriod(e.target.value)}
+                  >
+                    {["1h", "7d", "30d", "395d"].map((p) => (
+                      <option key={p}>{p}</option>
+                    ))}
+                  </select>
+                </label>
+              )}
               {view === "Costs" && (
                 <label>
                   Group by
@@ -566,9 +606,26 @@ function App() {
                       "workflow",
                       "environment",
                       "day",
+                      "call_site",
+                      "traffic",
                     ].map((g) => (
                       <option key={g}>{g}</option>
                     ))}
+                  </select>
+                </label>
+              )}
+              {["Overview", "Costs"].includes(view) && (
+                <label>
+                  Traffic purpose
+                  <select
+                    value={traffic}
+                    onChange={(e) => setTraffic(e.target.value)}
+                  >
+                    <option value="all">All reported purposes</option>
+                    <option value="application">Application calls</option>
+                    <option value="evaluation">Evaluation calls</option>
+                    <option value="judge">Judge calls</option>
+                    <option value="unknown">Unknown / legacy</option>
                   </select>
                 </label>
               )}
@@ -631,6 +688,19 @@ function App() {
                         api={api}
                         base={base}
                         runId={detail.id}
+                        models={detail.results?.models?.map(
+                          (row: RecordData) => row.model.key,
+                        )}
+                        strata={Array.from(
+                          new Set<string>(
+                            detail.results?.models?.flatMap(
+                              (row: RecordData) =>
+                                row.slices?.map(
+                                  (slice: RecordData) => slice.stratum,
+                                ) || [],
+                            ) || [],
+                          ),
+                        )}
                       />
                     )}
                   </>
@@ -654,7 +724,11 @@ function App() {
             )}
             {view === "Costs" && data.report && <Costs report={data.report} />}
             {view === "Inventory" && "inventory" in data && (
-              <InventoryView inventory={data.inventory} />
+              <InventoryView
+                inventory={data.inventory}
+                runtime={data.runtime_by_call_site || {}}
+                truncated={data.runtime_groups_truncated}
+              />
             )}
             {view === "Opportunities" && data.opportunities && (
               <Opportunities items={data.opportunities} />
@@ -674,6 +748,7 @@ function App() {
               <Changes
                 key={project}
                 items={data.recommendations}
+                patches={data.patches || []}
                 rollouts={data.rollouts}
                 api={api}
                 base={base}
@@ -792,7 +867,15 @@ function Overview({
     </>
   );
 }
-function InventoryView({ inventory }: { inventory: Inventory | null }) {
+function InventoryView({
+  inventory,
+  runtime,
+  truncated,
+}: {
+  inventory: Inventory | null;
+  runtime: RecordData;
+  truncated?: boolean;
+}) {
   const [query, setQuery] = useState(""),
     [provider, setProvider] = useState("all");
   const sites =
@@ -819,8 +902,9 @@ function InventoryView({ inventory }: { inventory: Inventory | null }) {
   return (
     <>
       <p>
-        Static discovery · actual historical tokens, latency, and cost remain
-        unknown.
+        Static source sites joined to reported application calls in this period.
+        Evaluation traffic is excluded. No observations means unknown usage, not
+        zero usage.
       </p>
       <div className="toolbar">
         <label>
@@ -860,6 +944,8 @@ function InventoryView({ inventory }: { inventory: Inventory | null }) {
                 "Provider / surface",
                 "Model",
                 "Confidence",
+                "Application observations",
+                "Known modeled cost",
                 "Missing evidence",
               ].map((v) => (
                 <th key={v}>{v}</th>
@@ -875,6 +961,15 @@ function InventoryView({ inventory }: { inventory: Inventory | null }) {
                   </code>
                   <br />
                   {s.source_symbol}
+                  <br />
+                  <span className="hint">
+                    Workflows:{" "}
+                    {s.entry_points
+                      ?.map((entry: RecordData) =>
+                        entry.symbol.split(".").at(-1),
+                      )
+                      .join(", ") || "Unknown"}
+                  </span>
                 </td>
                 <td>
                   {s.provider}
@@ -884,13 +979,32 @@ function InventoryView({ inventory }: { inventory: Inventory | null }) {
                 <td>{s.requested_model || "Runtime unresolved"}</td>
                 <td>{s.confidence}</td>
                 <td>
-                  {s.unresolved.join(", ") || "Runtime observation needed"}
+                  {runtime[s.call_site_id]
+                    ? count(runtime[s.call_site_id].observed_attempts)
+                    : "Unknown"}
+                </td>
+                <td>
+                  {money(
+                    runtime[s.call_site_id]?.known_modeled_cost_subtotal_usd,
+                  )}
+                </td>
+                <td>
+                  {s.unresolved.join(", ") ||
+                    (runtime[s.call_site_id]
+                      ? "Reported source identity; population coverage unknown"
+                      : "Runtime observation needed")}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      {truncated && (
+        <p className="notice">
+          Runtime groups are bounded. Narrow the period to inspect omitted
+          sites.
+        </p>
+      )}
       <h2>Scanner coverage and warnings</h2>
       <JSONView
         data={{ coverage: inventory.coverage, warnings: inventory.warnings }}
@@ -908,6 +1022,14 @@ function Costs({ report }: { report: RecordData }) {
   );
   return (
     <>
+      {!!report.summary.external_otel_observations && (
+        <p className="notice">
+          {count(report.summary.external_otel_observations)} external OTel spans
+          are included. A span may combine SDK retries; it does not establish
+          complete request or billing coverage. Export each call through one
+          observation path.
+        </p>
+      )}
       <p>
         {report.period.from} → {report.period.to}. Rates:{" "}
         {report.summary.price_snapshot_ids.join(", ") || "No priced usage"}.
@@ -930,7 +1052,7 @@ function Costs({ report }: { report: RecordData }) {
             {report.groups.slice(0, 10).map((g: RecordData, i: number) => (
               <g key={g.key}>
                 <text x="0" y={i * 40 + 22}>
-                  {g.key.slice(0, 25)}
+                  {(g.label || g.key).slice(0, 32)}
                 </text>
                 <rect
                   x="240"
@@ -968,7 +1090,7 @@ function Costs({ report }: { report: RecordData }) {
               <tbody>
                 {report.groups.map((g: RecordData) => (
                   <tr key={g.key}>
-                    <th scope="row">{g.key}</th>
+                    <th scope="row">{g.label || g.key}</th>
                     <td>{count(g.observed_attempts)}</td>
                     <td>{money(g.modeled_cost_usd)}</td>
                     <td>{money(g.known_modeled_cost_subtotal_usd)}</td>
@@ -1174,7 +1296,8 @@ function Experiments({
         data.plans.map((p: RecordData) => (
           <article className="row" key={p.id}>
             <h3>
-              {p.specification.workflow} · {p.approval_status}
+              {experimentTitle(p.specification)} · {p.specification.stage} ·{" "}
+              {p.approval_status}
             </h3>
             <p>
               Maximum budget {money(p.specification.budget.max_usd)} ·{" "}
@@ -1236,7 +1359,8 @@ function Experiments({
         data.runs.map((r: RecordData) => (
           <article className="row" key={r.id}>
             <h3>
-              {r.status} · {r.id}
+              {experimentTitle(r.specification)} ·{" "}
+              {r.specification?.stage || "full"} · {r.status}
             </h3>
             <p>
               Reserved {money(r.reserved_usd)} · known spend subtotal{" "}
@@ -1247,7 +1371,28 @@ function Experiments({
             >
               View reproducible evidence
             </button>
-            {analyst && ["QUEUED", "RUNNING"].includes(r.status) && (
+            {r.status === "BLOCKED" && (
+              <p role="status">
+                Waiting for configuration:{" "}
+                {r.block_reason || "Review worker provider configuration"}. No
+                provider request has started.
+              </p>
+            )}
+            {analyst && r.status === "BLOCKED" && (
+              <button
+                onClick={() =>
+                  act(() =>
+                    api(base + `/experiments/${r.id}/recheck`, {
+                      method: "POST",
+                      body: "{}",
+                    }),
+                  )
+                }
+              >
+                Recheck configuration
+              </button>
+            )}
+            {analyst && ["QUEUED", "BLOCKED", "RUNNING"].includes(r.status) && (
               <button
                 onClick={() =>
                   act(() =>
@@ -1277,7 +1422,7 @@ function Experiments({
       {notice && <p role="alert">{notice}</p>}
       {detail && (
         <>
-          <h2>Operation result</h2>
+          <h2>Experiment decision</h2>
           <RunEvidence detail={detail} />
           {detail.results?.case_outputs_retained && admin && (
             <CaseEvidence
@@ -1285,6 +1430,18 @@ function Experiments({
               api={api}
               base={base}
               runId={detail.id}
+              models={detail.results?.models?.map(
+                (row: RecordData) => row.model.key,
+              )}
+              strata={Array.from(
+                new Set<string>(
+                  detail.results?.models?.flatMap(
+                    (row: RecordData) =>
+                      row.slices?.map((slice: RecordData) => slice.stratum) ||
+                      [],
+                  ) || [],
+                ),
+              )}
             />
           )}
           <details>
@@ -1313,33 +1470,37 @@ function RunEvidence({ detail }: { detail: RecordData }) {
           ? "Complete modeled call accounting"
           : "Cost completeness unknown"}
       </p>
-      {result.recommendations?.map((item: RecordData) => (
-        <article className="row" key={item.candidate.key}>
-          <h3>
-            {item.candidate.key}:{" "}
-            {item.quality_gate_passed ? "Passes sample gates" : "Not eligible"}
-          </h3>
-          <p>
-            {item.decision_reason?.replaceAll("_", " ") || item.status}{" "}
-            {item.failed_criteria?.length
-              ? `Failed criteria: ${item.failed_criteria.join(", ")}.`
-              : ""}
-          </p>
-          <p>
-            Modeled sample difference:{" "}
-            {money(item.sample_modeled_cost_difference_usd)}. Monthly savings
-            remain unknown. Production approval is separate.
-          </p>
-          {item.paired_delta && (
+      <div className="decision-comparison">
+        {result.recommendations?.map((item: RecordData) => (
+          <article className="row" key={item.candidate.key}>
+            <h3>
+              {item.candidate.key}: {decisionLabel(item)}
+            </h3>
             <p>
-              Paired case scores: {item.paired_delta.improved} improved,{" "}
-              {item.paired_delta.regressed} regressed, {item.paired_delta.tied}{" "}
-              tied. This describes the first repeat on this dataset; it is not
-              population verification.
+              {item.decision_reason?.replaceAll("_", " ") || item.status}{" "}
+              {item.failed_criteria?.length
+                ? `Failed criteria: ${item.failed_criteria.join(", ")}.`
+                : ""}
+              {item.insufficient_criteria?.length
+                ? ` More evidence required for: ${item.insufficient_criteria.join(", ")}.`
+                : ""}
             </p>
-          )}
-        </article>
-      ))}
+            <p>
+              Modeled sample difference:{" "}
+              {money(item.sample_modeled_cost_difference_usd)}. Monthly savings
+              remain unknown. Production approval is separate.
+            </p>
+            {item.paired_delta && (
+              <p>
+                Paired case scores: {item.paired_delta.improved} improved,{" "}
+                {item.paired_delta.regressed} regressed,{" "}
+                {item.paired_delta.tied} tied. This describes the first repeat
+                on this dataset; it is not population verification.
+              </p>
+            )}
+          </article>
+        ))}
+      </div>
       <div className="table-scroll" tabIndex={0}>
         <table>
           <caption>Paired model evaluation evidence</caption>
@@ -1421,7 +1582,14 @@ function RunEvidence({ detail }: { detail: RecordData }) {
                         <td>{item.value.toFixed(3)}</td>
                         <td>{item.minimum}</td>
                         <td>{item.required ? "Yes" : "No"}</td>
-                        <td>{item.passed ? "Pass" : "Fail"}</td>
+                        <td>
+                          {criterionLabel(item)}
+                          <br />
+                          <span className="hint">
+                            {item.sample_n ?? "Unknown"} cases ·{" "}
+                            {item.independent_group_n ?? "Unknown"} groups
+                          </span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -1461,87 +1629,9 @@ function RunEvidence({ detail }: { detail: RecordData }) {
     </>
   );
 }
-function CaseEvidence({
-  api,
-  base,
-  runId,
-}: {
-  api: RequestAPI;
-  base: string;
-  runId: string;
-}) {
-  const [rows, setRows] = useState<RecordData[]>([]);
-  const [error, setError] = useState("");
-  const [purpose, setPurpose] = useState("");
-  const [offset, setOffset] = useState(0);
-  const [more, setMore] = useState(false);
-  const read = async (next: number) => {
-    try {
-      const result = await api(
-        `${base}/experiments/${runId}/cases/content?offset=${next}&limit=25`,
-        { method: "POST", body: JSON.stringify({ purpose }) },
-      );
-      setRows(result.cases);
-      setOffset(next);
-      setMore(result.more_possible);
-      setError("");
-    } catch (e) {
-      setError(explain(e));
-    }
-  };
-  return (
-    <section>
-      <h3>Inspect encrypted case evidence</h3>
-      <p>
-        Admin access, an active policy and a purpose reference (for example
-        sample-review) are required. Content stays in this page memory; each
-        read is audited.
-      </p>
-      <label>
-        Purpose for reading case evidence
-        <input
-          value={purpose}
-          maxLength={200}
-          onChange={(e) => setPurpose(e.target.value)}
-        />
-      </label>
-      <button
-        disabled={!/^[A-Za-z0-9_.:/-]{3,200}$/.test(purpose)}
-        onClick={() => read(0)}
-      >
-        Read authorized case outputs
-      </button>
-      {error && <p role="alert">{error}</p>}
-      {rows.map((row, i) => (
-        <details key={i}>
-          <summary>
-            {row.case.id} · {row.model_key} · repetition {row.repeat + 1}
-          </summary>
-          <p>Input: {row.case.input}</p>
-          <p>
-            Expected:{" "}
-            {JSON.stringify(row.case.gold ?? row.case.reference ?? "Unknown")}
-          </p>
-          <pre tabIndex={0}>{row.output ?? "Incomplete response"}</pre>
-          {row.criteria?.map((item: RecordData) => (
-            <p key={item.key}>
-              {item.key}: {item.value >= item.minimum ? "Pass" : "Fail"} (
-              {item.value}; minimum {item.minimum})
-            </p>
-          ))}
-        </details>
-      ))}
-      {offset > 0 && (
-        <button onClick={() => read(Math.max(0, offset - 25))}>
-          Previous cases
-        </button>
-      )}
-      {more && <button onClick={() => read(offset + 25)}>Next cases</button>}
-    </section>
-  );
-}
 function Changes({
   items,
+  patches,
   rollouts,
   api,
   base,
@@ -1550,6 +1640,7 @@ function Changes({
   analyst,
 }: {
   items: RecordData[];
+  patches: RecordData[];
   rollouts: RecordData[];
   api: RequestAPI;
   base: string;
@@ -1585,13 +1676,41 @@ function Changes({
           <article className="row" key={r.id}>
             <h2>{r.evidence.candidate?.model || r.id}</h2>
             <p>
-              {r.status} · {r.evidence.status} · tier {r.evidence.evidence_tier}{" "}
-              · {r.evidence.sample_n} held-out samples
+              {r.status} · tier {r.evidence.evidence_tier} ·{" "}
+              {r.evidence.sample_n} held-out samples
             </p>
-            <JSONView data={r.evidence} />
+            <p>
+              {r.evidence.experiment_name ||
+                r.evidence.workflow ||
+                "Workflow comparison"}{" "}
+              · {decisionLabel(r.evidence)}
+            </p>
+            <p>
+              Modeled difference on this sample:{" "}
+              {money(r.evidence.sample_modeled_cost_difference_usd)}. Monthly
+              savings: unknown.
+            </p>
+            {!!r.evidence.failed_criteria?.length && (
+              <p>Failed: {r.evidence.failed_criteria.join(", ")}</p>
+            )}
+            <p>
+              Rollback target:{" "}
+              {r.evidence.rollback?.baseline?.model || "Review frozen baseline"}
+              . Evidence applies to this dataset and configuration.
+            </p>
+            <details>
+              <summary>Frozen decision and audit references</summary>
+              <JSONView data={r.evidence} />
+            </details>
             {analyst && r.status === "pending" && (
               <div className="actions">
-                <button onClick={() => review(r.id, "accepted_for_staging")}>
+                <button
+                  disabled={
+                    !r.evidence.quality_gate_passed ||
+                    !r.evidence.cheaper_on_sample
+                  }
+                  onClick={() => review(r.id, "accepted_for_staging")}
+                >
                   Accept for staging review
                 </button>
                 <button onClick={() => review(r.id, "rejected")}>Reject</button>
@@ -1601,6 +1720,12 @@ function Changes({
               Generate a source-checked dry-run patch with{" "}
               <code>cutback recommendations patch</code>.
             </p>
+            {admin &&
+              patches
+                .filter((p) => p.recommendation_id === r.id)
+                .map((p) => (
+                  <PatchReview key={p.id} api={api} base={base} change={p} />
+                ))}
             <Download data={r} name={`recommendation-${r.id}.json`} />
           </article>
         ))
@@ -1622,6 +1747,50 @@ function Changes({
 function Integrations({ health }: { health: RecordData }) {
   return (
     <>
+      <h2>Connect an application</h2>
+      <ol className="integration-steps">
+        <li>
+          <strong>Discover the code.</strong> Run{" "}
+          <code>cutback scan . --output .cutback/inventory.json</code> in your
+          application. Review the source sites in Inventory after uploading the
+          scan.
+        </li>
+        <li>
+          <strong>Create a scoped ingestion key.</strong> Use Security. Set
+          CUTBACK_PROJECT_ID, CUTBACK_PROJECT_TOKEN, CUTBACK_ENDPOINT,
+          CUTBACK_SERVICE_NAME and CUTBACK_ENVIRONMENT in the application's
+          secret environment. Provider credentials stay with your application.
+        </li>
+        <li>
+          <strong>Review instrumentation.</strong> Run{" "}
+          <code>cutback instrument --target . --plan --json</code>. Review the
+          source map and initialization diff; use --apply only after approval.
+          Restart after source changes. Use --handler for serverless shutdown.
+        </li>
+        <li>
+          <strong>Verify one owned request.</strong> Enable CUTBACK_ENABLED=true
+          and execute an approved request. Check exported and dropped counts
+          below, then inspect application-purpose Costs and source attribution
+          in Inventory.
+        </li>
+      </ol>
+      <p>
+        Metadata capture is the default. Runtime delivery is bounded and best
+        effort. A missing health report can mean disabled SDK, no calls, failed
+        export, or an exited process.
+      </p>
+      <details>
+        <summary>Already use OpenTelemetry?</summary>
+        <p>
+          Reuse a filtered metadata-only OTLP/HTTP JSON export with a scoped
+          ingestion key. Keep your tracing backend and use one observation path
+          per call. Missing provenance stays unknown; external spans can
+          aggregate retries.
+        </p>
+        <a href="https://github.com/CutbackAI/cutback/blob/v0.1.0.dev4/docs/otel-ingestion.md">
+          OTLP metadata profile and independent producer example
+        </a>
+      </details>
       <h2>Instrumentation health</h2>
       <p>
         Supported adapters: OpenAI 2.29.0 and Anthropic 2.3.0. Uninstrumented
@@ -1654,7 +1823,13 @@ function Integrations({ health }: { health: RecordData }) {
                   <td>
                     <code>{h.instance_id}</code>
                   </td>
-                  <td>{h.updated_at}</td>
+                  <td>
+                    {h.updated_at}
+                    <br />
+                    {Date.now() - Date.parse(h.updated_at) > 300000
+                      ? "Stale snapshot; process state unknown"
+                      : "Recent report"}
+                  </td>
                   <td>{count(h.counters.observed)}</td>
                   <td>{count(h.counters.exported)}</td>
                   <td>{count(h.counters.dropped)}</td>

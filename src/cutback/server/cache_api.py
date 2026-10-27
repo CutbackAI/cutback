@@ -6,6 +6,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Annotated, Literal
 from uuid import UUID
 
+from cryptography.exceptions import InvalidTag
 from fastapi import Depends, HTTPException
 from pydantic import Field
 from sqlalchemy import delete, func, select
@@ -86,7 +87,7 @@ def install_cache(app, sessions, authorize, scope):
                 value = json.loads(store.get(body.project_id, row.object_ref))
                 if value["key_hash"] != row.key_hash:
                     raise ValueError("CACHE_INTEGRITY_FAILURE")
-            except (ValueError, OSError, KeyError):
+            except (ValueError, OSError, KeyError, InvalidTag):
                 return {"hit": False, "response": None, "reason": "expired_or_unavailable"}
             return {
                 "hit": True,

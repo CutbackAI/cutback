@@ -7,6 +7,7 @@ from pydantic import ValidationError
 
 from cutback.evals.datasets import digest
 from cutback.evals.experiments import ExperimentPlan
+from cutback.server.content_policy import policy_content
 
 
 def public_config(value):
@@ -26,9 +27,7 @@ def public_config(value):
 
 def freeze_plan(store, project, specification, policy, policy_id):
     raw = specification.model_dump(mode="json")
-    blob = json.dumps(raw).encode()
-    if len(blob) > policy.max_payload_bytes:
-        raise ValueError("PLAN_EXCEEDS_APPROVED_ARTIFACT_BYTES")
+    _, blob = policy_content(raw, policy, preserve_semantics=True)
     ref = store.put(project, blob, policy.retention_days)
     return {
         "public_specification": public_config(raw),

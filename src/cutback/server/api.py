@@ -22,6 +22,7 @@ from cutback.server.db import (
     Environment,
     Organization,
     Project,
+    ScanRun,
     StoredEvent,
     database,
     new_token,
@@ -152,7 +153,8 @@ def create_app(
     async def invalid(request, exc):
         increment("validation_rejected")
         # Pydantic's default errors include user input: never echo them.
-        return error("INVALID_SCHEMA_OR_CONTENT_FIELDS", 422, request.state.request_id)
+        status = 400 if request.url.path == "/v1/ingest/otel/v1/traces" else 422
+        return error("INVALID_SCHEMA_OR_CONTENT_FIELDS", status, request.state.request_id)
 
     @app.exception_handler(HTTPException)
     async def http_error(request, exc):
@@ -420,7 +422,11 @@ def create_app(
         project_id: UUID,
         start: datetime | None = None,
         end: datetime | None = None,
-        group_by: Literal["model", "provider", "workflow", "environment", "day"] = "model",
+        group_by: Literal[
+            "model", "provider", "workflow", "environment", "day", "call_site", "traffic"
+        ] = "model",
+        traffic_kind: Literal["application", "evaluation", "judge", "unknown"] | None = None,
+        call_site: Annotated[str | None, Query(max_length=200)] = None,
         auth=Depends(authorize),
     ):
         scope(auth, project_id)
@@ -433,7 +439,37 @@ def create_app(
         ):
             raise HTTPException(422, "INVALID_TIME_RANGE")
         with sessions() as session:
-            return repository.query_usage(session, project_id, start, end, group_by)
+            report = repository.query_usage(
+                session,
+                project_id,
+                start,
+                end,
+                group_by,
+                traffic_kind=traffic_kind,
+                call_site=call_site,
+            )
+
+            if group_by in {"workflow", "call_site"}:
+                from cutback.core.inventory import workflow_identity
+
+                scan = session.scalar(
+                    select(ScanRun)
+                    .where(ScanRun.project_id == project_id)
+                    .order_by(ScanRun.created_at.desc())
+                    .limit(1)
+                )
+                labels = {}
+                if scan:
+                    for site in scan.inventory["call_sites"]:
+                        labels[site["call_site_id"]] = (
+                            f"{site['source_file']}:{site['line']} · {site['source_symbol']}"
+                        )
+                        for entry in site["entry_points"]:
+                            identity, symbol = workflow_identity(entry["file"], entry["symbol"])
+                            labels[identity] = f"{entry['file']} · {symbol}"
+                for group in report["groups"]:
+                    group["label"] = labels.get(group["key"], group["key"])
+            return report
 
     @app.get("/v1/projects/{project_id}/events")
     def events(
@@ -502,7 +538,7 @@ def create_app(
     install_operations(app, sessions, authorize, scope, repository)
     from cutback.server.evaluation_api import install_evaluation
 
-    install_evaluation(app, sessions, authorize, scope)
+    import_dataset = install_evaluation(app, sessions, authorize, scope)
     from cutback.server.privacy_api import install_privacy
 
     install_privacy(app, sessions, authorize, scope)
@@ -523,7 +559,13 @@ def create_app(
     install_training(app, sessions, authorize, scope)
     from importlib.resources import files
 
-    install_case_evidence(app, sessions, authorize, scope)
+    install_case_evidence(app, sessions, authorize, scope, import_dataset=import_dataset)
+    from cutback.server.change_artifacts import install_changes
+
+    install_changes(app, sessions, authorize, scope)
+    from cutback.server.otel import install_otel
+
+    install_otel(app, sessions, authorize, scope, repository)
     from fastapi.staticfiles import StaticFiles
 
     dashboard = files("cutback").joinpath("dashboard")

@@ -9,6 +9,16 @@ def instrument_handler(observer, *, max_flush_seconds=0.1):
         raise ValueError("handler flush cap must be between 0 and 0.3 seconds")
 
     def decorate(handler):
+        def available(args, kwargs):
+            context = kwargs.get("context") or (args[1] if len(args) > 1 else None)
+            remaining = getattr(context, "get_remaining_time_in_millis", None)
+            if callable(remaining):
+                try:
+                    return min(max_flush_seconds, max(0, (remaining() - 25) / 1000))
+                except Exception:
+                    return 0
+            return max_flush_seconds
+
         if inspect.iscoroutinefunction(handler):
 
             @functools.wraps(handler)
@@ -20,7 +30,7 @@ def instrument_handler(observer, *, max_flush_seconds=0.1):
                 finally:
                     # Worker export remains off-loop; bounded wait delegates to a thread.
                     try:
-                        await asyncio.to_thread(observer.flush, max_flush_seconds)
+                        await asyncio.to_thread(observer.flush, available(args, kwargs))
                     except Exception:
                         pass
 
@@ -32,7 +42,7 @@ def instrument_handler(observer, *, max_flush_seconds=0.1):
                 return handler(*args, **kwargs)
             finally:
                 try:
-                    observer.flush(max_flush_seconds)
+                    observer.flush(available(args, kwargs))
                 except Exception:
                     pass
 

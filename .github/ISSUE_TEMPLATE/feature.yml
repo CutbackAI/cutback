@@ -1,0 +1,16 @@
+name: Workflow improvement
+description: Describe a concrete user outcome and acceptance criteria.
+body:
+  - type: textarea
+    id: workflow
+    attributes:
+      label: What task should become easier?
+      description: Use a generic synthetic scenario; omit private application details.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: What observable result would demonstrate success?
+    validations:
+      required: true
