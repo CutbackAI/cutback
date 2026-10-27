@@ -25,7 +25,7 @@ Wait for `Ready:` in the terminal, then click **Explore sample** in the browser.
 
 **All provider responses in the demo are synthetic.** The scanner, native SDK observation, authenticated HTTP collector, PostgreSQL, encrypted evidence, approvals and worker are real. Fixture prices and latency are not real-model benchmarks, invoices or customer savings. No paid inference occurs.
 
-The sample stays available for exploration while the command runs. Inspect calls, modeled usage, scorecards, failure-first paired cases, immutable label corrections, smoke/pilot/test receipts and a source diff with rollback. Costs distinguish application, evaluation, judge and unknown traffic. Encrypted diffs can be reviewed on the ordinary Changes page. Nothing is applied or deployed. Press Ctrl+C to remove its own temporary database and encrypted artifacts.
+The sample stays available for exploration while the command runs. Inspect calls, modeled usage, scorecards, failure-first paired cases, immutable label corrections, smoke/pilot/full receipts and a source diff with rollback. Costs distinguish application, evaluation, judge and unknown traffic. Encrypted diffs can be reviewed on the ordinary Changes page. Nothing is applied or deployed. Press Ctrl+C to remove its own temporary database and encrypted artifacts.
 
 ![Synthetic support-desk comparison: compact passes and unsafe fails priority](https://raw.githubusercontent.com/CutbackAI/cutback/v0.1.0.dev4/docs/assets/support-desk-decisions.png)
 
