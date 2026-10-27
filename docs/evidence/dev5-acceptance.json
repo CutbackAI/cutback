@@ -3,9 +3,9 @@
   "version": "0.1.0.dev5",
   "evidence_kind": "LOCAL_SYNTHETIC_ACCEPTANCE",
   "pytest": {
-    "passed": 225,
+    "passed": 228,
     "skipped": 5,
-    "seconds": 142.1,
+    "seconds": 200.19,
     "python": "3.11.18",
     "skip_scope": "four legacy-version cases run separately; Windows symlink privilege unavailable"
   },
@@ -51,7 +51,9 @@
     "core_only_wheel_consumer",
     "runtime_dependency_audit",
     "frontend_dependency_audit",
-    "private_publication_source_boundary"
+    "private_publication_source_boundary",
+    "windows_and_linux_platform_typing",
+    "universal_newline_attribution"
   ],
   "paid_provider_calls": 0,
   "production_deployed": false,
@@ -61,5 +63,6 @@
     "arbitrary dynamic/provider/prompt migrations require inspected adapters and diffs",
     "shared config consumers outside the bound workflow need independent qualification",
     "actual agent-client discovery and real customer/provider quality remain external"
-  ]
+  ],
+  "installed_minimal_wheel_cli_flow": "passed_with_real_postgresql_native_synthetic_http_zero_paid_calls"
 }
