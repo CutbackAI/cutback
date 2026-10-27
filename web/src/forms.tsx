@@ -450,7 +450,7 @@ export function PlanForm({
       <Form
         title="Compare authorized alternatives"
         submit="Freeze proposed plan"
-        description="Planning makes no provider calls. A separate hash approval is required before a run can be queued."
+        description="This form prepares standalone evaluations. Use Agent workflow to preserve the application's request and source binding for a change proposal. Planning makes zero provider calls; an exact hash approval is required to queue one run."
         onSubmit={async (data) => {
           const [provider, model] = String(data.model).split("|");
           const baseline = {

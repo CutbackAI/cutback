@@ -110,6 +110,11 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
     site = next(
         item for item in inventory["call_sites"] if item["sdk_surface"] == "responses.create"
     )
+    from cutback.core.request_profiles import prepare_profile
+
+    profile = prepare_profile(sample, site, commit=inventory["project"].get("commit"))
+    workflow = profile.binding.workflow_id
+    inventory["request_profiles"] = [profile.binding.model_dump(mode="json")]
     with httpx.Client(
         base_url=endpoint, headers={"Authorization": "Bearer " + admin}, trust_env=False, timeout=30
     ) as control:
@@ -131,7 +136,7 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
                 "approval_ref": "owned-synthetic-support-desk",
                 "rights_basis": "synthetic",
                 "environments": ["staging"],
-                "workflows": ["support-triage"],
+                "workflows": [workflow],
                 "allowed_providers": ["openai"],
                 "sample_rate": 1,
                 "max_samples": 5000,
@@ -144,7 +149,7 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
         dataset = call(
             base + "/datasets",
             {
-                "workflow": "support-triage",
+                "workflow": workflow,
                 "policy_id": policy["id"],
                 "source_type": "synthetic_fixture",
                 "provenance_ref": "support-desk-owned-synthetic-v1",
@@ -193,7 +198,7 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
                     )
                     assert result == expected
             specification = {
-                "workflow": "support-triage",
+                "workflow": workflow,
                 "dataset_hash": dataset["immutable_hash"],
                 "baseline": {
                     "key": "baseline",
@@ -237,6 +242,11 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
                 "retain_case_outputs": True,
             }
 
+            specification["source_binding"] = profile.binding.model_dump(mode="json")
+            specification["baseline"] = profile.baseline()
+            for candidate in specification["candidates"]:
+                candidate["request_contract"] = profile.request.model_dump(mode="json")
+
             def execute(spec):
                 plan = call(
                     base + "/experiments/plans",
@@ -255,6 +265,7 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
                     app.state.artifact_store,
                     executor=executor,
                     execution_enabled=True,
+                    only_run_id=queued["id"],
                 )
                 if outcome["status"] != "COMPLETED":
                     raise ValueError("SAMPLE_EXPERIMENT_FAILED")

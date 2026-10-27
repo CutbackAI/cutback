@@ -42,3 +42,9 @@ Repeated runs retain variation and latency. Confidence resamples whole duplicate
 Optional judges use approved vendors/data and the same budget, freeze the rubric hash, blind/randomize answer positions and report invalid votes. Results remain NOT VERIFIED without independent evidence; production decisions need customer calibration.
 
 Reviewed recommendations generate source/commit/hash-checked model diffs and rollback. Dynamic/provider/prompt migrations need inspected custom diffs. Canary logic reports guardrail/rollback decisions without changing traffic.
+
+## Native request and source binding
+
+`workflow prepare` constructs a baseline from a qualified parse-only request profile. Static instructions, supported native message/input template, structured-output options and output cap enter the encrypted frozen plan. Public metadata carries canonical hashes and source/config/prompt dependency hashes. All rendered native input and schema bytes enter the conservative input bound before the durable reservation or network call. Source-bound plan registration requires a matching project scan. A model-only diff requires exact source/request and unchanged candidate instructions/options/output cap; imported model constants are supported with explicit affected-workflow warnings.
+
+Old or standalone unbound evaluations remain useful evidence, but cannot authorize source patches. Newly added canonical fields change outstanding old plan hashes after schema validation; recreate/reapprove them rather than mutating stored approvals. A generated proposal is still human-review pending. Shared configuration consumers outside the evaluated workflow have unknown quality until separately qualified. See [agent workflow](agent-workflow.md) for the resumable preparation and exact one-run approval path.

@@ -1,0 +1,68 @@
+import json
+
+import pytest
+from support_agent import fresh_application
+from typer.testing import CliRunner
+
+from cutback.agent import analyze, load_session
+from cutback.cli import app
+from cutback.core.workspace import workspace_lock
+from cutback.evals.records import read_records
+
+
+def test_offline_agent_discovers_root_fixtures_and_resumes_without_payloads(tmp_path, monkeypatch):
+    fresh_application(tmp_path)
+    (tmp_path / "app.py").write_text(
+        (tmp_path / "app.py").read_text() + '\nraise RuntimeError("DO_NOT_EXECUTE")\n'
+    )
+    import socket
+
+    def deny(*args, **kwargs):
+        raise AssertionError("NETWORK_FORBIDDEN")
+
+    monkeypatch.setattr(socket, "create_connection", deny)
+    state = analyze(tmp_path)
+    assert len(state["profiles"]) == 1 and state["fixtures"][0]["path"] == "cases.jsonl"
+    assert state["next_action"]["code"] == "REVIEW_DATA_RIGHTS_AND_PREPARE"
+    assert "Owned synthetic classification task" not in json.dumps(state)
+    assert "Owned synthetic AA topic" not in json.dumps(state)
+    again = analyze(tmp_path)
+    assert again["id"] == state["id"] and again["revision"] == state["revision"]
+    cli = CliRunner().invoke(app, ["workflow", "status", "--target", str(tmp_path)])
+    assert cli.exit_code == 0 and json.loads(cli.stdout)["phase"] == "ANALYZED"
+    with (
+        workspace_lock(tmp_path / ".cutback/agent"),
+        pytest.raises(ValueError, match="WORKFLOW_BUSY"),
+    ):
+        analyze(tmp_path)
+    (tmp_path / "app.py").write_text((tmp_path / "app.py").read_text() + "# modified\n")
+    changed = analyze(tmp_path)
+    assert changed["phase"] == "SOURCE_CHANGED" and "plan" not in changed
+    assert load_session(tmp_path)["analysis_sha256"] != state["analysis_sha256"]
+
+
+def test_permitted_nested_mapping_preserves_unknown_gold_and_discovery_excludes_secrets(tmp_path):
+    fresh_application(tmp_path)
+    (tmp_path / "secrets").mkdir()
+    (tmp_path / "secrets/cases.jsonl").write_text("sensitive")
+    path = tmp_path / "nested.ndjson"
+    path.write_text(
+        json.dumps({"request": {"text": "owned text"}, "result": {"reference": "old answer"}})
+    )
+    rows = read_records(path, mapping={"input": "request.text", "reference": "result.reference"})
+    assert rows[0].input == "owned text" and rows[0].gold is None
+    assert "secrets/cases.jsonl" not in [f["path"] for f in analyze(tmp_path)["fixtures"]]
+    with pytest.raises(ValueError, match="UNSAFE_RECORD_MAPPING"):
+        read_records(path, mapping={"input": "request.__dict__"})
+
+
+def test_agent_workspace_refuses_symlink(tmp_path):
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    try:
+        (tmp_path / ".cutback").symlink_to(outside, target_is_directory=True)
+    except OSError:
+        pytest.skip("symlink privilege unavailable")
+    with pytest.raises(ValueError, match="UNSAFE_WORKSPACE_DIRECTORY"):
+        analyze(tmp_path)
+    assert not list(outside.iterdir())

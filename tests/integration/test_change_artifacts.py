@@ -1,8 +1,6 @@
-import hashlib
 from uuid import UUID
 
 import pytest
-from support_evaluation import SyntheticExecutor, authorized_dataset, plan_for
 
 from cutback.server.db import PayloadSample
 from cutback.server.worker import run_one
@@ -14,53 +12,51 @@ def test_explicit_patch_content_is_encrypted_scoped_and_revocable(
     api, tenant, tmp_path, monkeypatch
 ):
     client, admin, app = api
-    base, store, dataset, _ = authorized_dataset(api, tenant, tmp_path, monkeypatch)
-    spec = plan_for({"immutable_hash": dataset["immutable_hash"]})
-    frozen = client.post(
-        base + "/experiments/plans",
-        headers=admin,
-        json={"dataset_id": dataset["id"], "specification": spec.model_dump(mode="json")},
-    ).json()
-    client.post(
-        base + f"/experiments/plans/{frozen['id']}/approve",
-        headers=admin,
-        json={"plan_hash": frozen["plan_hash"], "approval_ref": "synthetic-patch-review"},
+    import httpx
+    from support_agent import native_response, prepare_fresh
+
+    from cutback.agent import advance
+    from cutback.changes import model_patch
+    from cutback.core.workspace import read_private
+    from cutback.evals.executors import OpenAIExecutor
+
+    root, control, state, _ = prepare_fresh(api, tenant, tmp_path, monkeypatch)
+    base = f"/v1/projects/{tenant[0]}"
+    store = app.state.artifact_store
+    queued = advance(
+        root, control, plan_hash=state["plan"]["plan_hash"], approval_ref="owned-synthetic-only"
     )
-    run_id = client.post(
-        base + "/experiments", headers=admin, json={"plan_id": frozen["id"]}
-    ).json()["id"]
-    assert (
-        run_one(app.state.sessions, store, executor=SyntheticExecutor(), execution_enabled=True)[
-            "status"
-        ]
-        == "COMPLETED"
+    run_id = queued["run_id"]
+    monkeypatch.setenv("CUTBACK_EXPERIMENT_OPENAI_KEY", "synthetic-never-provider")
+    executor = OpenAIExecutor(
+        http_client=httpx.Client(transport=httpx.MockTransport(native_response))
     )
+    try:
+        assert (
+            run_one(
+                app.state.sessions,
+                store,
+                executor=executor,
+                execution_enabled=True,
+                only_run_id=run_id,
+            )["status"]
+            == "COMPLETED"
+        )
+    finally:
+        executor.close()
     rec = client.get(base + "/recommendations", headers=admin).json()[0]
     path = base + f"/recommendations/{rec['id']}/patches"
-    from cutback.scanner import scan
-
-    source = tmp_path / "app.py"
-    source.write_text(
-        "from openai import OpenAI\nc=OpenAI()\n"
-        "c.responses.create(model='gpt-4.1', input='owned fixture')\n"
+    inventory = read_private(root / ".cutback/agent/inventory.json")
+    binding = rec["evidence"]["source_binding"]
+    artifact = model_patch(
+        root,
+        inventory,
+        binding["call_site_id"],
+        rec,
+        expected_source_sha256=binding["source_sha256"],
+        proposal_only=True,
     )
-    inventory = scan(tmp_path)
-    assert client.post(base + "/scans", headers=admin, json=inventory).status_code == 201
-    diff = "--- a/app.py\n+++ b/app.py\n@@ -1 +1 @@\n-old\n+new\n"
-    artifact = {
-        "status": "DRY_RUN_ONLY",
-        "production_deployed": False,
-        "recommendation_id": rec["id"],
-        "run_id": run_id,
-        "dataset_hash": dataset["immutable_hash"],
-        "plan_hash": frozen["plan_hash"],
-        "source_file": "app.py",
-        "source_sha256": "a" * 64,
-        "call_site_id": inventory["call_sites"][0]["call_site_id"],
-        "diff": diff,
-        "rollback_diff": "owned rollback fixture",
-        "diff_sha256": hashlib.sha256(diff.encode()).hexdigest(),
-    }
+    diff = artifact["diff"]
     body = {"approval_ref": "owned-synthetic-patch", "artifact": artifact}
     assert client.post(path, headers=admin, json=body).status_code == 409
     client.post(

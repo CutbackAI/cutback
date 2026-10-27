@@ -1,4 +1,3 @@
-import difflib
 import importlib.util
 import json
 import os
@@ -12,6 +11,7 @@ from typing import Annotated, Literal, NoReturn
 import typer
 
 from cutback import __version__
+from cutback.cli_agent import register_agent
 from cutback.cli_workflows import register
 
 app = typer.Typer(
@@ -328,130 +328,33 @@ def instrument(
     handler: str | None = None,
 ):
     """Prepare a reviewable instrumentation diff and rollback."""
-    import ast
+    from cutback.core.instrumentation_plan import instrument_plan
 
-    root = target.resolve(strict=True)
-    if entrypoint is None:
-        candidates = [
-            root / p
-            for p in ("main.py", "app.py", "src/main.py", "__main__.py")
-            if (root / p).is_file()
-        ]
-        if len(candidates) != 1:
-            fail(
-                "ENTRYPOINT_REQUIRED",
-                "specify --entrypoint relative/path.py after inspecting process startup",
+    try:
+        proposal = instrument_plan(target, entrypoint, handler)
+        root = target.resolve(strict=True)
+        if apply:
+            from cutback.core.workspace import private_directory, write_private
+
+            location = private_directory(root, ".cutback")
+            write_private(location / "source-map.json", proposal["source_map"])
+            (root / proposal["source_file"]).write_text(proposal["after"], encoding="utf-8")
+        if json_output:
+            output(
+                {
+                    "status": "applied" if apply else "plan_only",
+                    "diff": proposal["diff"],
+                    "source_map": proposal["source_map"],
+                    "source_map_path": ".cutback/source-map.json",
+                    "content_capture": False,
+                    "deployment": "not_performed",
+                    "lifecycle": proposal["lifecycle"],
+                }
             )
-        path = candidates[0]
-    else:
-        path = root / entrypoint
-    if (
-        path.is_symlink()
-        or not path.resolve().is_relative_to(root)
-        or path.stat().st_size > 1_048_576
-    ):
-        fail("UNSAFE_ENTRYPOINT", "choose a small Python source file inside target")
-    before = path.read_text(encoding="utf-8")
-    tree = ast.parse(before)
-    if handler and not any(
-        isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == handler
-        for node in tree.body
-    ):
-        fail("HANDLER_NOT_FOUND", "choose the inspected top-level serverless handler")
-    map_path = root / ".cutback" / "source-map.json"
-    if map_path.is_symlink() or map_path.parent.is_symlink():
-        fail("UNSAFE_SOURCE_MAP", "use an ordinary .cutback directory inside the application")
-    if "# cutback:bootstrap" in before:
-        fail(
-            "ALREADY_INSTRUMENTED", "inspect existing bootstrap and avoid duplicate instrumentation"
-        )
-    insert_after = 0
-    for i, node in enumerate(tree.body):
-        if (
-            i == 0
-            and isinstance(node, ast.Expr)
-            and isinstance(node.value, ast.Constant)
-            and isinstance(node.value.value, str)
-        ) or (isinstance(node, ast.ImportFrom) and node.module == "__future__"):
-            insert_after = node.end_lineno or node.lineno
         else:
-            break
-    bootstrap = (
-        "\n# cutback:bootstrap - observation only; requires CUTBACK_ENABLED=true\n"
-        "import os as _cutback_os\n"
-        'if _cutback_os.getenv("CUTBACK_ENABLED", "false").lower() == "true":\n'
-        "    try:\n"
-        "        import cutback as _cutback\n"
-        "        from pathlib import Path as _cutback_Path\n"
-        "        _cutback_observer = _cutback.init(\n"
-        '            service_name=_cutback_os.environ["CUTBACK_SERVICE_NAME"],\n'
-        '            environment=_cutback_os.environ["CUTBACK_ENVIRONMENT"],\n'
-        "            capture_content=False,\n"
-        "            source_map=str(_cutback_Path(__file__).resolve()\n"
-        f"                .parents[{len(path.relative_to(root).parts) - 1}] "
-        '/ ".cutback" / "source-map.json"),\n'
-        "        )\n"
-        "        import atexit as _cutback_atexit\n"
-        "        _cutback_atexit.register(_cutback_observer.close, 0.3)\n"
-        "    except Exception:\n"
-        "        import warnings as _cutback_warnings\n"
-        '        _cutback_warnings.warn("Cutback initialization failed; inference continues",\n'
-        "                               RuntimeWarning)\n\n"
-    )
-    lines = before.splitlines(keepends=True)
-    after = "".join(lines[:insert_after]) + bootstrap + "".join(lines[insert_after:])
-    if handler:
-        after += (
-            '\nif "_cutback_observer" in globals():\n'
-            "    from cutback.instrumentation.serverless import (\n"
-            "        instrument_handler as _cutback_handler)\n"
-            f"    {handler} = _cutback_handler(\n"
-            f"        _cutback_observer, max_flush_seconds=0.1)({handler})\n"
-        )
-    ast.parse(after)
-    relative = path.relative_to(root).as_posix()
-    from cutback.instrumentation.attribution import build_source_map
-    from cutback.scanner import scan
-
-    inventory = scan(root)
-    for site in inventory["call_sites"]:
-        if site["source_file"] == relative and site["line"] > insert_after:
-            site["line"] += len(bootstrap.splitlines())
-            site["end_line"] += len(bootstrap.splitlines())
-    source_map = build_source_map(root, inventory, replacements={relative: after})
-    diff = "".join(
-        difflib.unified_diff(
-            before.splitlines(keepends=True),
-            after.splitlines(keepends=True),
-            fromfile=f"a/{relative}",
-            tofile=f"b/{relative}",
-        )
-    )
-    if apply:
-        map_path.parent.mkdir(exist_ok=True)
-        map_path.write_text(json.dumps(source_map, indent=2), encoding="utf-8")
-        path.write_text(after, encoding="utf-8")
-    if json_output:
-        output(
-            {
-                "status": "applied" if apply else "plan_only",
-                "diff": diff,
-                "content_capture": False,
-                "deployment": "not_performed",
-                "source_map": source_map,
-                "source_map_path": ".cutback/source-map.json",
-                "lifecycle": "bounded_handler_flush_and_process_close"
-                if handler
-                else "bounded_process_close; serverless needs --handler",
-                "prerequisites": [
-                    "install pinned cutback[openai]",
-                    "set scoped collector environment",
-                    "review startup order, SDK retry and Lambda flush limitations",
-                ],
-            }
-        )
-    else:
-        typer.echo(diff)
+            typer.echo(proposal["diff"])
+    except (ValueError, OSError, SyntaxError):
+        fail("INSTRUMENTATION_PLAN_REQUIRES_REVIEW", "inspect entrypoint and existing bootstrap")
 
 
 @collector.command("serve")
@@ -476,21 +379,44 @@ def serve(host: str = "127.0.0.1", port: int = 8080, dev_http: bool = False):
 
 
 @collector.command("up")
-def collector_up(profile: Literal["dev"] = "dev"):
-    """Collector up using the configured scoped credentials."""
-    path = Path(__file__).resolve().parents[2] / "infra/compose/docker-compose.yml"
-    if not path.exists():
-        fail("COMPOSE_SOURCE_REQUIRED", "use the source distribution and follow docs/deployment.md")
-    result = subprocess.run(
-        ["docker", "compose", "-f", str(path), "up", "-d", "--build"], check=False
-    )
-    raise typer.Exit(result.returncode)
+def collector_up(
+    profile: Literal["dev"] = "dev",
+    target: Path = Path("."),
+    port: int = 8080,
+    allow_payloads: bool = False,
+):
+    """Start a persistent loopback collector from the installed wheel; Docker PostgreSQL only."""
+    from cutback.local_stack import up
+
+    try:
+        output(up(target, port=port, allow_payloads=allow_payloads))
+    except (ValueError, OSError, subprocess.SubprocessError):
+        fail(
+            "LOCAL_COLLECTOR_NOT_READY",
+            "check server extra, Docker Desktop, free port and collector status",
+        )
 
 
 @collector.command("status")
-def collector_status(endpoint: str = "http://127.0.0.1:8080"):
+def collector_status(endpoint: str | None = None, target: Path = Path(".")):
     """Collector status using the configured scoped credentials."""
-    output(request("GET", endpoint, "/v1/health/ready"))
+    if endpoint:
+        output(request("GET", endpoint, "/v1/health/ready"))
+    else:
+        from cutback.local_stack import status
+
+        output(status(target))
+
+
+@collector.command("down")
+def collector_down(target: Path = Path(".")):
+    """Stop only this workspace's owned resources; preserve database and encrypted artifacts."""
+    from cutback.local_stack import down
+
+    try:
+        output(down(target))
+    except (ValueError, OSError, subprocess.SubprocessError):
+        fail("LOCAL_COLLECTOR_STOP_FAILED", "inspect the owned local collector status")
 
 
 @db_app.command("migrate")
@@ -566,6 +492,8 @@ def create_key(
 
 
 register(app, output, request, fail)
+
+register_agent(app, output, fail)
 
 if __name__ == "__main__":
     app()

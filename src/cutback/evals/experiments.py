@@ -1,5 +1,6 @@
 """Paired, frozen experiments with pre-call budget reservation and no implicit inference."""
 
+import json
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -10,6 +11,7 @@ from pydantic import Field, model_validator
 
 from cutback.core.models import Identifier, StrictModel
 from cutback.core.observation import observation_scope
+from cutback.core.request_profiles import RequestContract, SourceBinding
 from cutback.evals.datasets import digest
 from cutback.evals.metrics import MetricSpec, evaluate, grouped_confidence
 from cutback.pricing import Catalog
@@ -34,6 +36,7 @@ class ModelSpec(StrictModel):
     local_cost_upper_usd: Decimal | None = Field(default=None, ge=0, le=100)
     routes: list["RouteSpec"] = Field(default_factory=list, max_length=8)
     prompt_cache: Literal["anthropic-5m", "anthropic-1h"] | None = None
+    request_contract: RequestContract | None = None
 
 
 class RouteSpec(StrictModel):
@@ -49,7 +52,7 @@ def provider_models(model: ModelSpec) -> list[ModelSpec]:
         if model.routes:
             raise ValueError("ROUTES_REQUIRE_ROUTER_STRATEGY")
         return [model]
-    if not model.routes or model.instruction or model.prompt_cache:
+    if not model.routes or model.instruction or model.prompt_cache or model.request_contract:
         raise ValueError("ROUTER_REQUIRES_EXPLICIT_NATIVE_TARGETS")
     bounds = [route.max_input_bytes for route in model.routes]
     if bounds != sorted(set(bounds)):
@@ -113,9 +116,29 @@ class ExperimentPlan(StrictModel):
         default_factory=lambda: Catalog().sha256
     )
     evaluator_version: Literal["deterministic-v3"] = "deterministic-v3"
+    source_binding: SourceBinding | None = None
 
     @model_validator(mode="after")
     def eligibility(self):
+        if self.source_binding:
+            from cutback.core.request_profiles import fingerprint
+
+            if (
+                self.workflow != self.source_binding.workflow_id
+                or not self.baseline.request_contract
+            ):
+                raise ValueError("SOURCE_REQUEST_BINDING_REQUIRED")
+            contract_hash = fingerprint(
+                {
+                    "request": self.baseline.request_contract.model_dump(mode="json"),
+                    "instruction": self.baseline.instruction,
+                    "max_output_tokens": self.baseline.max_output_tokens,
+                    "provider": self.baseline.provider,
+                    "model": self.baseline.model,
+                }
+            )
+            if contract_hash != self.source_binding.request_sha256:
+                raise ValueError("BASELINE_REQUEST_CONTRACT_MISMATCH")
         if self.staged:
             if self.stage != "full" and (self.split != "validation" or self.sample_limit is None):
                 raise ValueError("EARLY_STAGES_REQUIRE_BOUNDED_VALIDATION_CASES")
@@ -145,6 +168,12 @@ class ExperimentPlan(StrictModel):
             raise ValueError("ROUTED_JUDGES_NOT_SUPPORTED")
         expanded = [target for model in models for target in provider_models(model)]
         for model in expanded:
+            if model.request_contract and (
+                model.provider not in {"openai", "anthropic"}
+                or (model.request_contract.sdk_surface == "messages.create")
+                != (model.provider == "anthropic")
+            ):
+                raise ValueError("EXECUTOR_REQUEST_SURFACE_UNSUPPORTED")
             if model.prompt_cache and (model.provider != "anthropic" or not model.instruction):
                 raise ValueError("PROMPT_CACHE_REQUIRES_ANTHROPIC_STATIC_PREFIX")
             if model.provider not in self.approved_providers:
@@ -307,7 +336,13 @@ class BudgetLedger:
             raise ValueError("PRICE_CONTRACT_CHANGED_REAPPROVAL_REQUIRED")
         # UTF-8 bytes plus generous message framing bounds supported text input tokens.
         # No tool schemas, images, arbitrary endpoints or hidden retries are accepted.
-        if len((model.instruction + text).encode()) + 4096 > model.max_input_tokens:
+        target = route_target(model, text) if model.provider == "router" else model
+        rendered = target.request_contract.render(text) if target.request_contract else text
+        payload = (
+            json.dumps(rendered, ensure_ascii=False) if not isinstance(rendered, str) else rendered
+        )
+        options = json.dumps(target.request_contract.options) if target.request_contract else ""
+        if len((target.instruction + payload + options).encode()) + 4096 > target.max_input_tokens:
             raise ValueError("INPUT_EXCEEDS_PREAPPROVED_TOKEN_BOUND")
         if model.provider == "router":
             route_target(model, text)
@@ -812,6 +847,9 @@ def rank_results(plan, results, representative):
         ranked.append(
             {
                 "candidate": candidate["model"],
+                "source_binding": plan.source_binding.model_dump(mode="json")
+                if plan.source_binding
+                else None,
                 "evaluator_version": plan.evaluator_version,
                 "failed_criteria": criterion_failures,
                 "insufficient_criteria": insufficient_criteria,

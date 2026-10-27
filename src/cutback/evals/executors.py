@@ -35,14 +35,36 @@ class OpenAIExecutor:
         if model.provider != "openai":
             raise ValueError("EXECUTOR_PROVIDER_UNSUPPORTED")
         started = time.perf_counter()
-        response = self.client.responses.create(
-            model=model.model,
-            input=text,
-            instructions=model.instruction or None,
-            max_output_tokens=model.max_output_tokens,
-            store=False,
-            timeout=timeout_seconds,
-        )
+        contract = model.request_contract
+        payload = contract.render(text) if contract else text
+        options = contract.options if contract else {}
+        chat = contract is not None and contract.sdk_surface == "chat.completions.create"
+        if contract and contract.sdk_surface not in {"responses.create", "chat.completions.create"}:
+            raise ValueError("EXECUTOR_REQUEST_SURFACE_UNSUPPORTED")
+        if chat:
+            if model.instruction:
+                raise ValueError("CHAT_INSTRUCTIONS_BELONG_IN_BOUND_MESSAGES")
+            response = self.client.chat.completions.create(
+                model=model.model,
+                messages=payload,
+                max_tokens=model.max_output_tokens,
+                store=False,
+                timeout=timeout_seconds,
+                **options,
+            )
+            complete = bool(response.choices) and response.choices[0].finish_reason == "stop"
+            output = response.choices[0].message.content or "" if response.choices else ""
+        else:
+            response = self.client.responses.create(
+                model=model.model,
+                input=payload,
+                instructions=model.instruction or None,
+                max_output_tokens=model.max_output_tokens,
+                store=False,
+                timeout=timeout_seconds,
+                **options,
+            )
+            complete, output = response.status == "completed", response.output_text
         latency = (time.perf_counter() - started) * 1000
         from cutback.instrumentation.openai import normalize_usage
 
@@ -50,25 +72,25 @@ class OpenAIExecutor:
             environment="experiment",
             service_name="cutback-worker",
             provider="openai",
-            sdk_surface="responses.create",
+            sdk_surface="chat.completions.create" if chat else "responses.create",
             requested_model=model.model,
             response_model=response.model,
             trace_id="1" * 32,
             span_id="1" * 16,
             occurred_at=datetime.now(UTC),
             duration_ms=latency,
-            status="success" if response.status == "completed" else "incomplete",
+            status="success" if complete else "incomplete",
             metering_status="text_only",
-            **normalize_usage(response, "responses.create"),
+            **normalize_usage(response, "chat.completions.create" if chat else "responses.create"),
         )
         cost = Catalog().price(event)
         return Execution(
-            response.output_text,
+            output,
             cost.amount,
             latency,
             event.input_tokens,
             event.output_tokens,
-            complete=response.status == "completed",
+            complete=complete,
         )
 
     def close(self):
@@ -179,9 +201,15 @@ class AnthropicExecutor:
         params = {
             "model": model.model,
             "max_tokens": model.max_output_tokens,
-            "messages": [{"role": "user", "content": text}],
+            "messages": model.request_contract.render(text)
+            if model.request_contract
+            else [{"role": "user", "content": text}],
             "timeout": timeout_seconds,
         }
+        if model.request_contract:
+            if model.request_contract.sdk_surface != "messages.create":
+                raise ValueError("EXECUTOR_REQUEST_SURFACE_UNSUPPORTED")
+            params.update(model.request_contract.options)
         if model.instruction:
             params["system"] = (
                 [

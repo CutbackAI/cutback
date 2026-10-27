@@ -45,7 +45,7 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
         "from openai import OpenAI\n"
         "client = OpenAI()\n"
         "def classify(text):\n"
-        '    return client.responses.create(model="gpt-4.1", input=text)\n'
+        '    return client.responses.create(model="gpt-4.1", input=text, max_output_tokens=64)\n'
     )
     source.write_text(original, encoding="utf-8")
     private_sentinel = "synthetic-private-environment-value"
@@ -92,6 +92,10 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
     assert plan["status"] == "plan_only" and plan["content_capture"] is False
     assert "# cutback:bootstrap" in plan["diff"] and source.read_text(encoding="utf-8") == original
     assert command("datasets", "discover", "--target", ".")  # Parse-only discovery needs no server.
+    job = command("optimize", ".", "--json")
+    assert job["phase"] == "ANALYZED" and job["profiles"]
+    assert job["next_action"]["provider_calls"] == 0
+    assert command("workflow", "status")["id"] == job["id"]
     subprocess.run(
         [str(executable), "-m", "cutback.cli", "sample", str(Path(temporary) / "support-desk")],
         check=True,

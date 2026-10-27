@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: 'Type cutback-0.1.0.dev4 to publish this pre-alpha release'
+        description: 'Type cutback-0.1.0.dev5 to publish this pre-alpha release'
         required: true
         type: string
 permissions:
@@ -13,12 +13,12 @@ concurrency:
   cancel-in-progress: false
 jobs:
   validate:
-    if: ${{ inputs.confirm == 'cutback-0.1.0.dev4' }}
+    if: ${{ inputs.confirm == 'cutback-0.1.0.dev5' }}
     uses: ./.github/workflows/ci.yml
     permissions:
       contents: read
   security:
-    if: ${{ inputs.confirm == 'cutback-0.1.0.dev4' }}
+    if: ${{ inputs.confirm == 'cutback-0.1.0.dev5' }}
     uses: ./.github/workflows/security.yml
     permissions:
       contents: read

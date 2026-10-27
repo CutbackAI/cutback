@@ -77,6 +77,22 @@ def install_changes(app, sessions, authorize, scope):
                 }
                 if any(artifact.get(key) != value for key, value in expected.items()):
                     raise HTTPException(422, "PATCH_EVIDENCE_BINDING_MISMATCH")
+                binding = rec.evidence.get("source_binding")
+                if (
+                    not binding
+                    or artifact.get("source_binding") != binding
+                    or (plan.specification["public_specification"].get("source_binding") != binding)
+                ):
+                    raise HTTPException(409, "SOURCE_REQUEST_BINDING_REQUIRED")
+                if (
+                    artifact.get("source_file") != binding["model_binding"]["file"]
+                    or artifact.get("source_sha256")
+                    != binding["dependencies"].get(artifact.get("source_file"))
+                    or artifact.get("call_source_file") != binding["source_file"]
+                    or artifact.get("call_site_id") != binding["call_site_id"]
+                    or artifact.get("source_commit") != binding["source_commit"]
+                ):
+                    raise HTTPException(422, "PATCH_REQUEST_PROFILE_MISMATCH")
                 path = PurePosixPath(artifact.get("source_file", ""))
                 if (
                     not path.parts
@@ -108,7 +124,8 @@ def install_changes(app, sessions, authorize, scope):
                 ).all()
                 if not any(
                     site["call_site_id"] == artifact["call_site_id"]
-                    and site["source_file"] == str(path)
+                    and site["source_file"] == artifact["call_source_file"]
+                    and binding in scan.inventory.get("request_profiles", [])
                     for scan in scans
                     for site in scan.inventory["call_sites"]
                 ):

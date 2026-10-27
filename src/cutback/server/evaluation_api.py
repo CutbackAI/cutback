@@ -33,6 +33,7 @@ from cutback.server.db import (
     JobRecord,
     PayloadSample,
     RecommendationRecord,
+    ScanRun,
 )
 from cutback.server.plan_artifacts import freeze_plan, load_plan
 
@@ -451,6 +452,19 @@ def install_evaluation(app, sessions, authorize, scope):
             dataset = session.get(DatasetRecord, body.dataset_id)
             if not dataset or dataset.project_id != project_id:
                 raise HTTPException(404, "DATASET_NOT_FOUND")
+            binding = body.specification.source_binding
+            if binding:
+                registered = session.scalars(
+                    select(ScanRun)
+                    .where(ScanRun.project_id == project_id)
+                    .order_by(ScanRun.created_at.desc())
+                    .limit(100)
+                ).all()
+                if not any(
+                    binding.model_dump(mode="json") in row.inventory.get("request_profiles", [])
+                    for row in registered
+                ):
+                    raise HTTPException(409, "SOURCE_REQUEST_PROFILE_NOT_REGISTERED")
             _, policy = active_policy(session, project_id, UUID(dataset.provenance["policy_id"]))
             if body.specification.workflow != dataset.workflow_id or any(
                 p not in policy.allowed_providers for p in body.specification.approved_providers
