@@ -23,6 +23,14 @@
   "legacy_suite_passed": 21,
   "node_native_tests_passed": 9,
   "frontend_unit_tests_passed": 5,
+  "followup_acceptance": {
+    "agent_bundle_packaging_contract_tests_passed": 3,
+    "updated_agent_request_authenticated_browser_tests_passed": 3,
+    "browser_seconds": 38.94,
+    "fresh_installed_wheel_search_confirmation_tests_passed": 3,
+    "wheel_consumer_seconds": 45.31,
+    "readme_index_links_and_release_artifacts": "passed_after_absolute_link_fix"
+  },
   "checks": [
     "ruff_check_and_format",
     "mypy_82_source_files",
@@ -31,6 +39,7 @@
     "node_typescript_compatibility",
     "lockfile_check",
     "wheel_sdist_build_and_twine",
+    "release_artifact_metadata_readme_links_and_exclusions",
     "fresh_core_only_wheel_import_without_sdk_or_server",
     "source_and_archive_private_boundary",
     "existing_public_reachable_history_private_boundary"

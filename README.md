@@ -70,7 +70,7 @@ Use Cutback when you want a reviewable answer to “Can this workflow use a chea
 
 ## Explore further
 
-- [Product research and roadmap](docs/product-research.md): competitive evidence, common-feature gaps and the application-change workflow Cutback must earn. [Unreleased optimization search](docs/optimization-search.md) adds model/output-limit portfolios, separate confirmation, trade-offs and a CI gate in source checkouts.
+- [Product research and roadmap](https://github.com/CutbackAI/cutback/blob/main/docs/product-research.md): competitive evidence, common-feature gaps and the application-change workflow Cutback must earn. [Unreleased optimization search](https://github.com/CutbackAI/cutback/blob/main/docs/optimization-search.md) adds model/output-limit portfolios, separate confirmation, trade-offs and a CI gate in source checkouts.
 
 - [Other examples](https://github.com/CutbackAI/cutback/blob/v0.1.0.dev5/examples/README.md): sync/async/streams, FastAPI, Django, Lambda, workers and Node.
 - [Existing OpenTelemetry pipelines](https://github.com/CutbackAI/cutback/blob/v0.1.0.dev5/docs/otel-ingestion.md): reuse a filtered JSON metadata export without stacking SDK hooks.
