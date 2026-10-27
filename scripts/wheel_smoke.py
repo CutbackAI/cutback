@@ -14,9 +14,14 @@ version = tomllib.loads((root / "pyproject.toml").read_text())["project"]["versi
 (wheel,) = directory.glob(f"cutback-{version}-*.whl")
 with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
     environment = Path(temporary) / "venv"
-    subprocess.run(["uv", "venv", str(environment), "--python", "3.11"], check=True)
+    subprocess.run(
+        [os.getenv("CUTBACK_UV", "uv"), "venv", str(environment), "--python", "3.11.18"], check=True
+    )
     executable = environment / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
-    subprocess.run(["uv", "pip", "install", "--python", str(executable), str(wheel)], check=True)
+    subprocess.run(
+        [os.getenv("CUTBACK_UV", "uv"), "pip", "install", "--python", str(executable), str(wheel)],
+        check=True,
+    )
     probe = subprocess.run(
         [
             str(executable),

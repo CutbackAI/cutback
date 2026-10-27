@@ -12,7 +12,10 @@ _lock = threading.Lock()
 @contextmanager
 def workflow(workflow_id: str, *, call_site_id: str = "unattributed"):
     """Explicit attribution; use scanner IDs. Never derive workflow identity from user content."""
-    token = _identity.set({"workflow_id": workflow_id, "call_site_id": call_site_id})
+    identity = {"workflow_id": workflow_id}
+    if call_site_id != "unattributed":
+        identity["call_site_id"] = call_site_id
+    token = _identity.set(identity)
     try:
         yield
     finally:
@@ -77,6 +80,7 @@ def init(
     capture_policy_id: str | None = None,
     enabled: bool | None = None,
     providers: tuple[str, ...] | None = None,
+    source_map: str | None = None,
     **export_options,
 ):
     """Initialize once per process, outside Lambda handler. Explicit shutdown restores SDK hooks."""
@@ -101,6 +105,11 @@ def init(
     from cutback.instrumentation.anthropic import AnthropicInstrumentation
     from cutback.instrumentation.openai import OpenAIInstrumentation
 
+    source_map = source_map or os.getenv("CUTBACK_SOURCE_MAP")
+    from cutback.instrumentation.attribution import SourceMap
+
+    attribution = SourceMap(source_map) if source_map else None
+
     identity = (
         service_name,
         environment,
@@ -109,6 +118,7 @@ def init(
         providers,
         capture_content,
         capture_policy_id,
+        source_map,
     )
 
     with _lock:
@@ -143,6 +153,7 @@ def init(
                         token=os.environ.get(project_key_from_env, ""),
                         identity=identity,
                         capture=capture,
+                        attribution=attribution,
                         **export_options,
                     )
                 except BaseException:

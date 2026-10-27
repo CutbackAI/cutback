@@ -433,11 +433,52 @@
                 "provider",
                 "workflow",
                 "environment",
-                "day"
+                "day",
+                "call_site",
+                "traffic"
               ],
               "type": "string",
               "default": "model",
               "title": "Group By"
+            }
+          },
+          {
+            "name": "traffic_kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "application",
+                    "evaluation",
+                    "judge",
+                    "unknown"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Traffic Kind"
+            }
+          },
+          {
+            "name": "call_site",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Call Site"
             }
           }
         ],
@@ -722,6 +763,40 @@
               "type": "string",
               "format": "uuid",
               "title": "Project Id"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
             }
           }
         ],
@@ -1750,6 +1825,54 @@
       "post": {
         "summary": "Cancel",
         "operationId": "cancel_v1_projects__project_id__experiments__run_id__cancel_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/experiments/{run_id}/recheck": {
+      "post": {
+        "summary": "Recheck Blocked",
+        "operationId": "recheck_blocked_v1_projects__project_id__experiments__run_id__recheck_post",
         "parameters": [
           {
             "name": "project_id",
@@ -3503,6 +3626,207 @@
         }
       }
     },
+    "/v1/projects/{project_id}/experiments/{run_id}/cases/paired": {
+      "post": {
+        "summary": "Paired",
+        "operationId": "paired_v1_projects__project_id__experiments__run_id__cases_paired_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10,
+              "minimum": 1,
+              "default": 5,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10000,
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "failed_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Failed Only"
+            }
+          },
+          {
+            "name": "model_key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Model Key"
+            }
+          },
+          {
+            "name": "stratum",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stratum"
+            }
+          },
+          {
+            "name": "criterion",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Criterion"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentPurpose"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/experiments/{run_id}/cases/correct": {
+      "post": {
+        "summary": "Correct",
+        "operationId": "correct_v1_projects__project_id__experiments__run_id__cases_correct_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorrectionInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{project_id}/experiments/{run_id}/cases/content": {
       "post": {
         "summary": "Content",
@@ -3551,6 +3875,16 @@
               "default": 0,
               "title": "Offset"
             }
+          },
+          {
+            "name": "legacy_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Legacy Only"
+            }
           }
         ],
         "requestBody": {
@@ -3562,6 +3896,208 @@
               }
             }
           }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/recommendations/{recommendation_id}/patches": {
+      "post": {
+        "summary": "Upload",
+        "operationId": "upload_v1_projects__project_id__recommendations__recommendation_id__patches_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "recommendation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Recommendation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchUpload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/changes": {
+      "get": {
+        "summary": "List Changes",
+        "operationId": "list_changes_v1_projects__project_id__changes_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10000,
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/changes/{change_id}/content": {
+      "post": {
+        "summary": "Content",
+        "operationId": "content_v1_projects__project_id__changes__change_id__content_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "change_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Change Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentPurpose"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ingest/otel/v1/traces": {
+      "post": {
+        "summary": "Ingest",
+        "operationId": "ingest_v1_ingest_otel_v1_traces_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TraceExport"
+              }
+            }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -3644,6 +4180,27 @@
           "purpose"
         ],
         "title": "ArtifactAccess"
+      },
+      "Attribute": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Key"
+          },
+          "value": {
+            "additionalProperties": true,
+            "type": "object",
+            "maxProperties": 1,
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "value"
+        ],
+        "title": "Attribute"
       },
       "BillingCaps": {
         "properties": {
@@ -3949,6 +4506,17 @@
           "line": {
             "type": "integer",
             "title": "Line"
+          },
+          "end_line": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Line"
           },
           "workflow_hint": {
             "type": "string",
@@ -4342,6 +4910,55 @@
         ],
         "title": "ContentPurpose"
       },
+      "CorrectionInput": {
+        "properties": {
+          "purpose": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Purpose"
+          },
+          "case_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Case Id"
+          },
+          "gold": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              }
+            ],
+            "title": "Gold"
+          },
+          "correction_ref": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Correction Ref"
+          },
+          "all_labels_reviewed": {
+            "type": "boolean",
+            "title": "All Labels Reviewed",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "purpose",
+          "case_id",
+          "gold",
+          "correction_ref"
+        ],
+        "title": "CorrectionInput"
+      },
       "CriterionSpec": {
         "properties": {
           "key": {
@@ -4445,6 +5062,20 @@
       },
       "DraftInput": {
         "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9 .:/_-]*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
           "criteria": {
             "items": {
               "$ref": "#/components/schemas/CriterionSpec"
@@ -4589,6 +5220,20 @@
             "const": "1.0",
             "title": "Schema Version",
             "default": "1.0"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9 .:/_-]*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
           },
           "workflow": {
             "type": "string",
@@ -4771,9 +5416,9 @@
           },
           "evaluator_version": {
             "type": "string",
-            "const": "deterministic-v2",
+            "const": "deterministic-v3",
             "title": "Evaluator Version",
-            "default": "deterministic-v2"
+            "default": "deterministic-v3"
           }
         },
         "additionalProperties": false,
@@ -4854,7 +5499,7 @@
             "type": "string",
             "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
             "title": "Sdk Version",
-            "default": "0.1.0.dev3"
+            "default": "0.1.0.dev4"
           },
           "counters": {
             "additionalProperties": {
@@ -5042,7 +5687,7 @@
             "type": "string",
             "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
             "title": "Sdk Version",
-            "default": "0.1.0.dev3"
+            "default": "0.1.0.dev4"
           },
           "trace_id": {
             "type": "string",
@@ -5100,6 +5745,29 @@
               }
             ],
             "title": "Workflow Id"
+          },
+          "traffic_kind": {
+            "type": "string",
+            "enum": [
+              "application",
+              "evaluation",
+              "judge",
+              "unknown"
+            ],
+            "title": "Traffic Kind",
+            "default": "unknown"
+          },
+          "experiment_run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment Run Id"
           },
           "source_commit": {
             "anyOf": [
@@ -5351,7 +6019,10 @@
           },
           "sampling_policy_id": {
             "type": "string",
-            "const": "all-supported-calls-v1",
+            "enum": [
+              "all-supported-calls-v1",
+              "external-otel-spans-v1"
+            ],
             "title": "Sampling Policy Id",
             "default": "all-supported-calls-v1"
           }
@@ -5800,6 +6471,28 @@
         ],
         "title": "OverrideInput"
       },
+      "PatchUpload": {
+        "properties": {
+          "approval_ref": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Approval Ref"
+          },
+          "artifact": {
+            "additionalProperties": true,
+            "type": "object",
+            "maxProperties": 30,
+            "title": "Artifact"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "approval_ref",
+          "artifact"
+        ],
+        "title": "PatchUpload"
+      },
       "PlanInput": {
         "properties": {
           "dataset_id": {
@@ -5933,6 +6626,37 @@
           "plan_id"
         ],
         "title": "QueueInput"
+      },
+      "Resource": {
+        "properties": {
+          "attributes": {
+            "items": {
+              "$ref": "#/components/schemas/Attribute"
+            },
+            "type": "array",
+            "maxItems": 64,
+            "title": "Attributes"
+          }
+        },
+        "type": "object",
+        "title": "Resource"
+      },
+      "ResourceSpans": {
+        "properties": {
+          "resource": {
+            "$ref": "#/components/schemas/Resource"
+          },
+          "scopeSpans": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeSpans"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Scopespans"
+          }
+        },
+        "type": "object",
+        "title": "ResourceSpans"
       },
       "RetentionInput": {
         "properties": {
@@ -6263,6 +6987,123 @@
           "expires_at"
         ],
         "title": "ScheduleInput"
+      },
+      "ScopeSpans": {
+        "properties": {
+          "spans": {
+            "items": {
+              "$ref": "#/components/schemas/Span"
+            },
+            "type": "array",
+            "maxItems": 200,
+            "title": "Spans"
+          }
+        },
+        "type": "object",
+        "title": "ScopeSpans"
+      },
+      "Span": {
+        "properties": {
+          "traceId": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "title": "Traceid"
+          },
+          "spanId": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{16}$",
+            "title": "Spanid"
+          },
+          "parentSpanId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?:[a-fA-F0-9]{16})?$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parentspanid"
+          },
+          "startTimeUnixNano": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9]{1,20}$"
+              },
+              {
+                "type": "integer",
+                "maximum": 1.8446744073709552e+19,
+                "minimum": 0.0
+              }
+            ],
+            "title": "Starttimeunixnano"
+          },
+          "endTimeUnixNano": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9]{1,20}$"
+              },
+              {
+                "type": "integer",
+                "maximum": 1.8446744073709552e+19,
+                "minimum": 0.0
+              }
+            ],
+            "title": "Endtimeunixnano"
+          },
+          "attributes": {
+            "items": {
+              "$ref": "#/components/schemas/Attribute"
+            },
+            "type": "array",
+            "maxItems": 64,
+            "title": "Attributes"
+          },
+          "events": {
+            "items": {},
+            "type": "array",
+            "maxItems": 0,
+            "title": "Events"
+          },
+          "links": {
+            "items": {},
+            "type": "array",
+            "maxItems": 0,
+            "title": "Links"
+          },
+          "status": {
+            "additionalProperties": true,
+            "type": "object",
+            "maxProperties": 2,
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "traceId",
+          "spanId",
+          "startTimeUnixNano",
+          "endTimeUnixNano"
+        ],
+        "title": "Span"
+      },
+      "TraceExport": {
+        "properties": {
+          "resourceSpans": {
+            "items": {
+              "$ref": "#/components/schemas/ResourceSpans"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Resourcespans"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "TraceExport"
       },
       "TrainingInput": {
         "properties": {

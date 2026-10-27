@@ -1,6 +1,9 @@
-FROM python:3.11-slim@sha256:b7a9e5f6a93d6d4a31f129bbd4bdee69efccb6ded0fb230d78aafaf37af98377
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 UV_LINK_MODE=copy
-RUN pip install --no-cache-dir uv==0.12.13
+FROM ghcr.io/astral-sh/uv:0.13.6@sha256:af22a52f5eafef3d78e551599d405c02df61919d18028f0cea8eda93bc9986d0 AS installer
+FROM debian:trixie-slim@sha256:62bd423aeee912639ca8ee681c2b762cb3e25137e0a92b20be455898a9f034ad
+COPY --from=installer /uv /usr/local/bin/uv
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 UV_LINK_MODE=copy \
+    UV_PYTHON_INSTALL_DIR=/opt/python UV_PYTHON=3.11.18 UV_PYTHON_PREFERENCE=only-managed
+RUN uv python install 3.11.18
 WORKDIR /app
 COPY pyproject.toml uv.lock README.md LICENSE NOTICE .python-version ./
 COPY src ./src

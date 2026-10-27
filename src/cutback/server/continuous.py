@@ -316,6 +316,12 @@ def install_continuous(app, sessions, authorize, scope):
             rec = session.get(RecommendationRecord, body.recommendation_id)
             if not rec or rec.project_id != project_id or rec.status != "accepted_for_staging":
                 raise HTTPException(409, "REVIEWED_RECOMMENDATION_REQUIRED")
+            if not rec.evidence.get("quality_gate_passed") or not rec.evidence.get(
+                "cheaper_on_sample"
+            ):
+                raise HTTPException(409, "REQUIRED_COST_AND_QUALITY_GATES_NOT_PASSED")
+            if rec.evidence.get("evaluator_version") != "deterministic-v3":
+                raise HTTPException(409, "EVALUATOR_REAPPROVAL_REQUIRED")
             row = RolloutRecord(
                 project_id=project_id,
                 recommendation_id=rec.id,

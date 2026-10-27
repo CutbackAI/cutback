@@ -16,6 +16,7 @@ from uuid import uuid4
 from opentelemetry import trace
 
 from cutback.core.models import LLMEvent
+from cutback.core.observation import current_purpose
 from cutback.instrumentation import _identity
 from cutback.instrumentation.exporter import Exporter
 
@@ -93,7 +94,9 @@ class Observation:
             "span_id": secrets.token_hex(8),
             "parent_span_id": f"{parent.span_id:016x}" if parent.is_valid else None,
             "service_tier": kwargs.get("service_tier"),
+            **(owner.attribution.resolve() if owner.attribution else {}),
             **(_identity.get() or {}),
+            **current_purpose(),
         }
         client = resource._client
         self.client = client
@@ -257,9 +260,11 @@ class OpenAIInstrumentation:
         token,
         identity,
         capture=None,
+        attribution=None,
         **export_options,
     ):
         installed = version(self.sdk_package)
+        self.attribution = attribution
         allowed = {"1.55.3", "2.29.0"} if self.sdk_package == "openai" else {self.sdk_version}
         if installed not in allowed:
             raise ValueError("unsupported SDK version: install the pinned Cutback provider extra")

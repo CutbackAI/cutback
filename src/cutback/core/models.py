@@ -35,6 +35,8 @@ class LLMEvent(StrictModel):
     logical_request_id: UUID | None = None
     call_site_id: Identifier = "unattributed"
     workflow_id: Identifier | None = None
+    traffic_kind: Literal["application", "evaluation", "judge", "unknown"] = "unknown"
+    experiment_run_id: UUID | None = None
     source_commit: Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{7,40}$")] | None = None
     provider: Literal["openai", "anthropic"]
     sdk_surface: Literal["responses.create", "chat.completions.create", "messages.create"]
@@ -59,7 +61,9 @@ class LLMEvent(StrictModel):
     )
     metering_status: Literal["text_only", "unsupported_units", "unknown"] = "unknown"
     content_capture_status: Literal["disabled"] = "disabled"
-    sampling_policy_id: Literal["all-supported-calls-v1"] = "all-supported-calls-v1"
+    sampling_policy_id: Literal["all-supported-calls-v1", "external-otel-spans-v1"] = (
+        "all-supported-calls-v1"
+    )
     # No arbitrary attributes, raw usage maps, request IDs, error messages, or content fields.
 
     @field_validator("occurred_at")

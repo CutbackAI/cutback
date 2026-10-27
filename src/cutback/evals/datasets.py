@@ -70,6 +70,14 @@ def redact(value, denied: list[str]):
     if isinstance(value, list):
         return [redact(v, denied) for v in value]
     if isinstance(value, str):
+        if denied and value.lstrip().startswith(("{", "[")):
+            try:
+                parsed = json.loads(value)
+                clean = redact(parsed, denied)
+                if clean != parsed:
+                    return json.dumps(clean, ensure_ascii=False)
+            except (ValueError, RecursionError):
+                pass
         value = re.sub(r"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", "[EMAIL]", value)
         return re.sub(r"(?i)\b(?:sk|cb)[_-][A-Za-z0-9_-]{16,}\b", "[SECRET]", value)
     return value

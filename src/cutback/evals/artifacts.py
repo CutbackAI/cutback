@@ -16,12 +16,15 @@ class ArtifactStore(Protocol):
 
 
 class PayloadCodec:
-    def __init__(self, key: bytes):
+    def __init__(self, key: bytes, *, previous_keys=()):
         from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
         if len(key) != 32:
             raise ValueError("payload encryption requires a 32-byte key")
         self.cipher = AESGCM(key)
+        if len(previous_keys) > 3 or any(len(value) != 32 for value in previous_keys):
+            raise ValueError("at most three previous 32-byte keys are permitted")
+        self.read_ciphers = [self.cipher, *(AESGCM(value) for value in previous_keys)]
 
     def encrypt(self, project, ref, blob, ttl_days):
         if not 1 <= ttl_days <= 30 or len(blob) > 512000:
@@ -52,19 +55,29 @@ class PayloadCodec:
         metadata = json.loads(header)
         if metadata["project"] != str(project) or metadata["ref"] != str(UUID(ref)):
             raise ValueError("artifact scope mismatch")
-        plaintext = self.cipher.decrypt(
-            base64.b64decode(envelope["nonce"], validate=True),
-            base64.b64decode(envelope["ciphertext"], validate=True),
-            header,
-        )
+        from cryptography.exceptions import InvalidTag
+
+        plaintext = None
+        for cipher in self.read_ciphers:
+            try:
+                plaintext = cipher.decrypt(
+                    base64.b64decode(envelope["nonce"], validate=True),
+                    base64.b64decode(envelope["ciphertext"], validate=True),
+                    header,
+                )
+                break
+            except InvalidTag:
+                continue
+        if plaintext is None:
+            raise InvalidTag("ARTIFACT_AUTHENTICATION_FAILED")
         if datetime.fromisoformat(metadata["expires"]) <= datetime.now(UTC):
             raise ValueError("PAYLOAD_EXPIRED")
         return plaintext
 
 
 class EncryptedFileStore(PayloadCodec):
-    def __init__(self, root: Path, key: bytes):
-        super().__init__(key)
+    def __init__(self, root: Path, key: bytes, *, previous_keys=()):
+        super().__init__(key, previous_keys=previous_keys)
         if root.is_symlink():
             raise ValueError("payload root must not be a symlink")
         self.root = root.resolve()
@@ -100,10 +113,40 @@ class EncryptedFileStore(PayloadCodec):
     def delete(self, project: UUID, ref: str):
         self._path(project, ref).unlink(missing_ok=True)
 
+    def rekey(self, project: UUID, ref: str):
+        """Offline atomic rewrite. Identity, authenticated expiry and DB pointers stay unchanged."""
+        path = self._path(project, ref)
+        if path.stat().st_size > 1024000:
+            raise ValueError("oversized encrypted artifact")
+        raw = path.read_bytes()
+        blob = self.decrypt(project, ref, raw)
+        envelope = json.loads(raw)
+        header = base64.b64decode(envelope["header"], validate=True)
+        nonce = os.urandom(12)
+        encrypted = json.dumps(
+            {
+                "header": envelope["header"],
+                "nonce": base64.b64encode(nonce).decode(),
+                "ciphertext": base64.b64encode(self.cipher.encrypt(nonce, blob, header)).decode(),
+            }
+        ).encode()
+        temporary = path.with_name(path.name + ".rekey-" + uuid4().hex)
+        try:
+            fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(fd, "wb") as stream:
+                stream.write(encrypted)
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(temporary, path)
+        finally:
+            temporary.unlink(missing_ok=True)
+
 
 class EncryptedS3Store(PayloadCodec):
-    def __init__(self, bucket: str, key: bytes, *, client=None, endpoint=None, region=None):
-        super().__init__(key)
+    def __init__(
+        self, bucket: str, key: bytes, *, client=None, endpoint=None, region=None, previous_keys=()
+    ):
+        super().__init__(key, previous_keys=previous_keys)
         if not bucket or len(bucket) > 255:
             raise ValueError("customer bucket required")
         self.bucket = bucket
@@ -157,6 +200,15 @@ def configured_store() -> ArtifactStore:
     root, key = os.getenv("CUTBACK_PAYLOAD_DIR"), os.getenv("CUTBACK_PAYLOAD_KEY")
     if not key:
         raise ValueError("PAYLOAD_STORAGE_DISABLED: configure directory and encryption key")
+    previous_keys: tuple[bytes, ...] = ()
+    if os.getenv("CUTBACK_PAYLOAD_PREVIOUS_KEYS_FILE"):
+        path = Path(os.environ["CUTBACK_PAYLOAD_PREVIOUS_KEYS_FILE"])
+        if path.is_symlink() or path.stat().st_size > 2048:
+            raise ValueError("invalid previous key file")
+        values = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(values, list) or len(values) > 3:
+            raise ValueError("invalid previous key file")
+        previous_keys = tuple(base64.b64decode(value, validate=True) for value in values)
     if os.getenv("CUTBACK_PAYLOAD_BACKEND", "file") not in {"file", "s3"}:
         raise ValueError("unsupported payload backend")
     if os.getenv("CUTBACK_PAYLOAD_BACKEND", "file") == "s3":
@@ -165,7 +217,10 @@ def configured_store() -> ArtifactStore:
             base64.b64decode(key, validate=True),
             endpoint=os.getenv("CUTBACK_S3_ENDPOINT"),
             region=os.getenv("CUTBACK_S3_REGION"),
+            previous_keys=previous_keys,
         )
     if not root:
         raise ValueError("PAYLOAD_STORAGE_DISABLED: configure a payload directory")
-    return EncryptedFileStore(Path(root), base64.b64decode(key, validate=True))
+    return EncryptedFileStore(
+        Path(root), base64.b64decode(key, validate=True), previous_keys=previous_keys
+    )

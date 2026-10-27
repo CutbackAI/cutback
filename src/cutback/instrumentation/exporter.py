@@ -65,6 +65,18 @@ class Exporter:
     def health(self):
         with self._lock:
             return {
+                **{
+                    key: 0
+                    for key in (
+                        "observed",
+                        "queued",
+                        "dropped",
+                        "exported",
+                        "rejected",
+                        "export_failed",
+                        "normalization_failed",
+                    )
+                },
                 **dict(self._counters),
                 "queue_depth": self._queue.qsize(),
                 "last_export_unix": self._last_export,
@@ -129,7 +141,7 @@ class Exporter:
                     self.count("export_failed", len(batch))
                     self.count("dropped", len(batch))
                 finally:
-                    if time.monotonic() - self._last_health >= 60:
+                    if self._queue.empty() or time.monotonic() - self._last_health >= 60:
                         self._last_health = time.monotonic()
                         self._send_health(client, first)
                     for _ in batch:

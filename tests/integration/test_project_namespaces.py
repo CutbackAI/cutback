@@ -36,7 +36,11 @@ def test_project_names_are_organization_scoped_while_keys_remain_project_scoped(
     with pytest.raises(ValueError, match="DOWNGRADE_REQUIRES_UNIQUE_LEGACY_PROJECT_NAMES"):
         command.downgrade(cfg, "0003")
     with api[2].state.engine.connect() as connection:
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0004"
+        from cutback.server.migrate import CURRENT_REVISION
+
+        assert (
+            connection.scalar(text("SELECT version_num FROM alembic_version")) == CURRENT_REVISION
+        )
         assert connection.scalar(text("SELECT pg_try_advisory_lock(1638366142)")) is True
         connection.execute(text("SELECT pg_advisory_unlock(1638366142)"))
     key = client.post(

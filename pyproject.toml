@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cutback"
-version = "0.1.0.dev3"
+version = "0.1.0.dev4"
 description = "Independent, evidence-aware AI application cost observation and optimization"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -91,7 +91,8 @@ include = [
   "/infra/training/Dockerfile", "/infra/training/pyproject.toml", "/infra/training/uv.lock",
   "/scripts/check_public_boundary.py", "/docs/application-onboarding.md",
   "/web/public", "/web/unit", "/scripts/create_training_fixture.py", "/scripts/scale_smoke.py",
-  "/src", "/tests", "/examples", "/README.md", "/LICENSE", "/NOTICE",
+  "/SECURITY.md", "/GOVERNANCE.md", "/.github", "/src", "/tests", "/examples", "/README.md", "/LICENSE", "/NOTICE",
+  "/docs/audit-remediation.md", "/docs/otel-ingestion.md", "/docs/operating-and-recovering.md", "/scripts/check_toolchain.py", "/scripts/check_codeql_results.py", "/scripts/audit_training.py", "/scripts/image_acceptance.py", "/infra/training/.python-version",
   "/pyproject.toml", "/uv.lock", "/.python-version", "/scripts/wheel_smoke.py",
   '/web/src','/web/scripts','/web/tests','/web/package.json','/web/package-lock.json',
   '/web/openapi.json','/web/index.html','/web/tsconfig.json','/web/vite.config.ts',
@@ -125,6 +126,9 @@ select = ["E", "F", "I", "UP", "B"]
 "src/cutback/server/billing.py" = ["B008"]
 "src/cutback/server/cache_api.py" = ["B008"]
 "src/cutback/server/training_api.py" = ["B008"]
+"src/cutback/server/case_evidence.py" = ["B008"]
+"src/cutback/server/change_artifacts.py" = ["B008"]
+"src/cutback/server/otel.py" = ["B008"]
 
 [tool.mypy]
 python_version = "3.11"

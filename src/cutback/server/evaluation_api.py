@@ -61,6 +61,9 @@ class QueueInput(StrictModel):
 
 
 class DraftInput(StrictModel):
+    name: str | None = Field(
+        default=None, min_length=1, max_length=100, pattern=r"^[A-Za-z0-9][A-Za-z0-9 .:/_-]*$"
+    )
     criteria: list[CriterionSpec] = Field(default_factory=list, max_length=8)
     retain_case_outputs: bool = False
     dataset_id: UUID
@@ -425,6 +428,7 @@ def install_evaluation(app, sessions, authorize, scope):
                 criteria=body.criteria,
                 retain_case_outputs=body.retain_case_outputs,
             )
+            spec = spec.model_copy(update={"name": body.name})
         except ValueError as exc:
             code = str(exc)
             raise HTTPException(
@@ -466,9 +470,12 @@ def install_evaluation(app, sessions, authorize, scope):
             ):
                 raise HTTPException(429, "PROJECT_PLAN_QUOTA_EXCEEDED")
             store = require_store(app)
-            frozen = freeze_plan(
-                store, project_id, body.specification, policy, dataset.provenance["policy_id"]
-            )
+            try:
+                frozen = freeze_plan(
+                    store, project_id, body.specification, policy, dataset.provenance["policy_id"]
+                )
+            except ValueError:
+                raise HTTPException(422, "PLAN_CONTENT_POLICY_DENIED") from None
             sql_event.listen(
                 session,
                 "after_rollback",
@@ -594,6 +601,14 @@ def install_evaluation(app, sessions, authorize, scope):
     ):
         scope(auth, project_id)
         with sessions() as session:
+            rows = session.execute(
+                select(ExperimentRunRecord, ExperimentPlanRecord)
+                .join(ExperimentPlanRecord, ExperimentPlanRecord.id == ExperimentRunRecord.plan_id)
+                .where(ExperimentRunRecord.project_id == project_id)
+                .order_by(ExperimentRunRecord.created_at.desc())
+                .limit(limit)
+                .offset(offset)
+            ).all()
             return [
                 {
                     "id": str(row.id),
@@ -602,14 +617,15 @@ def install_evaluation(app, sessions, authorize, scope):
                     "reserved_usd": str(row.reserved_usd),
                     "spent_usd": str(row.spent_usd),
                     "requests": row.requests_used,
+                    "block_reason": row.results.get("code") if row.status == "BLOCKED" else None,
+                    "retry_after": row.results.get("retry_after")
+                    if row.status == "BLOCKED"
+                    else None,
+                    "specification": plan.specification["public_specification"],
+                    "created_at": row.created_at.isoformat(),
+                    "decisions": row.results.get("recommendations", []),
                 }
-                for row in session.scalars(
-                    select(ExperimentRunRecord)
-                    .where(ExperimentRunRecord.project_id == project_id)
-                    .order_by(ExperimentRunRecord.created_at.desc())
-                    .limit(limit)
-                    .offset(offset)
-                )
+                for row, plan in rows
             ]
 
     @app.get("/v1/projects/{project_id}/experiments/{run_id}")
@@ -637,7 +653,7 @@ def install_evaluation(app, sessions, authorize, scope):
             row = session.get(ExperimentRunRecord, run_id, with_for_update=True)
             if not row or row.project_id != project_id:
                 raise HTTPException(404, "RUN_NOT_FOUND")
-            if row.status not in {"QUEUED", "RUNNING"}:
+            if row.status not in {"QUEUED", "BLOCKED", "RUNNING"}:
                 raise HTTPException(409, "RUN_TERMINAL")
             row.status = "CANCELLED"
             job = session.scalar(
@@ -654,6 +670,31 @@ def install_evaluation(app, sessions, authorize, scope):
                 )
             )
         return {"status": "CANCELLED", "inflight_call": "may_finish_no_further_calls"}
+
+    @app.post("/v1/projects/{project_id}/experiments/{run_id}/recheck")
+    def recheck_blocked(project_id: UUID, run_id: UUID, auth=Depends(authorize)):
+        scope(auth, project_id, ("editor",))
+        with sessions.begin() as session:
+            row = session.get(ExperimentRunRecord, run_id, with_for_update=True)
+            if not row or row.project_id != project_id:
+                raise HTTPException(404, "RUN_NOT_FOUND")
+            if row.status != "BLOCKED" or row.requests_used:
+                raise HTTPException(409, "ONLY_UNSTARTED_BLOCKED_RUNS_CAN_RECHECK")
+            job = session.scalar(
+                select(JobRecord).where(JobRecord.run_id == row.id).with_for_update()
+            )
+            row.status = job.status = "QUEUED"
+            job.available_at = None
+            row.results = {}
+            session.add(
+                AuditEvent(
+                    project_id=project_id,
+                    actor=auth["actor"],
+                    action="experiment_eligibility_rechecked",
+                    details={"run_id": str(run_id), "provider_calls": 0},
+                )
+            )
+        return {"status": "QUEUED", "provider_calls": 0}
 
     @app.get("/v1/projects/{project_id}/recommendations")
     def recommendations(project_id: UUID, auth=Depends(authorize)):
@@ -685,6 +726,16 @@ def install_evaluation(app, sessions, authorize, scope):
                 raise HTTPException(404, "RECOMMENDATION_NOT_FOUND")
             if row.status != "pending":
                 raise HTTPException(409, "RECOMMENDATION_ALREADY_REVIEWED")
+            if (
+                body.decision == "accepted_for_staging"
+                and row.evidence.get("evaluator_version") != "deterministic-v3"
+            ):
+                raise HTTPException(409, "EVALUATOR_REAPPROVAL_REQUIRED")
+            if body.decision == "accepted_for_staging" and (
+                not row.evidence.get("quality_gate_passed")
+                or not row.evidence.get("cheaper_on_sample")
+            ):
+                raise HTTPException(409, "REQUIRED_COST_AND_QUALITY_GATES_NOT_PASSED")
             row.status = body.decision
             session.add(
                 AuditEvent(
@@ -695,3 +746,5 @@ def install_evaluation(app, sessions, authorize, scope):
                 )
             )
         return {"status": body.decision, "deployment": "not_performed"}
+
+    return import_dataset

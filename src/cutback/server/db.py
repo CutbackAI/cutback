@@ -19,6 +19,7 @@ from sqlalchemy import (
     UniqueConstraint,
     Uuid,
     create_engine,
+    func,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
@@ -151,6 +152,12 @@ class DailyUsage(Base):
     workflow: Mapped[str] = mapped_column(String(200))
     provider: Mapped[str] = mapped_column(String(30))
     model: Mapped[str] = mapped_column(String(200))
+    traffic_kind: Mapped[str] = mapped_column(
+        String(30), default="unknown", server_default="unknown"
+    )
+    call_site: Mapped[str] = mapped_column(
+        String(200), default="unattributed", server_default="unattributed"
+    )
     report: Mapped[dict] = mapped_column(JSON)
 
 
@@ -281,6 +288,11 @@ class JobRecord(Base):
     status: Mapped[str] = mapped_column(String(30), index=True)
     lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     attempts: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), server_default=func.now()
+    )
+    available_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    __table_args__ = (Index("ix_jobs_eligibility", "status", "available_at", "created_at"),)
 
 
 class RecommendationRecord(Base):

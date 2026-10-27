@@ -515,6 +515,7 @@ export function PlanForm({
             ];
           }
           const row = await json(api, base + "/experiments/draft", {
+            name: String(data.name || "").trim() || null,
             dataset_id: data.dataset,
             baseline,
             ...(candidates ? { candidates } : {}),
@@ -543,6 +544,14 @@ export function PlanForm({
           return `Plan ${row.id} frozen. Review its dataset, price contract and budget before approval.`;
         }}
       >
+        <Field
+          label="Experiment name"
+          name="name"
+          maxLength={100}
+          pattern="[A-Za-z0-9][A-Za-z0-9 .:/_-]*"
+          placeholder="Support triage - compact model"
+          hint="Describe the decision you want this comparison to answer."
+        />
         <Select
           label="Frozen dataset"
           name="dataset"

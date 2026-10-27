@@ -1,6 +1,7 @@
 """Check release payloads, metadata and internal-file exclusion before upload."""
 
 import email
+import re
 import tarfile
 import tomllib
 import zipfile
@@ -25,6 +26,8 @@ def check(directory: Path):
         names = wheel.namelist()
         (metadata_name,) = (name for name in names if name.endswith(".dist-info/METADATA"))
         metadata = email.message_from_bytes(wheel.read(metadata_name))
+        if re.search(r"\]\((?!https?://|#)[^)]+\)", metadata.get_payload()):
+            raise ValueError("package README contains index-broken relative links")
         version = tomllib.loads(
             (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text()
         )["project"]["version"]
@@ -38,6 +41,9 @@ def check(directory: Path):
         source_names = source.getnames()
         names += source_names
         for required in (
+            ".github/workflows/publish.yml",
+            "scripts/check_toolchain.py",
+            "docs/otel-ingestion.md",
             "infra/compose/docker-compose.yml",
             "infra/compose/prepare.py",
             "scripts/export_openapi.py",
