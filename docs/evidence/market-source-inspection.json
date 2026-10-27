@@ -1,0 +1,82 @@
+[
+  {
+    "repo": "comet-ml/opik",
+    "commit": "febbf5e4a4505350c5301c5a2b27a19ca4c4d975",
+    "path": "sdks/python/src/opik/cli/local_runner/connect.py",
+    "sha256": "3485fde88c54ea8e88d9c104176bdeb64f5d83a5c6412ab69e4aa9e56097ee10",
+    "bytes": 2733,
+    "url": "https://raw.githubusercontent.com/comet-ml/opik/febbf5e4a4505350c5301c5a2b27a19ca4c4d975/sdks/python/src/opik/cli/local_runner/connect.py"
+  },
+  {
+    "repo": "comet-ml/opik",
+    "commit": "febbf5e4a4505350c5301c5a2b27a19ca4c4d975",
+    "path": "sdks/python/src/opik/api_objects/annotation_queue/annotation_queue.py",
+    "sha256": "bcc8bf3654179a29ad4ac73ac34bb7eed00081d04a7c5ca49eebbe79a0af66f0",
+    "bytes": 13169,
+    "url": "https://raw.githubusercontent.com/comet-ml/opik/febbf5e4a4505350c5301c5a2b27a19ca4c4d975/sdks/python/src/opik/api_objects/annotation_queue/annotation_queue.py"
+  },
+  {
+    "repo": "langfuse/langfuse",
+    "commit": "2bd90f45b72f3fa309fec0822959b04974eca7c6",
+    "path": "web/src/features/annotation-queues/server/annotationQueueAssignmentsRouter.ts",
+    "sha256": "f5a241b0f0a43475127fc03827705dfca619541d7befc6f1abe5266c9eaef654",
+    "bytes": 5572,
+    "url": "https://raw.githubusercontent.com/langfuse/langfuse/2bd90f45b72f3fa309fec0822959b04974eca7c6/web/src/features/annotation-queues/server/annotationQueueAssignmentsRouter.ts"
+  },
+  {
+    "repo": "langfuse/langfuse",
+    "commit": "2bd90f45b72f3fa309fec0822959b04974eca7c6",
+    "path": "packages/shared/src/features/prompts/validation.ts",
+    "sha256": "0d8cef74b33a07bb6a086c7d87e1a9cd1c797ee7070c0b26c5a98fb9518edd81",
+    "bytes": 904,
+    "url": "https://raw.githubusercontent.com/langfuse/langfuse/2bd90f45b72f3fa309fec0822959b04974eca7c6/packages/shared/src/features/prompts/validation.ts"
+  },
+  {
+    "repo": "langfuse/langfuse",
+    "commit": "2bd90f45b72f3fa309fec0822959b04974eca7c6",
+    "path": "LICENSE",
+    "sha256": "9ee6ca42e813fb58bcad18bed834438503bcc997da3b452d3f9ad4af4292b6b3",
+    "bytes": 1646,
+    "url": "https://raw.githubusercontent.com/langfuse/langfuse/2bd90f45b72f3fa309fec0822959b04974eca7c6/LICENSE"
+  },
+  {
+    "repo": "Arize-ai/phoenix",
+    "commit": "78d1f5ffc42e2af6ce3ed9df36636b3dbcadb093",
+    "path": "src/phoenix/server/api/routers/v1/spans.py",
+    "sha256": "1a75c025345f2ed0d6faadf1ae93c5c2d1c94a4a9f2e22c298c914244192941e",
+    "bytes": 65785,
+    "url": "https://raw.githubusercontent.com/Arize-ai/phoenix/78d1f5ffc42e2af6ce3ed9df36636b3dbcadb093/src/phoenix/server/api/routers/v1/spans.py"
+  },
+  {
+    "repo": "Arize-ai/phoenix",
+    "commit": "78d1f5ffc42e2af6ce3ed9df36636b3dbcadb093",
+    "path": "src/phoenix/server/api/helpers/annotations.py",
+    "sha256": "bc147b8a3369148b2751fbb46e43f99962ff7b37c64c24db7eb07c97d5ed5106",
+    "bytes": 3788,
+    "url": "https://raw.githubusercontent.com/Arize-ai/phoenix/78d1f5ffc42e2af6ce3ed9df36636b3dbcadb093/src/phoenix/server/api/helpers/annotations.py"
+  },
+  {
+    "repo": "Arize-ai/phoenix",
+    "commit": "78d1f5ffc42e2af6ce3ed9df36636b3dbcadb093",
+    "path": "LICENSE",
+    "sha256": "1c5916f5112e30e92f291002bb02cf4f4851c9d1dbdf3360f9f745b7de2d775f",
+    "bytes": 3794,
+    "url": "https://raw.githubusercontent.com/Arize-ai/phoenix/78d1f5ffc42e2af6ce3ed9df36636b3dbcadb093/LICENSE"
+  },
+  {
+    "repo": "gepa-ai/gepa",
+    "commit": "d7918ba2f382d5d0652c10814bb278c1c7ffa7c3",
+    "path": "src/gepa/core/adapter.py",
+    "sha256": "ba79fb40682f7372f386f0d39358fa4866c3d06978d4a658fcbc711617e80694",
+    "bytes": 13396,
+    "url": "https://raw.githubusercontent.com/gepa-ai/gepa/d7918ba2f382d5d0652c10814bb278c1c7ffa7c3/src/gepa/core/adapter.py"
+  },
+  {
+    "repo": "gepa-ai/gepa",
+    "commit": "d7918ba2f382d5d0652c10814bb278c1c7ffa7c3",
+    "path": "src/gepa/oa/budget.py",
+    "sha256": "c5db70c3c4fe8cc80e98f0e7f41f5356b7393a608d07f921c6bac0cf7ec17838",
+    "bytes": 3489,
+    "url": "https://raw.githubusercontent.com/gepa-ai/gepa/d7918ba2f382d5d0652c10814bb278c1c7ffa7c3/src/gepa/oa/budget.py"
+  }
+]
