@@ -6,6 +6,7 @@ from dataclasses import replace
 from datetime import UTC, datetime
 
 from cutback.core.models import LLMEvent
+from cutback.core.sdk_compat import OPENAI_TEXT_SDKS
 from cutback.evals._logging import owned_sdk_request
 from cutback.evals.experiments import Execution, route_target
 from cutback.pricing import Catalog
@@ -43,7 +44,7 @@ class OpenAIExecutor:
             raise ValueError("NO_EXPERIMENT_API_KEY")
         from importlib.metadata import version
 
-        if version("openai") != "2.29.0":
+        if version("openai") not in OPENAI_TEXT_SDKS:
             raise ValueError("UNSUPPORTED_EXPERIMENT_SDK_VERSION")
         import httpx
         from openai import OpenAI
@@ -146,7 +147,7 @@ class LocalExecutor:
 
         from cutback.core.config import validate_endpoint
 
-        if version("openai") != "2.29.0":
+        if version("openai") not in OPENAI_TEXT_SDKS:
             raise ValueError("UNSUPPORTED_EXPERIMENT_SDK_VERSION")
         endpoint = os.getenv("CUTBACK_LOCAL_INFERENCE_ENDPOINT")
         if not endpoint:

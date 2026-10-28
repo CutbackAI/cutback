@@ -65,6 +65,18 @@ def next_action(state):
             "provider_calls": 0,
         }
     if phase == "PLAN_READY":
+        if state.get("search_mode") == "campaign_basis":
+            return {
+                "code": "PREPARE_BOUNDED_CAMPAIGN",
+                "tool": "cutback campaign prepare",
+                "requires": [
+                    "matching_complete_task_cost_snapshot",
+                    "conservative_opportunity",
+                    "campaign_ceilings",
+                ],
+                "effects": ["freeze_encrypted_campaign_envelope"],
+                "provider_calls": 0,
+            }
         return {
             "code": "REVIEW_EXACT_BUDGET",
             "tool": "cutback workflow continue",
@@ -313,6 +325,32 @@ def search_candidates(baseline):
     return candidate_portfolio(baseline)
 
 
+def campaign_basis_candidates(baseline):
+    """Prefer a pure model downgrade; retain an honest unchanged control if none exists."""
+    from cutback.evals.experiments import upper_cost
+
+    try:
+        choices = search_candidates(baseline)
+    except ValueError as exc:
+        if str(exc) != "NO_QUALIFIED_SEARCH_VARIANT_SUBMIT_REVIEWED_CANDIDATE":
+            raise
+        return [
+            baseline.model_copy(
+                update={
+                    "key": "campaign-control"
+                    if baseline.key != "campaign-control"
+                    else "unchanged-control"
+                }
+            )
+        ]
+    pure_downgrades = [
+        m
+        for m in choices
+        if m.model != baseline.model and m.max_output_tokens == baseline.max_output_tokens
+    ]
+    return [min(pure_downgrades or choices, key=upper_cost)]
+
+
 def prepare(
     root,
     control,
@@ -329,6 +367,8 @@ def prepare(
     representative=False,
     mapping=None,
     search=False,
+    for_campaign=False,
+    campaign_generator_provider=None,
 ):
     """Read only explicitly permitted files; upload to the chosen encrypted collector; no calls."""
     from datetime import timedelta
@@ -349,6 +389,27 @@ def prepare(
         if state["phase"] not in {"ANALYZED", "SOURCE_CHANGED", "PLAN_READY"}:
             raise ValueError("WORKFLOW_PREPARATION_ALREADY_STARTED_INSPECT_STATUS")
         profile = selected_profile(root, state, workflow)
+        if type(for_campaign) is not bool or for_campaign and search:
+            raise ValueError("CHOOSE_CAMPAIGN_BASIS_OR_STATIC_SEARCH")
+        if campaign_generator_provider is not None and (
+            not for_campaign or campaign_generator_provider != "openai"
+        ):
+            raise ValueError("CAMPAIGN_GENERATOR_PROVIDER_NOT_QUALIFIED")
+        providers = {profile.provider}
+        if for_campaign:
+            if profile.request.sdk_surface not in {"responses.create", "messages.create"}:
+                raise ValueError("CAMPAIGN_NATIVE_TEXT_SURFACE_NOT_QUALIFIED")
+            previously_allowed = (
+                state.get("campaign_allowed_providers", [])
+                if state["phase"] == "PLAN_READY"
+                and state.get("rights_ref") == rights_ref
+                and state.get("search_mode") == "campaign_basis"
+                else []
+            )
+            if campaign_generator_provider == "openai" or "openai" in previously_allowed:
+                providers.add("openai")
+            if "openai" not in providers:
+                raise ValueError("EXPLICIT_OPENAI_GENERATOR_VENDOR_AUTHORIZATION_REQUIRED")
         if not files or len(files) > 20:
             raise ValueError("ONE_TO_TWENTY_PERMITTED_FILES_REQUIRED")
         rights = CapturePolicy(
@@ -357,7 +418,7 @@ def prepare(
             rights_basis=rights_basis,
             environments=["staging"],
             workflows=[profile.binding.workflow_id],
-            allowed_providers=[profile.provider],
+            allowed_providers=sorted(providers),
             expires_at=datetime.now(UTC) + timedelta(days=1),
             retention_days=1,
             sample_rate=1,
@@ -419,7 +480,11 @@ def prepare(
             minimum=minimum,
             max_usd=max_usd,
             max_requests=max_requests,
-            candidates=search_candidates(baseline) if search else None,
+            candidates=campaign_basis_candidates(baseline)
+            if for_campaign
+            else search_candidates(baseline)
+            if search
+            else None,
         )
         criteria = []
         if (
@@ -445,23 +510,25 @@ def prepare(
                 **spec.model_dump(mode="json"),
                 "source_binding": profile.binding.model_dump(mode="json"),
                 "criteria": [c.model_dump(mode="json") for c in criteria],
-                "split": "validation" if search else "test",
+                "split": "validation" if search or for_campaign else "test",
+                **({"name": "Campaign preparation basis"} if for_campaign else {}),
             }
         )
         summary = plan_summary(spec, prepared)
         if not summary["fits_budget"]:
             raise ValueError("PROPOSED_PLAN_EXCEEDS_BUDGET_OR_HAS_NO_HELDOUT_CASES")
-        identity = fingerprint(
-            {
-                "source": profile.binding.profile_sha256,
-                "examples": identities,
-                "rights": rights_ref,
-                "rights_basis": rights_basis,
-                "project": project,
-                "endpoint": control.endpoint,
-                "spec": {**spec.model_dump(mode="json"), "dataset_hash": None},
-            }
-        )
+        intent = {
+            "source": profile.binding.profile_sha256,
+            "examples": identities,
+            "rights": rights_ref,
+            "rights_basis": rights_basis,
+            "project": project,
+            "endpoint": control.endpoint,
+            "spec": {**spec.model_dump(mode="json"), "dataset_hash": None},
+        }
+        if for_campaign:
+            intent["campaign_basis"] = {"allowed_providers": rights.allowed_providers}
+        identity = fingerprint(intent)
         if state["phase"] == "PLAN_READY":
             if state["preparation_sha256"] != identity:
                 raise ValueError("FROZEN_PLAN_CHANGED_START_NEW_SESSION")
@@ -472,13 +539,19 @@ def prepare(
             endpoint=control.endpoint,
             selected_workflow=body.workflow,
             preparation_sha256=identity,
-            search_mode="model_and_output_cap" if search else "qualified_model_swap",
+            search_mode="campaign_basis"
+            if for_campaign
+            else "model_and_output_cap"
+            if search
+            else "qualified_model_swap",
             permitted_files=identities,
             rights_ref=rights_ref,
             quality_scope="heldout_independent_labels"
             if spec.metric.kind in {"field_f1", "exact_label"}
             else "technical_only_not_verified",
         )
+        if for_campaign:
+            state["campaign_allowed_providers"] = rights.allowed_providers
         save_session(directory, state, "PREPARING")
         inventory = read_private(directory / "inventory.json")
         control("POST", base + "/scans", inventory)
@@ -512,6 +585,10 @@ def advance(root, control, *, plan_hash=None, approval_ref=None):
             raise ValueError("COLLECTOR_DESTINATION_MISMATCH")
         base = f"/v1/projects/{state['project_id']}"
         if state["phase"] == "PLAN_READY":
+            if state.get("search_mode") == "campaign_basis":
+                raise ValueError(
+                    "CAMPAIGN_BASIS_REQUIRES_CAMPAIGN_PREPARATION_NOT_STATIC_EXECUTION"
+                )
             selected_profile(root, state, state["selected_workflow"])
             if plan_hash != state["plan"]["plan_hash"] or not approval_ref:
                 raise ValueError("EXACT_PLAN_HASH_AND_APPROVAL_REFERENCE_REQUIRED")

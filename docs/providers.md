@@ -1,17 +1,21 @@
 # Provider compatibility
 
+The working source additionally supports exact OpenAI **3.35.1**, including its native HTTPX2 transport and legacy HTTPX compatibility path. The separately locked [compatibility environment](../infra/sdk-compat/README.md) and hosted Python matrix qualify it without changing the main OpenAI 2.29.0 extra or an application's existing pin. PyPI dev5 does not include this addition; consult [acceptance/publication state](progress.md). SDK support does not qualify additional models, reasoning modes or prices.
+
 The source-only [agent episode executor](agent-evaluation.md) separately qualifies OpenAI 2.29.0 Responses/Chat and Anthropic 2.3.0 Messages for synchronous, nonstreaming text/function conversations with declared synthetic fixtures. Every turn uses the durable experiment ledger. It supports no real application tools, parallel calls, generative simulator, agent stream/async surface or additional provider/model. This does not widen the observer matrix below.
 
 Unreleased prompt-registry experiment contracts use the same pinned clients: OpenAI 2.29.0 Responses/Chat preserve declared roles and qualified JSON output options; Anthropic 2.3.0 maps initial system messages to native system blocks. Local Chat now executes its declared bound messages/options instead of ignoring them. A configured local server/model still needs its own acceptance. These synchronous text experiments add no tool execution, streaming replay or new provider/model support claim. [Prompt contract limits](prompt-releases.md).
 
 | Runtime surface | Tested version | Exercised behavior |
 |---|---|---|
-| OpenAI Responses create | 2.29.0 | sync/async/native streams, retries/errors/outages, usage/cache/reasoning, privacy |
-| OpenAI Chat Completions create | 2.29.0 and 1.55.3 | sync/async/native streams, per-attempt retries/logical linkage |
+| OpenAI Responses create | 2.29.0 and source-only 3.35.1 | sync/async/native streams, retries/errors/outages, usage/cache/reasoning, privacy |
+| OpenAI Chat Completions create | 2.29.0, 1.55.3 and source-only 3.35.1 | sync/async/native streams, per-attempt retries/logical linkage |
 | Anthropic Messages create | 2.3.0 | sync/async/native streams, separate five-minute/one-hour cache usage |
-| Text experiment executor | OpenAI 2.29.0, Anthropic 2.3.0, or configured local Chat endpoint | approved providers, bounded input/output, no tools/retries, pre-call reservations |
+| Text experiment executor | OpenAI 2.29.0/source-only 3.35.1, Anthropic 2.3.0, or configured local Chat endpoint | approved providers, bounded input/output, no tools/retries, pre-call reservations |
 
 These are tested versions, not newest-version claims. `cutback[openai]` pins 2.29.0; `[anthropic]` pins 2.3.0. An application already pinned to 1.55.3 installs `[instrumentation]` alongside its existing pin. Legacy compatibility also tests Pydantic 2.10.6.
+
+An application already on 3.35.1 likewise uses `[instrumentation]` alongside that pin, from a release containing this source addition. Native responses keep optional missing usage unknown. Positive OpenAI cache writes are observed separately and remain unpriced under the current catalog, which has no qualified OpenAI write rate. Neither a newer SDK nor a transport shim authorizes guessing cache-write semantics or automatically repricing historical records.
 
 Explicit init uses service/environment, configured HTTPS endpoint ending `/v1/ingest/events`, project UUID and a scoped ingestion token. `providers=("openai", "anthropic")` or `CUTBACK_PROVIDERS` selects adapters. Default init is disabled. Initialize after worker fork; untested SDKs/existing resource wrappers are refused and the application's bootstrap must fail open.
 

@@ -8,7 +8,11 @@ Start with the [independent runnable classifier](../examples/improvement-campaig
 
 ## Prepare without inference
 
-Run `cutback optimize . --json`, then [prepare the selected source-bound workflow and permitted examples](agent-workflow.md). A campaign uses that saved preparation; it does not require executing the earlier static experiment first. Metadata observation and task-outcome declarations produce [complete task-cost snapshots](task-economics.md). The snapshot must match the same environment/workflow/service/release. Native LLM costs alone cannot stand in for unknown tool or other required task costs.
+Run `cutback optimize . --json`, then [prepare the selected source-bound workflow and permitted examples](agent-workflow.md) with `workflow prepare --for-campaign`. Inspect the installed help first: published dev5 lacks this flag and the campaign commands. Preparation preserves the native request, imports only authorized examples and creates a validation basis without running inference. It chooses a simple model downgrade when one exists; an application already on the cheapest qualified model can use an output-bound alternative, or an explicitly labelled unchanged control at the minimum cap. An unchanged control is not a claimed optimization. Use `campaign prepare` next; `workflow continue` refuses to execute this basis as a static experiment.
+
+For an Anthropic target, `--campaign-generator-provider openai` explicitly includes OpenAI in the capture policy's permitted vendors for the proposer. Supply it only within actual data/vendor authorization. Missing permission fails before reading examples or creating an upload policy. The permission persists for resuming that same frozen preparation and rights reference; changing vendors/rights requires a new preparation and paid campaign approval. OpenAI targets already include that vendor. Preparation does not authorize paid inference.
+
+Metadata observation and task-outcome declarations produce [complete task-cost snapshots](task-economics.md). The snapshot must match the same environment/workflow/service/release. Native LLM costs alone cannot stand in for unknown tool or other required task costs.
 
 The agent may locate an existing matching snapshot through the scoped API. Future volume and conservative savings per successful task remain owner assumptions. Missing/incomplete economics abstain without provider calls; the agent must not fabricate these inputs.
 

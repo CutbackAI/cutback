@@ -92,3 +92,26 @@ def test_new_session_archives_old_plan_but_never_discards_active_authority(tmp_p
     changed = analyze(tmp_path)
     assert changed["phase"] == "QUEUED" and changed["run_id"] == active["run_id"]
     assert changed["source_status"] == "CHANGED_RESCAN_AFTER_RUN"
+
+
+def test_campaign_basis_prefers_pure_downgrade_and_preserves_request_contract():
+    from cutback.agent import campaign_basis_candidates
+    from cutback.evals.experiments import ModelSpec
+
+    baseline = ModelSpec(
+        key="baseline",
+        provider="openai",
+        model="gpt-4.1",
+        instruction="Keep the independent task contract.",
+        max_output_tokens=64,
+    )
+    (choice,) = campaign_basis_candidates(baseline)
+    assert choice.model == "gpt-4.1-mini" and choice.max_output_tokens == 64
+    assert choice.instruction == baseline.instruction
+    smallest = baseline.model_copy(update={"model": "gpt-4.1-mini", "max_output_tokens": 16})
+    (control,) = campaign_basis_candidates(smallest)
+    assert control.key != smallest.key
+    assert control.model_dump(exclude={"key"}) == smallest.model_dump(exclude={"key"})
+    unknown = baseline.model_copy(update={"model": "synthetic-unpriced"})
+    with pytest.raises(ValueError, match="BASELINE_PRICE_UNKNOWN"):
+        campaign_basis_candidates(unknown)
