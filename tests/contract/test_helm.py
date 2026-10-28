@@ -12,6 +12,46 @@ ROOT = Path(__file__).resolve().parents[2]
 DIGEST = "sha256:" + "a" * 64
 
 
+def test_metadata_online_and_notifications_mount_only_dedicated_signing_refs(tmp_path):
+    path = tmp_path / "notifications.local.yaml"
+    values = {
+        "execution": {"online": True},
+        "notifications": {
+            "enabled": True,
+            "signingKeys": [
+                {"name": "CUTBACK_WEBHOOK_SECRET_SYNTHETIC", "key": "synthetic_signing"}
+            ],
+        },
+    }
+    path.write_text(yaml.safe_dump(values), encoding="utf-8")
+    rows = render("--values", str(path))
+    for row in rows:
+        if row["kind"] != "Deployment":
+            continue
+        container = row["spec"]["template"]["spec"]["containers"][0]
+        env = {e["name"]: e for e in container["env"]}
+        assert env["CUTBACK_WEBHOOK_DESTINATIONS"]["valueFrom"]["secretKeyRef"] == {
+            "name": "cutback-notifications",
+            "key": "destinations",
+        }
+        if container["name"] == "worker":
+            assert env["CUTBACK_WEBHOOK_SECRET_SYNTHETIC"]["valueFrom"]["secretKeyRef"] == {
+                "name": "cutback-notifications",
+                "key": "synthetic_signing",
+            }
+            assert "admin_token" not in str(container)
+        else:
+            assert "CUTBACK_WEBHOOK_SECRET_SYNTHETIC" not in env
+    render("--values", str(path), "--set", "secrets.notifications=cutback-runtime", expect_ok=False)
+    render(
+        "--values",
+        str(path),
+        "--set",
+        "notifications.signingKeys[0].name=CUTBACK_ADMIN_TOKEN",
+        expect_ok=False,
+    )
+
+
 def helm_binary():
     value = os.getenv("CUTBACK_HELM_BIN") or shutil.which("helm")
     local = ROOT / "artifacts/tools/helm-4.3.1/helm.exe"
@@ -64,6 +104,8 @@ def test_chart_private_defaults_nonroot_secret_scoping_and_external_db():
         "CUTBACK_CACHE_ENABLED",
         "CUTBACK_BILLING_ENABLED",
         "CUTBACK_TRAINING_EXECUTION",
+        "CUTBACK_ONLINE_EXECUTION",
+        "CUTBACK_WEBHOOK_EXECUTION",
     ):
         assert config[flag] == "false"
     workloads = [row for row in documents if row["kind"] in {"Deployment", "Job"}]
@@ -95,6 +137,8 @@ def test_chart_refuses_unsafe_or_incomplete_opt_ins_and_mounts_only_selected_wor
     render("--set", "execution.schedules=true", expect_ok=False)
     render("--set", "ingress.enabled=true", expect_ok=False)
     render("--set", "retention.rawDays=400", expect_ok=False)
+    render("--set", "execution.online=true,worker.enabled=false", expect_ok=False)
+    render("--set", "notifications.enabled=true", expect_ok=False)
     rows = render(
         "--set",
         "payloads.enabled=true,payloads.bucket=synthetic-bucket,execution.experiments=true",

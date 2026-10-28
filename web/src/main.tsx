@@ -23,6 +23,7 @@ import { Traces } from "./traces";
 import { Imports } from "./imports";
 import { Reviews } from "./reviews";
 import { Prompts } from "./prompts";
+import { Monitoring } from "./monitoring";
 import { decisionLabel, criterionLabel, experimentTitle } from "./evidence";
 
 async function request(token: string, path: string, options: RequestInit = {}) {
@@ -66,6 +67,7 @@ const views = [
   "Experiments",
   "Review",
   "Prompts",
+  "Monitoring",
   "Changes",
   "Integrations",
   "Security",
@@ -279,6 +281,20 @@ function App() {
             : { items: [] },
         };
       }
+      if (view === "Monitoring")
+        result = {
+          online: await api(base + "/online-rules"),
+          alerts: await api(base + "/alert-rules"),
+          incidents: await api(base + "/incidents"),
+          savedViews: await api(base + "/saved-views"),
+          notifications: await api(base + "/notifications"),
+          deliveries: await api(base + "/notification-deliveries"),
+          destinations: ["admin", "project_admin"].includes(
+            identity.project_roles?.[project] || identity.role,
+          )
+            ? await api(base + "/notification-destinations")
+            : { identifiers: [] },
+        };
       if (view === "Changes")
         result = {
           recommendations: await api(base + "/recommendations"),
@@ -852,6 +868,23 @@ function App() {
                 editor={["admin", "project_admin", "editor"].includes(
                   projectRole,
                 )}
+              />
+            )}
+            {view === "Monitoring" && data.online && (
+              <Monitoring
+                key={project}
+                api={api}
+                base={base}
+                data={data}
+                admin={admin}
+                editor={["admin", "project_admin", "editor"].includes(
+                  projectRole,
+                )}
+                reload={load}
+                onReview={(id) => {
+                  setReviewSource({ project, id });
+                  setView("Review");
+                }}
               />
             )}
             {view === "Changes" && data.recommendations && (

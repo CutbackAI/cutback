@@ -8,6 +8,7 @@ secrets:
   runtime: cutback-runtime
   migration: cutback-migration
   experiments: cutback-experiments
+  notifications: cutback-notifications
 serviceAccount:
   annotations: {}
   automount: false
@@ -28,11 +29,17 @@ migration:
     requests: {cpu: 100m, memory: 128Mi}
     limits: {cpu: 500m, memory: 512Mi}
 execution:
+  online: false
   experiments: false
   schedules: false
   # Exactly these keys are mounted on the worker, never on the collector.
   providers: []
   localEndpoint: ""
+notifications:
+  enabled: false
+  registryKey: destinations
+  # Dedicated Secret keys; signing values are exposed only to the worker.
+  signingKeys: []
 payloads:
   enabled: false
   backend: s3

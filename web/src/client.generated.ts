@@ -288,6 +288,79 @@ export function createSDK(request:Request) {return {
   diff_v1_projects__project_id__prompts__prompt_id__diff_post: (args:{project_id:string;prompt_id:string;body:components["schemas"]["PromptDiff"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/prompts/${encodeURIComponent(String(args.prompt_id))}/diff`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  create_online_v1_projects__project_id__online_rules_post: (args:{project_id:string;body:components["schemas"]["OnlineRuleInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/online-rules`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  list_online_v1_projects__project_id__online_rules_get: (args:{project_id:string;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/online-rules`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  switch_online_v1_projects__project_id__online_rules__rule_id__switch_post: (args:{project_id:string;rule_id:string;body:components["schemas"]["RuleSwitch"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/online-rules/${encodeURIComponent(String(args.rule_id))}/switch`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  evaluations_v1_projects__project_id__online_rules__rule_id__evaluations_get: (args:{project_id:string;rule_id:string;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/online-rules/${encodeURIComponent(String(args.rule_id))}/evaluations`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  create_alert_v1_projects__project_id__alert_rules_post: (args:{project_id:string;body:components["schemas"]["AlertRuleInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/alert-rules`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  list_alerts_v1_projects__project_id__alert_rules_get: (args:{project_id:string;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/alert-rules`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  switch_alert_v1_projects__project_id__alert_rules__rule_id__switch_post: (args:{project_id:string;rule_id:string;body:components["schemas"]["RuleSwitch"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/alert-rules/${encodeURIComponent(String(args.rule_id))}/switch`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  alert_windows_v1_projects__project_id__alert_rules__rule_id__windows_get: (args:{project_id:string;rule_id:string;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/alert-rules/${encodeURIComponent(String(args.rule_id))}/windows`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  incidents_v1_projects__project_id__incidents_get: (args:{project_id:string;after?:string | null;state?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.state!==undefined && args.state!==null) query.set("state",String(args.state));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/incidents`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  incident_detail_v1_projects__project_id__incidents__incident_id__get: (args:{project_id:string;incident_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/incidents/${encodeURIComponent(String(args.incident_id))}`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  transition_v1_projects__project_id__incidents__incident_id__transition_post: (args:{project_id:string;incident_id:string;body:components["schemas"]["IncidentTransition"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/incidents/${encodeURIComponent(String(args.incident_id))}/transition`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  incident_evaluations_v1_projects__project_id__incidents__incident_id__evaluations_get: (args:{project_id:string;incident_id:string;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/incidents/${encodeURIComponent(String(args.incident_id))}/evaluations`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  save_view_v1_projects__project_id__saved_views_post: (args:{project_id:string;body:components["schemas"]["SavedViewInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/saved-views`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  saved_views_v1_projects__project_id__saved_views_get: (args:{project_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/saved-views`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  delete_view_v1_projects__project_id__saved_views__view_id__delete: (args:{project_id:string;view_id:string;expected_revision:number}) => {
+    const query=new URLSearchParams();
+    if(args.expected_revision!==undefined && args.expected_revision!==null) query.set("expected_revision",String(args.expected_revision));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/saved-views/${encodeURIComponent(String(args.view_id))}`+(query.size?"?"+query.toString():""),{method:"DELETE"});},
+  allowed_v1_projects__project_id__notification_destinations_get: (args:{project_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/notification-destinations`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  configure_v1_projects__project_id__notifications_post: (args:{project_id:string;body:components["schemas"]["NotificationInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/notifications`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  configs_v1_projects__project_id__notifications_get: (args:{project_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/notifications`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  deliveries_v1_projects__project_id__notification_deliveries_get: (args:{project_id:string;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/notification-deliveries`+(query.size?"?"+query.toString():""),{method:"GET"});},
   export_v1_projects__project_id__export_get: (args:{project_id:string}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/export`+(query.size?"?"+query.toString():""),{method:"GET"});},

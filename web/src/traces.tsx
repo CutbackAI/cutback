@@ -75,7 +75,7 @@ function Evaluations({
   );
 }
 
-function Investigation({
+export function Investigation({
   api,
   base,
   id,

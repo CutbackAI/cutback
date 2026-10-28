@@ -2,7 +2,16 @@
   "contract": "cutback.prompt-acceptance.v1",
   "date": "2026-10-27",
   "scope": "bounded_prompt_registry_native_playground_and_portable_local_application_checks",
-  "publication": "working_source_hosted_gates_pending_no_new_pypi_upload",
+  "publication": "public_source_merged_no_new_pypi_upload",
+  "hosted": {
+    "pull_request": 19,
+    "tested_head": "b3706259b1062ac2c23c497b05be34380c055361",
+    "merge": "4bc997b3998b74a08fd77cdfa167aba37db9baea",
+    "identical_tree": "6d887b5b1a4861baed1a629e73fb28e471681405",
+    "required_checks_passed": 8,
+    "python_311": {"passed": 364, "skipped": 4},
+    "python_313": {"passed": 362, "skipped": 6}
+  },
   "migrations": ["0010"],
   "released_migrations_preserved_through": "0009",
   "local_full_regression": {

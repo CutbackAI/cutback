@@ -153,6 +153,26 @@ def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False
             from cutback.server.traces import prune_traces
 
             prune_traces(session, cutoff, selected)
+            from cutback.server.monitoring_db import AlertWindow, Incident, OnlineEvaluation
+
+            session.execute(
+                delete(AlertWindow).where(
+                    AlertWindow.window_end < cutoff, selected(AlertWindow.project_id)
+                )
+            )
+
+            session.execute(
+                delete(OnlineEvaluation).where(
+                    OnlineEvaluation.occurred_at < cutoff, selected(OnlineEvaluation.project_id)
+                )
+            )
+            session.execute(
+                delete(Incident).where(
+                    Incident.created_at < now - timedelta(days=aggregate_days),
+                    Incident.state == "resolved",
+                    selected(Incident.project_id),
+                )
+            )
             from cutback.server.prompt_db import PromptObservation
 
             session.execute(

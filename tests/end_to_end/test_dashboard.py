@@ -7,7 +7,7 @@ import shutil
 import subprocess
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import httpx
 import pytest
@@ -105,6 +105,68 @@ def test_dashboard_authenticated_accessibility(postgres_url, tmp_path, event, mo
             },
         )
         assert response.status_code == 201, response.text
+        from cutback.server.incidents import evaluate_alert
+        from cutback.server.monitoring import epoch_ns, queue_online_intake, run_online_one
+
+        anchor = datetime.now(UTC).replace(second=0, microsecond=0) - timedelta(minutes=10)
+        rule = client.post(
+            f"/v1/projects/{project}/online-rules",
+            headers=headers,
+            json={
+                "version_id": str(uuid4()),
+                "key": "browser-execution-health",
+                "expected_revision": 0,
+                "environment": "staging",
+                "filter": {"workflow": "monitoring-browser"},
+                "evaluator": {"kind": "execution_ok"},
+                "starts_at": (anchor - timedelta(hours=1)).isoformat(),
+                "expires_at": (datetime.now(UTC) + timedelta(days=1)).isoformat(),
+                "max_evaluations": 10,
+                "approval_ref": "owned-monitoring-browser",
+            },
+        )
+        assert rule.status_code == 201, rule.text
+        alert = client.post(
+            f"/v1/projects/{project}/alert-rules",
+            headers=headers,
+            json={
+                "version_id": str(uuid4()),
+                "key": "browser-execution-alert",
+                "expected_revision": 0,
+                "online_rule_id": rule.json()["id"],
+                "window_seconds": 60,
+                "grace_seconds": 0,
+                "min_samples": 1,
+                "threshold": "0.5",
+                "cooldown_seconds": 0,
+            },
+        )
+        assert alert.status_code == 201, alert.text
+        response = client.post(
+            "/v1/ingest/spans",
+            headers={"Authorization": "Bearer " + writer},
+            json={
+                "spans": [
+                    {
+                        "trace_id": uuid4().hex,
+                        "span_id": uuid4().hex[:16],
+                        "operation": "owned-monitoring-check",
+                        "service": "owned-browser",
+                        "workflow": "monitoring-browser",
+                        "kind": "guardrail",
+                        "status": "error",
+                        "started_ns": epoch_ns(anchor + timedelta(seconds=1)),
+                        "ended_ns": epoch_ns(anchor + timedelta(seconds=2)),
+                    }
+                ]
+            },
+        )
+        assert response.status_code == 200, response.text
+        queue_online_intake(app.state.sessions, enabled=True, only_project_id=UUID(project))
+        assert run_online_one(app.state.sessions, enabled=True)["status"] == "failed"
+        evaluate_alert(
+            app.state.sessions, UUID(alert.json()["id"]), now=anchor + timedelta(seconds=61)
+        )
         result = subprocess.run(
             [shutil.which("npm.cmd") or shutil.which("npm") or "npm", "test"],
             cwd=root / "web",

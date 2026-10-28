@@ -1,6 +1,27 @@
 {{- if and .Values.cache.enabled (not .Values.payloads.enabled) -}}
 {{- fail "Application caching requires explicitly authorized encrypted payload storage" -}}
 {{- end -}}
+{{- if and .Values.execution.online (not .Values.worker.enabled) -}}
+{{- fail "Online evaluation requires an explicitly enabled worker" -}}
+{{- end -}}
+{{- if .Values.notifications.enabled -}}
+{{- if or (not .Values.worker.enabled) (not .Values.notifications.registryKey) (not .Values.notifications.signingKeys) -}}
+{{- fail "Notifications require a worker, dedicated registry and signing key references" -}}
+{{- end -}}
+{{- if or (not .Values.secrets.notifications) (eq .Values.secrets.notifications .Values.secrets.runtime) (eq .Values.secrets.notifications .Values.secrets.experiments) (eq .Values.secrets.notifications .Values.secrets.migration) -}}
+{{- fail "Notifications require a separate dedicated Secret" -}}
+{{- end -}}
+{{- $seenSigning := dict -}}
+{{- range $item := .Values.notifications.signingKeys -}}
+{{- if or (not $item.key) (not (regexMatch "^CUTBACK_WEBHOOK_SECRET_[A-Z0-9_]{1,50}$" $item.name)) -}}
+{{- fail "Notification signing names must be dedicated CUTBACK_WEBHOOK_SECRET_ variables" -}}
+{{- end -}}
+{{- if hasKey $seenSigning $item.name -}}
+{{- fail "Notification signing variable names must be unique" -}}
+{{- end -}}
+{{- $_ := set $seenSigning $item.name true -}}
+{{- end -}}
+{{- end -}}
 {{- if and .Values.execution.schedules (not .Values.execution.experiments) -}}
 {{- fail "Schedules require explicit experiment execution enablement" -}}
 {{- end -}}
@@ -35,6 +56,8 @@ data:
   CUTBACK_CACHE_ENABLED: {{ .Values.cache.enabled | quote }}
   CUTBACK_EXPERIMENT_EXECUTION: {{ .Values.execution.experiments | quote }}
   CUTBACK_SCHEDULE_EXECUTION: {{ .Values.execution.schedules | quote }}
+  CUTBACK_ONLINE_EXECUTION: {{ .Values.execution.online | quote }}
+  CUTBACK_WEBHOOK_EXECUTION: {{ .Values.notifications.enabled | quote }}
   CUTBACK_TRAINING_EXECUTION: {{ .Values.training.enabled | quote }}
   CUTBACK_BILLING_ENABLED: {{ .Values.billing.enabled | quote }}
   CUTBACK_BILLING_ALLOW_LIVE: {{ .Values.billing.allowLive | quote }}

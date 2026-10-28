@@ -52,6 +52,8 @@ Add explicit local application-check contracts: exact command/working directory,
 
 ## Release 4 — production quality and incident workflow
 
+In progress: the working source now contains bounded nonbillable metadata rules, exact external boolean score monitoring, durable evaluation/backfill/leases, closed alert windows, incidents/ownership/recovery, typed saved views, an authenticated dashboard, independent sample and opt-in signed allowlisted notifications. See [contracts and limits](online-monitoring.md). This is not complete Release 4: online content/judge evaluation and drift remain unfinished. Acceptance and publication status are recorded in [progress](progress.md).
+
 **Baseline:** O04–O10, R07, C10. **User outcome:** find a quality regression, triage it, and make it a regression case.
 
 Version online rules by target/filter, evaluator, sample policy, window and total budget. Execute out of the request path unless explicit inline enforcement is configured separately. Use deterministic sampling/deduplication, durable backlog/leases, fairness and retention-aware backfill. Judge/vendor payload access needs explicit policy; metadata-only scores can be ingested without running a judge. Track missing/error/failed results separately, including unobserved denominators.

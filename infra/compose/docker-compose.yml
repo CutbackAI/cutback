@@ -43,6 +43,8 @@ services:
       CUTBACK_DB_PASSWORD_FILE: /run/secrets/db_password
       CUTBACK_PROCESS: worker
       CUTBACK_EXPERIMENT_EXECUTION: "false"
+      CUTBACK_ONLINE_EXECUTION: "${CUTBACK_ONLINE_EXECUTION:-false}"
+      CUTBACK_WEBHOOK_EXECUTION: "false"
     secrets: [db_password]
     depends_on:
       collector:

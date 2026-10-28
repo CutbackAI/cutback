@@ -58,12 +58,12 @@ Evidence: [Datadog](https://docs.datadoghq.com/llm_observability/), [Logfire liv
 | O01 | Query token/cost/latency/error trends with explicit priced and observed denominators | Bounded | `server/repository.py`, `server/operations.py`; modeled rates, not invoice reconciliation |
 | O02 | Separate application traffic from evaluation, judge and optimizer overhead | Partial | Application/evaluation/judge dimensions exist; future optimizer calls must use the same accounting boundary |
 | O03 | Expose exporter drops/outages and avoid presenting partial telemetry as full population coverage | Bounded | SDK health/collector reports; coverage remains unknown where not measurable |
-| O04 | Define immutable/versioned online evaluation rules with sampling, scope and a budget ceiling | Missing | Experiment schedules do not constitute production evaluation rules |
+| O04 | Define immutable/versioned online evaluation rules with sampling, scope and a budget ceiling | Partial | Source metadata/exact external boolean profile has immutable versions, sampling, scope and durable count/zero-dollar ceilings; billable/content judging remains unfinished |
 | O05 | Join delayed scores/feedback to the exact span, trace or session without tenant ambiguity | Bounded | Versioned immutable external result IDs, exact project/environment/trace/span/session targets and delayed joins |
-| O06 | Distinguish evaluator errors, missing data, invalid scores and actual application failures | Partial | External passed/failed/error/unknown shapes and absent results remain distinct; budgeted online evaluation execution is still Release 4 work |
-| O07 | Create alert rules with windows, minimum sample size, cooldown, deduplication and recovery | Missing | Health/rollout guardrails are not an incident/alert product |
-| O08 | Acknowledge/resolve an incident with owner, evidence links and an audit trail | Missing | No incident record or operator workflow |
-| O09 | Deliver configured webhooks/notifications with signed payloads, retries and delivery status | Missing | External messaging is not authorized by implementation alone; provide opt-in integration |
+| O06 | Distinguish evaluator errors, missing data, invalid scores and actual application failures | Partial | Durable nonbillable online receipts separate failed/error/missing/unknown, ambiguity, count exhaustion and source expiry; content/judge online execution remains unfinished |
+| O07 | Create alert rules with windows, minimum sample size, cooldown, deduplication and recovery | Bounded | Source closed event-time windows, durable late-result/backfill re-evaluation, minimum samples/cooldown/dedup; no-data/incomplete never establish recovery. Acceptance/publication gates in progress.md |
+| O08 | Acknowledge/resolve an incident with owner, evidence links and an audit trail | Bounded | Source incident CAS/history/owner routing references, retained receipt → trace investigation and existing authorized Review path; synthetic acceptance only |
+| O09 | Deliver configured webhooks/notifications with signed payloads, retries and delivery status | Bounded | Default-disabled metadata-only signed HTTPS profile, project/operator allowlists, public IP pinning/original TLS host, exact config approval, durable capped at-least-once attempts/dead letters. Synthetic receivers only; no external delivery configured |
 | O10 | Diagnose drift by cohort/release and distinguish input drift from labeled quality loss | Partial | Rollout windows/slices exist; continuous distribution and outcome monitoring absent |
 
 ## 4. Datasets, provenance and review — core baseline
@@ -197,7 +197,7 @@ Evidence: [Braintrust administration](https://www.braintrust.dev/docs), [Fiddler
 | R04 | Retain summaries without inventing missing raw quantiles, identities or coverage | Bounded | `server/operations.py`, retained-dimension tests |
 | R05 | Restore backups and reconcile encrypted-object/database pointers after faults | Bounded | Local backup/object recovery tests; customer/cloud deployment remains external |
 | R06 | Prove sustained ingest/query/worker concurrency and isolation at a declared load envelope | Partial | Bounded retention/load smoke exists; mature capacity/SLO qualification absent |
-| R07 | Share saved views, dashboards, comments and incident ownership safely across a team | Missing | Team identity exists; collaboration workflows largely absent |
+| R07 | Share saved views, dashboards, comments and incident ownership safely across a team | Partial | Typed project-scoped shared metadata views and audited incident ownership/history; broader shared dashboards/comments remain unfinished |
 | R08 | Offer optional enterprise SSO/SCIM/provisioning with revocation and audit behavior | Partial | OIDC/PKCE and project grants exist; SCIM and real customer IdP acceptance missing |
 | R09 | Publish a working accessibility/responsive dashboard for every supported lifecycle | Partial | Existing authenticated browser/axe tests pass within current views; missing journeys cannot pass |
 | R10 | Provide stable API/CLI schemas, release notes, migration guidance and dependency/security updates | Bounded | OpenAPI/types, CI/release/security gates; maintain as scope grows |
