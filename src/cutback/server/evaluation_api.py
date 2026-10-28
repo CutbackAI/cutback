@@ -41,11 +41,26 @@ from cutback.server.plan_artifacts import freeze_plan, load_plan
 
 def policy_object_count(session, policy_id):
     from cutback.server.enterprise_db import CacheEntry
+    from cutback.server.quality_db import QualityEvaluation, QualityRule
 
-    return sum(
+    stored = sum(
         session.scalar(select(func.count()).select_from(cls).where(cls.policy_id == policy_id)) or 0
         for cls in (PayloadSample, CacheEntry)
     )
+    reserved = (
+        session.scalar(
+            select(func.count())
+            .select_from(QualityEvaluation)
+            .join(QualityRule)
+            .where(
+                QualityRule.specification["source_policy_id"].as_string() == str(policy_id),
+                QualityEvaluation.output_reserved.is_(True),
+                QualityEvaluation.lease_until > datetime.now(UTC),
+            )
+        )
+        or 0
+    )
+    return stored + reserved
 
 
 class PlanInput(StrictModel):

@@ -5,7 +5,7 @@ from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, Field, StrictBool, model_validator
+from pydantic import AwareDatetime, Field, StrictBool, model_serializer, model_validator
 
 from cutback.core.models import Identifier, StrictModel
 from cutback.server.prompt_contracts import EnvironmentName
@@ -39,6 +39,16 @@ class OnlineEvaluator(StrictModel):
     source: Identifier | None = None
     evaluator: Identifier | None = None
     evaluator_version: Identifier | None = None
+    source_origin: (
+        Literal["external", "cutback_model_judge", "cutback_technical_contract"] | None
+    ) = None
+
+    @model_serializer(mode="wrap")
+    def preserve_legacy_specification(self, handler):
+        result = handler(self)
+        if self.source_origin is None:
+            result.pop("source_origin", None)
+        return result
 
     @model_validator(mode="after")
     def shape(self):
@@ -46,7 +56,11 @@ class OnlineEvaluator(StrictModel):
         if self.kind == "external_boolean":
             if not all(external) or self.max_duration_ms is not None:
                 raise ValueError("EXACT_EXTERNAL_EVALUATOR_REQUIRED")
-        elif any(external) or (self.kind == "duration_le") != (self.max_duration_ms is not None):
+        elif (
+            any(external)
+            or self.source_origin is not None
+            or (self.kind == "duration_le") != (self.max_duration_ms is not None)
+        ):
             raise ValueError("EVALUATOR_OPTIONS_MISMATCH")
         return self
 

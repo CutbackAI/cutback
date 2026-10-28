@@ -71,7 +71,46 @@ def postgres_url():
 
 
 @pytest.fixture
-def api(postgres_url):
+def isolated_postgres_url(postgres_url, monkeypatch):
+    """A fresh owned database for destructive migration tests, independent of test order."""
+    import psycopg
+    from psycopg import sql
+    from sqlalchemy.engine import make_url
+
+    from cutback.server.migrate import migrate
+
+    url = make_url(postgres_url)
+    assert url.host in {"127.0.0.1", "localhost", "::1"}
+    assert url.database.startswith("cutback_test_")
+    name = "cutback_test_" + uuid4().hex
+    kwargs = {
+        "host": url.host,
+        "port": url.port or 5432,
+        "user": url.username,
+        "password": url.password,
+        "dbname": url.database,
+    }
+    with psycopg.connect(**kwargs, autocommit=True) as connection:
+        connection.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(name)))
+    target = url.set(database=name).render_as_string(hide_password=False)
+    monkeypatch.setenv("CUTBACK_DATABASE_URL", target)
+    try:
+        migrate()
+        yield target
+    finally:
+        with psycopg.connect(**kwargs, autocommit=True) as connection:
+            connection.execute(
+                sql.SQL("DROP DATABASE {} WITH (FORCE)").format(sql.Identifier(name))
+            )
+
+
+@pytest.fixture
+def api_database_url(postgres_url):
+    return postgres_url
+
+
+@pytest.fixture
+def api(api_database_url):
     import secrets
 
     from fastapi.testclient import TestClient
@@ -79,7 +118,7 @@ def api(postgres_url):
     from cutback.server.api import create_app
 
     admin = secrets.token_urlsafe(48)
-    app = create_app(database_url=postgres_url, admin_token=admin, allow_insecure_http=True)
+    app = create_app(database_url=api_database_url, admin_token=admin, allow_insecure_http=True)
     with TestClient(app, raise_server_exceptions=False) as client:
         yield client, {"Authorization": f"Bearer {admin}"}, app
 

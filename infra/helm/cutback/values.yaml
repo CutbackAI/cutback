@@ -30,6 +30,7 @@ migration:
     limits: {cpu: 500m, memory: 512Mi}
 execution:
   online: false
+  quality: false
   experiments: false
   schedules: false
   # Exactly these keys are mounted on the worker, never on the collector.

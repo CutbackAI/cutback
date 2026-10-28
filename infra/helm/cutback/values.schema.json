@@ -235,6 +235,9 @@
         },
         "online": {
           "type": "boolean"
+        },
+        "quality": {
+          "type": "boolean"
         }
       }
     },

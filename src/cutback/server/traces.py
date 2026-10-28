@@ -309,7 +309,12 @@ def evaluation_record(row, spans=None):
         if spans is None
         else not record["span_id"] or any(s["span_id"] == record["span_id"] for s in spans)
     )
-    return {**record, "evidence": "externally_asserted", "target_in_retained_page": joined}
+    evidence = (
+        row.source_origin
+        if row.source_origin in {"cutback_model_judge", "cutback_technical_contract"}
+        else "externally_asserted"
+    )
+    return {**record, "evidence": evidence, "target_in_retained_page": joined}
 
 
 def prune_traces(session, cutoff, selected):
@@ -418,6 +423,7 @@ def install_traces(app, sessions, authorize, scope):
                         project_id=project,
                         environment_id=env.id,
                         result_id=result.result_id,
+                        source_origin="external",
                         trace_id=result.trace_id,
                         session_id=result.session_id,
                         fingerprint=digest,
@@ -434,6 +440,7 @@ def install_traces(app, sessions, authorize, scope):
                             ExternalEvaluation.project_id == project,
                             ExternalEvaluation.environment_id == env.id,
                             ExternalEvaluation.result_id == result.result_id,
+                            ExternalEvaluation.source_origin == "external",
                         )
                     )
                     != digest

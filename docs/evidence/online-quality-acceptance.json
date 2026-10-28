@@ -1,0 +1,94 @@
+{
+  "contract": "cutback.online-quality-acceptance.v1",
+  "date": "2026-10-28",
+  "scope": "bounded_authorized_online_content_contracts_native_judging_and_observed_cohorts",
+  "publication": "locally_accepted_source_hosted_gates_pending_no_pypi_upload",
+  "migration": "0012",
+  "released_migrations_preserved_through": "0011",
+  "local_full_regression": {
+    "passed": 429,
+    "skipped": 5,
+    "duration_seconds": 447.67,
+    "real_postgres": true,
+    "browser": true,
+    "cpu_training": true,
+    "owned_docker_lifecycle": true
+  },
+  "prior_broad_run": {
+    "passed": 422,
+    "failed": 1,
+    "skipped": 5,
+    "cause": "legacy namespace migration test attempted to downgrade a shared test database containing protected quality ledger data",
+    "resolution": "destructive migration tests now use their own fresh disposable PostgreSQL databases; the ledger downgrade guard is preserved and directly tested"
+  },
+  "focused_monitoring_quality_postgres": {
+    "passed": 37
+  },
+  "native_quality_transports": {
+    "passed": 8,
+    "openai_sdk": "2.29.0",
+    "anthropic_sdk": "2.3.0",
+    "surfaces": [
+      "responses.create",
+      "chat.completions.create",
+      "messages.create"
+    ],
+    "inference": "synthetic_http_transports_only"
+  },
+  "isolated_migration_lifecycle_followup": {
+    "passed": 8
+  },
+  "clean_installed_wheel": {
+    "passed": 31,
+    "origin_verified": true
+  },
+  "legacy_sdk_scanner": {
+    "passed": 21
+  },
+  "native_node": {
+    "passed": 9,
+    "typescript": "passed"
+  },
+  "frontend_units": {
+    "passed": 7
+  },
+  "browser": "authenticated_real_postgres_desktop_mobile_and_axe_passed",
+  "static_checks": [
+    "ruff",
+    "ruff_format",
+    "linux_mypy_131_modules",
+    "locked_dependencies",
+    "generated_openapi_client_types",
+    "react_production_build"
+  ],
+  "dependency_audits": {
+    "python_runtime": "no_known_vulnerabilities",
+    "web": 0,
+    "node_sdk": 0
+  },
+  "archive_checks": [
+    "wheel_and_sdist_build",
+    "twine",
+    "release_payload_and_licenses",
+    "core_only_independent_consumer_smoke"
+  ],
+  "privacy_guard": {
+    "source_files": 466,
+    "archive_members": 606,
+    "archive_stage": "before_acceptance_receipt_documentation_followup",
+    "findings": 0,
+    "private_marker_values_logged": false
+  },
+  "executed_provider_requests": 0,
+  "external_notifications": 0,
+  "production_deployments": 0,
+  "package_uploads": 0,
+  "limits": [
+    "synthetic_acceptance_not_customer_quality",
+    "judge_assessments_not_independent_gold",
+    "descriptive_cohorts_not_causal_or_statistically_significant_drift",
+    "population_coverage_unknown",
+    "worker_execution_state_not_observed_by_collector",
+    "releases_5_through_7_unfinished"
+  ]
+}

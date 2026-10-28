@@ -87,6 +87,28 @@ def route_target(model: ModelSpec, text: str) -> ModelSpec:
     raise ValueError("NO_APPROVED_ROUTE_FOR_INPUT")
 
 
+def qualified_native_model(model: ModelSpec, catalog=None):
+    """One support boundary for experiments and approved online judges."""
+    catalog = catalog or Catalog()
+    validated_openai = {"gpt-4.1", "gpt-4.1-mini", "gpt-4.1-2025-04-14", "gpt-4.1-mini-2025-04-14"}
+    validated_anthropic = {"claude-sonnet-4-6", "claude-haiku-4-5"}
+    if model.provider not in {"openai", "anthropic", "local"}:
+        raise ValueError("NATIVE_MODEL_PROVIDER_UNSUPPORTED")
+    if model.region is not None:
+        raise ValueError("UNSUPPORTED_REGION_FOR_EXPERIMENT_EXECUTOR")
+    if model.provider == "openai" and not catalog.rate_info("openai", model.model)["rate"]:
+        raise ValueError("UNKNOWN_PRICE: model ineligible for paid experiments")
+    if model.provider == "openai" and model.model not in validated_openai:
+        raise ValueError("MODEL_CAPABILITY_CONTRACT_NOT_VALIDATED")
+    if model.provider == "anthropic" and (
+        model.model not in validated_anthropic
+        or not catalog.rate_info("anthropic", model.model)["rate"]
+    ):
+        raise ValueError("ANTHROPIC_MODEL_CONTRACT_OR_PRICE_NOT_VALIDATED")
+    if model.provider == "local" and model.local_cost_upper_usd is None:
+        raise ValueError("LOCAL_COMPUTE_COST_BOUND_REQUIRED")
+
+
 class Budget(StrictModel):
     max_usd: Decimal = Field(ge=0, le=10000)
     max_requests: int = Field(ge=1, le=10000)
@@ -205,13 +227,6 @@ class ExperimentPlan(StrictModel):
         catalog = Catalog()
         if (self.price_snapshot_id, self.price_sha256) != (catalog.snapshot_id, catalog.sha256):
             raise ValueError("PRICE_CONTRACT_CHANGED_REAPPROVAL_REQUIRED")
-        validated_text_models = {
-            "gpt-4.1",
-            "gpt-4.1-mini",
-            "gpt-4.1-2025-04-14",
-            "gpt-4.1-mini-2025-04-14",
-        }
-        validated_anthropic = {"claude-sonnet-4-6", "claude-haiku-4-5"}
         if self.judge and self.judge.provider == "router":
             raise ValueError("ROUTED_JUDGES_NOT_SUPPORTED")
         expanded = [target for model in models for target in provider_models(model)]
@@ -234,19 +249,7 @@ class ExperimentPlan(StrictModel):
                     raise ValueError("PROMPT_CACHE_REQUIRES_ANTHROPIC_STATIC_PREFIX")
             if model.provider not in self.approved_providers:
                 raise ValueError("FORBIDDEN_PROVIDER")
-            if model.region is not None:
-                raise ValueError("UNSUPPORTED_REGION_FOR_EXPERIMENT_EXECUTOR")
-            if model.provider == "openai" and not catalog.rate_info("openai", model.model)["rate"]:
-                raise ValueError("UNKNOWN_PRICE: model ineligible for paid experiments")
-            if model.provider == "openai" and model.model not in validated_text_models:
-                raise ValueError("MODEL_CAPABILITY_CONTRACT_NOT_VALIDATED")
-            if model.provider == "anthropic" and (
-                model.model not in validated_anthropic
-                or not catalog.rate_info("anthropic", model.model)["rate"]
-            ):
-                raise ValueError("ANTHROPIC_MODEL_CONTRACT_OR_PRICE_NOT_VALIDATED")
-            if model.provider == "local" and model.local_cost_upper_usd is None:
-                raise ValueError("LOCAL_COMPUTE_COST_BOUND_REQUIRED")
+            qualified_native_model(model, catalog)
         if self.judge and not self.judge_rubric:
             raise ValueError("judge requires an explicit rubric")
         return self

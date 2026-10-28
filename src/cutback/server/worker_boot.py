@@ -62,6 +62,14 @@ def worker_cycle(sessions, store, *, maintenance_due=True):
         from cutback.server.notifications import run_notification_one
 
         attempt("notifications", lambda: run_notification_one(sessions, enabled=True))
+    if store and os.getenv("CUTBACK_QUALITY_EXECUTION", "false").lower() == "true":
+        from cutback.server.quality_service import backfill_quality_one
+        from cutback.server.quality_worker import run_quality_one
+
+        attempt("quality_backfill", lambda: backfill_quality_one(sessions, enabled=True))
+        attempt(
+            "quality_evaluations", lambda: run_quality_one(sessions, store, execution_enabled=True)
+        )
     if store and os.getenv("CUTBACK_TRAINING_EXECUTION", "false").lower() == "true":
         from cutback.server.training_worker import run_training_one
 

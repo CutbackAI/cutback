@@ -5,6 +5,11 @@ import pytest
 pytestmark = pytest.mark.postgres
 
 
+@pytest.fixture
+def api_database_url(isolated_postgres_url):
+    return isolated_postgres_url
+
+
 def test_project_names_are_organization_scoped_while_keys_remain_project_scoped(api):
     client, admin, _ = api
     organizations = [

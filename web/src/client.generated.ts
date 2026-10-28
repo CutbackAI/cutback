@@ -361,6 +361,28 @@ export function createSDK(request:Request) {return {
     if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
     if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/notification-deliveries`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  compare_v1_projects__project_id__quality_rules__rule_id__compare_post: (args:{project_id:string;rule_id:string;body:components["schemas"]["QualityComparison"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/quality-rules/${encodeURIComponent(String(args.rule_id))}/compare`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  create_rule_v1_projects__project_id__quality_rules_post: (args:{project_id:string;body:components["schemas"]["QualityRuleInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/quality-rules`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  rules_v1_projects__project_id__quality_rules_get: (args:{project_id:string;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/quality-rules`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  switch_v1_projects__project_id__quality_rules__rule_id__switch_post: (args:{project_id:string;rule_id:string;body:components["schemas"]["RuleSwitch"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/quality-rules/${encodeURIComponent(String(args.rule_id))}/switch`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  evaluations_v1_projects__project_id__quality_rules__rule_id__evaluations_get: (args:{project_id:string;rule_id:string;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/quality-rules/${encodeURIComponent(String(args.rule_id))}/evaluations`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  read_output_v1_projects__project_id__quality_evaluations__evaluation_id__output_post: (args:{project_id:string;evaluation_id:string;body:components["schemas"]["ContentPurpose"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/quality-evaluations/${encodeURIComponent(String(args.evaluation_id))}/output`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   export_v1_projects__project_id__export_get: (args:{project_id:string}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/export`+(query.size?"?"+query.toString():""),{method:"GET"});},

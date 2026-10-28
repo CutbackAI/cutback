@@ -5487,6 +5487,370 @@
         }
       }
     },
+    "/v1/projects/{project_id}/quality-rules/{rule_id}/compare": {
+      "post": {
+        "summary": "Compare",
+        "operationId": "compare_v1_projects__project_id__quality_rules__rule_id__compare_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rule Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QualityComparison"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/quality-rules": {
+      "post": {
+        "summary": "Create Rule",
+        "operationId": "create_rule_v1_projects__project_id__quality_rules_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QualityRuleInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Rules",
+        "operationId": "rules_v1_projects__project_id__quality_rules_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/quality-rules/{rule_id}/switch": {
+      "post": {
+        "summary": "Switch",
+        "operationId": "switch_v1_projects__project_id__quality_rules__rule_id__switch_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rule Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RuleSwitch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/quality-rules/{rule_id}/evaluations": {
+      "get": {
+        "summary": "Evaluations",
+        "operationId": "evaluations_v1_projects__project_id__quality_rules__rule_id__evaluations_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rule Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/quality-evaluations/{evaluation_id}/output": {
+      "post": {
+        "summary": "Read Output",
+        "operationId": "read_output_v1_projects__project_id__quality_evaluations__evaluation_id__output_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "evaluation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Evaluation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentPurpose"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{project_id}/export": {
       "get": {
         "summary": "Export",
@@ -8679,7 +9043,11 @@
           },
           "evidence": {
             "type": "string",
-            "const": "externally_asserted",
+            "enum": [
+              "externally_asserted",
+              "cutback_model_judge",
+              "cutback_technical_contract"
+            ],
             "title": "Evidence",
             "default": "externally_asserted"
           },
@@ -8693,6 +9061,18 @@
               }
             ],
             "title": "Target In Retained Page"
+          },
+          "source_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "missing"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Status"
           }
         },
         "additionalProperties": false,
@@ -11552,6 +11932,22 @@
               }
             ],
             "title": "Evaluator Version"
+          },
+          "source_origin": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "external",
+                  "cutback_model_judge",
+                  "cutback_technical_contract"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Origin"
           }
         },
         "additionalProperties": false,
@@ -12712,6 +13108,275 @@
           "document"
         ],
         "title": "PromptVersionInput"
+      },
+      "QualityComparison": {
+        "properties": {
+          "baseline_start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Baseline Start"
+          },
+          "baseline_end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Baseline End"
+          },
+          "current_start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Current Start"
+          },
+          "current_end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Current End"
+          },
+          "group_by": {
+            "type": "string",
+            "enum": [
+              "release",
+              "service",
+              "input_size_bucket"
+            ],
+            "title": "Group By",
+            "default": "release"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "baseline_start",
+          "baseline_end",
+          "current_start",
+          "current_end"
+        ],
+        "title": "QualityComparison"
+      },
+      "QualityRuleInput": {
+        "properties": {
+          "version_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Version Id"
+          },
+          "key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Key"
+          },
+          "expected_revision": {
+            "type": "integer",
+            "maximum": 2147483646.0,
+            "minimum": 0.0,
+            "title": "Expected Revision"
+          },
+          "environment": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.-]{1,100}$",
+            "title": "Environment"
+          },
+          "workflow": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Workflow"
+          },
+          "filter": {
+            "$ref": "#/components/schemas/SpanFilter"
+          },
+          "source_policy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Source Policy Id"
+          },
+          "evaluator": {
+            "type": "string",
+            "enum": [
+              "nonempty_output",
+              "output_schema",
+              "model_judge"
+            ],
+            "title": "Evaluator"
+          },
+          "prompt_version_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Version Id"
+          },
+          "judge": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QualityTarget"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "content_use_authorized": {
+            "type": "boolean",
+            "title": "Content Use Authorized",
+            "default": false
+          },
+          "record_input_features": {
+            "type": "boolean",
+            "title": "Record Input Features",
+            "default": false
+          },
+          "retain_judge_output": {
+            "type": "boolean",
+            "title": "Retain Judge Output",
+            "default": false
+          },
+          "sample_basis_points": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Sample Basis Points",
+            "default": 10000
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Starts At"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "max_evaluations": {
+            "type": "integer",
+            "maximum": 50000.0,
+            "minimum": 1.0,
+            "title": "Max Evaluations"
+          },
+          "max_requests": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Max Requests",
+            "default": 0
+          },
+          "max_total_usd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 10000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Max Total Usd",
+            "default": "0"
+          },
+          "wait_seconds": {
+            "type": "integer",
+            "maximum": 86400.0,
+            "minimum": 1.0,
+            "title": "Wait Seconds",
+            "default": 300
+          },
+          "approval_ref": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Approval Ref"
+          },
+          "price_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Price Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "version_id",
+          "key",
+          "expected_revision",
+          "environment",
+          "workflow",
+          "source_policy_id",
+          "evaluator",
+          "starts_at",
+          "expires_at",
+          "max_evaluations",
+          "approval_ref"
+        ],
+        "title": "QualityRuleInput"
+      },
+      "QualityTarget": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "anthropic",
+              "local"
+            ],
+            "title": "Provider"
+          },
+          "model": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Model"
+          },
+          "surface": {
+            "type": "string",
+            "enum": [
+              "responses.create",
+              "chat.completions.create",
+              "messages.create"
+            ],
+            "title": "Surface"
+          },
+          "max_input_tokens": {
+            "type": "integer",
+            "maximum": 100000.0,
+            "minimum": 1.0,
+            "title": "Max Input Tokens",
+            "default": 8192
+          },
+          "max_output_tokens": {
+            "type": "integer",
+            "maximum": 16384.0,
+            "minimum": 16.0,
+            "title": "Max Output Tokens",
+            "default": 256
+          },
+          "local_cost_upper_usd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Local Cost Upper Usd"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "provider",
+          "model",
+          "surface"
+        ],
+        "title": "QualityTarget"
       },
       "QueueInput": {
         "properties": {

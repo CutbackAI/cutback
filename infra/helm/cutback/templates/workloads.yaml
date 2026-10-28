@@ -77,7 +77,7 @@ spec:
             {{- if $root.Values.payloads.enabled }}
             - {name: CUTBACK_PAYLOAD_KEY_FILE, value: /run/cutback/payload_key}
             {{- end }}
-            {{- if and (eq $component "worker") $root.Values.execution.experiments }}
+            {{- if and (eq $component "worker") (or $root.Values.execution.experiments $root.Values.execution.quality) }}
             {{- range $provider := $root.Values.execution.providers }}
             - {name: {{ printf "CUTBACK_EXPERIMENT_%s_KEY_FILE" (upper $provider) }}, value: {{ printf "/run/experiments/%s_experiment_key" $provider | quote }}}
             {{- end }}
@@ -109,7 +109,7 @@ spec:
             {{- if and $root.Values.payloads.enabled (eq $root.Values.payloads.backend "file") }}
             - {name: payloads, mountPath: /var/lib/cutback/payloads}
             {{- end }}
-            {{- if and (eq $component "worker") $root.Values.execution.experiments $root.Values.execution.providers }}
+            {{- if and (eq $component "worker") (or $root.Values.execution.experiments $root.Values.execution.quality) $root.Values.execution.providers }}
             - {name: experiments, mountPath: /run/experiments, readOnly: true}
             {{- end }}
       volumes:
@@ -141,7 +141,7 @@ spec:
           persistentVolumeClaim:
             claimName: {{ required "file payload storage needs payloads.existingClaim with shared access" $root.Values.payloads.existingClaim }}
         {{- end }}
-        {{- if and (eq $component "worker") $root.Values.execution.experiments $root.Values.execution.providers }}
+        {{- if and (eq $component "worker") (or $root.Values.execution.experiments $root.Values.execution.quality) $root.Values.execution.providers }}
         - name: experiments
           secret:
             secretName: {{ $root.Values.secrets.experiments }}

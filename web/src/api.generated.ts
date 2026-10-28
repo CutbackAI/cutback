@@ -1433,6 +1433,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/quality-rules/{rule_id}/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Compare */
+        post: operations["compare_v1_projects__project_id__quality_rules__rule_id__compare_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/quality-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Rules */
+        get: operations["rules_v1_projects__project_id__quality_rules_get"];
+        put?: never;
+        /** Create Rule */
+        post: operations["create_rule_v1_projects__project_id__quality_rules_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/quality-rules/{rule_id}/switch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Switch */
+        post: operations["switch_v1_projects__project_id__quality_rules__rule_id__switch_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/quality-rules/{rule_id}/evaluations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Evaluations */
+        get: operations["evaluations_v1_projects__project_id__quality_rules__rule_id__evaluations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/quality-evaluations/{evaluation_id}/output": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Read Output */
+        post: operations["read_output_v1_projects__project_id__quality_evaluations__evaluation_id__output_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/export": {
         parameters: {
             query?: never;
@@ -2399,11 +2485,13 @@ export interface components {
             /**
              * Evidence
              * @default externally_asserted
-             * @constant
+             * @enum {string}
              */
-            evidence: "externally_asserted";
+            evidence: "externally_asserted" | "cutback_model_judge" | "cutback_technical_contract";
             /** Target In Retained Page */
             target_in_retained_page?: boolean | null;
+            /** Source Status */
+            source_status?: "missing" | null;
         };
         /** Attribute */
         Attribute: {
@@ -3476,6 +3564,8 @@ export interface components {
             evaluator?: string | null;
             /** Evaluator Version */
             evaluator_version?: string | null;
+            /** Source Origin */
+            source_origin?: ("external" | "cutback_model_judge" | "cutback_technical_contract") | null;
         };
         /** OnlineRuleInput */
         OnlineRuleInput: {
@@ -3902,6 +3992,143 @@ export interface components {
             /** Provenance Ref */
             provenance_ref: string;
             document: components["schemas"]["PromptDocument"];
+        };
+        /** QualityComparison */
+        QualityComparison: {
+            /**
+             * Baseline Start
+             * Format: date-time
+             */
+            baseline_start: string;
+            /**
+             * Baseline End
+             * Format: date-time
+             */
+            baseline_end: string;
+            /**
+             * Current Start
+             * Format: date-time
+             */
+            current_start: string;
+            /**
+             * Current End
+             * Format: date-time
+             */
+            current_end: string;
+            /**
+             * Group By
+             * @default release
+             * @enum {string}
+             */
+            group_by: "release" | "service" | "input_size_bucket";
+        };
+        /** QualityRuleInput */
+        QualityRuleInput: {
+            /**
+             * Version Id
+             * Format: uuid
+             */
+            version_id: string;
+            /** Key */
+            key: string;
+            /** Expected Revision */
+            expected_revision: number;
+            /** Environment */
+            environment: string;
+            /** Workflow */
+            workflow: string;
+            filter?: components["schemas"]["SpanFilter"];
+            /**
+             * Source Policy Id
+             * Format: uuid
+             */
+            source_policy_id: string;
+            /**
+             * Evaluator
+             * @enum {string}
+             */
+            evaluator: "nonempty_output" | "output_schema" | "model_judge";
+            /** Prompt Version Id */
+            prompt_version_id?: string | null;
+            judge?: components["schemas"]["QualityTarget"] | null;
+            /**
+             * Content Use Authorized
+             * @default false
+             */
+            content_use_authorized: boolean;
+            /**
+             * Record Input Features
+             * @default false
+             */
+            record_input_features: boolean;
+            /**
+             * Retain Judge Output
+             * @default false
+             */
+            retain_judge_output: boolean;
+            /**
+             * Sample Basis Points
+             * @default 10000
+             */
+            sample_basis_points: number;
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Max Evaluations */
+            max_evaluations: number;
+            /**
+             * Max Requests
+             * @default 0
+             */
+            max_requests: number;
+            /**
+             * Max Total Usd
+             * @default 0
+             */
+            max_total_usd: number | string;
+            /**
+             * Wait Seconds
+             * @default 300
+             */
+            wait_seconds: number;
+            /** Approval Ref */
+            approval_ref: string;
+            /** Price Sha256 */
+            price_sha256?: string;
+        };
+        /** QualityTarget */
+        QualityTarget: {
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "openai" | "anthropic" | "local";
+            /** Model */
+            model: string;
+            /**
+             * Surface
+             * @enum {string}
+             */
+            surface: "responses.create" | "chat.completions.create" | "messages.create";
+            /**
+             * Max Input Tokens
+             * @default 8192
+             */
+            max_input_tokens: number;
+            /**
+             * Max Output Tokens
+             * @default 256
+             */
+            max_output_tokens: number;
+            /** Local Cost Upper Usd */
+            local_cost_upper_usd?: number | string | null;
         };
         /** QueueInput */
         QueueInput: {
@@ -8011,6 +8238,218 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    compare_v1_projects__project_id__quality_rules__rule_id__compare_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QualityComparison"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rules_v1_projects__project_id__quality_rules_get: {
+        parameters: {
+            query?: {
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_rule_v1_projects__project_id__quality_rules_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QualityRuleInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    switch_v1_projects__project_id__quality_rules__rule_id__switch_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuleSwitch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    evaluations_v1_projects__project_id__quality_rules__rule_id__evaluations_get: {
+        parameters: {
+            query?: {
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_output_v1_projects__project_id__quality_evaluations__evaluation_id__output_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                evaluation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentPurpose"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

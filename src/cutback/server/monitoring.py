@@ -188,6 +188,10 @@ def queue_online_intake(sessions, *, enabled=False, now=None, only_project_id=No
                     return {"status": "PROJECT_ONLINE_QUEUE_FULL"}
                 enqueue(session, rule, span, trace, now)
                 count += 1
+            from cutback.server.quality_service import select_quality_targets
+
+            if not select_quality_targets(session, project, span, trace, now):
+                return {"status": "PROJECT_QUALITY_QUEUE_FULL"}
             session.delete(intake)
         return {"status": "TARGETS_QUEUED", "spans_processed": len(rows)}
 
@@ -293,6 +297,7 @@ def evaluate_online(session, row, rule, now):
     query = select(ExternalEvaluation).where(
         ExternalEvaluation.project_id == rule.project_id,
         ExternalEvaluation.environment_id == rule.environment_id,
+        ExternalEvaluation.source_origin == (spec.evaluator.source_origin or "external"),
         ExternalEvaluation.trace_id == row.trace_id,
         ExternalEvaluation.metadata_record["span_id"].as_string() == row.span_id,
         ExternalEvaluation.metadata_record["source"].as_string() == spec.evaluator.source,
@@ -310,6 +315,8 @@ def evaluate_online(session, row, rule, now):
     if len(results) != 1:
         return "unknown", "AMBIGUOUS_EXTERNAL_RESULTS", None
     result = results[0].metadata_record
+    if results[0].source_origin != "external" and result.get("source_status") == "missing":
+        return "missing", "QUALITY_SOURCE_CONTENT_NOT_OBSERVED", str(results[0].result_id)
     if result["outcome"] in {"error", "unknown"}:
         return (
             result["outcome"],

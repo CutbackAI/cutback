@@ -51,6 +51,7 @@ from cutback.server.prompt_db import (
     PromptRecord,
     PromptVersion,
 )
+from cutback.server.quality_db import QualityEvaluation, QualityPromptUse, QualityRule
 from cutback.server.review_db import (
     ReviewItem,
     ReviewLease,
@@ -87,6 +88,9 @@ def install_privacy(app, sessions, authorize, scope):
                 for cls in (
                     NotificationConfig,
                     NotificationDelivery,
+                    QualityRule,
+                    QualityEvaluation,
+                    QualityPromptUse,
                     OnlineRule,
                     OnlineIntake,
                     OnlineEvaluation,
@@ -175,6 +179,16 @@ def install_privacy(app, sessions, authorize, scope):
                 .limit(1)
             ):
                 raise HTTPException(409, "FINISH_IN_FLIGHT_NOTIFICATION_FIRST")
+            if session.scalar(
+                select(QualityEvaluation.id)
+                .where(
+                    QualityEvaluation.project_id == project_id,
+                    QualityEvaluation.state == "leased",
+                    QualityEvaluation.lease_until > datetime.now(UTC),
+                )
+                .limit(1)
+            ):
+                raise HTTPException(409, "FINISH_IN_FLIGHT_QUALITY_EVALUATION_FIRST")
             running = session.scalar(
                 select(JobRecord)
                 .where(
@@ -233,6 +247,9 @@ def install_privacy(app, sessions, authorize, scope):
             from cutback.server.db import ChangeProposal, DatasetItem, RecommendationRecord
 
             for cls in (
+                QualityEvaluation,
+                QualityPromptUse,
+                QualityRule,
                 PromptAliasChange,
                 PromptAlias,
                 PromptDependency,
