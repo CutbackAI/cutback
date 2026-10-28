@@ -141,7 +141,7 @@ def git(root, *arguments):
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             start_new_session=os.name != "nt",
-            creationflags=subprocess.CREATE_NO_WINDOW | 0x4 if os.name == "nt" else 0,
+            creationflags=cast(Any, subprocess).CREATE_NO_WINDOW | 0x4 if os.name == "nt" else 0,
         )
         if job:
             job.assign_and_resume(process)
@@ -320,7 +320,7 @@ class WindowsJob:
                 ("peak_job_memory", ctypes.c_size_t),
             ]
 
-        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel = cast(Any, ctypes).WinDLL("kernel32", use_last_error=True)
         kernel.CreateJobObjectW.argtypes = [ctypes.c_void_p, wintypes.LPCWSTR]
         kernel.CreateJobObjectW.restype = wintypes.HANDLE
         kernel.SetInformationJobObject.argtypes = [
@@ -348,7 +348,7 @@ class WindowsJob:
 
         if not self.kernel.AssignProcessToJobObject(self.handle, int(process._handle)):
             raise ValueError("APPLICATION_CHECK_PROCESS_CONTAINMENT_UNAVAILABLE")
-        resume = ctypes.WinDLL("ntdll").NtResumeProcess
+        resume = cast(Any, ctypes).WinDLL("ntdll").NtResumeProcess
         resume.argtypes = [wintypes.HANDLE]
         resume.restype = ctypes.c_long
         if resume(int(process._handle)) != 0:
@@ -390,7 +390,9 @@ def execute_command(root, command):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             start_new_session=os.name != "nt",
-            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW | 0x4
+            creationflags=cast(Any, subprocess).CREATE_NEW_PROCESS_GROUP
+            | cast(Any, subprocess).CREATE_NO_WINDOW
+            | 0x4
             if os.name == "nt"
             else 0,
         )
