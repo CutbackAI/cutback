@@ -2,7 +2,7 @@
   "contract": "cutback.campaign-acceptance.v1",
   "date": "2026-10-28",
   "scope": "bounded_native_text_adaptive_campaign_with_literal_source_change_and_local_review",
-  "publication": "locally_accepted_hosted_and_public_source_gates_pending_no_new_pypi_upload",
+  "publication": "public_source_merged_no_new_pypi_upload",
   "migration": "0015",
   "released_migrations_preserved_through": "0014",
   "broad_regression_before_final_patch_hook_and_ui_followups": {
@@ -132,5 +132,30 @@
       "authenticated_browser_mobile_axe",
       "readable_decision_and_cost_copy"
     ]
+  },
+  "hosted_publication": {
+    "pull_request": "https://github.com/CutbackAI/cutback/pull/24",
+    "head": "f90bc27267d9afe1353de8d3dc9e4b89007e2d54",
+    "merge": "5c34b39b73b615f1d0852debd3c6c1234c3a44e8",
+    "identical_tree": "69a636201aaf2d6e5234bc01e8e9486001835662",
+    "required_checks_passed": 8,
+    "python_311": {
+      "passed": 633,
+      "skipped": 4,
+      "seconds": 384.52
+    },
+    "python_313": {
+      "passed": 631,
+      "skipped": 6,
+      "seconds": 282.6
+    },
+    "ci_run": "https://github.com/CutbackAI/cutback/actions/runs/40655168303",
+    "security_run": "https://github.com/CutbackAI/cutback/actions/runs/40655168469",
+    "public_boundary": {
+      "source_files": 564,
+      "history_objects": 1916,
+      "archive_members": 747,
+      "findings": 0
+    }
   }
 }

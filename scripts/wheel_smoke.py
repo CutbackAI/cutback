@@ -96,6 +96,14 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
     assert job["phase"] == "ANALYZED" and job["profiles"]
     assert job["next_action"]["provider_calls"] == 0
     assert command("workflow", "status")["id"] == job["id"]
+    help_result = subprocess.run(
+        [str(executable), "-m", "cutback.cli", "qualify", "load", "--help"],
+        capture_output=True,
+        text=True,
+        cwd=consumer,
+        check=True,
+    )
+    assert "--execute-local" in help_result.stdout
     subprocess.run(
         [str(executable), "-m", "cutback.cli", "sample", str(Path(temporary) / "support-desk")],
         check=True,

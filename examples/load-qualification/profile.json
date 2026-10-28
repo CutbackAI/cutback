@@ -1,0 +1,12 @@
+{
+  "contract": "cutback.local-load-profile.v1",
+  "events": 10000,
+  "batch_size": 100,
+  "concurrency": 4,
+  "query_requests": 40,
+  "max_workload_seconds": 300,
+  "minimum_latency_samples": 20,
+  "p95_ingest_ms_ceiling": 10000,
+  "p95_query_ms_ceiling": 5000,
+  "minimum_unique_events_per_second": 10
+}

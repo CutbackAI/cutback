@@ -91,6 +91,7 @@ include = [
   "/docs/agent-evaluation.md",
   "/docs/task-economics.md",
   "/docs/improvement-campaigns.md",
+  "/docs/load-qualification.md",
   "/docs/identity-and-teams.md", "/docs/hosted-billing.md", "/docs/continuous-operations.md",
   "/docs/advanced-optimization.md", "/docs/local-training.md", "/docs/adr", "/docs/assets", "/packages/js-sdk/index.mjs", "/packages/js-sdk/index.d.ts",
   "/packages/js-sdk/package.json", "/packages/js-sdk/package-lock.json",

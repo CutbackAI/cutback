@@ -20,6 +20,7 @@ from cutback.core.traces import (
     TraceComparison,
     TraceDetail,
     TracePage,
+    WorkflowSpan,
 )
 from cutback.server.db import Environment, StoredEvent
 from cutback.server.trace_db import (
@@ -64,13 +65,36 @@ def identity(session, cls, fields, constraint):
     return session.scalar(select(cls.id).where(*(getattr(cls, k) == v for k, v in fields.items())))
 
 
+def scoped_identities(session, cls, project, environment, name, identifiers, constraint):
+    keys = sorted(set(identifiers))
+    if not keys:
+        return {}
+    session.execute(
+        insert(cls)
+        .values(
+            [
+                {"id": uuid4(), "project_id": project, "environment_id": environment, name: key}
+                for key in keys
+            ]
+        )
+        .on_conflict_do_nothing(constraint=constraint)
+    )
+    field = getattr(cls, name)
+    return dict(
+        session.execute(
+            select(field, cls.id).where(
+                cls.project_id == project, cls.environment_id == environment, field.in_(keys)
+            )
+        ).all()
+    )
+
+
 def ingest_spans(session, project, environment, body):
-    accepted = duplicates = 0
     from cutback.server.dataset_lineage import lock_lineage
     from cutback.server.monitoring_db import OnlineIntake, OnlineRule
 
-    # One shared lock/query per bounded batch. Rule fan-out and evaluators belong
-    # to the worker, never to the telemetry request path.
+    # This lock also serializes policy cutover, intake and conflicting identities.
+    # No evaluator fan-out or model call belongs in the ingestion request path.
     lock_lineage(session, project)
     online_enabled = (
         session.scalar(
@@ -84,71 +108,119 @@ def ingest_spans(session, project, environment, body):
         )
         is not None
     )
-    for span in sorted(body.spans, key=lambda value: (value.trace_id, value.span_id)):
-        trace = identity(
-            session,
-            ExecutionTrace,
-            {"project_id": project, "environment_id": environment, "trace_id": span.trace_id},
-            "uq_execution_trace",
-        )
+    requested: dict[tuple[str, str], tuple[dict, str, WorkflowSpan]] = {}
+    for span in body.spans:
         record = span.model_dump(mode="json")
         digest = fingerprint(record)
-        added = session.scalar(
-            insert(ExecutionSpan)
-            .values(
-                id=uuid4(),
-                project_id=project,
-                environment_id=environment,
-                trace_record_id=trace,
-                span_id=span.span_id,
-                started_ns=span.started_ns,
-                fingerprint=digest,
-                metadata_record=record,
-            )
-            .on_conflict_do_nothing(constraint="uq_execution_span")
-            .returning(ExecutionSpan.id)
-        )
-        if added:
-            accepted += 1
-            if online_enabled:
-                session.add(
-                    OnlineIntake(
-                        project_id=project, environment_id=environment, span_record_id=added
-                    )
-                )
-        elif (
-            session.scalar(
-                select(ExecutionSpan.fingerprint).where(
-                    ExecutionSpan.trace_record_id == trace,
-                    ExecutionSpan.span_id == span.span_id,
-                )
-            )
-            != digest
-        ):
+        key = (span.trace_id, span.span_id)
+        if key in requested and requested[key][1] != digest:
             raise HTTPException(409, "SPAN_IDENTITY_CONFLICT_BATCH_ROLLED_BACK")
-        else:
-            duplicates += 1
-        if span.session_id:
-            sid = identity(
-                session,
-                ExecutionSession,
-                {
-                    "project_id": project,
-                    "environment_id": environment,
-                    "session_id": span.session_id,
-                },
-                "uq_execution_session",
+        requested.setdefault(key, (record, digest, span))
+    traces = scoped_identities(
+        session,
+        ExecutionTrace,
+        project,
+        environment,
+        "trace_id",
+        [key[0] for key in requested],
+        "uq_execution_trace",
+    )
+    records = [
+        {
+            "id": uuid4(),
+            "project_id": project,
+            "environment_id": environment,
+            "trace_record_id": traces[trace],
+            "span_id": identifier,
+            "started_ns": span.started_ns,
+            "fingerprint": digest,
+            "metadata_record": record,
+        }
+        for (trace, identifier), (record, digest, span) in sorted(requested.items())
+    ]
+    added = session.scalars(
+        insert(ExecutionSpan)
+        .values(records)
+        .on_conflict_do_nothing(constraint="uq_execution_span")
+        .returning(ExecutionSpan.id)
+    ).all()
+    expected = {
+        (traces[trace], identifier): value[1] for (trace, identifier), value in requested.items()
+    }
+    # Check both existing and inserted rows after the upsert. A conflicting
+    # concurrent/direct writer cannot hide behind ON CONFLICT DO NOTHING.
+    retained = {
+        (row.trace_record_id, row.span_id): row.fingerprint
+        for row in session.execute(
+            select(
+                ExecutionSpan.trace_record_id, ExecutionSpan.span_id, ExecutionSpan.fingerprint
+            ).where(
+                ExecutionSpan.project_id == project,
+                ExecutionSpan.environment_id == environment,
+                tuple_(ExecutionSpan.trace_record_id, ExecutionSpan.span_id).in_(list(expected)),
             )
-            identity(
-                session,
-                SessionTrace,
-                {"project_id": project, "session_record_id": sid, "trace_record_id": trace},
-                "uq_session_trace",
+        )
+    }
+    if retained != expected:
+        raise HTTPException(409, "SPAN_IDENTITY_CONFLICT_BATCH_ROLLED_BACK")
+    if online_enabled and added:
+        session.execute(
+            insert(OnlineIntake)
+            .values(
+                [
+                    {
+                        "id": uuid4(),
+                        "project_id": project,
+                        "environment_id": environment,
+                        "span_record_id": identifier,
+                    }
+                    for identifier in added
+                ]
             )
+            .on_conflict_do_nothing(constraint="uq_online_intake_span")
+        )
+    sessions = scoped_identities(
+        session,
+        ExecutionSession,
+        project,
+        environment,
+        "session_id",
+        [value[2].session_id for value in requested.values() if value[2].session_id],
+        "uq_execution_session",
+    )
+    links = sorted(
+        {
+            (sessions[value[2].session_id], traces[trace])
+            for (trace, _), value in requested.items()
+            if value[2].session_id
+        }
+    )
+    if links:
+        session.execute(
+            insert(SessionTrace)
+            .values(
+                [
+                    {
+                        "id": uuid4(),
+                        "project_id": project,
+                        "session_record_id": sid,
+                        "trace_record_id": trace,
+                    }
+                    for sid, trace in links
+                ]
+            )
+            .on_conflict_do_nothing(constraint="uq_session_trace")
+        )
     from cutback.server.billing import meter_ingestion
 
+    accepted = len(added)
     meter_ingestion(session, project, accepted)
-    return {"profile": PROFILE, "accepted": accepted, "duplicates": duplicates, "conflicts": 0}
+    return {
+        "profile": PROFILE,
+        "accepted": accepted,
+        "duplicates": len(body.spans) - accepted,
+        "conflicts": 0,
+    }
 
 
 def graph_issues(spans, truncated):
@@ -516,16 +588,27 @@ def install_traces(app, sessions, authorize, scope):
         with sessions() as session:
             query = page_before(session, query, ExecutionTrace, project_id, environment_id, before)
             rows = session.scalars(query.limit(limit + 1)).all()
+            counts = {
+                row.trace_record_id: (row.spans, row.errors)
+                for row in session.execute(
+                    select(
+                        ExecutionSpan.trace_record_id,
+                        func.count(ExecutionSpan.id).label("spans"),
+                        func.count(ExecutionSpan.id)
+                        .filter(ExecutionSpan.metadata_record["status"].as_string() == "error")
+                        .label("errors"),
+                    )
+                    .where(
+                        ExecutionSpan.project_id == project_id,
+                        ExecutionSpan.environment_id == environment_id,
+                        ExecutionSpan.trace_record_id.in_([row.id for row in rows[:limit]]),
+                    )
+                    .group_by(ExecutionSpan.trace_record_id)
+                )
+            }
             items = []
             for row in rows[:limit]:
-                count, errors = session.execute(
-                    select(
-                        func.count(ExecutionSpan.id),
-                        func.count(ExecutionSpan.id).filter(
-                            ExecutionSpan.metadata_record["status"].as_string() == "error"
-                        ),
-                    ).where(ExecutionSpan.trace_record_id == row.id)
-                ).one()
+                count, errors = counts.get(row.id, (0, 0))
                 items.append(
                     {
                         "id": str(row.id),
