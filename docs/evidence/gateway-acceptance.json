@@ -1,6 +1,7 @@
 {
   "feature": "finite_application_gateway_budgets",
-  "status": "source_focused_qualified_frozen_installed_and_public_gates_pending",
+  "status": "bounded_implementation_final_acceptance_tracked_in_pull_request_33",
+  "final_gate_record": "https://github.com/CutbackAI/cutback/pull/33",
   "scope": "project/environment virtual keys, shared project/team/model/key modeled budgets; native synchronous/asynchronous nonstreaming Luna Responses text",
   "released_migrations_unchanged": "0001-0018",
   "additive_migration_unreleased": "0019",
@@ -13,6 +14,19 @@
   "desktop_mobile_axe_and_viewer": true,
   "frontend_units": 9,
   "source_typing_modules": 204,
+  "expiry_fix_source_default": {"passed": 32, "skipped": 8, "seconds": 44.11},
+  "expiry_fix_source_sdk3": {"passed": 40, "seconds": 45.69},
+  "exact_public_wheel_sdk3": {"passed": 727, "skipped": 6, "seconds": 478.84},
+  "exact_public_wheel_sdk3_skips": {"windows_symlink_privilege": 2, "separate_legacy_sdk_matrix": 4},
+  "exact_public_wheel_legacy_scanner": {"passed": 21, "seconds": 5.83},
+  "exact_public_wheel_migrations_authenticated_gateway_browser_and_pipeline": "pass within full default run; complete run status is in the final gate record",
+  "exact_public_wheel_independent_cli_sample": "pass with owned Docker/PostgreSQL, metadata-only startup, two synthetic provider requests, duplicate/shared limits enforced and confirmed project deletion",
+  "exact_public_wheel_core_only": "pass, including native preparation and discovered application checks without server/provider SDK dependencies",
+  "exact_public_wheel_gateway_without_provider_sdks": "pass; disabled HTTP response is nonretryable",
+  "exact_packaged_application_files": 217,
+  "exact_packaged_python_modules": 204,
+  "public_source_and_both_installed_environments_match": true,
+  "full_default_and_hosted_acceptance": "Consult the final gate record; do not infer these results from focused/source checks.",
   "generated_api_types_and_production_react": "pass",
   "independent_native_http_pg_report_sample": "pass within combined source group",
   "earlier_failed_runs": [
@@ -22,16 +36,16 @@
     "Source typing required explicit Decimal construction and a literal context default; corrected.",
     "React build caught two missing newly frozen reservation fields; authoring now supplies both.",
     "Initial mobile table over-wrapped opaque IDs; bounded horizontal tables preserve readability.",
-    "The added dashboard exceeded the initial bundle warning; route-level lazy loading removes that warning and provides a failure boundary."
+    "The added dashboard exceeded the initial bundle warning; route-level lazy loading removes that warning and provides a failure boundary.",
+    "Initial hosted SDK3 and audit jobs rejected stale optional-extra metadata in the nested compatibility lockfile. Regenerated it without changing dependency versions.",
+    "An additional real-PG concurrency test reproduced expiry being checked before a shared lock wait. Real time is now refreshed under the mutation lock before policy/key actions and money reservation; the regression passes.",
+    "The obsolete pre-expiry-fix default installed run was stopped and is not counted as final acceptance; the fixed wheel has a separate complete gate."
   ],
   "native_sdk_requests": "actual pinned SDKs with synthetic provider transports",
   "paid_provider_requests": 0,
   "production_deployment": false,
   "pypi_upload": false,
   "pending": [
-    "final frozen installed default, SDK3 and legacy qualification",
-    "core-only/archive/publication boundary and packaged-byte comparisons",
-    "exact hosted checks and sanitized public merge",
     "broader providers, surfaces, reliability, operations and roadmap acceptance",
     "independent real user/customer and live provider acceptance"
   ]

@@ -20,7 +20,7 @@ The independent [campaign application](../examples/improvement-campaign/README.m
 
 ## Engineering still required
 
-1. **Gateway breadth and reliability:** the working source now implements a separately enabled, finite text-gateway contract with virtual keys, shared budgets and no uncertain replay ([scope](gateway-budgets.md)); final installed/public gates remain pending. Additional providers/surfaces, streaming, configurable reliability/fallback behavior and operational acceptance remain unfinished.
+1. **Gateway breadth and reliability:** the working source implements a separately enabled, finite text-gateway contract with virtual keys, shared budgets and no uncertain replay ([scope](gateway-budgets.md)); exact package qualification and public acceptance are tracked in [PR 33](https://github.com/CutbackAI/cutback/pull/33). Additional providers/surfaces, streaming, configurable reliability/fallback behavior and operational acceptance remain unfinished.
 2. **Broader automatic improvements:** evidence-driven strategy selection, retrieval/tool/compression/batch optimization, learned routing and additional source/framework adapters. The current instruction search and heuristic routing do not provide all these strategies.
 3. **Broader evaluation:** generated criteria and real-data scenarios, qualified application/tool isolation and simulation, broader adversarial/guardrail integrations, and the documented modality/cloud specialties.
 4. **Operational qualification:** evaluator/worker/gateway capacity, intended clean-host deployment and recovery modes, remaining collaboration/provisioning journeys, and their complete dashboard lifecycles.
