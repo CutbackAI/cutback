@@ -550,6 +550,12 @@ def create_app(
     from cutback.server.prompt_api import install_prompts
 
     install_prompts(app, sessions, authorize, scope)
+    from cutback.server.monitoring_api import install_monitoring
+
+    install_monitoring(app, sessions, authorize, scope)
+    from cutback.server.notification_api import install_notifications
+
+    install_notifications(app, sessions, authorize, scope)
     from cutback.server.privacy_api import install_privacy
 
     install_privacy(app, sessions, authorize, scope)

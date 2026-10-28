@@ -1,0 +1,95 @@
+{
+  "contract": "cutback.monitoring-acceptance.v1",
+  "date": "2026-10-27",
+  "scope": "bounded_nonbillable_online_monitoring_incidents_and_opt_in_metadata_notifications",
+  "publication": "locally_accepted_source_hosted_gates_pending_no_pypi_upload",
+  "migrations": [
+    "0011"
+  ],
+  "released_migrations_preserved_through": "0010",
+  "first_full_regression": {
+    "passed": 394,
+    "failed": 1,
+    "skipped": 5,
+    "resolved_cause": "backfill test assumed a global shared worker would select its project next"
+  },
+  "focused_postgres_migration_transport_before_outbox": {
+    "passed": 33
+  },
+  "focused_postgres_migration_transport_after_outbox": {
+    "passed": 34
+  },
+  "qualified_transport_and_receiver_signature_followup": {
+    "passed": 17
+  },
+  "helm_render_strict_schema_and_secret_scoping": {
+    "passed": 4
+  },
+  "separate_legacy_sdk_and_scanner": {
+    "passed": 21
+  },
+  "frontend_units": {
+    "passed": 7
+  },
+  "initial_installed_wheel_before_outbox_and_signature_followup": {
+    "origin_verified": true,
+    "postgres_migration_transport_browser_passed": 34
+  },
+  "initial_core_only_wheel_consumer_smoke": "passed",
+  "final_full_regression": {
+    "passed": 398,
+    "skipped": 5,
+    "skip_reasons": [
+      "four legacy SDK cases exercised separately",
+      "one Windows symlink privilege unavailable"
+    ],
+    "postgresql": true,
+    "authenticated_browser_mobile_accessibility_pkce": true,
+    "cpu_training": true,
+    "owned_local_docker_lifecycle": true
+  },
+  "final_installed_wheel": {
+    "origin_verified": true,
+    "postgres_migration_native_transport_receiver_and_authenticated_browser_passed": 36,
+    "dependencies": "frozen_lock_export",
+    "non_editable": true
+  },
+  "native_webhook_transport": {
+    "httpcore": "1.0.9",
+    "connections": "synthetic_TCP_stream_with_actual_HTTP_TLS_SNI_path"
+  },
+  "provider_calls": 0,
+  "external_notifications": 0,
+  "production_deployments": 0,
+  "limitations": [
+    "metadata execution status is not task quality",
+    "external scores retain externally asserted evidence semantics",
+    "population and retention coverage remain unknown",
+    "content and billable online judging are not implemented",
+    "input and labeled cohort drift remain unfinished",
+    "notifications require separate explicit destination approval and worker enablement",
+    "at least once delivery requires durable receiver deduplication",
+    "source functionality is not included in the published dev5 wheel",
+    "Releases 5 through 7 and real customer qualification remain unfinished"
+  ],
+  "static_checks": [
+    "ruff",
+    "ruff_format",
+    "mypy_linux_123_modules",
+    "generated_openapi_client_types",
+    "react_production_build",
+    "locked_dependencies"
+  ],
+  "source_archive_boundary": {
+    "files": 447,
+    "archive_members": 580,
+    "findings": 0,
+    "private_marker_values_logged": false
+  },
+  "archive_checks": [
+    "wheel_and_sdist_build",
+    "twine",
+    "release_payload_and_license_check"
+  ],
+  "core_only_wheel_independent_consumer": "passed_final_rebuild"
+}

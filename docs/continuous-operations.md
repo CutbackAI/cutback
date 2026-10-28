@@ -1,5 +1,7 @@
 # Continuous experiments and rollout evidence
 
+For versioned online metadata evaluation, delayed-score alert windows, incident ownership and opt-in signed notifications, see [continuous monitoring](online-monitoring.md). Those records and workers are separate from the approved experiment schedules below.
+
 Schedules are proposals until an administrator approves their exact hash and a reference. They bind a frozen plan hash, a maximum number of runs, interval, expiry, total request limit and total modeled USD cap. Aggregate limits must cover the full per-run caps. Approval cannot be reused to authorize a changed or exhausted schedule.
 
 The worker additionally requires `CUTBACK_EXPERIMENT_EXECUTION=true`, configured approved execution credentials/store, and `CUTBACK_SCHEDULE_EXECUTION=true`. These settings default to false. Ticks use PostgreSQL row locks/skip-locked selection, reserve the whole run cap before queueing and advance from the current time. Missed ticks do not cause catch-up bursts. Failed or uncertain runs do not refund the schedule reservation. Catalog changes, plan expiry, hash changes and exhausted limits disable further queueing. Existing worker policy/expiry checks and per-request durable reservations still apply before inference.

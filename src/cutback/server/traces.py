@@ -66,6 +66,24 @@ def identity(session, cls, fields, constraint):
 
 def ingest_spans(session, project, environment, body):
     accepted = duplicates = 0
+    from cutback.server.dataset_lineage import lock_lineage
+    from cutback.server.monitoring_db import OnlineIntake, OnlineRule
+
+    # One shared lock/query per bounded batch. Rule fan-out and evaluators belong
+    # to the worker, never to the telemetry request path.
+    lock_lineage(session, project)
+    online_enabled = (
+        session.scalar(
+            select(OnlineRule.id)
+            .where(
+                OnlineRule.project_id == project,
+                OnlineRule.environment_id == environment,
+                OnlineRule.enabled.is_(True),
+            )
+            .limit(1)
+        )
+        is not None
+    )
     for span in sorted(body.spans, key=lambda value: (value.trace_id, value.span_id)):
         trace = identity(
             session,
@@ -92,6 +110,12 @@ def ingest_spans(session, project, environment, body):
         )
         if added:
             accepted += 1
+            if online_enabled:
+                session.add(
+                    OnlineIntake(
+                        project_id=project, environment_id=environment, span_record_id=added
+                    )
+                )
         elif (
             session.scalar(
                 select(ExecutionSpan.fingerprint).where(

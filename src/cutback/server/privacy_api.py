@@ -29,6 +29,18 @@ from cutback.server.enterprise_db import (
     TrainingJob,
 )
 from cutback.server.lineage_db import DatasetAlias, DatasetExposure, DatasetFamily
+from cutback.server.monitoring_db import (
+    AlertRule,
+    AlertWindow,
+    Incident,
+    IncidentEvent,
+    NotificationConfig,
+    NotificationDelivery,
+    OnlineEvaluation,
+    OnlineIntake,
+    OnlineRule,
+    SavedView,
+)
 from cutback.server.prompt_db import (
     PromptAlias,
     PromptAliasChange,
@@ -73,6 +85,16 @@ def install_privacy(app, sessions, authorize, scope):
         def records():
             with sessions() as session:
                 for cls in (
+                    NotificationConfig,
+                    NotificationDelivery,
+                    OnlineRule,
+                    OnlineIntake,
+                    OnlineEvaluation,
+                    AlertRule,
+                    AlertWindow,
+                    Incident,
+                    IncidentEvent,
+                    SavedView,
                     ExecutionTrace,
                     ExecutionSpan,
                     ExecutionSession,
@@ -135,9 +157,24 @@ def install_privacy(app, sessions, authorize, scope):
     def delete_project(project_id: UUID, confirm_slug: str, auth=Depends(authorize)):
         scope(auth, project_id, ("admin",))
         with sessions.begin() as session:
+            from cutback.server.dataset_lineage import lock_lineage
+
+            lock_lineage(session, project_id)
             project = session.get(Project, project_id, with_for_update=True)
             if not project or confirm_slug != project.slug:
                 raise HTTPException(409, "PROJECT_DELETE_REQUIRES_EXACT_SLUG")
+            from datetime import UTC, datetime
+
+            if session.scalar(
+                select(NotificationDelivery.id)
+                .where(
+                    NotificationDelivery.project_id == project_id,
+                    NotificationDelivery.state == "leased",
+                    NotificationDelivery.lease_until > datetime.now(UTC),
+                )
+                .limit(1)
+            ):
+                raise HTTPException(409, "FINISH_IN_FLIGHT_NOTIFICATION_FIRST")
             running = session.scalar(
                 select(JobRecord)
                 .where(

@@ -49,6 +49,18 @@ spec:
             - {name: CUTBACK_DATABASE_URL_FILE, value: /run/cutback/database_url}
             - {name: CUTBACK_SKIP_MIGRATIONS, value: "true"}
             - {name: CUTBACK_PROCESS, value: {{ $component | quote }}}
+            {{- if $root.Values.notifications.enabled }}
+            - name: CUTBACK_WEBHOOK_DESTINATIONS
+              valueFrom:
+                secretKeyRef: {name: {{ $root.Values.secrets.notifications | quote }}, key: {{ $root.Values.notifications.registryKey | quote }}}
+            {{- if eq $component "worker" }}
+            {{- range $item := $root.Values.notifications.signingKeys }}
+            - name: {{ $item.name | quote }}
+              valueFrom:
+                secretKeyRef: {name: {{ $root.Values.secrets.notifications | quote }}, key: {{ $item.key | quote }}}
+            {{- end }}
+            {{- end }}
+            {{- end }}
             {{- if eq $component "worker" }}
             - {name: CUTBACK_TRAINING_EXECUTION, value: "false"}
             {{- end }}

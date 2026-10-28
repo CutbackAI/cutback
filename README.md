@@ -1,5 +1,7 @@
 # Cutback
 
+Source-checkout development: [continuous monitoring and incidents](https://github.com/CutbackAI/cutback/blob/main/docs/online-monitoring.md) adds versioned metadata rules, a durable queue, incident ownership and optional signed notifications. Try the [independent synthetic sample](https://github.com/CutbackAI/cutback/tree/main/examples/online-monitoring). This is unreleased source work, with explicit limits; it is not in the published dev5 wheel.
+
 Find where an AI application spends money. Test cheaper alternatives against its quality requirements. Review the evidence before changing anything.
 
 Cutback is an Apache-2.0 Python tool with an offline scanner and a self-hosted collector, PostgreSQL worker and dashboard. **Pre-alpha: synthetic tests demonstrate the workflow; production behavior and real customer savings are not validated.**

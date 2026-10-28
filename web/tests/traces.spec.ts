@@ -23,7 +23,10 @@ test("authenticated session to failing step, delayed scores, mobile and accessib
   await expect(
     page.getByRole("heading", { name: /Session: synthetic-/ }),
   ).toBeVisible();
-  await page.getByRole("button", { name: /Open trace/ }).click();
+  await page
+    .getByRole("button", { name: /Open trace/ })
+    .first()
+    .click();
   await expect(
     page.getByRole("heading", { name: "Trace investigation" }),
   ).toBeVisible();
@@ -147,7 +150,7 @@ test("trace loading, empty, error and retry states never show stale evidence", a
   await page.route("**/v1/projects/*/traces/*", (route) =>
     route.fulfill({ status: 404, json: { code: "TRACE_NOT_FOUND" } }),
   );
-  await page.getByRole("button", { name: /Open trace/ }).click();
+  await page.getByRole("button", { name: /Open trace/ }).first().click();
   await expect(page.getByRole("alert")).toContainText(
     "Could not load this trace",
   );
