@@ -1,0 +1,32 @@
+{
+  "feature": "existing_application_check_discovery",
+  "status": "locally_qualified_public_gates_pending",
+  "installed_default_unit_and_native_journeys": {
+    "passed": 443,
+    "skipped": 23,
+    "seconds": 215.63
+  },
+  "installed_sdk3_check_review_and_native_journeys": {
+    "passed": 21,
+    "skipped": 1,
+    "seconds": 188.49
+  },
+  "late_malformed_and_credential_cases": 3,
+  "independent_core_only_consumer": "pass",
+  "paid_provider_calls": 0,
+  "production_deployment": false,
+  "pypi_upload": false,
+  "limits": [
+    "full_suite_candidates_not_independent_workflow_coverage",
+    "explicit_local_execution_required",
+    "minimal_environment_not_os_sandbox",
+    "unqualified_shell_scripts_require_explicit_declarations",
+    "broader_roadmap_incomplete"
+  ],
+  "pending": [
+    "final_full_source_typing",
+    "sanitized_public_promotion_and_exact_wheel",
+    "required_hosted_checks",
+    "public_merge"
+  ]
+}

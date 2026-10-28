@@ -27,10 +27,13 @@ def create(destination):
         root = destination / name
         root.mkdir()
         (root / "app.py").write_text(APPLICATION, encoding="utf-8")
+        (root / "check_application.py").write_text(
+            'if __name__ == "__main__":\n    import app\n', encoding="utf-8"
+        )
         (root / "release.txt").write_text(name + "\n", encoding="utf-8")
         for arguments in (
             ("init",),
-            ("add", "app.py", "release.txt"),
+            ("add", "app.py", "check_application.py", "release.txt"),
             (
                 "-c",
                 "user.name=Synthetic",

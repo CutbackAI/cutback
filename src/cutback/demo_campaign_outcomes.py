@@ -29,9 +29,13 @@ def respond(request):
         }], "usage":{"input_tokens":20, "output_tokens":1, "total_tokens":21,
         "input_tokens_details":{"cached_tokens":0}, "output_tokens_details":{"reasoning_tokens":0}}
     })
-answer = classify("Owned application check", api_key="synthetic-no-vendor-key",
-    http_client=httpx.Client(transport=httpx.MockTransport(respond), trust_env=False))
-assert answer == "A" and len(requests) == 1
+def main():
+    answer = classify("Owned application check", api_key="synthetic-no-vendor-key",
+        http_client=httpx.Client(transport=httpx.MockTransport(respond), trust_env=False))
+    assert answer == "A" and len(requests) == 1
+
+if __name__ == "__main__":
+    main()
 """
 
 
@@ -114,8 +118,8 @@ def run_sample(app, client, endpoint, admin, project, ingest_token, workspace, *
     from cutback.agent_campaign import advance, proposal, review, status
     from cutback.agent_campaign import prepare as prepare_campaign
     from cutback.agent_control import Control
-    from cutback.application_checks import ApplicationCommand, git, run_checks
-    from cutback.application_checks import prepare as prepare_checks
+    from cutback.application_check_discovery import discover
+    from cutback.application_checks import ApplicationCheckContract, git, run_checks
     from cutback.campaign_outcomes import record_outcomes
     from cutback.demo_campaigns import synthetic_executor
     from cutback.server.campaign_db import CampaignRecord, CampaignRun
@@ -258,15 +262,8 @@ def run_sample(app, client, endpoint, admin, project, ingest_token, workspace, *
             "-m",
             "Evaluated synthetic change",
         )
-        contract = prepare_checks(
-            roots[0],
-            roots[1],
-            [
-                ApplicationCommand(
-                    key="native-application-check", arguments=["check_application.py"]
-                )
-            ],
-        )
+        discovered = discover(*roots)
+        contract = ApplicationCheckContract.model_validate(discovered["contract"])
         receipt = run_checks(contract, *roots, execute_local=True)
         checked = review(
             application,
@@ -276,7 +273,9 @@ def run_sample(app, client, endpoint, admin, project, ingest_token, workspace, *
             receipt=receipt,
             base=roots[0],
             proposed=roots[1],
-            coverage={w: ["native-application-check"] for w in artifact["affected_workflows"]},
+            coverage={
+                w: [c.key for c in contract.commands] for w in artifact["affected_workflows"]
+            },
             branch="cutback/owned-outcome-review",
             sample_only=True,
         )
@@ -376,6 +375,12 @@ def run_sample(app, client, endpoint, admin, project, ingest_token, workspace, *
             "report": status(application, control),
             "native_calls": len(requests),
             "application_check_native_calls": 2,
+            "application_check_discovery": {
+                "hash": discovered["discovery_hash"],
+                "commands": [command.key for command in contract.commands],
+                "executed_during_discovery": discovered["application_commands_executed"],
+                "coverage": discovered["coverage"],
+            },
             "paid_provider_calls": 0,
             "review": checked,
             "outcome_review": observed,
