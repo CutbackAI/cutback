@@ -2,7 +2,9 @@
 
 import json
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
+from cryptography.exceptions import InvalidTag
 from pydantic import ValidationError
 
 from cutback.evals.datasets import digest
@@ -10,13 +12,21 @@ from cutback.evals.experiments import ExperimentPlan
 from cutback.server.content_policy import policy_content
 
 
-def public_config(value):
+def public_config(value, *, redact_content_hashes=False):
     if isinstance(value, list):
-        return [public_config(item) for item in value]
+        return [public_config(item, redact_content_hashes=redact_content_hashes) for item in value]
     if not isinstance(value, dict):
         return value
-    result = {}
+    redact_content_hashes = redact_content_hashes or bool(value.get("prompt_bindings"))
+    result: dict[str, Any] = {}
     for key, item in value.items():
+        if key in {"prompt_variables", "sampling_options", "content_nonce"} or (
+            key == "request_contract"
+            and isinstance(item, dict)
+            and item.get("version") == "native-prompt-v1"
+        ):
+            result[key] = None
+            continue
         if key in {
             "instruction",
             "judge_rubric",
@@ -25,9 +35,10 @@ def public_config(value):
             "request_contract",
         }:
             result[key] = "" if key == "instruction" else None
-            result[key + "_sha256"] = digest(item)
+            if not redact_content_hashes:
+                result[key + "_sha256"] = digest(item)
         else:
-            result[key] = public_config(item)
+            result[key] = public_config(item, redact_content_hashes=redact_content_hashes)
     return result
 
 
@@ -47,7 +58,10 @@ def freeze_plan(store, project, specification, policy, policy_id):
 def load_plan(store, project, metadata):
     if datetime.fromisoformat(metadata["expires_at"]) <= datetime.now(UTC):
         raise ValueError("PLAN_ARTIFACT_EXPIRED")
-    raw = json.loads(store.get(project, metadata["artifact_ref"]))
+    try:
+        raw = json.loads(store.get(project, metadata["artifact_ref"]))
+    except (OSError, ValueError, InvalidTag):
+        raise ValueError("PLAN_ARTIFACT_UNAVAILABLE") from None
     if digest(raw) != metadata["plan_hash"]:
         raise ValueError("PLAN_INTEGRITY_FAILURE")
     try:

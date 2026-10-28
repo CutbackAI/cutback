@@ -675,6 +675,9 @@ openai = [
     { name = "openai" },
     { name = "opentelemetry-api" },
 ]
+prompts = [
+    { name = "httpx" },
+]
 server = [
     { name = "alembic" },
     { name = "cryptography" },
@@ -713,6 +716,7 @@ requires-dist = [
     { name = "cutback", extras = ["instrumentation"], marker = "extra == 'openai'" },
     { name = "fastapi", marker = "extra == 'server'", specifier = ">=0.120,<1" },
     { name = "httpx", marker = "extra == 'instrumentation'", specifier = ">=0.28,<1" },
+    { name = "httpx", marker = "extra == 'prompts'", specifier = ">=0.28,<1" },
     { name = "jsonschema", marker = "extra == 'eval'", specifier = ">=4.25,<5" },
     { name = "openai", marker = "extra == 'openai'", specifier = "==2.29.0" },
     { name = "opentelemetry-api", marker = "extra == 'instrumentation'", specifier = ">=1.38,<2" },
@@ -729,7 +733,7 @@ requires-dist = [
     { name = "typer", specifier = ">=0.20,<1" },
     { name = "uvicorn", marker = "extra == 'server'", specifier = ">=0.38,<1" },
 ]
-provides-extras = ["instrumentation", "openai", "server", "eval", "anthropic", "storage", "identity", "commercial", "javascript"]
+provides-extras = ["prompts", "instrumentation", "openai", "server", "eval", "anthropic", "storage", "identity", "commercial", "javascript"]
 
 [package.metadata.requires-dev]
 dev = [

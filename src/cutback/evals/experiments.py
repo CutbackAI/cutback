@@ -6,8 +6,9 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Annotated, Literal, Protocol
+from uuid import UUID, uuid4
 
-from pydantic import Field, model_validator
+from pydantic import Field, JsonValue, model_serializer, model_validator
 
 from cutback.core.models import Identifier, StrictModel
 from cutback.core.observation import observation_scope
@@ -37,6 +38,16 @@ class ModelSpec(StrictModel):
     routes: list["RouteSpec"] = Field(default_factory=list, max_length=8)
     prompt_cache: Literal["anthropic-5m", "anthropic-1h"] | None = None
     request_contract: RequestContract | None = None
+
+    @model_validator(mode="after")
+    def bound_prompt_instructions(self):
+        if (
+            self.request_contract
+            and self.request_contract.version == "native-prompt-v1"
+            and self.instruction
+        ):
+            raise ValueError("BOUND_PROMPT_INSTRUCTIONS_MUST_BE_IN_CONTRACT")
+        return self
 
 
 class RouteSpec(StrictModel):
@@ -82,6 +93,24 @@ class Budget(StrictModel):
     max_wall_seconds: int = Field(default=300, ge=1, le=3600)
 
 
+class PromptModelBinding(StrictModel):
+    model_key: Identifier
+    version_id: UUID
+    version_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+    environment: Identifier
+    prompt_variables: dict[str, JsonValue] = Field(default_factory=dict, max_length=20)
+    sampling_options: dict[str, JsonValue] = Field(default_factory=dict, max_length=4)
+    # Encrypted-only randomness prevents a public plan hash becoming a dictionary
+    # oracle for short fixed variables or a common prompt template.
+    content_nonce: UUID = Field(default_factory=uuid4)
+
+    @model_validator(mode="after")
+    def bounded(self):
+        if len(json.dumps(self.model_dump(mode="json"), allow_nan=False).encode()) > 128000:
+            raise ValueError("PROMPT_BINDING_TOO_LARGE")
+        return self
+
+
 class ExperimentPlan(StrictModel):
     schema_version: Literal["1.0"] = "1.0"
     name: str | None = Field(
@@ -117,6 +146,16 @@ class ExperimentPlan(StrictModel):
     )
     evaluator_version: Literal["deterministic-v3"] = "deterministic-v3"
     source_binding: SourceBinding | None = None
+    prompt_bindings: list[PromptModelBinding] | None = Field(
+        default=None, min_length=1, max_length=6
+    )
+
+    @model_serializer(mode="wrap")
+    def preserve_existing_plan_hashes(self, handler):
+        result = handler(self)
+        if self.prompt_bindings is None:
+            result.pop("prompt_bindings", None)
+        return result
 
     @model_validator(mode="after")
     def eligibility(self):
@@ -154,6 +193,15 @@ class ExperimentPlan(StrictModel):
         keys = [model.key for model in models]
         if len(keys) != len(set(keys)):
             raise ValueError("model keys must be unique")
+        if self.prompt_bindings:
+            bindings = [b.model_key for b in self.prompt_bindings]
+            targets = {m.key: m for m in [self.baseline, *self.candidates]}
+            if len(bindings) != len(set(bindings)) or any(
+                key not in targets or targets[key].provider == "router" for key in bindings
+            ):
+                raise ValueError("PROMPT_BINDING_REQUIRES_UNIQUE_NATIVE_TARGET")
+            if self.source_binding:
+                raise ValueError("SOURCE_PATCH_AND_REGISTRY_PLAN_BINDINGS_ARE_SEPARATE")
         catalog = Catalog()
         if (self.price_snapshot_id, self.price_sha256) != (catalog.snapshot_id, catalog.sha256):
             raise ValueError("PRICE_CONTRACT_CHANGED_REAPPROVAL_REQUIRED")
@@ -169,13 +217,21 @@ class ExperimentPlan(StrictModel):
         expanded = [target for model in models for target in provider_models(model)]
         for model in expanded:
             if model.request_contract and (
-                model.provider not in {"openai", "anthropic"}
+                model.provider not in {"openai", "anthropic", "local"}
                 or (model.request_contract.sdk_surface == "messages.create")
                 != (model.provider == "anthropic")
+                or model.provider == "local"
+                and model.request_contract.sdk_surface != "chat.completions.create"
             ):
                 raise ValueError("EXECUTOR_REQUEST_SURFACE_UNSUPPORTED")
-            if model.prompt_cache and (model.provider != "anthropic" or not model.instruction):
-                raise ValueError("PROMPT_CACHE_REQUIRES_ANTHROPIC_STATIC_PREFIX")
+            if model.prompt_cache:
+                static_prefix = bool(model.instruction)
+                if model.request_contract and model.request_contract.version == "native-prompt-v1":
+                    first = model.request_contract.render("synthetic first case").get("system")
+                    second = model.request_contract.render("synthetic second case").get("system")
+                    static_prefix = bool(first) and first == second
+                if model.provider != "anthropic" or not static_prefix:
+                    raise ValueError("PROMPT_CACHE_REQUIRES_ANTHROPIC_STATIC_PREFIX")
             if model.provider not in self.approved_providers:
                 raise ValueError("FORBIDDEN_PROVIDER")
             if model.region is not None:

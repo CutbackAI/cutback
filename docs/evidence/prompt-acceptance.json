@@ -1,0 +1,47 @@
+{
+  "contract": "cutback.prompt-acceptance.v1",
+  "date": "2026-10-27",
+  "scope": "bounded_prompt_registry_native_playground_and_portable_local_application_checks",
+  "publication": "working_source_hosted_gates_pending_no_new_pypi_upload",
+  "migrations": ["0010"],
+  "released_migrations_preserved_through": "0009",
+  "local_full_regression": {
+    "passed": 359,
+    "skipped": 5,
+    "skip_reasons": ["four legacy SDK cases run separately", "one Windows symlink privilege unavailable"],
+    "postgresql": true,
+    "authenticated_browser_mobile_accessibility_pkce": true,
+    "cpu_training": true,
+    "owned_local_docker": true
+  },
+  "first_full_run": {
+    "passed": 352,
+    "failed": 2,
+    "skipped": 5,
+    "resolved_causes": ["shared OIDC fixture subject collision", "training test assumed its project was on the first list page"]
+  },
+  "focused_prompt_review_training": {"passed": 25},
+  "final_missing_plan_artifact_followup": {"passed": 6},
+  "final_schema_metric_and_native_followup": {"passed": 47},
+  "final_registry_experiment_observation_migration_followup": {"passed": 16},
+  "local_application_runner_followup": {"passed": 9, "python_and_node": true},
+  "installed_server_wheel": {"origin_verified": true, "postgres_native_browser_passed": 34, "final_rebuilt_full_feature_subset_passed": 63},
+  "separate_legacy_sdk": {"passed": 21},
+  "frontend_units": {"passed": 7},
+  "native_clients": {"openai": "2.29.0", "anthropic": "2.3.0", "transports": "synthetic_no_paid_requests"},
+  "core_only_wheel_independent_consumer": "passed",
+  "static_checks": ["ruff", "ruff-format", "mypy_113_modules", "locked_dependencies", "generated_openapi_client_types", "react_production_build"],
+  "archive_checks": ["wheel_and_sdist_build", "twine", "release_identity_license_reproducibility_inputs", "private_source_and_archive_boundary_zero_findings"],
+  "limitations": [
+    "source functionality is not in the published dev5 wheel",
+    "native SDK transport qualification does not prove real provider or local model quality",
+    "manual and synthetic alias changes remain quality-unverified",
+    "retained consumer reports have unknown population coverage",
+    "local application execution is not an OS sandbox",
+    "receipt hashes are not independent authenticity attestation",
+    "ignored files, dependencies and services are outside the tracked source assertion",
+    "automatic rubric generation, shared-consumer scheduling and tool/conversation execution remain later roadmap work"
+  ],
+  "paid_provider_calls": 0,
+  "production_deployments": 0
+}

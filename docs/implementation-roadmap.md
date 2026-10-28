@@ -38,6 +38,8 @@ Promotion creates a new frozen dataset version with exact reviewed inputs/labels
 
 ## Release 3 — prompt versions and application experiments
 
+Implementation: the bounded registry/playground/alias and local-check journey is implemented and locally accepted; [contracts](prompt-releases.md), [portable checks](application-checks.md), [examples](../examples/prompt-releases/README.md) and [acceptance/publication state](progress.md). Hosted checks remain publication gates. Generated rubrics (P09), automatic shared-consumer scheduling (E09), tools and general conversation execution are still partial/later work; they are not implied by this increment.
+
 **Baseline:** P01–P10, E06/E08/E09, F09. **User outcome:** author a change, compare it against declared application checks, and promote or roll back the exact version.
 
 Add prompt identity/version/dependency/alias/promotion records. Encrypt prompt bodies and schemas; retain only safe hashes/references in relational metadata. Use a deliberately limited template language with explicit variables, no arbitrary Python/Jinja execution, no network/file includes and deterministic composition/cycle limits. Resolve dependencies by pinned versions. Alias promotion uses compare-and-swap/version checks and audit receipts. Read scopes must not bypass payload rights.

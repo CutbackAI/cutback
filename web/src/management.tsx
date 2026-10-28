@@ -194,11 +194,15 @@ export function Teams({
                         ))}
                     </Select>
                     <Select label="Project access role" name="role">
-                      {["viewer", "analyst", "editor", "project_admin"].map(
-                        (role) => (
-                          <option key={role}>{role}</option>
-                        ),
-                      )}
+                      {[
+                        "viewer",
+                        "analyst",
+                        "editor",
+                        "project_admin",
+                        "prompt_reader",
+                      ].map((role) => (
+                        <option key={role}>{role}</option>
+                      ))}
                     </Select>
                   </Form>
                   <button

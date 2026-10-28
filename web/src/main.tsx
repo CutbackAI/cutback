@@ -22,6 +22,7 @@ import { AgentWorkflow } from "./agent-workflow";
 import { Traces } from "./traces";
 import { Imports } from "./imports";
 import { Reviews } from "./reviews";
+import { Prompts } from "./prompts";
 import { decisionLabel, criterionLabel, experimentTitle } from "./evidence";
 
 async function request(token: string, path: string, options: RequestInit = {}) {
@@ -64,6 +65,7 @@ const views = [
   "Opportunities",
   "Experiments",
   "Review",
+  "Prompts",
   "Changes",
   "Integrations",
   "Security",
@@ -261,6 +263,19 @@ function App() {
           policies: isAdmin ? await api(base + "/capture-policies") : [],
           principals: isAdmin
             ? await api(base + "/reviews/principals")
+            : { items: [] },
+        };
+      }
+      if (view === "Prompts") {
+        const isAdmin = ["admin", "project_admin"].includes(
+          identity.project_roles?.[project] || identity.role,
+        );
+        result = {
+          prompts: await api(base + "/prompts"),
+          datasets: await api(base + "/datasets"),
+          policies: isAdmin ? await api(base + "/capture-policies") : [],
+          grants: isAdmin
+            ? await api(base + "/prompt-read-grants")
             : { items: [] },
         };
       }
@@ -824,6 +839,19 @@ function App() {
                     ? reviewSource.id
                     : undefined
                 }
+              />
+            )}
+            {view === "Prompts" && data.prompts && (
+              <Prompts
+                key={project}
+                api={api}
+                base={base}
+                data={data}
+                admin={admin}
+                analyst={analyst}
+                editor={["admin", "project_admin", "editor"].includes(
+                  projectRole,
+                )}
               />
             )}
             {view === "Changes" && data.recommendations && (

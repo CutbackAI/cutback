@@ -30,7 +30,7 @@ class MemberInput(StrictModel):
 
 class GrantInput(StrictModel):
     project_id: UUID
-    role: Literal["viewer", "analyst", "editor", "project_admin"] = "viewer"
+    role: Literal["viewer", "analyst", "editor", "project_admin", "prompt_reader"] = "viewer"
 
 
 class RetentionInput(StrictModel):

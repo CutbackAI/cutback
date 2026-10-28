@@ -42,7 +42,7 @@ class ProjectInput(StrictModel):
 
 
 class KeyInput(StrictModel):
-    role: Literal["ingest", "viewer", "analyst", "editor", "project_admin"]
+    role: Literal["ingest", "viewer", "analyst", "editor", "project_admin", "prompt_reader"]
     environment: ShortName = "staging"
     expires_in_days: int = Field(default=30, ge=1, le=365)
 
@@ -337,7 +337,7 @@ def create_app(
                 raise HTTPException(422, "ENVIRONMENT_NOT_CONFIGURED")
             key_row = AccessKey(
                 project_id=project_id,
-                environment_id=environment.id if body.role == "ingest" else None,
+                environment_id=environment.id if body.role in {"ingest", "prompt_reader"} else None,
                 digest=token_hash(token),
                 role=body.role,
                 expires_at=datetime.now(UTC) + timedelta(days=body.expires_in_days),
@@ -546,6 +546,10 @@ def create_app(
     from cutback.server.review_api import install_reviews
 
     install_reviews(app, sessions, authorize, scope)
+
+    from cutback.server.prompt_api import install_prompts
+
+    install_prompts(app, sessions, authorize, scope)
     from cutback.server.privacy_api import install_privacy
 
     install_privacy(app, sessions, authorize, scope)

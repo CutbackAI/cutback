@@ -1,5 +1,7 @@
 # Architecture
 
+The optional [prompt registry](prompt-releases.md) stores encrypted bodies/schemas plus relational immutable version/dependency/alias/grant/use metadata. Scoped resolution renders variables in the application; telemetry ingestion never grants content reads. Playground compilation produces frozen native experiment contracts under the existing reservation worker. Source-bound [local application checks](application-checks.md) run only through an explicit development/CI command, outside the scanner and shared server. Their receipts have declared source and attestation limits.
+
 The independent package separates scanner/inventory, instrumentation/metadata, collector/PostgreSQL, pricing/valuations, datasets/evaluators/experiments and recommendations/change proposals. CLI and React use the same scoped API. Core import performs no network call or SDK instrumentation.
 
 Scanning runs next to source; observation runs where the application executes. New metadata goes to the configured customer collector. A laptop cannot magically observe remote production. PostgreSQL is canonical; SQLite is not substituted for shared telemetry.

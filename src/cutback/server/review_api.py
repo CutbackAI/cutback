@@ -28,7 +28,7 @@ from cutback.server.db import (
     PayloadSample,
     Project,
 )
-from cutback.server.enterprise_db import OrganizationMember, ProjectGrant
+from cutback.server.enterprise_db import OrganizationMember
 from cutback.server.evaluation_api import (
     ContentPurpose,
     active_policy,
@@ -118,41 +118,10 @@ class ReviewClose(ContentPurpose):
 
 
 def principal_active(session, project, actor):
-    """Recheck grants at each transition, not just when the queue was created."""
-    if actor == "bootstrap_admin":
-        return True
-    if actor.startswith("oidc:") and len(actor) == 37:
-        target = session.get(Project, project)
-        if not target:
-            return False
-        members = session.scalars(
-            select(OrganizationMember).where(
-                OrganizationMember.organization_id == target.organization_id,
-                OrganizationMember.enabled.is_(True),
-                OrganizationMember.subject_hash.startswith(actor[5:]),
-            )
-        ).all()
-        if len(members) != 1:
-            return False
-        member = members[0]
-        grant = session.scalar(
-            select(ProjectGrant).where(
-                ProjectGrant.member_id == member.id, ProjectGrant.project_id == project
-            )
-        )
-        return member.role in {"owner", "admin"} or bool(
-            grant and grant.role in {"analyst", "editor", "project_admin"}
-        )
-    try:
-        key = session.get(AccessKey, UUID(actor))
-    except ValueError:
-        return False
-    return bool(
-        key
-        and key.project_id == project
-        and not key.revoked_at
-        and (not key.expires_at or key.expires_at > datetime.now(UTC))
-        and key.role in {"analyst", "editor", "project_admin"}
+    from cutback.server.principals import principal_is_active
+
+    return principal_is_active(
+        session, project, actor, roles={"analyst", "editor", "project_admin", "admin"}
     )
 
 

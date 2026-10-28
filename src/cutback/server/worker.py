@@ -237,6 +237,9 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
                 from cutback.server.dataset_lineage import evaluation_receipt
 
                 evaluation_receipt(session, project_id, dataset_id, plan, run_id)
+                from cutback.server.prompt_experiments import recheck_bindings
+
+                recheck_bindings(session, store, project_id, plan_row, plan)
 
             def reserve(amount):
                 require_payloads_enabled()
@@ -247,6 +250,9 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
                     raise ValueError("EXPERIMENT_DATA_OR_PLAN_EXPIRED")
                 # Recheck revocation/expiry between calls, not only at run startup.
                 with sessions() as session:
+                    from cutback.server.prompt_experiments import recheck_bindings
+
+                    recheck_bindings(session, store, project_id, plan_row, plan)
                     row = session.get(CapturePolicyRecord, provenance["policy_id"])
                     current_policy = CapturePolicy.model_validate(row.policy) if row else None
                     if (
@@ -301,7 +307,18 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
             lock_lineage(session, project_id)
             record = session.get(ExperimentRunRecord, run_id, with_for_update=True)
             job = session.get(JobRecord, job_id)
-            results = public_config(results)
+            results = public_config(results, redact_content_hashes=bool(plan.prompt_bindings))
+            if results.get("status") == "COMPLETED":
+                try:
+                    from cutback.server.prompt_experiments import recheck_bindings
+
+                    recheck_bindings(session, store, project_id, plan_row, plan)
+                except Exception:
+                    results.update(
+                        status="FAILED",
+                        code="PROMPT_CONTENT_AUTHORIZATION_CHANGED",
+                        recommendations=[],
+                    )
             if results.get("status") == "COMPLETED":
                 try:
                     lineage = evaluation_receipt(session, project_id, dataset_id, plan, run_id)

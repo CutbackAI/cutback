@@ -103,7 +103,7 @@ def audit(session, project, actor, action, details):
     session.add(AuditEvent(project_id=project, actor=actor, action=action, details=details))
 
 
-def queue_schedules(sessions, *, enabled=False, now=None):
+def queue_schedules(sessions, *, enabled=False, now=None, store=None):
     if not enabled:
         return {"status": "SCHEDULE_EXECUTION_DISABLED", "queued": 0}
     now = now or datetime.now(UTC)
@@ -160,6 +160,25 @@ def queue_schedules(sessions, *, enabled=False, now=None):
             ):
                 row.enabled = False
                 continue
+            if plan.specification["public_specification"].get("prompt_bindings"):
+                from cutback.evals.artifacts import configured_store
+                from cutback.server.plan_artifacts import load_plan
+                from cutback.server.prompt_experiments import recheck_bindings
+
+                try:
+                    prompt_store = store or configured_store()
+                    prompt_plan = load_plan(prompt_store, row.project_id, plan.specification)
+                    recheck_bindings(session, prompt_store, row.project_id, plan, prompt_plan)
+                except (ValueError, OSError, HTTPException):
+                    row.enabled = False
+                    audit(
+                        session,
+                        row.project_id,
+                        "scheduler",
+                        "schedule_prompt_authorization_blocked",
+                        {"schedule_id": str(row.id)},
+                    )
+                    continue
             row.reserved_usd += cap
             row.runs_queued += 1
             row.next_run_at = now + timedelta(seconds=spec["interval_seconds"])

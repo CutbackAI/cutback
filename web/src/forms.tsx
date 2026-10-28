@@ -226,11 +226,16 @@ export function KeyForm({
         }}
       >
         <Select label="Key role" name="role">
-          {["ingest", "viewer", "analyst", "editor", "project_admin"].map(
-            (role) => (
-              <option key={role}>{role}</option>
-            ),
-          )}
+          {[
+            "ingest",
+            "viewer",
+            "analyst",
+            "editor",
+            "project_admin",
+            "prompt_reader",
+          ].map((role) => (
+            <option key={role}>{role}</option>
+          ))}
         </Select>
         <Field
           label="Key environment"
