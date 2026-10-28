@@ -22,6 +22,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--local-target", type=Path, required=True)
     parser.add_argument("--cleanup", action="store_true")
+    parser.add_argument(
+        "--outcomes",
+        action="store_true",
+        help="Run ordinary agent preparation, application checks and later declared outcomes",
+    )
     args = parser.parse_args()
     location, config = configured(args.local_target)
     if status(args.local_target)["status"] != "READY" or not config["allow_payloads"]:
@@ -54,7 +59,20 @@ def main():
             project = created.json()["id"]
             key = client.post(f"/v1/projects/{project}/keys", json={"role": "ingest"})
             key.raise_for_status()
-            result = seed_campaign(owned, client, project, key.json()["token"], workspace)
+            if args.outcomes:
+                from cutback.demo_campaign_outcomes import run_sample
+
+                result = run_sample(
+                    owned,
+                    client,
+                    config["endpoint"],
+                    config["admin"],
+                    project,
+                    key.json()["token"],
+                    workspace,
+                )
+            else:
+                result = seed_campaign(owned, client, project, key.json()["token"], workspace)
             report = result["report"]
             print(
                 json.dumps(
@@ -69,6 +87,17 @@ def main():
                         "paid_provider_calls": 0,
                         "dashboard": config["endpoint"] + "/dashboard/?project=" + project,
                         "disclosure": result["disclosure"],
+                        **(
+                            {
+                                "outcome_action": result["outcome_review"]["next_action"],
+                                "outcome_receipt": result["outcome_review"]["receipt"]["id"],
+                                "application_check_native_calls": result[
+                                    "application_check_native_calls"
+                                ],
+                            }
+                            if args.outcomes
+                            else {}
+                        ),
                     },
                     indent=2,
                 )

@@ -333,6 +333,7 @@ def install_improvements(app, sessions, authorize, scope):
     @app.get("/v1/projects/{project_id}/improvement-observations", response_model=ImprovementPage)
     def observations(
         project_id: UUID,
+        environment_id: UUID | None = None,
         after: UUID | None = None,
         limit: int = Query(20, ge=1, le=50),
         auth=Depends(authorize),
@@ -342,6 +343,8 @@ def install_improvements(app, sessions, authorize, scope):
             query = select(ImprovementObservation).where(
                 ImprovementObservation.project_id == project_id
             )
+            if environment_id:
+                query = query.where(ImprovementObservation.environment_id == environment_id)
             if after:
                 query = query.where(ImprovementObservation.id > after)
             rows = session.scalars(query.order_by(ImprovementObservation.id).limit(limit + 1)).all()

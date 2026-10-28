@@ -12,6 +12,30 @@ from cutback.server.content_policy import policy_content, require_payloads_enabl
 from cutback.server.db import CapturePolicyRecord, ExperimentPlanRecord, PayloadSample
 
 
+def discard_unreferenced(sessions, store, project, refs):
+    """After an uncertain commit, preserve every referenced or unreadable object."""
+    for ref in refs:
+        try:
+            with sessions() as reader:
+                payload = reader.scalar(
+                    select(PayloadSample.id)
+                    .where(PayloadSample.project_id == project, PayloadSample.object_ref == ref)
+                    .limit(1)
+                )
+                plan = reader.scalar(
+                    select(ExperimentPlanRecord.id)
+                    .where(
+                        ExperimentPlanRecord.project_id == project,
+                        ExperimentPlanRecord.specification["artifact_ref"].as_string() == ref,
+                    )
+                    .limit(1)
+                )
+            if payload is None and plan is None:
+                store.delete(project, ref)
+        except Exception:
+            pass  # Keep an uncertain reference for offline orphan reconciliation.
+
+
 @contextmanager
 def content_transaction(sessions, store, project):
     refs: list[str] = []
@@ -21,26 +45,7 @@ def content_transaction(sessions, store, project):
     except BaseException:
         # A commit acknowledgement can be lost. Delete only after a fresh read
         # confirms neither payload nor exact-plan records reference this object.
-        for ref in refs:
-            try:
-                with sessions() as reader:
-                    payload = reader.scalar(
-                        select(PayloadSample.id)
-                        .where(PayloadSample.project_id == project, PayloadSample.object_ref == ref)
-                        .limit(1)
-                    )
-                    plan = reader.scalar(
-                        select(ExperimentPlanRecord.id)
-                        .where(
-                            ExperimentPlanRecord.project_id == project,
-                            ExperimentPlanRecord.specification["artifact_ref"].as_string() == ref,
-                        )
-                        .limit(1)
-                    )
-                if payload is None and plan is None:
-                    store.delete(project, ref)
-            except Exception:
-                pass  # Keep an uncertain reference for offline orphan reconciliation.
+        discard_unreferenced(sessions, store, project, refs)
         raise
 
 

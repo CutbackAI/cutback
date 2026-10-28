@@ -93,5 +93,40 @@ def test_explicit_patch_content_is_encrypted_scoped_and_revocable(
     with app.state.sessions() as session:
         payload = session.get(PayloadSample, UUID(metadata[0]["evidence"]["payload_id"]))
         assert diff.encode() not in store._path(UUID(tenant[0]), payload.object_ref).read_bytes()
+    # A commit can succeed while its acknowledgement is lost. Reconcile the
+    # committed metadata instead of deleting referenced ciphertext or retrying
+    # the upload and creating another artifact.
+    from contextlib import contextmanager
+
+    from cutback.server.db import ChangeProposal
+
+    sessions = app.state.sessions
+    begin = sessions.begin
+
+    @contextmanager
+    def lost_upload_commit_ack():
+        with begin() as session:
+            yield session
+            committed_upload = any(
+                isinstance(row, ChangeProposal) for row in session.identity_map.values()
+            )
+        if committed_upload:
+            raise ConnectionError("OWNED_UPLOAD_COMMIT_ACK_LOST")
+
+    with monkeypatch.context() as scope:
+        scope.setattr(sessions, "begin", lost_upload_commit_ack)
+        uncertain = client.post(path, headers=admin, json=body)
+    assert uncertain.status_code == 500
+    reconciled = client.get(base + "/changes", headers=admin).json()
+    assert len(reconciled) == 2
+    (late,) = [row for row in reconciled if row["id"] != change_id]
+    assert (
+        client.post(
+            base + f"/changes/{late['id']}/content",
+            headers=admin,
+            json={"purpose": "reconcile-upload"},
+        ).json()["diff"]
+        == diff
+    )
     monkeypatch.setenv("CUTBACK_ALLOW_PAYLOADS", "false")
     assert client.post(read, headers=admin, json={"purpose": "patch-review"}).status_code == 403

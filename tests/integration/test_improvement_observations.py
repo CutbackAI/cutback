@@ -94,6 +94,12 @@ def test_canonical_search_cost_not_duplicated_and_cheap_worse_rejected(
     )
     listing = api[0].get(path, headers=tenant[2])
     assert listing.status_code == 200 and len(listing.json()["items"]) == 1
+    scoped = api[0].get(
+        path, headers=tenant[2], params={"environment_id": environment(api, tenant[0])}
+    )
+    assert scoped.status_code == 200 and len(scoped.json()["items"]) == 1
+    different = api[0].get(path, headers=tenant[2], params={"environment_id": str(uuid4())})
+    assert different.status_code == 200 and different.json()["items"] == []
 
 
 def test_unknown_overhead_forecasts_scope_and_snapshot_integrity(api, tenant):

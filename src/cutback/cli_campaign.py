@@ -135,6 +135,64 @@ def register_campaign(app, output, guarded):
             )
         )
 
+    @group.command("observe")
+    @guarded
+    def observe(
+        candidate_snapshot: str = typer.Option(..., "--candidate-snapshot"),
+        change: str = typer.Option(..., "--change"),
+        target: Path = Path("."),
+        release_linkage_attested: bool = False,
+        assumptions: Path | None = None,
+        observation_id: str | None = None,
+        all_optimization_runs_declared_complete: bool = False,
+        other_optimization_costs_declared_complete: bool = False,
+        forecast_successful_tasks: int | None = None,
+        minimum_tasks: int | None = None,
+        max_success_rate_loss: str | None = None,
+    ):
+        """Link a reviewed campaign to later declared task costs; never change traffic."""
+        from cutback.agent_control import connect
+        from cutback.campaign_outcomes import record_outcomes
+        from cutback.core.workspace import read_private
+
+        declared = {
+            **(
+                {"all_optimization_runs_declared_complete": True}
+                if all_optimization_runs_declared_complete
+                else {}
+            ),
+            **(
+                {"other_optimization_costs_declared_complete": True}
+                if other_optimization_costs_declared_complete
+                else {}
+            ),
+            **(
+                {"forecast_successful_tasks": forecast_successful_tasks}
+                if forecast_successful_tasks is not None
+                else {}
+            ),
+            **({"min_tasks_per_window": minimum_tasks} if minimum_tasks is not None else {}),
+            **(
+                {"max_absolute_success_rate_loss": max_success_rate_loss}
+                if max_success_rate_loss is not None
+                else {}
+            ),
+        }
+        if assumptions is not None and declared:
+            raise ValueError("CHOOSE_ASSUMPTIONS_FILE_OR_EXPLICIT_DECLARATION_FLAGS")
+        control, _ = connect(target)
+        output(
+            record_outcomes(
+                target,
+                control,
+                candidate_snapshot_id=candidate_snapshot,
+                change_id=change,
+                release_linkage_attested=release_linkage_attested,
+                assumptions=read_private(assumptions) if assumptions else declared,
+                observation_id=observation_id,
+            )
+        )
+
     @group.command("work")
     @guarded
     def work(target: Path = Path(".")):

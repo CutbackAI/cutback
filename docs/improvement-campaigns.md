@@ -48,6 +48,8 @@ The proposer sees authorized training examples, prior generated configurations a
 cutback campaign proposal --purpose-reference actual-change-review
 ```
 
+After an operator's separately authorized application release, [link later task outcomes](campaign-outcomes.md) with `campaign observe`. It reuses the reviewed diff, original baseline and canonical run family, preserves unknown external costs and prepares an operator review action without changing traffic.
+
 This performs an audited current-policy content read, revalidates confirmation/lineage and local source hashes, and returns the exact source diff and rollback. It changes no application file. `--sample-only` is available for owned fixtures; it keeps the evidence explicitly sample-only and cannot establish independent/customer quality.
 
 The coding agent reviews the diff and prepares **two independent clean Git checkouts**, one at the original source and one with only the proposed evaluated source change committed. It freezes and explicitly runs [portable application checks](application-checks.md) under the application's execution authorization. Commands execute locally with a minimal environment and bounded processes, not in the collector. They are not an OS/network sandbox. Keep credentials and production access out of that worker.

@@ -8891,6 +8891,7 @@ export interface operations {
     observations_v1_projects__project_id__improvement_observations_get: {
         parameters: {
             query?: {
+                environment_id?: string | null;
                 after?: string | null;
                 limit?: number;
             };

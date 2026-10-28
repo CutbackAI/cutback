@@ -1,5 +1,7 @@
 # Changelog
 
+Source follow-up, 28 October 2026: `campaign observe` connects an exact checked source diff and the complete canonical campaign run family to later declared task windows. It reconciles lost acknowledgements, preserves unknown overhead and prepares rollback/cost/evidence review actions without traffic changes. Saved comparisons have project/environment-scoped dashboard history. The independent campaign sample adds `--outcomes` for the ordinary agent-to-application-check-to-later-window path. Patch upload accepts the complete bounded instruction artifact and preserves committed ciphertext after a lost commit acknowledgement; checkpoint filenames fit the qualified nested Windows sample. PyPI dev5 is unchanged; full acceptance is recorded in docs/progress.md.
+
 Source follow-up, 28 October 2026: explicit campaign preparation now supports cheapest-model/minimum-cap applications with an honest unchanged control and explicit additional generator-vendor permission. Separately locked OpenAI 3.35.1 compatibility preserves the main 2.29.0 extra and application pins, with native HTTPX2 response/retry/stream/cancellation/privacy and PostgreSQL worker qualification. This does not qualify new model names or cache-write pricing. PyPI dev5 is unchanged; [acceptance/publication status](docs/progress.md).
 
 ## Unreleased source after dev5

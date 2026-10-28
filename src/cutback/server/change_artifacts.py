@@ -34,7 +34,10 @@ from cutback.server.evaluation_api import (
 
 class PatchUpload(StrictModel):
     approval_ref: Identifier
-    artifact: dict = Field(max_length=30)
+    # A qualified instruction campaign adds its frozen campaign/confirmation
+    # references to the source artifact. The complete current envelope has 31
+    # top-level fields; keep it bounded without rejecting our own exact diff.
+    artifact: dict = Field(max_length=40)
 
 
 def install_changes(app, sessions, authorize, scope):
@@ -201,7 +204,9 @@ def install_changes(app, sessions, authorize, scope):
             return result
         except BaseException:
             if ref:
-                store.delete(project_id, ref)
+                from cutback.server.campaign_content import discard_unreferenced
+
+                discard_unreferenced(sessions, store, project_id, [ref])
             raise
 
     @app.get("/v1/projects/{project_id}/changes")

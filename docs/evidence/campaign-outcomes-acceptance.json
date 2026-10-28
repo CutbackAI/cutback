@@ -1,0 +1,86 @@
+{
+  "contract": "cutback.campaign-outcomes-acceptance.v1",
+  "date": "2026-10-28",
+  "publication": "working_source_broad_installed_and_hosted_gates_pending_no_new_pypi_upload",
+  "scope": [
+    "ordinary_agent_campaign_to_checked_encrypted_diff_and_later_declared_task_windows",
+    "canonical_campaign_run_cost_closure",
+    "idempotent_nonbillable_observation_reconciliation",
+    "scoped_dashboard_saved_comparisons",
+    "bounded_patch_upload_and_uncertain_commit_content_preservation"
+  ],
+  "focused": {
+    "native_campaign_patch_link_improvement_and_migration_checks": {
+      "passed": 8,
+      "seconds": 70.99
+    },
+    "encrypted_commit_ack_cleanup_and_outcome_boundary_checks": {
+      "passed": 12,
+      "seconds": 18.8
+    },
+    "improvement_and_native_pg_authenticated_browser_checks": {
+      "passed": 7,
+      "seconds": 35.66
+    },
+    "ordinary_independent_application_sample_agent_and_outcome_boundary_checks": {
+      "passed": 14,
+      "skipped": 1,
+      "seconds": 50.57,
+      "skip": "windows_symlink_privilege_unavailable"
+    }
+  },
+  "static": {
+    "ruff": "passed",
+    "format": "passed",
+    "mypy_modules": 179,
+    "main_lock": "unchanged_verified",
+    "openapi_types_and_react_build": "passed",
+    "frontend_units": 7
+  },
+  "source_boundary": {
+    "files": 589,
+    "findings": 0,
+    "private_marker_values_logged": false
+  },
+  "pending": [
+    "full_installed_regression",
+    "final_artifacts_and_backend_identity",
+    "exact_head_hosted_checks"
+  ],
+  "paid_provider_calls": 0,
+  "production_deployment": false,
+  "pypi_upload": false,
+  "limits": [
+    "synthetic_answers_usage_and_business_outcomes",
+    "owner_attested_release_linkage_not_verified_deployment",
+    "descriptive_not_causal_or_independent_customer_quality",
+    "no_continuous_followup_or_automatic_rollback",
+    "unknown_costs_and_retained_context_preserved",
+    "remaining_market_baseline_not_complete"
+  ],
+  "separately_locked_sdk3_installed_journey": {
+    "passed": 22,
+    "seconds": 123.07,
+    "includes": [
+      "ordinary_independent_native_application_sample",
+      "actual_portable_application_checks",
+      "encrypted_patch_upload",
+      "lost_ack_outcome_reconciliation",
+      "uncertain_commit_cleanup",
+      "real_migrations",
+      "authenticated_task_economics_browser_mobile_axe"
+    ]
+  },
+  "standalone_installed_owned_collector": {
+    "status": "COMPLETED",
+    "campaign_native_sdk_calls": 241,
+    "campaign_known_cost_receipts": 241,
+    "application_check_native_calls": 2,
+    "known_modeled_fixture_subtotal_usd": "0.066088000000",
+    "outcome_review": "REVIEW_ROLLBACK",
+    "paid_provider_calls": 0,
+    "synthetic_project_absence_independently_confirmed": true,
+    "owned_collector_stopped": true,
+    "database_volume_preserved": true
+  }
+}

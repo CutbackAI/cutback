@@ -9,6 +9,15 @@ test("native task coverage, failed spend, unknown components and frozen receipts
     "Requires the owned native-task fixture",
   );
   const errors: string[] = [];
+  let comparisonsCreated = 0;
+  page.on("request", (request) => {
+    if (
+      request.method() === "POST" &&
+      request.url().endsWith("/improvement-observations")
+    ) {
+      comparisonsCreated++;
+    }
+  });
   page.on("pageerror", (e) => errors.push(e.message));
   let releaseMetadata = () => {};
   let metadataStarted = () => {};
@@ -92,6 +101,21 @@ test("native task coverage, failed spend, unknown components and frozen receipts
     decision.getByRole("heading", { name: "Abstain or reject" }),
   ).toBeVisible();
   await expect(decision).toContainText("declared outcome regression");
+  await expect(decision).toContainText(
+    "Review the change and rollback evidence",
+  );
+  const history = page.getByRole("region", {
+    name: "Saved economic comparisons",
+  });
+  const savedComparison = history.getByRole("button", {
+    name: /Open comparison synthetic-reference/,
+  });
+  await expect(savedComparison).toBeVisible();
+  await form.getByLabel("Forecast successful tasks").fill("101");
+  await expect(decision).toHaveCount(0);
+  await savedComparison.click();
+  await expect(decision).toContainText("declared outcome regression");
+  expect(comparisonsCreated).toBe(1);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page
     .getByLabel("Application release", { exact: true })

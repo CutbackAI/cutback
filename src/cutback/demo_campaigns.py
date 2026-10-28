@@ -12,7 +12,7 @@ from unittest.mock import patch
 from uuid import UUID, uuid4
 
 
-def synthetic_executor():
+def synthetic_executor(*, seeds_from_scope=False):
     import httpx
 
     from cutback.evals.executors import OpenAIExecutor
@@ -28,11 +28,16 @@ def synthetic_executor():
         requests.append(body)
         proposer = "text" in body
         if proposer:
+            seeds = (
+                [seed["key"] for seed in json.loads(body["input"])["seeds"]]
+                if seeds_from_scope
+                else ("baseline", "simple-downgrade")
+            )
             output = json.dumps(
                 {
                     "proposals": [
                         {"seed_key": key, "instruction": "Answer A only.", "max_output_tokens": 64}
-                        for key in ("baseline", "simple-downgrade")
+                        for key in seeds
                     ]
                 }
             )
