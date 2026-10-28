@@ -4877,6 +4877,7 @@ export interface components {
             /** Prompt Cache */
             prompt_cache?: ("anthropic-5m" | "anthropic-1h") | null;
             request_contract?: components["schemas"]["RequestContract"] | null;
+            native_contract?: components["schemas"]["NativeModelContract"] | null;
         };
         /** ModelSpec */
         "ModelSpec-Output": {
@@ -4913,6 +4914,7 @@ export interface components {
             /** Prompt Cache */
             prompt_cache?: ("anthropic-5m" | "anthropic-1h") | null;
             request_contract?: components["schemas"]["RequestContract"] | null;
+            native_contract?: components["schemas"]["NativeModelContract"] | null;
         };
         /** NativeGeneratorSpec */
         NativeGeneratorSpec: {
@@ -4964,6 +4966,41 @@ export interface components {
              * @default 256
              */
             max_output_tokens: number;
+        };
+        /** NativeModelContract */
+        NativeModelContract: {
+            /**
+             * Version
+             * @default openai-luna-responses-text-v1
+             * @constant
+             */
+            version: "openai-luna-responses-text-v1";
+            /**
+             * Price Snapshot Id
+             * @default openai-text-2026-10-28-v1
+             * @constant
+             */
+            price_snapshot_id: "openai-text-2026-10-28-v1";
+            /** Price Sha256 */
+            price_sha256: string;
+            /**
+             * Reasoning Effort
+             * @default none
+             * @enum {string}
+             */
+            reasoning_effort: "none" | "low" | "medium" | "high" | "xhigh" | "max";
+            /**
+             * Service Tier
+             * @default default
+             * @enum {string}
+             */
+            service_tier: "default" | "auto";
+            /**
+             * Cache Write Lifetime
+             * @default 30m
+             * @constant
+             */
+            cache_write_lifetime: "30m";
         };
         /** NativeObservation */
         NativeObservation: {

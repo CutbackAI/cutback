@@ -100,6 +100,7 @@ def check(directory: Path):
             "docs/campaign-outcomes.md",
             "docs/load-qualification.md",
             "docs/modern-model-accounting.md",
+            "docs/native-modern-text.md",
             "examples/modern-pricing/sample.py",
             "examples/load-qualification/profile.json",
             "examples/load-qualification/compare.py",

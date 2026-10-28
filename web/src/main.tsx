@@ -28,6 +28,7 @@ import { Reviews } from "./reviews";
 import { Prompts } from "./prompts";
 import { Monitoring } from "./monitoring";
 import { PriceSnapshots } from "./price-snapshots";
+import { NativeContracts } from "./native-contracts";
 import { decisionLabel, criterionLabel, experimentTitle } from "./evidence";
 
 async function request(token: string, path: string, options: RequestInit = {}) {
@@ -1525,6 +1526,7 @@ function Experiments({
               {p.specification.budget.max_requests} requests · hash{" "}
               <code>{p.plan_hash}</code>
             </p>
+            <NativeContracts plan={p.specification} planId={p.id} />
             <details>
               <summary>Frozen specification</summary>
               <JSONView data={p} />

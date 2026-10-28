@@ -14,6 +14,7 @@ from cutback.core.agent_turns import AgentTurnFrame
 from cutback.core.episode_judging import EpisodeJudgingSpec
 from cutback.core.episodes import EpisodeAssistant
 from cutback.core.models import Identifier, StrictModel
+from cutback.core.native_models import NativeModelContract, validate_luna_text_contract
 from cutback.core.observation import observation_scope
 from cutback.core.request_profiles import RequestContract, SourceBinding
 from cutback.evals.datasets import digest
@@ -41,7 +42,15 @@ class ModelSpec(StrictModel):
     routes: list["RouteSpec"] = Field(default_factory=list, max_length=8)
     prompt_cache: Literal["anthropic-5m", "anthropic-1h"] | None = None
     request_contract: RequestContract | None = None
+    native_contract: NativeModelContract | None = None
     _agent_turn: AgentTurnFrame | None = PrivateAttr(default=None)
+
+    @model_serializer(mode="wrap")
+    def preserve_released_model_serialization(self, handler):
+        result = handler(self)
+        if self.native_contract is None:
+            result.pop("native_contract", None)
+        return result
 
     @property
     def agent_turn(self) -> AgentTurnFrame | None:
@@ -60,6 +69,7 @@ class ModelSpec(StrictModel):
         qualified_native_model(self)
         value = self.model_copy(deep=True)
         value._agent_turn = frame.model_copy(deep=True)
+        qualified_native_model(value)
         return value
 
     @model_validator(mode="after")
@@ -100,7 +110,13 @@ def provider_models(model: ModelSpec) -> list[ModelSpec]:
         if model.routes:
             raise ValueError("ROUTES_REQUIRE_ROUTER_STRATEGY")
         return [model]
-    if not model.routes or model.instruction or model.prompt_cache or model.request_contract:
+    if (
+        not model.routes
+        or model.instruction
+        or model.prompt_cache
+        or model.request_contract
+        or model.native_contract is not None
+    ):
         raise ValueError("ROUTER_REQUIRES_EXPLICIT_NATIVE_TARGETS")
     bounds = [route.max_input_bytes for route in model.routes]
     if bounds != sorted(set(bounds)):
@@ -127,6 +143,14 @@ def route_target(model: ModelSpec, text: str) -> ModelSpec:
 def qualified_native_model(model: ModelSpec, catalog=None):
     """One support boundary for experiments and approved online judges."""
     catalog = catalog or Catalog()
+    if model.native_contract is not None:
+        validate_luna_text_contract(model, catalog)
+        return
+    if model.request_contract and set(model.request_contract.options) & {
+        "reasoning",
+        "service_tier",
+    }:
+        raise ValueError("MODERN_NATIVE_CONTRACT_REFERENCE_REQUIRED")
     validated_openai = {"gpt-4.1", "gpt-4.1-mini", "gpt-4.1-2025-04-14", "gpt-4.1-mini-2025-04-14"}
     validated_anthropic = {"claude-sonnet-4-6", "claude-haiku-4-5"}
     if model.provider not in {"openai", "anthropic", "local"}:
@@ -334,6 +358,12 @@ class ExperimentPlan(StrictModel):
             raise ValueError("PRICE_CONTRACT_CHANGED_REAPPROVAL_REQUIRED")
         if self.judge and self.judge.provider == "router":
             raise ValueError("ROUTED_JUDGES_NOT_SUPPORTED")
+        if self.episode_execution and any(
+            target.native_contract is not None
+            for parent in [self.baseline, *self.candidates]
+            for target in provider_models(parent)
+        ):
+            raise ValueError("MODERN_NATIVE_TEXT_CONTRACT_CANNOT_EXECUTE_EPISODES")
         expanded = [target for model in models for target in provider_models(model)]
         for model in expanded:
             if model.request_contract and (
@@ -366,6 +396,34 @@ def upper_cost(model: ModelSpec) -> Decimal:
     if model.provider == "local":
         assert model.local_cost_upper_usd is not None
         return model.local_cost_upper_usd
+    if model.native_contract is not None:
+        from decimal import localcontext
+
+        catalog = Catalog()
+        reference = validate_luna_text_contract(model, catalog)
+        rate = catalog.rate_info("openai", model.model)["rate"]
+        # Reserve the largest write bucket even though the request fixes a shorter TTL.
+        with localcontext() as money_context:
+            money_context.prec = 80
+            large = model.max_input_tokens > rate["long_context_threshold"]
+            input_multiplier = (
+                Decimal(rate["long_context_input_multiplier"]) if large else Decimal(1)
+            )
+            output_multiplier = (
+                Decimal(rate["long_context_output_multiplier"]) if large else Decimal(1)
+            )
+            amount = (
+                Decimal(model.max_input_tokens)
+                * max(
+                    Decimal(rate[key])
+                    for key in ("input", "cache_read", "cache_write_30m", "cache_write_12h")
+                )
+                * input_multiplier
+                + Decimal(model.max_output_tokens) * Decimal(rate["output"]) * output_multiplier
+            ) / Decimal(1000000)
+            # An application's auto tier may resolve to Fast. Unknown actual tier
+            # usage still stops execution; reserve the documented Fast premium first.
+            return amount * (2 if reference.service_tier == "auto" else 1)
     rate = Catalog().rate_info(model.provider, model.model)["rate"]
     return (
         Decimal(model.max_input_tokens)
@@ -454,7 +512,7 @@ def plan_summary(plan: ExperimentPlan, dataset: dict) -> dict:
         from cutback.evals.episode_runner import episode_forecast
 
         requests, cost = episode_forecast(plan, dataset)
-    return {
+    summary = {
         "pilot_validation_samples": len(pilot),
         "pilot_requests_upper": pilot_requests,
         "plan_hash": digest(plan.model_dump(mode="json")),
@@ -473,6 +531,21 @@ def plan_summary(plan: ExperimentPlan, dataset: dict) -> dict:
         "price_sha256": plan.price_sha256,
         "evaluator_version": plan.evaluator_version,
     }
+    references = [
+        {
+            "model_key": model.key,
+            "target_key": target.key,
+            "provider": target.provider,
+            "model": target.model,
+            **target.native_contract.model_dump(mode="json"),
+        }
+        for model in [plan.baseline, *plan.candidates, *([plan.judge] if plan.judge else [])]
+        for target in provider_models(model)
+        if target.native_contract is not None
+    ]
+    if references:
+        summary["native_model_contracts"] = references
+    return summary
 
 
 @dataclass(frozen=True)

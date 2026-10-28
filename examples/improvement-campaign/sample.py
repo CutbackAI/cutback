@@ -23,6 +23,11 @@ def main():
     parser.add_argument("--local-target", type=Path, required=True)
     parser.add_argument("--cleanup", action="store_true")
     parser.add_argument(
+        "--modern-model",
+        action="store_true",
+        help="Use a Luna application through ordinary agent preparation; requires --outcomes",
+    )
+    parser.add_argument(
         "--outcomes",
         action="store_true",
         help="Run ordinary agent preparation, application checks and later declared outcomes",
@@ -35,6 +40,8 @@ def main():
     args = parser.parse_args()
     if args.watch and not args.outcomes:
         parser.error("--watch requires --outcomes")
+    if args.modern_model and not args.outcomes:
+        parser.error("--modern-model requires --outcomes")
     location, config = configured(args.local_target)
     if status(args.local_target)["status"] != "READY" or not config["allow_payloads"]:
         raise ValueError("START_OWNED_LOCAL_COLLECTOR_WITH_AUTHORIZED_ENCRYPTED_STORAGE")
@@ -78,6 +85,7 @@ def main():
                     key.json()["token"],
                     workspace,
                     watch=args.watch,
+                    modern_model=args.modern_model,
                 )
             else:
                 result = seed_campaign(owned, client, project, key.json()["token"], workspace)

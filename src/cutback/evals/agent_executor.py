@@ -10,7 +10,7 @@ from cutback.core.episodes import EpisodeAssistant, EpisodeCitation, EpisodeTool
 from cutback.core.models import LLMEvent
 from cutback.evals._logging import owned_sdk_request
 from cutback.evals.executors import ConfiguredExecutor
-from cutback.evals.experiments import Execution
+from cutback.evals.experiments import Execution, qualified_native_model
 from cutback.evals.output_contracts import output_contract
 from cutback.pricing import Catalog
 
@@ -44,6 +44,7 @@ class NativeAgentExecutor(ConfiguredExecutor):
             return super().execute(model, text, timeout_seconds)
         if model.provider not in {"openai", "anthropic"}:
             raise ValueError("NATIVE_AGENT_PROVIDER_UNQUALIFIED")
+        qualified_native_model(model)
         self.prepare(model.provider)
         client = self.clients[model.provider].client
         started = time.perf_counter()

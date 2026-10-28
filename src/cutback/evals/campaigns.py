@@ -249,6 +249,12 @@ def proposal_model(spec: NativeGeneratorSpec) -> ModelSpec:
             }
         },
     ).model_dump(mode="json")
+    if spec.model.native_contract is not None:
+        contract = value["request_contract"]
+        contract["options"].update(
+            reasoning={"effort": spec.model.native_contract.reasoning_effort},
+            service_tier=spec.model.native_contract.service_tier,
+        )
     return ModelSpec.model_validate(value)
 
 

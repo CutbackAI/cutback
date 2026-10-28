@@ -87,7 +87,7 @@ class RequestContract(StrictModel):
         if len(json.dumps(self.model_dump(), allow_nan=False).encode()) > 128000:
             raise ValueError("REQUEST_CONTRACT_TOO_LARGE")
         allowed = {
-            "responses.create": {"temperature", "top_p", "text"},
+            "responses.create": {"temperature", "top_p", "text", "reasoning", "service_tier"},
             "chat.completions.create": {"temperature", "top_p", "stop", "response_format"},
             "messages.create": {"stop_sequences"}
             | ({"output_config"} if self.version == "native-prompt-v1" else set()),
@@ -243,7 +243,7 @@ class PreparedProfile:
 
     def baseline(self):
         # Call only after explicit permission to prepare/import request content.
-        return {
+        value = {
             "key": "baseline",
             "provider": self.provider,
             "model": self.model,
@@ -251,6 +251,17 @@ class PreparedProfile:
             "max_output_tokens": self.max_output_tokens,
             "request_contract": self.request.model_dump(mode="json"),
         }
+        if self.provider == "openai" and self.model == "gpt-6-luna":
+            from cutback.core.native_models import NativeModelContract
+
+            reasoning = self.request.options.get("reasoning", {"effort": "medium"})
+            if not isinstance(reasoning, dict) or set(reasoning) != {"effort"}:
+                raise ValueError("MODERN_NATIVE_SOURCE_REASONING_UNQUALIFIED")
+            value["native_contract"] = NativeModelContract.current_luna_text(
+                reasoning_effort=reasoning["effort"],
+                service_tier=self.request.options.get("service_tier", "auto"),
+            ).model_dump(mode="json")
+        return value
 
 
 class Resolver:
@@ -512,7 +523,7 @@ def prepare_profile(
     payload_key = "input" if site["sdk_surface"] == "responses.create" else "messages"
     output_key = "max_output_tokens" if site["sdk_surface"] == "responses.create" else "max_tokens"
     option_names = {
-        "responses.create": {"temperature", "top_p", "text"},
+        "responses.create": {"temperature", "top_p", "text", "reasoning", "service_tier"},
         "chat.completions.create": {"temperature", "top_p", "stop", "response_format"},
         "messages.create": {"stop_sequences"},
     }[site["sdk_surface"]]

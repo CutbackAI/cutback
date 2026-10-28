@@ -1,5 +1,7 @@
 # Provider compatibility
 
+Newer source separately qualifies [Luna Responses text execution](native-modern-text.md) through an explicit model/request/price reference, preserving supported reasoning and tier choices. It adds no Luna agent/tool/Chat execution or live-provider claim. [Progress](progress.md) distinguishes local/public gates and the unchanged PyPI wheel.
+
 The working source additionally supports exact OpenAI **3.35.1**, including its native HTTPX2 transport and legacy HTTPX compatibility path. The separately locked [compatibility environment](../infra/sdk-compat/README.md) and hosted Python matrix qualify it without changing the main OpenAI 2.29.0 extra or an application's existing pin. PyPI dev5 does not include this addition; consult [acceptance/publication state](progress.md). SDK support does not qualify additional models, reasoning modes or prices.
 
 The source-only [agent episode executor](agent-evaluation.md) separately qualifies OpenAI 2.29.0 Responses/Chat and Anthropic 2.3.0 Messages for synchronous, nonstreaming text/function conversations with declared synthetic fixtures. Every turn uses the durable experiment ledger. It supports no real application tools, parallel calls, generative simulator, agent stream/async surface or additional provider/model. This does not widen the observer matrix below.
@@ -15,7 +17,7 @@ Unreleased prompt-registry experiment contracts use the same pinned clients: Ope
 
 These are tested versions, not newest-version claims. `cutback[openai]` pins 2.29.0; `[anthropic]` pins 2.3.0. An application already pinned to 1.55.3 installs `[instrumentation]` alongside its existing pin. Legacy compatibility also tests Pydantic 2.10.6.
 
-An application already on 3.35.1 likewise uses `[instrumentation]` alongside that pin, from a release containing this source addition. Native responses keep optional missing usage unknown. The source-only [modern text accounting contract](modern-model-accounting.md) observes disjoint thirty-minute/twelve-hour cache writes and a checked Luna observation snapshot. Positive writes lacking a complete qualified contract remain unpriced. This does not qualify Luna for paid experiment execution, widen modality/tier support or reprice historical records. Upgrade collectors before emitting event `1.1`.
+An application already on 3.35.1 likewise uses `[instrumentation]` alongside that pin, from a release containing this source addition. Native responses keep missing usage unknown. The [modern accounting contract](modern-model-accounting.md) observes disjoint thirty-minute/twelve-hour writes and a checked Luna snapshot. Incomplete contracts remain unpriced. Observation alone does not qualify paid execution, widen modality/tier support or reprice history; the separate execution contract above supplies the additional boundary. Upgrade collectors before emitting event `1.1`.
 
 Explicit init uses service/environment, configured HTTPS endpoint ending `/v1/ingest/events`, project UUID and a scoped ingestion token. `providers=("openai", "anthropic")` or `CUTBACK_PROVIDERS` selects adapters. Default init is disabled. Initialize after worker fork; untested SDKs/existing resource wrappers are refused and the application's bootstrap must fail open.
 

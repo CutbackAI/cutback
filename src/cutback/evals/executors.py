@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from cutback.core.models import LLMEvent
 from cutback.core.sdk_compat import OPENAI_TEXT_SDKS
 from cutback.evals._logging import owned_sdk_request
-from cutback.evals.experiments import Execution, route_target
+from cutback.evals.experiments import Execution, qualified_native_model, route_target
 from cutback.pricing import Catalog
 
 
@@ -62,6 +62,9 @@ class OpenAIExecutor:
     def execute(self, model, text, timeout_seconds):
         if model.provider != "openai":
             raise ValueError("EXECUTOR_PROVIDER_UNSUPPORTED")
+        qualified_native_model(model)
+        if model.native_contract is not None and not isinstance(text, str):
+            raise ValueError("MODERN_NATIVE_TEXT_INPUT_REQUIRED")
         require_single_call_model(model)
         started = time.perf_counter()
         contract = model.request_contract
@@ -69,7 +72,19 @@ class OpenAIExecutor:
         bundle = contract is not None and contract.version == "native-prompt-v1"
         if bundle and model.instruction:
             raise ValueError("BOUND_PROMPT_INSTRUCTIONS_MUST_BE_IN_CONTRACT")
-        options = contract.options if contract else {}
+        options = dict(contract.options) if contract else {}
+        if model.native_contract is not None:
+            options.update(
+                reasoning={"effort": model.native_contract.reasoning_effort},
+                service_tier=model.native_contract.service_tier,
+                extra_body={
+                    "prompt_cache_options": {"ttl": model.native_contract.cache_write_lifetime}
+                },
+            )
+        from openai.types.chat import ChatCompletion
+        from openai.types.responses import Response
+
+        response: ChatCompletion | Response
         chat = contract is not None and contract.sdk_surface == "chat.completions.create"
         if contract and contract.sdk_surface not in {"responses.create", "chat.completions.create"}:
             raise ValueError("EXECUTOR_REQUEST_SURFACE_UNSUPPORTED")
@@ -117,7 +132,7 @@ class OpenAIExecutor:
             sdk_surface="chat.completions.create" if chat else "responses.create",
             requested_model=model.model,
             response_model=response.model,
-            service_tier=getattr(response, "service_tier", None),
+            service_tier=getattr(response, "service_tier", None) or options.get("service_tier"),
             trace_id="1" * 32,
             span_id="1" * 16,
             occurred_at=datetime.now(UTC),
@@ -127,6 +142,18 @@ class OpenAIExecutor:
             **normalize_usage(response, "chat.completions.create" if chat else "responses.create"),
         )
         cost = Catalog().price(event)
+        if model.native_contract is not None and getattr(response, "service_tier", None) not in {
+            "default",
+        }:
+            # Auto can resolve to a premium tier. Missing actual-tier evidence is
+            # insufficient for this new paid contract, even when token counts exist.
+            cost = replace(
+                cost, amount=None, status="unpriced", reason="native_served_tier_unqualified"
+            )
+        if model.native_contract is not None and response.model != model.model:
+            cost = replace(
+                cost, amount=None, status="unpriced", reason="native_response_model_scope_mismatch"
+            )
         return Execution(
             output,
             cost.amount,
@@ -134,6 +161,7 @@ class OpenAIExecutor:
             event.input_tokens,
             event.output_tokens,
             complete=complete,
+            actual_model="openai:" + response.model if model.native_contract is not None else None,
         )
 
     def close(self):
@@ -226,9 +254,10 @@ class ConfiguredExecutor:
         require_single_call_model(model)
         if model.provider == "router":
             target = route_target(model, text)
+            result = self.execute(target, text, timeout_seconds)
             return replace(
-                self.execute(target, text, timeout_seconds),
-                actual_model=target.provider + ":" + target.model,
+                result,
+                actual_model=result.actual_model or target.provider + ":" + target.model,
             )
         self.prepare(model.provider)
         return self.clients[model.provider].execute(model, text, timeout_seconds)

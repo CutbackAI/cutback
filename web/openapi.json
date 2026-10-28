@@ -16256,6 +16256,16 @@
                 "type": "null"
               }
             ]
+          },
+          "native_contract": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NativeModelContract"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -16364,6 +16374,16 @@
                 "type": "null"
               }
             ]
+          },
+          "native_contract": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NativeModelContract"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -16450,6 +16470,61 @@
           "model"
         ],
         "title": "NativeGeneratorSpec"
+      },
+      "NativeModelContract": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "openai-luna-responses-text-v1",
+            "title": "Version",
+            "default": "openai-luna-responses-text-v1"
+          },
+          "price_snapshot_id": {
+            "type": "string",
+            "const": "openai-text-2026-10-28-v1",
+            "title": "Price Snapshot Id",
+            "default": "openai-text-2026-10-28-v1"
+          },
+          "price_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Price Sha256"
+          },
+          "reasoning_effort": {
+            "type": "string",
+            "enum": [
+              "none",
+              "low",
+              "medium",
+              "high",
+              "xhigh",
+              "max"
+            ],
+            "title": "Reasoning Effort",
+            "default": "none"
+          },
+          "service_tier": {
+            "type": "string",
+            "enum": [
+              "default",
+              "auto"
+            ],
+            "title": "Service Tier",
+            "default": "default"
+          },
+          "cache_write_lifetime": {
+            "type": "string",
+            "const": "30m",
+            "title": "Cache Write Lifetime",
+            "default": "30m"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "price_sha256"
+        ],
+        "title": "NativeModelContract"
       },
       "NativeObservation": {
         "properties": {

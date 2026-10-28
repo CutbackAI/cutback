@@ -1,5 +1,7 @@
 # Cutback agent workflow
 
+When an installed version returns native model/price references, include each model's reasoning setting, requested tier, snapshot and SHA in the exact approval review. Preserve source choices and documented defaults. Observation compatibility alone grants no paid execution permission. Read the matching `docs/native-modern-text.md` before using a new contract; published dev5 lacks this source addition. Existing authorization for the same exact frozen scope remains valid.
+
 1. Inside the permitted application, run `cutback doctor --json` and `cutback optimize . --json`. Resume `.cutback/agent/session.json` with `cutback workflow status`; keep this directory ignored. Finish discovery when every detected workflow has either a qualified request/source contract or a concrete unresolved reason. Application source is parsed, never imported by discovery. Keep historical spend and missing coverage unknown.
 
 2. Inspect the application's startup and existing tracing wrappers. Prepare the shared `cutback instrument --plan --target . --entrypoint path.py --json` proposal, native SDK compatibility checks, bounded lifecycle and runtime secret configuration. Apply/run authorized application checks yourself; preserve dependency pins. Source changes require fresh analysis before evaluation. Keep private application identities, source and findings exclusively in its own workspace.

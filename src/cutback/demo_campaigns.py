@@ -36,8 +36,12 @@ def synthetic_executor(*, seeds_from_scope=False):
             output = json.dumps(
                 {
                     "proposals": [
-                        {"seed_key": key, "instruction": "Answer A only.", "max_output_tokens": 64}
-                        for key in seeds
+                        {
+                            "seed_key": key,
+                            "instruction": "Answer A only.",
+                            "max_output_tokens": 64 + index * 16 if seeds_from_scope else 64,
+                        }
+                        for index, key in enumerate(seeds)
                     ]
                 }
             )
@@ -54,6 +58,7 @@ def synthetic_executor(*, seeds_from_scope=False):
                 "created_at": 1,
                 "status": "completed",
                 "model": body["model"],
+                **({"service_tier": "default"} if body["model"] == "gpt-6-luna" else {}),
                 "output": [
                     {
                         "type": "message",
@@ -67,7 +72,20 @@ def synthetic_executor(*, seeds_from_scope=False):
                     "input_tokens": 100,
                     "output_tokens": tokens,
                     "total_tokens": 100 + tokens,
-                    "input_tokens_details": {"cached_tokens": 0},
+                    "input_tokens_details": {
+                        "cached_tokens": 0,
+                        **(
+                            {
+                                "cache_write_tokens": 0,
+                                "cache_write_tokens_details": {
+                                    "ttl_30m_tokens": 0,
+                                    "ttl_12h_tokens": 0,
+                                },
+                            }
+                            if body["model"] == "gpt-6-luna"
+                            else {}
+                        ),
+                    },
                     "output_tokens_details": {"reasoning_tokens": 0},
                 },
             },

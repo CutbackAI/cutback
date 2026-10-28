@@ -1,6 +1,6 @@
 # Modern text usage and effective-dated prices
 
-This source addition observes the qualified text usage fields of GPT-6 Luna. It does not enable Luna as a paid experiment target. Existing native experiment contracts and their primary price-snapshot hash stay unchanged. PyPI `0.1.0.dev5` does not contain this addition.
+This accounting addition observes qualified Luna usage fields. Prices alone do not enable a paid target; newer source separately provides an explicit [native text execution contract](native-modern-text.md). Existing experiment contracts and their primary price hash stay unchanged. PyPI `0.1.0.dev5` does not contain these additions.
 
 ## Try the arithmetic without a provider key
 
