@@ -117,6 +117,7 @@ class OpenAIExecutor:
             sdk_surface="chat.completions.create" if chat else "responses.create",
             requested_model=model.model,
             response_model=response.model,
+            service_tier=getattr(response, "service_tier", None),
             trace_id="1" * 32,
             span_id="1" * 16,
             occurred_at=datetime.now(UTC),

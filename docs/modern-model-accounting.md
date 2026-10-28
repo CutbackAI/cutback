@@ -40,6 +40,8 @@ The returned service tier takes precedence over the requested tier. If the respo
 
 Open **Security → Public list-price snapshots** to see readable rates, cache durations, context premiums, checked dates and source links. Effective-dated project rates appear below with cursor pagination.
 
+![The actual pricing dashboard showing the checked Standard text rates and long-context threshold](assets/modern-price-snapshot.png)
+
 An administrator can expand **Add effective-dated contract rate**, select the exact provider/model/region/tier and enter rates. Monetary fields start blank. For this OpenAI contract select the versioned inclusive-write option and supply both lifetime prices, the context threshold and both multipliers. Null region/tier is an exact unspecified scope, not a wildcard; use `default` when the application reports that actual tier. Rates are USD per million tokens.
 
 Quotes are immutable. A later start supersedes an earlier matching quote for later events; already recorded events keep their valuation. Repeating the identical scope/start/rates/end returns the same ID. A different quote with the same scope and start conflicts. Legacy ambiguous active quotes with the same start leave cost unknown instead of selecting an arbitrary rate. A project retains at most 10,000 quotes; an identical replay still works at that limit. Listing uses a project-scoped UUID cursor, at most 100 rows per request. Export and project deletion include contract quotes and extended event metadata under the existing privacy boundary.

@@ -207,3 +207,44 @@ def test_unqualified_extra_body_remains_unpriced(observer):
     (event,) = observer.exporter.events
     assert event.metering_status == "unsupported_units"
     assert Catalog().price(event).amount is None
+
+
+@pytest.mark.parametrize("surface", ["responses.create", "chat.completions.create"])
+@pytest.mark.parametrize("agent", [False, True])
+@pytest.mark.parametrize("tier", [None, "default", "fast"])
+def test_owned_execution_never_prices_an_unsupported_served_tier_as_standard(
+    monkeypatch, surface, agent, tier
+):
+    import httpx
+    from support_native_agent import native_executor, response_body
+    from test_agent_turns import frame
+    from test_prompt_executors import bound_model
+
+    from cutback.evals.executors import OpenAIExecutor
+    from cutback.evals.experiments import ModelSpec
+
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        wire = response_body(surface)
+        if tier is not None:
+            wire["service_tier"] = tier
+        return httpx.Response(200, json=wire)
+
+    if agent:
+        executor = native_executor(surface, monkeypatch, handler)
+        model = ModelSpec(key="owned", provider="openai", model="gpt-4.1-mini").with_agent_turn(
+            frame(surface)
+        )
+    else:
+        monkeypatch.setenv("CUTBACK_EXPERIMENT_OPENAI_KEY", "synthetic-owned-never-sent")
+        executor = OpenAIExecutor(http_client=httpx.Client(transport=httpx.MockTransport(handler)))
+        model = bound_model("openai", surface)
+    try:
+        result = executor.execute(model, "synthetic", 2)
+        assert result.complete
+        assert (result.cost_usd is None) == (tier == "fast")
+        assert len(calls) == 1
+    finally:
+        executor.close()

@@ -1,0 +1,42 @@
+{
+  "feature": "versioned_modern_text_observation_and_private_contract_rates",
+  "status": "installed_focused_qualified_broad_and_hosted_gates_pending",
+  "event_schema": "1.1 optional OpenAI cache-write durations; released 1.0 bytes preserved",
+  "released_migrations_unchanged": "0001-0018",
+  "primary_execution_snapshot_sha256": "57acf5108329471b4280a09c65714aeb235542effa7bcf93fa16434f301e897d",
+  "observation_snapshot": "openai-text-2026-10-28-v1",
+  "installed_exact_public_default": {"passed": 71, "seconds": 20.76},
+  "installed_exact_public_sdk3": {"passed": 73, "seconds": 13.28},
+  "pre_final_guard_installed_sdk3": {"passed": 609, "skipped": 6, "seconds": 276.70},
+  "pre_final_guard_sdk3_skip_reasons": [
+    "two Windows symlink privilege skips",
+    "four legacy SDK cases covered by the separate legacy environment"
+  ],
+  "legacy_sdk_and_offline_scanner": {"passed": 21, "seconds": 3.03},
+  "native_node_tests": 13,
+  "native_node_strict_types": "pass",
+  "frontend_units": 7,
+  "source_typing_modules": 191,
+  "packaged_application_files_equal_in_public_source_default_and_sdk3_installs": 203,
+  "core_only_installed_consumer": "pass",
+  "authenticated_pricing_browser": {
+    "passed": 1,
+    "seconds": 11.09,
+    "coverage": ["quote authoring", "cursor pagination", "desktop", "mobile", "axe"]
+  },
+  "earlier_failed_runs": [
+    "Two new PG assertions incorrectly assumed the unsanitized error envelope; corrected 12-case run passed.",
+    "A new native Anthropic fixture used shutdown instead of close and left global instrumentation active; cleanup fixed, all nine native cases passed."
+  ],
+  "paid_provider_requests": 0,
+  "production_deployment": false,
+  "pypi_upload": false,
+  "limits": [
+    "Luna observation accounting does not qualify a paid experiment target",
+    "upgrade strict collectors before event 1.1 producers; no protocol negotiation",
+    "unsupported tiers, regions, modalities and incomplete usage remain unpriced",
+    "synthetic arithmetic and transports are not live model or customer validation",
+    "broader roadmap incomplete"
+  ],
+  "pending": ["broad installed default regression", "hosted exact-head checks", "public merge"]
+}

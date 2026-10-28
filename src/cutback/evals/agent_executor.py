@@ -173,6 +173,9 @@ class NativeAgentExecutor(ConfiguredExecutor):
             sdk_surface=frame.surface,
             requested_model=model.model,
             response_model=response.model,
+            service_tier=getattr(response, "service_tier", None)
+            if model.provider == "openai"
+            else None,
             trace_id="1" * 32,
             span_id="1" * 16,
             occurred_at=datetime.now(UTC),
