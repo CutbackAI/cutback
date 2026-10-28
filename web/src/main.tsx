@@ -19,6 +19,7 @@ import { SampleGuide } from "./demo";
 import { PatchReview } from "./change-review";
 import { CaseEvidence } from "./case-evidence";
 import { ExecutionEvidence } from "./execution";
+import { TaskEconomics } from "./task-economics";
 import { AgentWorkflow } from "./agent-workflow";
 import { Traces } from "./traces";
 import { Imports } from "./imports";
@@ -64,6 +65,7 @@ const views = [
   "Traces",
   "Inventory",
   "Costs",
+  "Task economics",
   "Opportunities",
   "Experiments",
   "Review",
@@ -740,6 +742,19 @@ function App() {
                   setReviewSource({ project, id });
                   setView("Review");
                 }}
+              />
+            )}
+            {view === "Task economics" && project && (
+              <TaskEconomics
+                key={project}
+                api={api}
+                project={project}
+                canWrite={[
+                  "admin",
+                  "project_admin",
+                  "analyst",
+                  "editor",
+                ].includes(identity.project_roles?.[project] || identity.role)}
               />
             )}
             {view === "Training" && data.jobs && (

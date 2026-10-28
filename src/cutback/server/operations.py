@@ -153,6 +153,9 @@ def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False
             from cutback.server.traces import prune_traces
 
             prune_traces(session, cutoff, selected)
+            from cutback.server.task_economics import retain_task_outcomes
+
+            retain_task_outcomes(session, cutoff, selected)
             from cutback.server.execution_db import ExecutionCall, ExecutionEpisode
             from cutback.server.quality_db import QualityEvaluation
 

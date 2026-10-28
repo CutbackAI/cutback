@@ -167,6 +167,54 @@ export function createSDK(request:Request) {return {
     if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
     if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/experiments/${encodeURIComponent(String(args.run_id))}/episodes`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  ingest_v1_ingest_task_outcomes_post: (args:{body:components["schemas"]["TaskOutcomeBatch"]}) => {
+    const query=new URLSearchParams();
+    return request(`/ingest/task-outcomes`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  record_v1_projects__project_id__task_outcomes_post: (args:{project_id:string;environment_id:string;body:components["schemas"]["TaskOutcomeBatch"]}) => {
+    const query=new URLSearchParams();
+    if(args.environment_id!==undefined && args.environment_id!==null) query.set("environment_id",String(args.environment_id));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/task-outcomes`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  tasks_v1_projects__project_id__task_outcomes_get: (args:{project_id:string;environment_id:string;as_of?:string | null;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.environment_id!==undefined && args.environment_id!==null) query.set("environment_id",String(args.environment_id));
+    if(args.as_of!==undefined && args.as_of!==null) query.set("as_of",String(args.as_of));
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/task-outcomes`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  economics_v1_projects__project_id__task_economics_get: (args:{project_id:string;environment_id:string;start:string;end:string;workflow?:string | null;release?:string | null;expected_tasks?:number | null;as_of?:string | null}) => {
+    const query=new URLSearchParams();
+    if(args.environment_id!==undefined && args.environment_id!==null) query.set("environment_id",String(args.environment_id));
+    if(args.start!==undefined && args.start!==null) query.set("start",String(args.start));
+    if(args.end!==undefined && args.end!==null) query.set("end",String(args.end));
+    if(args.workflow!==undefined && args.workflow!==null) query.set("workflow",String(args.workflow));
+    if(args.release!==undefined && args.release!==null) query.set("release",String(args.release));
+    if(args.expected_tasks!==undefined && args.expected_tasks!==null) query.set("expected_tasks",String(args.expected_tasks));
+    if(args.as_of!==undefined && args.as_of!==null) query.set("as_of",String(args.as_of));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/task-economics`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  freeze_v1_projects__project_id__task_cost_snapshots_post: (args:{project_id:string;environment_id:string;body:components["schemas"]["TaskSnapshotInput"]}) => {
+    const query=new URLSearchParams();
+    if(args.environment_id!==undefined && args.environment_id!==null) query.set("environment_id",String(args.environment_id));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/task-cost-snapshots`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  snapshots_v1_projects__project_id__task_cost_snapshots_get: (args:{project_id:string;environment_id:string;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.environment_id!==undefined && args.environment_id!==null) query.set("environment_id",String(args.environment_id));
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/task-cost-snapshots`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  snapshot_v1_projects__project_id__task_cost_snapshots__snapshot_id__get: (args:{project_id:string;snapshot_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/task-cost-snapshots/${encodeURIComponent(String(args.snapshot_id))}`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  effort_v1_projects__project_id__search_effort_post: (args:{project_id:string;body:components["schemas"]["SearchEffortInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/search-effort`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  observe_v1_projects__project_id__improvement_observations_post: (args:{project_id:string;body:components["schemas"]["ImprovementInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/improvement-observations`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  observations_v1_projects__project_id__improvement_observations_get: (args:{project_id:string;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/improvement-observations`+(query.size?"?"+query.toString():""),{method:"GET"});},
   preview_v1_projects__project_id__imports_preview_post: (args:{project_id:string;body:components["schemas"]["ImportPreviewInput"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/imports/preview`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},

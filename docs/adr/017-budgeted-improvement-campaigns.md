@@ -1,0 +1,31 @@
+# Budgeted improvement campaigns
+
+Status: implementation design, 28 October 2026. Task economics and frozen observations are working source; the campaign described here is **not implemented or accepted** yet. Existing released plans, source bindings, reservations and test-lineage rules remain valid.
+
+## Decision
+
+An adaptive optimizer must not mutate an approved experiment's models or silently authorize generated instructions under an unrelated plan hash. Introduce a separately approved, encrypted campaign envelope. It binds the source/request/prompt version, dataset and policy, eligible models/destinations, permitted transformations, generator version, maximum rounds/candidates, required application criteria, immutable price contract, total request/USD/time ceilings and authority to prepare derived plans within those bounds. Approval delegates only this bounded preparation/evaluation journey. It grants no application deployment, alias promotion or traffic changes.
+
+Derived candidates are encrypted and frozen before any target request. Each target experiment retains an ordinary exact model/request plan hash and a server-validated derivation receipt. The canonical execution ledger continues checking equality against that exact child plan. Do not bypass that equality with a broad "generated model" exception. Parent campaign request/USD reservations are committed in the same project-locked transaction as each child physical-call reservation; a process-local optimizer callback count is insufficient. Cancellation, expiry and current principal/data/vendor authority are rechecked before every physical request. Uncertain charged operations never replay automatically.
+
+## Worker and evidence lifecycle
+
+Campaign control work advances one bounded state transition per eligible worker cycle. Metadata transitions use deterministic identities and atomic idempotent persistence. Native generation is an explicitly typed proposal-only operation with its own exact approved request contract and call receipt; it cannot masquerade as a completed target evaluation. Its raw response and generated instructions remain in the authorized encrypted plane. Refusal, malformed/incomplete output, unknown usage, policy/storage failure and uncertain operations stop safely and retain spent/request coverage.
+
+Start with a qualified native prompt/parameter generator and the existing static model/output-cap portfolio as a simpler baseline. Generator inputs contain only authorized training groups and permitted prior validation evidence; held-out confirmation inputs/labels remain unavailable. Generated changes can alter only the named instruction fields and output-bound range. They cannot introduce tools, code execution, endpoints, providers, hidden sampling options, arbitrary template evaluation or changed application output schemas. Every proposer, target, evaluator and simulator request is purpose-labeled and charged once through the same canonical ledger.
+
+Adapters produce declarative generation requests and typed candidate proposals. The shared collector does not import arbitrary optimizer Python packages or accept a package's assertion that it intercepted every billable call. Additional optimizers need explicit qualification and an execution/network boundary that prevents hidden calls. Document unsupported integrations honestly.
+
+Validation may adapt within the frozen campaign envelope, but all proposed/rejected versions and costs remain attributable. Freeze one candidate before a separately bounded untouched confirmation stage. Persistent family/exposure checks still apply across reimports and later runs. A campaign cannot reset a consumed test family or turn validation selection into independent confirmation. Confirmation failure, inadequate sample or uncertainty blocks an accepted recommendation.
+
+Use complete task costs and conservative owner-declared opportunity/volume to cap effort; unknown or too-small opportunities abstain. Cumulative native call costs, generation/judging and training/tool/engineering costs feed the existing improvement receipt. Comparisons must include a simple downgrade and a qualified optimizer-only baseline before additional strategy complexity is claimed useful. Synthetic acceptance remains synthetic; task-matched customer benefits need separately authorized evidence.
+
+## Application change boundary
+
+Prepare the exact tested source/registry change with rollback and affected-consumer application checks. Existing model-only patches must continue refusing changed instructions. Prompt edits need a separately qualified, hashed editable instruction location or frozen registry version; do not guess an AST location or replace an arbitrary matching string. Preserve v1 source/plan hashes, qualify additive bindings and keep unresolved/dynamic cases explicit. A portable PR can run the frozen evidence/application contract in an independent checkout. Its creation does not authorize deployment.
+
+## Required acceptance
+
+Exercise actual pinned native clients through owned synthetic transports; parent/child concurrent budget exhaustion; crash before/after each reservation and encrypted persistence boundary; stale/generated model tampering; current rights/principal/source change; train/test leakage; canceled or expired work and late usage; fair multi-worker state transitions; canonical once-only overhead; cheap-but-worse and failed-payback trials; exact source diffs/rollback, affected consumers and independent PR checks; migrations/RBAC/retention/export/delete; generated API/dashboard/mobile/axe; installed wheels and privacy boundaries. No paid vendor request or production change is part of engineering acceptance.
+
+Official request semantics consulted: [Responses structured output](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses) documents strict JSON schemas and explicit incomplete/refusal handling. Installed SDK source and synthetic transports remain the qualification authority for the repository's pinned versions; documentation does not broaden that matrix or establish current account availability.

@@ -21,6 +21,12 @@ from cutback.server.db import (
     ScanRun,
     StoredEvent,
 )
+from cutback.server.economics_db import (
+    ImprovementObservation,
+    TaskCostSnapshot,
+    TaskRecord,
+    TaskResult,
+)
 from cutback.server.enterprise_db import (
     CacheEntry,
     ExperimentSchedule,
@@ -87,6 +93,10 @@ def install_privacy(app, sessions, authorize, scope):
         def records():
             with sessions() as session:
                 for cls in (
+                    TaskRecord,
+                    TaskResult,
+                    TaskCostSnapshot,
+                    ImprovementObservation,
                     ExecutionCall,
                     ExecutionEpisode,
                     NotificationConfig,
@@ -260,6 +270,10 @@ def install_privacy(app, sessions, authorize, scope):
             from cutback.server.db import ChangeProposal, DatasetItem, RecommendationRecord
 
             for cls in (
+                ImprovementObservation,
+                TaskResult,
+                TaskRecord,
+                TaskCostSnapshot,
                 ExecutionCall,
                 ExecutionEpisode,
                 QualityEvaluation,

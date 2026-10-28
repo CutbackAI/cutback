@@ -542,6 +542,12 @@ def create_app(
     from cutback.server.execution_api import install_execution
 
     install_execution(app, sessions, authorize, scope)
+    from cutback.server.economics_api import install_economics
+
+    install_economics(app, sessions, authorize, scope)
+    from cutback.server.improvement_api import install_improvements
+
+    install_improvements(app, sessions, authorize, scope)
     from cutback.server.import_api import install_imports
 
     install_imports(app, sessions, authorize, scope)
