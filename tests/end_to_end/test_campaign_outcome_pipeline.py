@@ -11,8 +11,9 @@ from cutback.evals.artifacts import EncryptedFileStore
 pytestmark = pytest.mark.postgres
 
 
+@pytest.mark.parametrize("watch", [False, True])
 def test_ordinary_campaign_checks_uploaded_diff_and_later_rollback_review(
-    api, tenant, tmp_path, monkeypatch
+    api, tenant, tmp_path, monkeypatch, watch
 ):
     monkeypatch.setenv("CUTBACK_ALLOW_PAYLOADS", "true")
     app = api[2]
@@ -25,6 +26,7 @@ def test_ordinary_campaign_checks_uploaded_diff_and_later_rollback_review(
         tenant[0],
         tenant[1]["Authorization"][7:],
         tmp_path,
+        watch=watch,
     )
     assert result["report"]["status"] == "COMPLETED"
     assert (
@@ -40,3 +42,11 @@ def test_ordinary_campaign_checks_uploaded_diff_and_later_rollback_review(
     assert evidence["report"]["declared_optimization_total_usd"] is not None
     assert evidence["report"]["production_savings_usd"] is None
     assert api[1]["Authorization"][7:] not in json.dumps(result)
+
+    if watch:
+        automatic = result["automatic_observation"]
+        assert automatic["receipt"]["status"] == "EXHAUSTED"
+        assert automatic["receipt"]["windows_processed"] == 1
+        assert len(automatic["windows"]["items"]) == 1
+        assert automatic["windows"]["items"][0]["evidence"]["next_action"] == "REVIEW_ROLLBACK"
+        assert automatic["provider_calls"] == 0 and not automatic["traffic_changed"]

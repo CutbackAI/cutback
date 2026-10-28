@@ -208,6 +208,111 @@ def collect_run_costs(session, project, run_ids, change):
     ], len(missing)
 
 
+def freeze_improvement(session, project_id, body, actor):
+    specification = body.model_dump(mode="json")
+    request_hash = fingerprint(specification)
+    lock_lineage(session, project_id)
+    existing = session.scalar(
+        select(ImprovementObservation).where(
+            ImprovementObservation.project_id == project_id,
+            ImprovementObservation.observation_id == body.observation_id,
+        )
+    )
+    if existing:
+        if existing.request_sha256 != request_hash:
+            raise HTTPException(409, "IMPROVEMENT_OBSERVATION_REQUEST_CONFLICT")
+        return receipt(existing)
+    if (
+        session.scalar(
+            select(func.count())
+            .select_from(ImprovementObservation)
+            .where(
+                ImprovementObservation.project_id == project_id,
+            )
+        )
+        >= 1000
+    ):
+        raise HTTPException(409, "IMPROVEMENT_OBSERVATION_PROJECT_QUOTA")
+    baseline = session.get(TaskCostSnapshot, body.baseline_snapshot_id)
+    candidate = session.get(TaskCostSnapshot, body.candidate_snapshot_id)
+    if (
+        not baseline
+        or not candidate
+        or baseline.project_id != project_id
+        or candidate.project_id != project_id
+    ):
+        raise HTTPException(404, "TASK_SNAPSHOT_NOT_FOUND")
+    snapshots = [baseline, candidate]
+    if baseline.environment_id != candidate.environment_id:
+        raise HTTPException(409, "IMPROVEMENT_ENVIRONMENT_MISMATCH")
+    if any(fingerprint(s.report) != s.evidence_sha256 for s in snapshots):
+        raise HTTPException(409, "TASK_SNAPSHOT_INTEGRITY_FAILURE")
+    before, after = (TaskWindow.model_validate(s.report) for s in snapshots)
+    base_identity, candidate_identity = window_identity(before), window_identity(after)
+    if base_identity[:2] != candidate_identity[:2] or base_identity[2] == candidate_identity[2]:
+        raise HTTPException(409, "IMPROVEMENT_REQUIRES_SAME_WORKFLOW_AND_DISTINCT_RELEASES")
+    if {item.declaration.task_id for item in before.items} & {
+        item.declaration.task_id for item in after.items
+    }:
+        raise HTTPException(409, "IMPROVEMENT_WINDOWS_CANNOT_REUSE_A_TASK")
+    change = session.get(ChangeProposal, body.change_id) if body.change_id else None
+    if body.change_id and (not change or change.project_id != project_id):
+        raise HTTPException(404, "CHANGE_NOT_FOUND")
+    if change and not re.fullmatch(r"[a-f0-9]{64}", change.evidence.get("diff_sha256", "")):
+        raise HTTPException(409, "SOURCE_BOUND_CHANGE_DIFF_REQUIRED")
+    costs, missing = collect_run_costs(session, project_id, body.optimization_run_ids, change)
+    if missing and body.assumptions.all_optimization_runs_declared_complete:
+        raise HTTPException(409, "INCLUDE_PREDECESSOR_OPTIMIZATION_RUN_COSTS")
+    result = compare_improvement_economics(before.summary, after.summary, costs, body.assumptions)
+    evidence = ImprovementEvidence(
+        report=ImprovementReport.model_validate(result),
+        assumptions=body.assumptions,
+        baseline_snapshot_id=baseline.id,
+        baseline_sha256=baseline.evidence_sha256,
+        candidate_snapshot_id=candidate.id,
+        candidate_sha256=candidate.evidence_sha256,
+        change_id=body.change_id,
+        source_diff_sha256=change.evidence.get("diff_sha256") if change else None,
+        release_linkage="owner_attested_not_deployment_verified"
+        if change
+        else "unlinked_window_comparison",
+        workflow=base_identity[0],
+        service=base_identity[1],
+        baseline_release=base_identity[2],
+        candidate_release=candidate_identity[2],
+        run_costs=costs,
+        missing_predecessor_costs=missing,
+    ).model_dump(mode="json")
+    row = ImprovementObservation(
+        project_id=project_id,
+        environment_id=baseline.environment_id,
+        observation_id=body.observation_id,
+        change_id=body.change_id,
+        baseline_snapshot_id=baseline.id,
+        candidate_snapshot_id=candidate.id,
+        request_sha256=request_hash,
+        evidence_sha256=fingerprint(evidence),
+        specification=specification,
+        receipt=evidence,
+        actor=actor,
+    )
+    session.add(row)
+    session.flush()
+    session.add(
+        AuditEvent(
+            project_id=project_id,
+            actor=actor,
+            action="improvement_observed",
+            details={
+                "observation_id": str(row.id),
+                "evidence_sha256": row.evidence_sha256,
+                "decision": result["decision"],
+            },
+        )
+    )
+    return receipt(row)
+
+
 def install_improvements(app, sessions, authorize, scope):
     @app.post("/v1/projects/{project_id}/search-effort", response_model=SearchEffortReceipt)
     def effort(project_id: UUID, body: SearchEffortInput, auth=Depends(authorize)):
@@ -219,116 +324,8 @@ def install_improvements(app, sessions, authorize, scope):
     )
     def observe(project_id: UUID, body: ImprovementInput, auth=Depends(authorize)):
         scope(auth, project_id, ("analyst",))
-        specification = body.model_dump(mode="json")
-        request_hash = fingerprint(specification)
         with sessions.begin() as session:
-            lock_lineage(session, project_id)
-            existing = session.scalar(
-                select(ImprovementObservation).where(
-                    ImprovementObservation.project_id == project_id,
-                    ImprovementObservation.observation_id == body.observation_id,
-                )
-            )
-            if existing:
-                if existing.request_sha256 != request_hash:
-                    raise HTTPException(409, "IMPROVEMENT_OBSERVATION_REQUEST_CONFLICT")
-                return receipt(existing)
-            if (
-                session.scalar(
-                    select(func.count())
-                    .select_from(ImprovementObservation)
-                    .where(
-                        ImprovementObservation.project_id == project_id,
-                    )
-                )
-                >= 1000
-            ):
-                raise HTTPException(409, "IMPROVEMENT_OBSERVATION_PROJECT_QUOTA")
-            baseline = session.get(TaskCostSnapshot, body.baseline_snapshot_id)
-            candidate = session.get(TaskCostSnapshot, body.candidate_snapshot_id)
-            if (
-                not baseline
-                or not candidate
-                or baseline.project_id != project_id
-                or candidate.project_id != project_id
-            ):
-                raise HTTPException(404, "TASK_SNAPSHOT_NOT_FOUND")
-            snapshots = [baseline, candidate]
-            if baseline.environment_id != candidate.environment_id:
-                raise HTTPException(409, "IMPROVEMENT_ENVIRONMENT_MISMATCH")
-            if any(fingerprint(s.report) != s.evidence_sha256 for s in snapshots):
-                raise HTTPException(409, "TASK_SNAPSHOT_INTEGRITY_FAILURE")
-            before, after = (TaskWindow.model_validate(s.report) for s in snapshots)
-            base_identity, candidate_identity = window_identity(before), window_identity(after)
-            if (
-                base_identity[:2] != candidate_identity[:2]
-                or base_identity[2] == candidate_identity[2]
-            ):
-                raise HTTPException(409, "IMPROVEMENT_REQUIRES_SAME_WORKFLOW_AND_DISTINCT_RELEASES")
-            if {item.declaration.task_id for item in before.items} & {
-                item.declaration.task_id for item in after.items
-            }:
-                raise HTTPException(409, "IMPROVEMENT_WINDOWS_CANNOT_REUSE_A_TASK")
-            change = session.get(ChangeProposal, body.change_id) if body.change_id else None
-            if body.change_id and (not change or change.project_id != project_id):
-                raise HTTPException(404, "CHANGE_NOT_FOUND")
-            if change and not re.fullmatch(r"[a-f0-9]{64}", change.evidence.get("diff_sha256", "")):
-                raise HTTPException(409, "SOURCE_BOUND_CHANGE_DIFF_REQUIRED")
-            costs, missing = collect_run_costs(
-                session, project_id, body.optimization_run_ids, change
-            )
-            if missing and body.assumptions.all_optimization_runs_declared_complete:
-                raise HTTPException(409, "INCLUDE_PREDECESSOR_OPTIMIZATION_RUN_COSTS")
-            result = compare_improvement_economics(
-                before.summary, after.summary, costs, body.assumptions
-            )
-            evidence = ImprovementEvidence(
-                report=ImprovementReport.model_validate(result),
-                assumptions=body.assumptions,
-                baseline_snapshot_id=baseline.id,
-                baseline_sha256=baseline.evidence_sha256,
-                candidate_snapshot_id=candidate.id,
-                candidate_sha256=candidate.evidence_sha256,
-                change_id=body.change_id,
-                source_diff_sha256=change.evidence.get("diff_sha256") if change else None,
-                release_linkage="owner_attested_not_deployment_verified"
-                if change
-                else "unlinked_window_comparison",
-                workflow=base_identity[0],
-                service=base_identity[1],
-                baseline_release=base_identity[2],
-                candidate_release=candidate_identity[2],
-                run_costs=costs,
-                missing_predecessor_costs=missing,
-            ).model_dump(mode="json")
-            row = ImprovementObservation(
-                project_id=project_id,
-                environment_id=baseline.environment_id,
-                observation_id=body.observation_id,
-                change_id=body.change_id,
-                baseline_snapshot_id=baseline.id,
-                candidate_snapshot_id=candidate.id,
-                request_sha256=request_hash,
-                evidence_sha256=fingerprint(evidence),
-                specification=specification,
-                receipt=evidence,
-                actor=auth["actor"],
-            )
-            session.add(row)
-            session.flush()
-            session.add(
-                AuditEvent(
-                    project_id=project_id,
-                    actor=auth["actor"],
-                    action="improvement_observed",
-                    details={
-                        "observation_id": str(row.id),
-                        "evidence_sha256": row.evidence_sha256,
-                        "decision": result["decision"],
-                    },
-                )
-            )
-            return receipt(row)
+            return freeze_improvement(session, project_id, body, auth["actor"])
 
     @app.get("/v1/projects/{project_id}/improvement-observations", response_model=ImprovementPage)
     def observations(

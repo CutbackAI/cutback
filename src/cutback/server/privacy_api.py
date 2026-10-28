@@ -55,6 +55,7 @@ from cutback.server.monitoring_db import (
     OnlineRule,
     SavedView,
 )
+from cutback.server.outcome_watch_db import OutcomeWatch, OutcomeWatchWindow
 from cutback.server.prompt_db import (
     PromptAlias,
     PromptAliasChange,
@@ -100,6 +101,8 @@ def install_privacy(app, sessions, authorize, scope):
         def records():
             with sessions() as session:
                 for cls in (
+                    OutcomeWatch,
+                    OutcomeWatchWindow,
                     CampaignRecord,
                     CampaignRun,
                     CampaignCandidate,
@@ -282,6 +285,8 @@ def install_privacy(app, sessions, authorize, scope):
             from cutback.server.db import ChangeProposal, DatasetItem, RecommendationRecord
 
             for cls in (
+                OutcomeWatchWindow,
+                OutcomeWatch,
                 CampaignSelection,
                 CampaignCandidate,
                 CampaignRun,

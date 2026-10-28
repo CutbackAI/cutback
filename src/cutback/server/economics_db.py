@@ -128,6 +128,7 @@ class TaskCostSnapshot(Base):
 class ImprovementObservation(Base):
     __tablename__ = "improvement_observations"
     __table_args__ = (
+        UniqueConstraint("id", "project_id", "environment_id", name="uq_improvement_scope"),
         UniqueConstraint("project_id", "observation_id", name="uq_improvement_observation_request"),
         ForeignKeyConstraint(
             ["environment_id", "project_id"],

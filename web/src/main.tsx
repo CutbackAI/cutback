@@ -757,6 +757,9 @@ function App() {
                   "analyst",
                   "editor",
                 ].includes(identity.project_roles?.[project] || identity.role)}
+                canApprove={["admin", "project_admin"].includes(
+                  identity.project_roles?.[project] || identity.role,
+                )}
               />
             )}
             {view === "Campaigns" && project && (

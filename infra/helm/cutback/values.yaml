@@ -33,6 +33,7 @@ execution:
   quality: false
   experiments: false
   schedules: false
+  outcomeWatches: false
   # Exactly these keys are mounted on the worker, never on the collector.
   providers: []
   localEndpoint: ""

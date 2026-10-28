@@ -3151,6 +3151,23 @@
             }
           },
           {
+            "name": "service",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Service"
+            }
+          },
+          {
             "name": "as_of",
             "in": "query",
             "required": false,
@@ -3379,6 +3396,56 @@
         }
       }
     },
+    "/v1/projects/{project_id}/task-cost-snapshots/{snapshot_id}/summary": {
+      "get": {
+        "summary": "Snapshot Summary",
+        "operationId": "snapshot_summary_v1_projects__project_id__task_cost_snapshots__snapshot_id__summary_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "snapshot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Snapshot Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskSnapshotBrief"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{project_id}/search-effort": {
       "post": {
         "summary": "Effort",
@@ -3546,6 +3613,508 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ImprovementPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/outcome-watches/draft": {
+      "post": {
+        "summary": "Draft",
+        "operationId": "draft_v1_projects__project_id__outcome_watches_draft_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "environment_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Environment Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OutcomeWatchIntent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/outcome-watches": {
+      "post": {
+        "summary": "Propose",
+        "operationId": "propose_v1_projects__project_id__outcome_watches_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "environment_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Environment Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OutcomeWatchSpec-Input"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Watches",
+        "operationId": "watches_v1_projects__project_id__outcome_watches_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "environment_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Environment Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/outcome-watches/{watch_id}": {
+      "get": {
+        "summary": "Read",
+        "operationId": "read_v1_projects__project_id__outcome_watches__watch_id__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "watch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Watch Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete",
+        "operationId": "delete_v1_projects__project_id__outcome_watches__watch_id__delete",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "watch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Watch Id"
+            }
+          },
+          {
+            "name": "confirm_watch_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Confirm Watch Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/outcome-watches/{watch_id}/approve": {
+      "post": {
+        "summary": "Approve",
+        "operationId": "approve_v1_projects__project_id__outcome_watches__watch_id__approve_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "watch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Watch Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchApproval"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/outcome-watches/{watch_id}/state": {
+      "post": {
+        "summary": "Transition",
+        "operationId": "transition_v1_projects__project_id__outcome_watches__watch_id__state_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "watch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Watch Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchTransition"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/outcome-watches/{watch_id}/windows": {
+      "get": {
+        "summary": "Windows",
+        "operationId": "windows_v1_projects__project_id__outcome_watches__watch_id__windows_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "watch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Watch Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchWindowPage"
                 }
               }
             }
@@ -16338,6 +16907,395 @@
         ],
         "title": "OrganizationInput"
       },
+      "OutcomeWatchEnvelope": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Environment Id"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/OutcomeWatchSpec-Output"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "project_id",
+          "environment_id",
+          "policy"
+        ],
+        "title": "OutcomeWatchEnvelope"
+      },
+      "OutcomeWatchIntent": {
+        "properties": {
+          "contract": {
+            "type": "string",
+            "const": "cutback.outcome-watch.v1",
+            "title": "Contract",
+            "default": "cutback.outcome-watch.v1"
+          },
+          "watch_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Watch Id"
+          },
+          "key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Key"
+          },
+          "baseline_snapshot_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Baseline Snapshot Id"
+          },
+          "change_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Change Id"
+          },
+          "release_linkage_attested": {
+            "type": "boolean",
+            "title": "Release Linkage Attested"
+          },
+          "candidate_release": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Candidate Release"
+          },
+          "window_seconds": {
+            "type": "integer",
+            "maximum": 2592000.0,
+            "minimum": 60.0,
+            "title": "Window Seconds"
+          },
+          "interval_seconds": {
+            "type": "integer",
+            "maximum": 2592000.0,
+            "minimum": 60.0,
+            "title": "Interval Seconds"
+          },
+          "first_window_end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "First Window End"
+          },
+          "grace_seconds": {
+            "type": "integer",
+            "maximum": 86400.0,
+            "minimum": 0.0,
+            "title": "Grace Seconds",
+            "default": 300
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "max_windows": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Max Windows",
+            "default": 30
+          },
+          "expected_tasks": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Tasks"
+          },
+          "assumptions": {
+            "$ref": "#/components/schemas/ImprovementAssumptions-Input"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "watch_id",
+          "key",
+          "baseline_snapshot_id",
+          "change_id",
+          "release_linkage_attested",
+          "candidate_release",
+          "window_seconds",
+          "interval_seconds",
+          "first_window_end",
+          "expires_at"
+        ],
+        "title": "OutcomeWatchIntent"
+      },
+      "OutcomeWatchSpec-Input": {
+        "properties": {
+          "contract": {
+            "type": "string",
+            "const": "cutback.outcome-watch.v1",
+            "title": "Contract",
+            "default": "cutback.outcome-watch.v1"
+          },
+          "watch_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Watch Id"
+          },
+          "key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Key"
+          },
+          "baseline_snapshot_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Baseline Snapshot Id"
+          },
+          "change_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Change Id"
+          },
+          "release_linkage_attested": {
+            "type": "boolean",
+            "title": "Release Linkage Attested"
+          },
+          "candidate_release": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Candidate Release"
+          },
+          "window_seconds": {
+            "type": "integer",
+            "maximum": 2592000.0,
+            "minimum": 60.0,
+            "title": "Window Seconds"
+          },
+          "interval_seconds": {
+            "type": "integer",
+            "maximum": 2592000.0,
+            "minimum": 60.0,
+            "title": "Interval Seconds"
+          },
+          "first_window_end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "First Window End"
+          },
+          "grace_seconds": {
+            "type": "integer",
+            "maximum": 86400.0,
+            "minimum": 0.0,
+            "title": "Grace Seconds",
+            "default": 300
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "max_windows": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Max Windows",
+            "default": 30
+          },
+          "expected_tasks": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Tasks"
+          },
+          "assumptions": {
+            "$ref": "#/components/schemas/ImprovementAssumptions-Input"
+          },
+          "baseline_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Baseline Sha256"
+          },
+          "source_diff_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Source Diff Sha256"
+          },
+          "optimization_run_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Optimization Run Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "watch_id",
+          "key",
+          "baseline_snapshot_id",
+          "change_id",
+          "release_linkage_attested",
+          "candidate_release",
+          "window_seconds",
+          "interval_seconds",
+          "first_window_end",
+          "expires_at",
+          "baseline_sha256",
+          "source_diff_sha256",
+          "optimization_run_ids"
+        ],
+        "title": "OutcomeWatchSpec"
+      },
+      "OutcomeWatchSpec-Output": {
+        "properties": {
+          "contract": {
+            "type": "string",
+            "const": "cutback.outcome-watch.v1",
+            "title": "Contract",
+            "default": "cutback.outcome-watch.v1"
+          },
+          "watch_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Watch Id"
+          },
+          "key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Key"
+          },
+          "baseline_snapshot_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Baseline Snapshot Id"
+          },
+          "change_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Change Id"
+          },
+          "release_linkage_attested": {
+            "type": "boolean",
+            "title": "Release Linkage Attested"
+          },
+          "candidate_release": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Candidate Release"
+          },
+          "window_seconds": {
+            "type": "integer",
+            "maximum": 2592000.0,
+            "minimum": 60.0,
+            "title": "Window Seconds"
+          },
+          "interval_seconds": {
+            "type": "integer",
+            "maximum": 2592000.0,
+            "minimum": 60.0,
+            "title": "Interval Seconds"
+          },
+          "first_window_end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "First Window End"
+          },
+          "grace_seconds": {
+            "type": "integer",
+            "maximum": 86400.0,
+            "minimum": 0.0,
+            "title": "Grace Seconds",
+            "default": 300
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "max_windows": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Max Windows",
+            "default": 30
+          },
+          "expected_tasks": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Tasks"
+          },
+          "assumptions": {
+            "$ref": "#/components/schemas/ImprovementAssumptions-Output"
+          },
+          "baseline_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Baseline Sha256"
+          },
+          "source_diff_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Source Diff Sha256"
+          },
+          "optimization_run_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Optimization Run Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "watch_id",
+          "key",
+          "baseline_snapshot_id",
+          "change_id",
+          "release_linkage_attested",
+          "candidate_release",
+          "window_seconds",
+          "interval_seconds",
+          "first_window_end",
+          "expires_at",
+          "baseline_sha256",
+          "source_diff_sha256",
+          "optimization_run_ids"
+        ],
+        "title": "OutcomeWatchSpec"
+      },
       "OverrideInput": {
         "properties": {
           "provider": {
@@ -19816,6 +20774,17 @@
       },
       "TaskSnapshotBrief": {
         "properties": {
+          "service": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service"
+          },
           "id": {
             "type": "string",
             "format": "uuid",
@@ -19888,6 +20857,18 @@
       },
       "TaskSnapshotInput": {
         "properties": {
+          "service": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service"
+          },
           "snapshot_id": {
             "type": "string",
             "format": "uuid",
@@ -20772,6 +21753,393 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "WatchApproval": {
+        "properties": {
+          "approval_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Approval Hash"
+          },
+          "approval_ref": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Approval Ref"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "approval_hash",
+          "approval_ref"
+        ],
+        "title": "WatchApproval"
+      },
+      "WatchPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WatchReceipt"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_after"
+        ],
+        "title": "WatchPage"
+      },
+      "WatchReceipt": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Environment Id"
+          },
+          "approval_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Approval Hash"
+          },
+          "specification": {
+            "$ref": "#/components/schemas/OutcomeWatchEnvelope"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "approved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "next_run_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Next Run At"
+          },
+          "windows_processed": {
+            "type": "integer",
+            "title": "Windows Processed"
+          },
+          "last_window_index": {
+            "type": "integer",
+            "title": "Last Window Index"
+          },
+          "windows_skipped": {
+            "type": "integer",
+            "title": "Windows Skipped"
+          },
+          "last_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Code"
+          },
+          "retained_windows": {
+            "type": "integer",
+            "title": "Retained Windows"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "provider_calls_authorized": {
+            "type": "integer",
+            "title": "Provider Calls Authorized",
+            "default": 0
+          },
+          "traffic_changes_authorized": {
+            "type": "boolean",
+            "title": "Traffic Changes Authorized",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "environment_id",
+          "approval_hash",
+          "specification",
+          "status",
+          "enabled",
+          "approved_at",
+          "next_run_at",
+          "windows_processed",
+          "last_window_index",
+          "windows_skipped",
+          "last_code",
+          "retained_windows",
+          "created_at"
+        ],
+        "title": "WatchReceipt"
+      },
+      "WatchTransition": {
+        "properties": {
+          "approval_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Approval Hash"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "approval_hash",
+          "enabled"
+        ],
+        "title": "WatchTransition"
+      },
+      "WatchWindowEvidence": {
+        "properties": {
+          "contract": {
+            "type": "string",
+            "const": "cutback.outcome-watch-window.v1",
+            "title": "Contract"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "COMPLETED",
+              "MISSING_EVIDENCE",
+              "BLOCKED"
+            ],
+            "title": "Status"
+          },
+          "approval_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Approval Hash"
+          },
+          "window_index": {
+            "type": "integer",
+            "title": "Window Index"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End"
+          },
+          "declarations_as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Declarations As Of"
+          },
+          "candidate_snapshot_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Snapshot Id"
+          },
+          "improvement_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Improvement Id"
+          },
+          "report": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ImprovementReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "next_action": {
+            "type": "string",
+            "title": "Next Action"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reasons"
+          },
+          "skipped_previous_windows": {
+            "type": "integer",
+            "title": "Skipped Previous Windows"
+          },
+          "release_linkage": {
+            "type": "string",
+            "const": "owner_attested_not_deployment_verified",
+            "title": "Release Linkage"
+          },
+          "action_authorized": {
+            "type": "boolean",
+            "const": false,
+            "title": "Action Authorized"
+          },
+          "provider_calls": {
+            "type": "integer",
+            "const": 0,
+            "title": "Provider Calls"
+          },
+          "traffic_changed": {
+            "type": "boolean",
+            "const": false,
+            "title": "Traffic Changed"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "contract",
+          "status",
+          "approval_hash",
+          "window_index",
+          "start",
+          "end",
+          "declarations_as_of",
+          "candidate_snapshot_id",
+          "improvement_id",
+          "report",
+          "next_action",
+          "reasons",
+          "skipped_previous_windows",
+          "release_linkage",
+          "action_authorized",
+          "provider_calls",
+          "traffic_changed"
+        ],
+        "title": "WatchWindowEvidence"
+      },
+      "WatchWindowPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WatchWindowReceipt"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          },
+          "windows_processed": {
+            "type": "integer",
+            "title": "Windows Processed"
+          },
+          "retained_windows": {
+            "type": "integer",
+            "title": "Retained Windows"
+          },
+          "evidence_scope": {
+            "type": "string",
+            "title": "Evidence Scope",
+            "default": "retained_frozen_declared_windows_not_population_or_causal_verification"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_after",
+          "windows_processed",
+          "retained_windows"
+        ],
+        "title": "WatchWindowPage"
+      },
+      "WatchWindowReceipt": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "evidence_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Evidence Sha256"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/WatchWindowEvidence"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "evidence_sha256",
+          "evidence",
+          "created_at"
+        ],
+        "title": "WatchWindowReceipt"
       },
       "Window": {
         "properties": {

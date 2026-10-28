@@ -884,6 +884,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/task-cost-snapshots/{snapshot_id}/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Snapshot Summary */
+        get: operations["snapshot_summary_v1_projects__project_id__task_cost_snapshots__snapshot_id__summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/search-effort": {
         parameters: {
             query?: never;
@@ -913,6 +930,110 @@ export interface paths {
         put?: never;
         /** Observe */
         post: operations["observe_v1_projects__project_id__improvement_observations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/outcome-watches/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Draft */
+        post: operations["draft_v1_projects__project_id__outcome_watches_draft_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/outcome-watches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Watches */
+        get: operations["watches_v1_projects__project_id__outcome_watches_get"];
+        put?: never;
+        /** Propose */
+        post: operations["propose_v1_projects__project_id__outcome_watches_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/outcome-watches/{watch_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read */
+        get: operations["read_v1_projects__project_id__outcome_watches__watch_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete */
+        delete: operations["delete_v1_projects__project_id__outcome_watches__watch_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/outcome-watches/{watch_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve */
+        post: operations["approve_v1_projects__project_id__outcome_watches__watch_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/outcome-watches/{watch_id}/state": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Transition */
+        post: operations["transition_v1_projects__project_id__outcome_watches__watch_id__state_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/outcome-watches/{watch_id}/windows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Windows */
+        get: operations["windows_v1_projects__project_id__outcome_watches__watch_id__windows_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5008,6 +5129,203 @@ export interface components {
             /** Name */
             name: string;
         };
+        /** OutcomeWatchEnvelope */
+        OutcomeWatchEnvelope: {
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            policy: components["schemas"]["OutcomeWatchSpec-Output"];
+        };
+        /** OutcomeWatchIntent */
+        OutcomeWatchIntent: {
+            /**
+             * Contract
+             * @default cutback.outcome-watch.v1
+             * @constant
+             */
+            contract: "cutback.outcome-watch.v1";
+            /**
+             * Watch Id
+             * Format: uuid
+             */
+            watch_id: string;
+            /** Key */
+            key: string;
+            /**
+             * Baseline Snapshot Id
+             * Format: uuid
+             */
+            baseline_snapshot_id: string;
+            /**
+             * Change Id
+             * Format: uuid
+             */
+            change_id: string;
+            /** Release Linkage Attested */
+            release_linkage_attested: boolean;
+            /** Candidate Release */
+            candidate_release: string;
+            /** Window Seconds */
+            window_seconds: number;
+            /** Interval Seconds */
+            interval_seconds: number;
+            /**
+             * First Window End
+             * Format: date-time
+             */
+            first_window_end: string;
+            /**
+             * Grace Seconds
+             * @default 300
+             */
+            grace_seconds: number;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Max Windows
+             * @default 30
+             */
+            max_windows: number;
+            /** Expected Tasks */
+            expected_tasks?: number | null;
+            assumptions?: components["schemas"]["ImprovementAssumptions-Input"];
+        };
+        /** OutcomeWatchSpec */
+        "OutcomeWatchSpec-Input": {
+            /**
+             * Contract
+             * @default cutback.outcome-watch.v1
+             * @constant
+             */
+            contract: "cutback.outcome-watch.v1";
+            /**
+             * Watch Id
+             * Format: uuid
+             */
+            watch_id: string;
+            /** Key */
+            key: string;
+            /**
+             * Baseline Snapshot Id
+             * Format: uuid
+             */
+            baseline_snapshot_id: string;
+            /**
+             * Change Id
+             * Format: uuid
+             */
+            change_id: string;
+            /** Release Linkage Attested */
+            release_linkage_attested: boolean;
+            /** Candidate Release */
+            candidate_release: string;
+            /** Window Seconds */
+            window_seconds: number;
+            /** Interval Seconds */
+            interval_seconds: number;
+            /**
+             * First Window End
+             * Format: date-time
+             */
+            first_window_end: string;
+            /**
+             * Grace Seconds
+             * @default 300
+             */
+            grace_seconds: number;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Max Windows
+             * @default 30
+             */
+            max_windows: number;
+            /** Expected Tasks */
+            expected_tasks?: number | null;
+            assumptions?: components["schemas"]["ImprovementAssumptions-Input"];
+            /** Baseline Sha256 */
+            baseline_sha256: string;
+            /** Source Diff Sha256 */
+            source_diff_sha256: string;
+            /** Optimization Run Ids */
+            optimization_run_ids: string[];
+        };
+        /** OutcomeWatchSpec */
+        "OutcomeWatchSpec-Output": {
+            /**
+             * Contract
+             * @default cutback.outcome-watch.v1
+             * @constant
+             */
+            contract: "cutback.outcome-watch.v1";
+            /**
+             * Watch Id
+             * Format: uuid
+             */
+            watch_id: string;
+            /** Key */
+            key: string;
+            /**
+             * Baseline Snapshot Id
+             * Format: uuid
+             */
+            baseline_snapshot_id: string;
+            /**
+             * Change Id
+             * Format: uuid
+             */
+            change_id: string;
+            /** Release Linkage Attested */
+            release_linkage_attested: boolean;
+            /** Candidate Release */
+            candidate_release: string;
+            /** Window Seconds */
+            window_seconds: number;
+            /** Interval Seconds */
+            interval_seconds: number;
+            /**
+             * First Window End
+             * Format: date-time
+             */
+            first_window_end: string;
+            /**
+             * Grace Seconds
+             * @default 300
+             */
+            grace_seconds: number;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Max Windows
+             * @default 30
+             */
+            max_windows: number;
+            /** Expected Tasks */
+            expected_tasks?: number | null;
+            assumptions?: components["schemas"]["ImprovementAssumptions-Output"];
+            /** Baseline Sha256 */
+            baseline_sha256: string;
+            /** Source Diff Sha256 */
+            source_diff_sha256: string;
+            /** Optimization Run Ids */
+            optimization_run_ids: string[];
+        };
         /** OverrideInput */
         OverrideInput: {
             /**
@@ -6343,6 +6661,8 @@ export interface components {
         };
         /** TaskSnapshotBrief */
         TaskSnapshotBrief: {
+            /** Service */
+            service?: string | null;
             /**
              * Id
              * Format: uuid
@@ -6378,6 +6698,8 @@ export interface components {
         };
         /** TaskSnapshotInput */
         TaskSnapshotInput: {
+            /** Service */
+            service?: string | null;
             /**
              * Snapshot Id
              * Format: uuid
@@ -6778,6 +7100,174 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** WatchApproval */
+        WatchApproval: {
+            /** Approval Hash */
+            approval_hash: string;
+            /** Approval Ref */
+            approval_ref: string;
+        };
+        /** WatchPage */
+        WatchPage: {
+            /** Items */
+            items: components["schemas"]["WatchReceipt"][];
+            /** Next After */
+            next_after: string | null;
+        };
+        /** WatchReceipt */
+        WatchReceipt: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            /** Approval Hash */
+            approval_hash: string;
+            specification: components["schemas"]["OutcomeWatchEnvelope"];
+            /** Status */
+            status: string;
+            /** Enabled */
+            enabled: boolean;
+            /** Approved At */
+            approved_at: string | null;
+            /**
+             * Next Run At
+             * Format: date-time
+             */
+            next_run_at: string;
+            /** Windows Processed */
+            windows_processed: number;
+            /** Last Window Index */
+            last_window_index: number;
+            /** Windows Skipped */
+            windows_skipped: number;
+            /** Last Code */
+            last_code: string | null;
+            /** Retained Windows */
+            retained_windows: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Provider Calls Authorized
+             * @default 0
+             */
+            provider_calls_authorized: number;
+            /**
+             * Traffic Changes Authorized
+             * @default false
+             */
+            traffic_changes_authorized: boolean;
+        };
+        /** WatchTransition */
+        WatchTransition: {
+            /** Approval Hash */
+            approval_hash: string;
+            /** Enabled */
+            enabled: boolean;
+        };
+        /** WatchWindowEvidence */
+        WatchWindowEvidence: {
+            /**
+             * Contract
+             * @constant
+             */
+            contract: "cutback.outcome-watch-window.v1";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "COMPLETED" | "MISSING_EVIDENCE" | "BLOCKED";
+            /** Approval Hash */
+            approval_hash: string;
+            /** Window Index */
+            window_index: number;
+            /**
+             * Start
+             * Format: date-time
+             */
+            start: string;
+            /**
+             * End
+             * Format: date-time
+             */
+            end: string;
+            /**
+             * Declarations As Of
+             * Format: date-time
+             */
+            declarations_as_of: string;
+            /** Candidate Snapshot Id */
+            candidate_snapshot_id: string | null;
+            /** Improvement Id */
+            improvement_id: string | null;
+            report: components["schemas"]["ImprovementReport"] | null;
+            /** Next Action */
+            next_action: string;
+            /** Reasons */
+            reasons: string[];
+            /** Skipped Previous Windows */
+            skipped_previous_windows: number;
+            /**
+             * Release Linkage
+             * @constant
+             */
+            release_linkage: "owner_attested_not_deployment_verified";
+            /**
+             * Action Authorized
+             * @constant
+             */
+            action_authorized: false;
+            /**
+             * Provider Calls
+             * @constant
+             */
+            provider_calls: 0;
+            /**
+             * Traffic Changed
+             * @constant
+             */
+            traffic_changed: false;
+        };
+        /** WatchWindowPage */
+        WatchWindowPage: {
+            /** Items */
+            items: components["schemas"]["WatchWindowReceipt"][];
+            /** Next After */
+            next_after: number | null;
+            /** Windows Processed */
+            windows_processed: number;
+            /** Retained Windows */
+            retained_windows: number;
+            /**
+             * Evidence Scope
+             * @default retained_frozen_declared_windows_not_population_or_causal_verification
+             */
+            evidence_scope: string;
+        };
+        /** WatchWindowReceipt */
+        WatchWindowReceipt: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Evidence Sha256 */
+            evidence_sha256: string;
+            evidence: components["schemas"]["WatchWindowEvidence"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /** Window */
         Window: {
@@ -8755,6 +9245,7 @@ export interface operations {
                 workflow?: string | null;
                 release?: string | null;
                 expected_tasks?: number | null;
+                service?: string | null;
                 as_of?: string | null;
             };
             header?: never;
@@ -8889,6 +9380,38 @@ export interface operations {
             };
         };
     };
+    snapshot_summary_v1_projects__project_id__task_cost_snapshots__snapshot_id__summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskSnapshotBrief"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     effort_v1_projects__project_id__search_effort_post: {
         parameters: {
             query?: never;
@@ -8981,6 +9504,288 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ImprovementReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    draft_v1_projects__project_id__outcome_watches_draft_post: {
+        parameters: {
+            query: {
+                environment_id: string;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OutcomeWatchIntent"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    watches_v1_projects__project_id__outcome_watches_get: {
+        parameters: {
+            query: {
+                environment_id: string;
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    propose_v1_projects__project_id__outcome_watches_post: {
+        parameters: {
+            query: {
+                environment_id: string;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OutcomeWatchSpec-Input"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_v1_projects__project_id__outcome_watches__watch_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                watch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_v1_projects__project_id__outcome_watches__watch_id__delete: {
+        parameters: {
+            query: {
+                confirm_watch_id: string;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                watch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_v1_projects__project_id__outcome_watches__watch_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                watch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WatchApproval"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    transition_v1_projects__project_id__outcome_watches__watch_id__state_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                watch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WatchTransition"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    windows_v1_projects__project_id__outcome_watches__watch_id__windows_get: {
+        parameters: {
+            query?: {
+                after?: number | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                watch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchWindowPage"];
                 };
             };
             /** @description Validation Error */

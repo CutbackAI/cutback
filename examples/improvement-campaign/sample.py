@@ -27,7 +27,14 @@ def main():
         action="store_true",
         help="Run ordinary agent preparation, application checks and later declared outcomes",
     )
+    parser.add_argument(
+        "--watch",
+        action="store_true",
+        help="Include one real closed metadata observation window; requires --outcomes",
+    )
     args = parser.parse_args()
+    if args.watch and not args.outcomes:
+        parser.error("--watch requires --outcomes")
     location, config = configured(args.local_target)
     if status(args.local_target)["status"] != "READY" or not config["allow_payloads"]:
         raise ValueError("START_OWNED_LOCAL_COLLECTOR_WITH_AUTHORIZED_ENCRYPTED_STORAGE")
@@ -70,6 +77,7 @@ def main():
                     project,
                     key.json()["token"],
                     workspace,
+                    watch=args.watch,
                 )
             else:
                 result = seed_campaign(owned, client, project, key.json()["token"], workspace)
@@ -87,6 +95,11 @@ def main():
                         "paid_provider_calls": 0,
                         "dashboard": config["endpoint"] + "/dashboard/?project=" + project,
                         "disclosure": result["disclosure"],
+                        **(
+                            {"automatic_observation": result["automatic_observation"]}
+                            if args.watch
+                            else {}
+                        ),
                         **(
                             {
                                 "outcome_action": result["outcome_review"]["next_action"],

@@ -107,7 +107,7 @@ def frozen_tasks(control, project, writer, workflow, release, outcomes, amount):
     )
 
 
-def run_sample(app, client, endpoint, admin, project, ingest_token, workspace):
+def run_sample(app, client, endpoint, admin, project, ingest_token, workspace, *, watch=False):
     from sqlalchemy import select
 
     from cutback.agent import analyze, prepare
@@ -173,7 +173,13 @@ def run_sample(app, client, endpoint, admin, project, ingest_token, workspace):
         for_campaign=True,
     )
     baseline = frozen_tasks(
-        control, project, writer, workflow, "synthetic-reference", ["success"], "1"
+        control,
+        project,
+        writer,
+        workflow,
+        "synthetic-reference",
+        ["success", "success"] if watch else ["success"],
+        "1",
     )
     campaign = prepare_campaign(
         application,
@@ -307,6 +313,60 @@ def run_sample(app, client, endpoint, admin, project, ingest_token, workspace):
                 "forecast_successful_tasks": 10000,
             },
         )
+        watched = None
+        if watch:
+            import time
+
+            from cutback.campaign_watches import approve as approve_watch
+            from cutback.campaign_watches import prepare as prepare_watch
+            from cutback.campaign_watches import status as watch_status
+            from cutback.server.outcome_watches import run_outcome_watch_one
+
+            first_end = max(
+                datetime.fromisoformat(later["report"]["end"]),
+                datetime.fromisoformat(baseline["report"]["end"]) + timedelta(seconds=60),
+            )
+            policy = prepare_watch(
+                application,
+                control,
+                change_id=change["id"],
+                candidate_release="synthetic-later-release",
+                first_window_end=first_end,
+                expires_at=first_end + timedelta(hours=1),
+                window_seconds=60,
+                interval_seconds=3600,
+                grace_seconds=0,
+                max_windows=1,
+                expected_tasks=2,
+                assumptions={
+                    "all_optimization_runs_declared_complete": True,
+                    "other_optimization_costs_declared_complete": True,
+                    "min_tasks_per_window": 2,
+                    "forecast_successful_tasks": 10000,
+                },
+                release_linkage_attested=True,
+                key="owned-automatic-followup",
+            )
+            approve_watch(
+                application,
+                control,
+                approval_hash=policy["receipt"]["approval_hash"],
+                approval_ref="owned-single-window-metadata-only",
+            )
+            deadline = time.monotonic() + 65
+            while datetime.now(UTC) < first_end:
+                if time.monotonic() >= deadline:
+                    raise ValueError("OWNED_SYNTHETIC_OBSERVATION_WINDOW_WAIT_EXCEEDED")
+                time.sleep(min(0.25, max(0, (first_end - datetime.now(UTC)).total_seconds())))
+            processed = run_outcome_watch_one(
+                app.state.sessions, enabled=True, only_watch_id=policy["receipt"]["id"]
+            )
+            watched = watch_status(application, control)
+            if (
+                processed.get("next_action") != "REVIEW_ROLLBACK"
+                or watched["receipt"]["status"] != "EXHAUSTED"
+            ):
+                raise ValueError("OWNED_AUTOMATIC_OUTCOME_SAMPLE_INTEGRITY_FAILED")
         if (application / "app.py").read_bytes() != initial or observed[
             "next_action"
         ] != "REVIEW_ROLLBACK":
@@ -319,6 +379,7 @@ def run_sample(app, client, endpoint, admin, project, ingest_token, workspace):
             "paid_provider_calls": 0,
             "review": checked,
             "outcome_review": observed,
+            **({"automatic_observation": watched} if watched else {}),
             "disclosure": (
                 "Owned synthetic answers, usage and later task outcomes; "
                 "not customer quality or savings."

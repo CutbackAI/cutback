@@ -213,7 +213,7 @@ export function createSDK(request:Request) {return {
     if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
     if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/task-outcomes`+(query.size?"?"+query.toString():""),{method:"GET"});},
-  economics_v1_projects__project_id__task_economics_get: (args:{project_id:string;environment_id:string;start:string;end:string;workflow?:string | null;release?:string | null;expected_tasks?:number | null;as_of?:string | null}) => {
+  economics_v1_projects__project_id__task_economics_get: (args:{project_id:string;environment_id:string;start:string;end:string;workflow?:string | null;release?:string | null;expected_tasks?:number | null;service?:string | null;as_of?:string | null}) => {
     const query=new URLSearchParams();
     if(args.environment_id!==undefined && args.environment_id!==null) query.set("environment_id",String(args.environment_id));
     if(args.start!==undefined && args.start!==null) query.set("start",String(args.start));
@@ -221,6 +221,7 @@ export function createSDK(request:Request) {return {
     if(args.workflow!==undefined && args.workflow!==null) query.set("workflow",String(args.workflow));
     if(args.release!==undefined && args.release!==null) query.set("release",String(args.release));
     if(args.expected_tasks!==undefined && args.expected_tasks!==null) query.set("expected_tasks",String(args.expected_tasks));
+    if(args.service!==undefined && args.service!==null) query.set("service",String(args.service));
     if(args.as_of!==undefined && args.as_of!==null) query.set("as_of",String(args.as_of));
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/task-economics`+(query.size?"?"+query.toString():""),{method:"GET"});},
   freeze_v1_projects__project_id__task_cost_snapshots_post: (args:{project_id:string;environment_id:string;body:components["schemas"]["TaskSnapshotInput"]}) => {
@@ -236,6 +237,9 @@ export function createSDK(request:Request) {return {
   snapshot_v1_projects__project_id__task_cost_snapshots__snapshot_id__get: (args:{project_id:string;snapshot_id:string}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/task-cost-snapshots/${encodeURIComponent(String(args.snapshot_id))}`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  snapshot_summary_v1_projects__project_id__task_cost_snapshots__snapshot_id__summary_get: (args:{project_id:string;snapshot_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/task-cost-snapshots/${encodeURIComponent(String(args.snapshot_id))}/summary`+(query.size?"?"+query.toString():""),{method:"GET"});},
   effort_v1_projects__project_id__search_effort_post: (args:{project_id:string;body:components["schemas"]["SearchEffortInput"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/search-effort`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
@@ -248,6 +252,38 @@ export function createSDK(request:Request) {return {
     if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
     if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/improvement-observations`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  draft_v1_projects__project_id__outcome_watches_draft_post: (args:{project_id:string;environment_id:string;body:components["schemas"]["OutcomeWatchIntent"]}) => {
+    const query=new URLSearchParams();
+    if(args.environment_id!==undefined && args.environment_id!==null) query.set("environment_id",String(args.environment_id));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/outcome-watches/draft`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  propose_v1_projects__project_id__outcome_watches_post: (args:{project_id:string;environment_id:string;body:components["schemas"]["OutcomeWatchSpec-Input"]}) => {
+    const query=new URLSearchParams();
+    if(args.environment_id!==undefined && args.environment_id!==null) query.set("environment_id",String(args.environment_id));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/outcome-watches`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  watches_v1_projects__project_id__outcome_watches_get: (args:{project_id:string;environment_id:string;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.environment_id!==undefined && args.environment_id!==null) query.set("environment_id",String(args.environment_id));
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/outcome-watches`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  read_v1_projects__project_id__outcome_watches__watch_id__get: (args:{project_id:string;watch_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/outcome-watches/${encodeURIComponent(String(args.watch_id))}`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  delete_v1_projects__project_id__outcome_watches__watch_id__delete: (args:{project_id:string;watch_id:string;confirm_watch_id:string}) => {
+    const query=new URLSearchParams();
+    if(args.confirm_watch_id!==undefined && args.confirm_watch_id!==null) query.set("confirm_watch_id",String(args.confirm_watch_id));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/outcome-watches/${encodeURIComponent(String(args.watch_id))}`+(query.size?"?"+query.toString():""),{method:"DELETE"});},
+  approve_v1_projects__project_id__outcome_watches__watch_id__approve_post: (args:{project_id:string;watch_id:string;body:components["schemas"]["WatchApproval"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/outcome-watches/${encodeURIComponent(String(args.watch_id))}/approve`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  transition_v1_projects__project_id__outcome_watches__watch_id__state_post: (args:{project_id:string;watch_id:string;body:components["schemas"]["WatchTransition"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/outcome-watches/${encodeURIComponent(String(args.watch_id))}/state`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  windows_v1_projects__project_id__outcome_watches__watch_id__windows_get: (args:{project_id:string;watch_id:string;after?:number | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/outcome-watches/${encodeURIComponent(String(args.watch_id))}/windows`+(query.size?"?"+query.toString():""),{method:"GET"});},
   preview_v1_projects__project_id__imports_preview_post: (args:{project_id:string;body:components["schemas"]["ImportPreviewInput"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/imports/preview`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},

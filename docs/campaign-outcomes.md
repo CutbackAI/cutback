@@ -48,4 +48,4 @@ A private request identity is written before sending. Repeating identical inputs
 - **COLLECT_MISSING_EVIDENCE:** sample, outcome, cost or forecast coverage is insufficient.
 - **PREPARE_INDEPENDENT_CONFIRMATION:** descriptive gates passed; causal savings and independent customer quality remain unproven.
 
-The response always reports no action or traffic-change authorization. This is an explicitly invoked follow-up; continuous monitoring, automatic rollback and complete deployment inventory remain unimplemented. [Online incident rules](online-monitoring.md) are a separate workflow.
+The response always reports no action or traffic-change authorization. This manual command is an explicitly invoked follow-up. [Finite approved automatic observation](automatic-outcome-observation.md) provides a separate metadata worker and agent/dashboard controls. Automatic rollback and deployment verification remain unimplemented. [Online incident rules](online-monitoring.md) are a separate workflow.

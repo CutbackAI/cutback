@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, Query
-from pydantic import AwareDatetime, Field, StrictInt
+from pydantic import AwareDatetime, Field, StrictInt, model_serializer
 from sqlalchemy import func, select
 
 from cutback.core.models import Identifier, StrictModel
@@ -64,6 +64,15 @@ class TaskWindow(StrictModel):
 
 
 class TaskSnapshotInput(StrictModel):
+    service: Identifier | None = None
+
+    @model_serializer(mode="wrap")
+    def preserve_existing_snapshot_hashes(self, handler):
+        result = handler(self)
+        if self.service is None:
+            result.pop("service", None)
+        return result
+
     snapshot_id: UUID
     start: AwareDatetime
     end: AwareDatetime
@@ -88,6 +97,7 @@ class TaskSnapshotPage(StrictModel):
 
 
 class TaskSnapshotBrief(StrictModel):
+    service: str | None = None
     id: UUID
     environment_id: UUID
     evidence_sha256: str
@@ -99,7 +109,24 @@ class TaskSnapshotBrief(StrictModel):
     created_at: datetime
 
 
-def read_window(session, project, environment, start, end, at, workflow, release, expected_tasks):
+def snapshot_columns():
+    return (
+        TaskCostSnapshot.id,
+        TaskCostSnapshot.environment_id,
+        TaskCostSnapshot.evidence_sha256,
+        TaskCostSnapshot.report["summary"].label("summary"),
+        TaskCostSnapshot.specification["workflow"].as_string().label("workflow"),
+        TaskCostSnapshot.specification["release"].as_string().label("release"),
+        TaskCostSnapshot.specification["service"].as_string().label("service"),
+        TaskCostSnapshot.report["start"].as_string().label("start"),
+        TaskCostSnapshot.report["end"].as_string().label("end"),
+        TaskCostSnapshot.created_at,
+    )
+
+
+def read_window(
+    session, project, environment, start, end, at, workflow, release, expected_tasks, service=None
+):
     if not at - timedelta(days=90) <= start < end <= at or end - start > timedelta(days=30):
         raise HTTPException(400, "TASK_COST_WINDOW_REQUIRES_AT_MOST_30_DAYS_WITHIN_RETENTION")
     query = (
@@ -115,6 +142,8 @@ def read_window(session, project, environment, start, end, at, workflow, release
         query = query.where(TaskRecord.workflow == workflow)
     if release is not None:
         query = query.where(TaskRecord.release == release)
+    if service is not None:
+        query = query.where(TaskRecord.service == service)
     rows = session.execute(query.order_by(TaskRecord.id).limit(10001)).all()
     if len(rows) > 10000:
         raise HTTPException(413, "TASK_COST_WINDOW_EXCEEDS_10000_TASKS_NARROW_FILTERS")
@@ -145,19 +174,90 @@ def snapshot_receipt(row):
     )
 
 
+def environment(session, project, identifier):
+    row = session.get(Environment, identifier)
+    if not row or row.project_id != project:
+        raise HTTPException(404, "ENVIRONMENT_NOT_FOUND")
+    return row
+
+
+def watermark(as_of):
+    now = datetime.now(UTC)
+    if as_of and not now - timedelta(days=90) <= as_of <= now:
+        raise HTTPException(400, "TASK_DECLARATION_WATERMARK_OUTSIDE_WINDOW")
+    return as_of or now
+
+
+def freeze_task_snapshot(session, sessions, project_id, environment_id, body, actor):
+    specification = {"environment_id": str(environment_id), **body.model_dump(mode="json")}
+    digest = fingerprint(specification)
+    lock_lineage(session, project_id)
+    environment(session, project_id, environment_id)
+    existing = session.scalar(
+        select(TaskCostSnapshot).where(
+            TaskCostSnapshot.project_id == project_id,
+            TaskCostSnapshot.snapshot_id == body.snapshot_id,
+        )
+    )
+    if existing:
+        if existing.request_sha256 != digest:
+            raise HTTPException(409, "TASK_SNAPSHOT_REQUEST_CONFLICT")
+        return snapshot_receipt(existing)
+    if (
+        session.scalar(
+            select(func.count())
+            .select_from(TaskCostSnapshot)
+            .where(
+                TaskCostSnapshot.project_id == project_id,
+            )
+        )
+        >= 1000
+    ):
+        raise HTTPException(409, "TASK_SNAPSHOT_PROJECT_QUOTA")
+    # Serialize idempotent mutations under the project lock, but read
+    # telemetry from one independent repeatable-read snapshot. Waiting
+    # for that lock must not freeze a stale mutation-identity lookup.
+    with sessions() as reader:
+        reader.connection(execution_options={"isolation_level": "REPEATABLE READ"})
+        report = read_window(
+            reader,
+            project_id,
+            environment_id,
+            body.start,
+            body.end,
+            watermark(body.as_of),
+            body.workflow,
+            body.release,
+            body.expected_tasks,
+            body.service,
+        ).model_dump(mode="json")
+    if len(report["items"]) > 1000 or len(json.dumps(report).encode()) > 4000000:
+        raise HTTPException(413, "TASK_SNAPSHOT_TOO_LARGE_NARROW_FILTERS")
+    report["evidence_scope"] = "frozen_retained_evidence_at_calculation_time"
+    row = TaskCostSnapshot(
+        project_id=project_id,
+        environment_id=environment_id,
+        snapshot_id=body.snapshot_id,
+        request_sha256=digest,
+        evidence_sha256=fingerprint(report),
+        specification=specification,
+        report=report,
+        actor=actor,
+    )
+    session.add(row)
+    session.flush()
+    session.add(
+        AuditEvent(
+            project_id=project_id,
+            actor=actor,
+            action="task_cost_snapshot_frozen",
+            details={"snapshot_id": str(row.id), "evidence_sha256": row.evidence_sha256},
+        )
+    )
+    return snapshot_receipt(row)
+
+
 def install_economics(app, sessions, authorize, scope):
-    def environment(session, project, identifier):
-        row = session.get(Environment, identifier)
-        if not row or row.project_id != project:
-            raise HTTPException(404, "ENVIRONMENT_NOT_FOUND")
-        return row
-
-    def watermark(as_of):
-        now = datetime.now(UTC)
-        if as_of and not now - timedelta(days=90) <= as_of <= now:
-            raise HTTPException(400, "TASK_DECLARATION_WATERMARK_OUTSIDE_WINDOW")
-        return as_of or now
-
     @app.post("/v1/ingest/task-outcomes", response_model=TaskIngestReceipt)
     def ingest(body: TaskOutcomeBatch, auth=Depends(authorize)):
         project = auth.get("project_id")
@@ -227,6 +327,7 @@ def install_economics(app, sessions, authorize, scope):
             None, min_length=1, max_length=200, pattern=r"^[a-zA-Z0-9_.:-]+$"
         ),
         expected_tasks: int | None = Query(None, ge=0, le=1000000),
+        service: Identifier | None = None,
         as_of: AwareDatetime | None = None,
         auth=Depends(authorize),
     ):
@@ -245,6 +346,7 @@ def install_economics(app, sessions, authorize, scope):
                 workflow,
                 release,
                 expected_tasks,
+                service,
             )
 
     @app.post("/v1/projects/{project_id}/task-cost-snapshots", response_model=TaskSnapshotReceipt)
@@ -255,72 +357,10 @@ def install_economics(app, sessions, authorize, scope):
         auth=Depends(authorize),
     ):
         scope(auth, project_id, ("analyst",))
-        specification = {"environment_id": str(environment_id), **body.model_dump(mode="json")}
-        digest = fingerprint(specification)
         with sessions.begin() as session:
-            lock_lineage(session, project_id)
-            environment(session, project_id, environment_id)
-            existing = session.scalar(
-                select(TaskCostSnapshot).where(
-                    TaskCostSnapshot.project_id == project_id,
-                    TaskCostSnapshot.snapshot_id == body.snapshot_id,
-                )
+            return freeze_task_snapshot(
+                session, sessions, project_id, environment_id, body, auth["actor"]
             )
-            if existing:
-                if existing.request_sha256 != digest:
-                    raise HTTPException(409, "TASK_SNAPSHOT_REQUEST_CONFLICT")
-                return snapshot_receipt(existing)
-            if (
-                session.scalar(
-                    select(func.count())
-                    .select_from(TaskCostSnapshot)
-                    .where(
-                        TaskCostSnapshot.project_id == project_id,
-                    )
-                )
-                >= 1000
-            ):
-                raise HTTPException(409, "TASK_SNAPSHOT_PROJECT_QUOTA")
-            # Serialize idempotent mutations under the project lock, but read
-            # telemetry from one independent repeatable-read snapshot. Waiting
-            # for that lock must not freeze a stale mutation-identity lookup.
-            with sessions() as reader:
-                reader.connection(execution_options={"isolation_level": "REPEATABLE READ"})
-                report = read_window(
-                    reader,
-                    project_id,
-                    environment_id,
-                    body.start,
-                    body.end,
-                    watermark(body.as_of),
-                    body.workflow,
-                    body.release,
-                    body.expected_tasks,
-                ).model_dump(mode="json")
-            if len(report["items"]) > 1000 or len(json.dumps(report).encode()) > 4000000:
-                raise HTTPException(413, "TASK_SNAPSHOT_TOO_LARGE_NARROW_FILTERS")
-            report["evidence_scope"] = "frozen_retained_evidence_at_calculation_time"
-            row = TaskCostSnapshot(
-                project_id=project_id,
-                environment_id=environment_id,
-                snapshot_id=body.snapshot_id,
-                request_sha256=digest,
-                evidence_sha256=fingerprint(report),
-                specification=specification,
-                report=report,
-                actor=auth["actor"],
-            )
-            session.add(row)
-            session.flush()
-            session.add(
-                AuditEvent(
-                    project_id=project_id,
-                    actor=auth["actor"],
-                    action="task_cost_snapshot_frozen",
-                    details={"snapshot_id": str(row.id), "evidence_sha256": row.evidence_sha256},
-                )
-            )
-            return snapshot_receipt(row)
 
     @app.get("/v1/projects/{project_id}/task-cost-snapshots", response_model=TaskSnapshotPage)
     def snapshots(
@@ -341,17 +381,7 @@ def install_economics(app, sessions, authorize, scope):
                 query = query.where(TaskCostSnapshot.id > after)
             # Project only bounded metadata; never load twenty multi-megabyte reports.
             rows = session.execute(
-                query.with_only_columns(
-                    TaskCostSnapshot.id,
-                    TaskCostSnapshot.environment_id,
-                    TaskCostSnapshot.evidence_sha256,
-                    TaskCostSnapshot.report["summary"].label("summary"),
-                    TaskCostSnapshot.specification["workflow"].as_string().label("workflow"),
-                    TaskCostSnapshot.specification["release"].as_string().label("release"),
-                    TaskCostSnapshot.report["start"].as_string().label("start"),
-                    TaskCostSnapshot.report["end"].as_string().label("end"),
-                    TaskCostSnapshot.created_at,
-                )
+                query.with_only_columns(*snapshot_columns())
                 .order_by(TaskCostSnapshot.id)
                 .limit(limit + 1)
             ).all()
@@ -373,3 +403,19 @@ def install_economics(app, sessions, authorize, scope):
             if not row or row.project_id != project_id:
                 raise HTTPException(404, "TASK_SNAPSHOT_NOT_FOUND")
             return snapshot_receipt(row)
+
+    @app.get(
+        "/v1/projects/{project_id}/task-cost-snapshots/{snapshot_id}/summary",
+        response_model=TaskSnapshotBrief,
+    )
+    def snapshot_summary(project_id: UUID, snapshot_id: UUID, auth=Depends(authorize)):
+        scope(auth, project_id)
+        with sessions() as session:
+            row = session.execute(
+                select(*snapshot_columns()).where(
+                    TaskCostSnapshot.project_id == project_id, TaskCostSnapshot.id == snapshot_id
+                )
+            ).one_or_none()
+            if row is None:
+                raise HTTPException(404, "TASK_SNAPSHOT_NOT_FOUND")
+            return TaskSnapshotBrief.model_validate(dict(row._mapping))
