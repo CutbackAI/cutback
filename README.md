@@ -1,7 +1,5 @@
 # Cutback
 
-Source-checkout development: [continuous monitoring and incidents](https://github.com/CutbackAI/cutback/blob/main/docs/online-monitoring.md) adds versioned metadata rules, a durable queue, incident ownership and optional signed notifications. Try the [independent synthetic sample](https://github.com/CutbackAI/cutback/tree/main/examples/online-monitoring). This is unreleased source work, with explicit limits; it is not in the published dev5 wheel.
-
 Find where an AI application spends money. Test cheaper alternatives against its quality requirements. Review the evidence before changing anything.
 
 Cutback is an Apache-2.0 Python tool with an offline scanner and a self-hosted collector, PostgreSQL worker and dashboard. **Pre-alpha: synthetic tests demonstrate the workflow; production behavior and real customer savings are not validated.**
@@ -35,8 +33,6 @@ Read [the walkthrough and testing checklist](https://github.com/CutbackAI/cutbac
 
 ## Try the offline scanner without Docker
 
-The current source checkout also includes a [prompt release workspace](https://github.com/CutbackAI/cutback/blob/main/docs/prompt-releases.md): encrypted text/chat versions, typed components, purpose-bound reads, frozen playground plans and exact alias rollback. Try the [independent prompt example](https://github.com/CutbackAI/cutback/blob/main/examples/prompt-releases/README.md) or [portable application checks](https://github.com/CutbackAI/cutback/blob/main/examples/application-checks/README.md). These capabilities are not in the published dev5 wheel; see [acceptance and remaining roadmap](https://github.com/CutbackAI/cutback/blob/main/docs/progress.md).
-
 ```sh
 cutback sample support-desk
 cutback scan support-desk
@@ -57,6 +53,20 @@ cutback workflow status
 The saved job prepares source contracts, fixture candidates, instrumentation choices and the next decision. With permitted examples and an approved destination, `workflow prepare` handles scoped project/policy/dataset setup, preserves the application's native request, chooses qualified candidates and freezes one exact budget. Approval queues one run; subsequent continuations resume it. The dashboard's **Agent workflow** explains the path and shows registered contracts, plans and runs. [Walkthrough, scope and recovery](https://github.com/CutbackAI/cutback/blob/v0.1.0.dev5/docs/agent-workflow.md).
 
 ![Agent workflow with a synthetic source-bound local run](https://raw.githubusercontent.com/CutbackAI/cutback/v0.1.0.dev5/docs/assets/agent-workflow.png)
+
+## Explore newer source workflows
+
+The commands above target the published dev5 package. For the newer source-checkout workflows:
+
+| Follow this journey | Start here |
+|---|---|
+| Investigate a whole workflow or session | [Tracing walkthrough](https://github.com/CutbackAI/cutback/blob/main/docs/workflow-tracing.md) |
+| Review failures and build a versioned regression dataset | [Import and review](https://github.com/CutbackAI/cutback/blob/main/docs/imports-and-review.md) |
+| Version a prompt, compare it and roll back an alias | [Prompt sample](https://github.com/CutbackAI/cutback/blob/main/examples/prompt-releases/README.md) and [application checks](https://github.com/CutbackAI/cutback/blob/main/examples/application-checks/README.md) |
+| Open and triage a technical incident | [Monitoring sample](https://github.com/CutbackAI/cutback/tree/main/examples/online-monitoring) |
+| Catch an empty answer or evaluate an authorized captured output | [Quality sample, no provider key](https://github.com/CutbackAI/cutback/tree/main/examples/online-quality) and [bounded judging](https://github.com/CutbackAI/cutback/blob/main/docs/online-quality.md) |
+
+These source additions are not in the published dev5 wheel. [Acceptance and remaining roadmap](https://github.com/CutbackAI/cutback/blob/main/docs/progress.md) distinguish shipped source, tested limits and unfinished work. Model-judge estimates do not prove task success; content use, native requests and external notifications need their own scoped authorization.
 
 ## Use your own application
 

@@ -52,6 +52,22 @@ def test_metadata_online_and_notifications_mount_only_dedicated_signing_refs(tmp
     )
 
 
+def test_quality_only_execution_mounts_selected_native_keys_on_worker():
+    rows = render(
+        "--set",
+        "execution.quality=true,execution.online=true,payloads.enabled=true,payloads.bucket=synthetic",
+        "--set",
+        "execution.providers[0]=openai",
+    )
+    config = next(row for row in rows if row["kind"] == "ConfigMap")["data"]
+    assert config["CUTBACK_QUALITY_EXECUTION"] == "true"
+    assert config["CUTBACK_EXPERIMENT_EXECUTION"] == "false"
+    for row in rows:
+        if row["kind"] == "Deployment":
+            container = row["spec"]["template"]["spec"]["containers"][0]
+            assert ("openai_experiment_key" in str(container)) == (container["name"] == "worker")
+
+
 def helm_binary():
     value = os.getenv("CUTBACK_HELM_BIN") or shutil.which("helm")
     local = ROOT / "artifacts/tools/helm-4.3.1/helm.exe"
@@ -105,6 +121,7 @@ def test_chart_private_defaults_nonroot_secret_scoping_and_external_db():
         "CUTBACK_BILLING_ENABLED",
         "CUTBACK_TRAINING_EXECUTION",
         "CUTBACK_ONLINE_EXECUTION",
+        "CUTBACK_QUALITY_EXECUTION",
         "CUTBACK_WEBHOOK_EXECUTION",
     ):
         assert config[flag] == "false"
@@ -138,6 +155,8 @@ def test_chart_refuses_unsafe_or_incomplete_opt_ins_and_mounts_only_selected_wor
     render("--set", "ingress.enabled=true", expect_ok=False)
     render("--set", "retention.rawDays=400", expect_ok=False)
     render("--set", "execution.online=true,worker.enabled=false", expect_ok=False)
+    render("--set", "execution.quality=true", expect_ok=False)
+    render("--set", "execution.quality=true,execution.online=true", expect_ok=False)
     render("--set", "notifications.enabled=true", expect_ok=False)
     rows = render(
         "--set",

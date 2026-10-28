@@ -18,10 +18,11 @@ function Evaluations({
 }) {
   return (
     <section aria-label={"External evaluation results for " + target}>
-      <h3>External evaluations</h3>
+      <h3>Evaluation evidence</h3>
       <p>
-        These results were asserted by the submitting evaluator. Cutback has not
-        independently verified them.
+        External scores are asserted by their submitting evaluator. Technical
+        contract checks and model judge assessments retain their own evidence
+        labels. None alone verifies independent task success.
       </p>
       {!items.length ? (
         <p>No external results for this target.</p>
@@ -33,7 +34,7 @@ function Evaluations({
           aria-label={"Scrollable external results for " + target}
         >
           <table>
-            <caption>Externally asserted evaluation metadata</caption>
+            <caption>Evaluation metadata and evidence source</caption>
             <thead>
               <tr>
                 <th>Evaluator / version</th>
@@ -45,7 +46,7 @@ function Evaluations({
             </thead>
             <tbody>
               {items.map((r) => (
-                <tr key={r.result_id}>
+                <tr key={r.result_id + ":" + r.evidence}>
                   <td>
                     {r.evaluator} / {r.evaluator_version}
                   </td>
@@ -64,7 +65,9 @@ function Evaluations({
                       ? " · target not in retained page"
                       : ""}
                   </td>
-                  <td>{r.source}</td>
+                  <td>
+                    {r.source} · {r.evidence.replaceAll("_", " ")}
+                  </td>
                 </tr>
               ))}
             </tbody>

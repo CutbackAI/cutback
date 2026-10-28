@@ -76,7 +76,11 @@ class ExternalEvaluation(Base):
     __tablename__ = "external_evaluations"
     __table_args__ = (
         UniqueConstraint(
-            "project_id", "environment_id", "result_id", name="uq_external_evaluation"
+            "project_id",
+            "environment_id",
+            "result_id",
+            "source_origin",
+            name="uq_external_evaluation",
         ),
         Index("ix_external_evaluation_target", "project_id", "environment_id", "trace_id", "id"),
     )
@@ -84,6 +88,9 @@ class ExternalEvaluation(Base):
     project_id: Mapped[UUID] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
     environment_id: Mapped[UUID] = mapped_column(ForeignKey("environments.id", ondelete="CASCADE"))
     result_id: Mapped[UUID] = mapped_column(Uuid)
+    source_origin: Mapped[str] = mapped_column(
+        String(40), default="external", server_default="external"
+    )
     trace_id: Mapped[str | None] = mapped_column(String(32))
     session_id: Mapped[str | None] = mapped_column(String(200))
     received_at: Mapped[datetime] = mapped_column(

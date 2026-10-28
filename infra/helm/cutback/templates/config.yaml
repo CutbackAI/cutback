@@ -1,6 +1,9 @@
 {{- if and .Values.cache.enabled (not .Values.payloads.enabled) -}}
 {{- fail "Application caching requires explicitly authorized encrypted payload storage" -}}
 {{- end -}}
+{{- if and .Values.execution.quality (or (not .Values.payloads.enabled) (not .Values.execution.online) (not .Values.worker.enabled)) -}}
+{{- fail "Online content quality requires encrypted payloads, metadata online processing and an enabled worker" -}}
+{{- end -}}
 {{- if and .Values.execution.online (not .Values.worker.enabled) -}}
 {{- fail "Online evaluation requires an explicitly enabled worker" -}}
 {{- end -}}
@@ -57,6 +60,7 @@ data:
   CUTBACK_EXPERIMENT_EXECUTION: {{ .Values.execution.experiments | quote }}
   CUTBACK_SCHEDULE_EXECUTION: {{ .Values.execution.schedules | quote }}
   CUTBACK_ONLINE_EXECUTION: {{ .Values.execution.online | quote }}
+  CUTBACK_QUALITY_EXECUTION: {{ .Values.execution.quality | quote }}
   CUTBACK_WEBHOOK_EXECUTION: {{ .Values.notifications.enabled | quote }}
   CUTBACK_TRAINING_EXECUTION: {{ .Values.training.enabled | quote }}
   CUTBACK_BILLING_ENABLED: {{ .Values.billing.enabled | quote }}

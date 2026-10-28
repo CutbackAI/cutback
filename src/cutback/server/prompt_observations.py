@@ -143,12 +143,23 @@ def install_prompt_observations(app, sessions, authorize, scope):
                     PromptExperimentUse.version_id.in_(versions),
                 )
             )
+            from cutback.server.quality_db import QualityPromptUse
+
+            quality_uses = session.scalar(
+                select(func.count())
+                .select_from(QualityPromptUse)
+                .where(
+                    QualityPromptUse.project_id == project_id,
+                    QualityPromptUse.version_id.in_(versions),
+                )
+            )
             return {
                 "items": [r.metadata_record for r in rows[:limit]],
                 "next_cursor": str(rows[limit - 1].id) if len(rows) > limit else None,
                 "days": days,
                 "registered_dependency_edges": dependents,
                 "registered_experiment_uses": experiments,
+                "registered_online_quality_uses": quality_uses,
                 "usage_coverage": "unknown",
                 "evidence": "retained_externally_reported_metadata",
                 "unobserved_consumers": "unknown",

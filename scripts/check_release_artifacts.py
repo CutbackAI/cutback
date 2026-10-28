@@ -63,6 +63,8 @@ def check(directory: Path):
             "docs/application-checks.md",
             "docs/online-monitoring.md",
             "examples/online-monitoring/sample.py",
+            "docs/online-quality.md",
+            "examples/online-quality/sample.py",
             "src/cutback/server/migrations/versions/0011_online_quality.py",
             "examples/prompt-releases/sample.py",
             "examples/application-checks/commands.json",

@@ -556,6 +556,9 @@ def create_app(
     from cutback.server.notification_api import install_notifications
 
     install_notifications(app, sessions, authorize, scope)
+    from cutback.server.quality_api import install_quality
+
+    install_quality(app, sessions, authorize, scope)
     from cutback.server.privacy_api import install_privacy
 
     install_privacy(app, sessions, authorize, scope)

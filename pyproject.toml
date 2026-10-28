@@ -87,6 +87,7 @@ include = [
   "/docs/workflow-tracing.md", "/docs/imports-and-review.md",
   "/docs/prompt-releases.md", "/docs/application-checks.md",
   "/docs/online-monitoring.md",
+  "/docs/online-quality.md",
   "/docs/identity-and-teams.md", "/docs/hosted-billing.md", "/docs/continuous-operations.md",
   "/docs/advanced-optimization.md", "/docs/local-training.md", "/docs/adr", "/docs/assets", "/packages/js-sdk/index.mjs", "/packages/js-sdk/index.d.ts",
   "/packages/js-sdk/package.json", "/packages/js-sdk/package-lock.json",
@@ -146,6 +147,7 @@ select = ["E", "F", "I", "UP", "B"]
 "src/cutback/server/prompt_observations.py" = ["B008"]
 "src/cutback/server/monitoring_api.py" = ["B008"]
 "src/cutback/server/notification_api.py" = ["B008"]
+"src/cutback/server/quality_api.py" = ["B008"]
 
 [tool.mypy]
 python_version = "3.11"

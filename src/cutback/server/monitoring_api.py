@@ -76,6 +76,13 @@ def new_revision(session, cls, project, body):
     if count >= 1000:
         raise HTTPException(429, "PROJECT_MONITORING_RULE_QUOTA_EXCEEDED")
     if previous:
+        if cls is OnlineRule:
+            from cutback.server.quality_db import QualityRule
+
+            if session.scalar(
+                select(QualityRule.id).where(QualityRule.online_rule_id == previous.id)
+            ):
+                raise HTTPException(409, "CREATE_NEW_QUALITY_RULE_VERSION_FOR_MANAGED_RULE")
         previous.enabled = False
         if cls is OnlineRule:
             session.execute(
@@ -174,6 +181,10 @@ def install_monitoring(app, sessions, authorize, scope):
         with sessions.begin() as session:
             lock_lineage(session, project_id)
             row = scoped(session, OnlineRule, project_id, rule_id, lock=True)
+            from cutback.server.quality_db import QualityRule
+
+            if session.scalar(select(QualityRule.id).where(QualityRule.online_rule_id == row.id)):
+                raise HTTPException(409, "USE_QUALITY_RULE_SWITCH_FOR_MANAGED_RULE")
             latest = session.scalar(
                 select(func.max(OnlineRule.revision)).where(
                     OnlineRule.project_id == project_id, OnlineRule.key == row.key

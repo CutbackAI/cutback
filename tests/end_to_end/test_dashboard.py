@@ -26,6 +26,7 @@ def test_dashboard_authenticated_accessibility(postgres_url, tmp_path, event, mo
 
     monkeypatch.setenv("CUTBACK_ALLOW_PAYLOADS", "true")
     monkeypatch.setenv("CUTBACK_EXPERIMENT_EXECUTION", "false")
+    monkeypatch.setenv("CUTBACK_QUALITY_EXECUTION", "false")
     admin = secrets.token_urlsafe(48)
     app = create_app(database_url=postgres_url, admin_token=admin, allow_insecure_http=True)
     app.state.artifact_store = EncryptedFileStore(tmp_path / "encrypted-ui", os.urandom(32))
@@ -167,6 +168,38 @@ def test_dashboard_authenticated_accessibility(postgres_url, tmp_path, event, mo
         evaluate_alert(
             app.state.sessions, UUID(alert.json()["id"]), now=anchor + timedelta(seconds=61)
         )
+        quality = client.post(
+            f"/v1/projects/{project}/quality-rules",
+            headers=headers,
+            json={
+                "version_id": str(uuid4()),
+                "key": "browser-content-check",
+                "expected_revision": 0,
+                "environment": "staging",
+                "workflow": "support.answer",
+                "source_policy_id": policy,
+                "evaluator": "nonempty_output",
+                "content_use_authorized": True,
+                "record_input_features": True,
+                "starts_at": (datetime.now(UTC) - timedelta(hours=2)).isoformat(),
+                "expires_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
+                "max_evaluations": 10,
+                "approval_ref": "owned-browser-quality",
+            },
+        )
+        assert quality.status_code == 201, quality.text
+        from cutback.server.quality_service import backfill_quality_one
+        from cutback.server.quality_worker import run_quality_one
+
+        backfill_quality_one(app.state.sessions, enabled=True)
+        # A trace may include uncaptured steps. They remain waiting, never fabricated passes.
+        for _ in range(10):
+            result = run_quality_one(
+                app.state.sessions, app.state.artifact_store, execution_enabled=True
+            )
+            if result["status"] == "passed":
+                break
+        assert result["status"] == "passed", result
         result = subprocess.run(
             [shutil.which("npm.cmd") or shutil.which("npm") or "npm", "test"],
             cwd=root / "web",
@@ -180,4 +213,31 @@ def test_dashboard_authenticated_accessibility(postgres_url, tmp_path, event, mo
             text=True,
             timeout=120,
         )
+        # Leave no eligible synthetic jobs for unrelated tests sharing this owned DB.
+        from sqlalchemy import update
+
+        from cutback.server.monitoring_db import OnlineEvaluation, OnlineRule
+        from cutback.server.quality_db import QualityEvaluation, QualityRule
+
+        with app.state.sessions.begin() as session:
+            for cls in (QualityRule, OnlineRule):
+                session.execute(
+                    update(cls).where(cls.project_id == UUID(project)).values(enabled=False)
+                )
+            session.execute(
+                update(OnlineEvaluation)
+                .where(
+                    OnlineEvaluation.project_id == UUID(project),
+                    OnlineEvaluation.state.in_(["queued", "leased"]),
+                )
+                .values(state="unknown", lease_token=None, lease_until=None)
+            )
+            session.execute(
+                update(QualityEvaluation)
+                .where(
+                    QualityEvaluation.project_id == UUID(project),
+                    QualityEvaluation.state.in_(["queued", "leased"]),
+                )
+                .values(state="unknown", lease_token=None, lease_until=None, output_reserved=False)
+            )
         assert result.returncode == 0, result.stdout + result.stderr

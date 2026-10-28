@@ -196,6 +196,18 @@ class ConfiguredExecutor:
     def __init__(self):
         self.clients = {}
 
+    def prepare(self, provider):
+        """Load a configured client before reserving an online judge request."""
+        if provider not in self.clients:
+            constructor = {
+                "openai": OpenAIExecutor,
+                "anthropic": AnthropicExecutor,
+                "local": LocalExecutor,
+            }.get(provider)
+            if constructor is None:
+                raise ValueError("EXECUTOR_PROVIDER_UNSUPPORTED")
+            self.clients[provider] = constructor()
+
     def execute(self, model, text, timeout_seconds):
         if model.provider == "router":
             target = route_target(model, text)
@@ -203,12 +215,7 @@ class ConfiguredExecutor:
                 self.execute(target, text, timeout_seconds),
                 actual_model=target.provider + ":" + target.model,
             )
-        if model.provider not in self.clients:
-            self.clients[model.provider] = {
-                "openai": OpenAIExecutor,
-                "anthropic": AnthropicExecutor,
-                "local": LocalExecutor,
-            }[model.provider]()
+        self.prepare(model.provider)
         return self.clients[model.provider].execute(model, text, timeout_seconds)
 
     def close(self):

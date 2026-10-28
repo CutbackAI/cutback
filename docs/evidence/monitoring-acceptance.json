@@ -2,7 +2,7 @@
   "contract": "cutback.monitoring-acceptance.v1",
   "date": "2026-10-27",
   "scope": "bounded_nonbillable_online_monitoring_incidents_and_opt_in_metadata_notifications",
-  "publication": "locally_accepted_source_hosted_gates_pending_no_pypi_upload",
+  "publication": "public_source_merged_no_new_pypi_upload",
   "migrations": [
     "0011"
   ],
@@ -91,5 +91,20 @@
     "twine",
     "release_payload_and_license_check"
   ],
-  "core_only_wheel_independent_consumer": "passed_final_rebuild"
+  "core_only_wheel_independent_consumer": "passed_final_rebuild",
+  "hosted": {
+    "pull_request": 20,
+    "tested_head": "40b16f21a1073ac0242a364b5ed6c26758d34431",
+    "merge": "06c702ef22b030d66a1b9804b0925f44dd642863",
+    "identical_tree": "968a5542ca70f4a347233c8ebe609dc907bd629f",
+    "required_checks_passed": 8,
+    "python_311": {
+      "passed": 399,
+      "skipped": 4
+    },
+    "python_313": {
+      "passed": 397,
+      "skipped": 6
+    }
+  }
 }

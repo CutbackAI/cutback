@@ -153,6 +153,17 @@ def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False
             from cutback.server.traces import prune_traces
 
             prune_traces(session, cutoff, selected)
+            from cutback.server.quality_db import QualityEvaluation
+
+            # Keep durable rule totals after receipt retention. Never prune queued or
+            # leased work: a charged interrupted lease still needs an uncertainty receipt.
+            session.execute(
+                delete(QualityEvaluation).where(
+                    QualityEvaluation.completed_at < cutoff,
+                    QualityEvaluation.state.not_in(["queued", "leased"]),
+                    selected(QualityEvaluation.project_id),
+                )
+            )
             from cutback.server.monitoring_db import AlertWindow, Incident, OnlineEvaluation
 
             session.execute(

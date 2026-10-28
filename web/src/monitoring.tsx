@@ -11,6 +11,7 @@ import {
   type Data,
 } from "./ui";
 import { Investigation } from "./traces";
+import { Quality } from "./quality";
 
 const label = (value: unknown) =>
   String(value || "not observed").replaceAll("_", " ");
@@ -130,6 +131,7 @@ export function Monitoring({
   }
   return (
     <section aria-label="Continuous quality monitoring">
+      <Quality api={api} base={base} admin={admin} />
       <p>
         Turn observed failures into an incident, investigate the retained trace,
         then send authorized captured cases to Review. Metadata execution checks
@@ -138,9 +140,9 @@ export function Monitoring({
       </p>
       <p className="hint">
         No data is not healthy. Population and retention coverage are unknown.
-        This profile makes no model calls. Notifications require a separately
-        approved destination and enabled delivery worker. An operator enables
-        the online worker separately.
+        The metadata rules below make no model calls. Notifications require a
+        separately approved destination and enabled delivery worker. An operator
+        enables the online worker separately.
       </p>
       <button disabled={busy} onClick={() => action(refresh)}>
         Refresh monitoring

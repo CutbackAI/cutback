@@ -10,7 +10,8 @@ from cutback.server.db import database
 
 
 @pytest.mark.postgres
-def test_migration_downgrade_upgrade_and_model_drift(postgres_url):
+def test_migration_downgrade_upgrade_and_model_drift(isolated_postgres_url):
+    postgres_url = isolated_postgres_url
     assert "/cutback_test_" in postgres_url  # Only disposable test databases.
     cfg = Config()
     cfg.set_main_option("script_location", str(files("cutback.server").joinpath("migrations")))

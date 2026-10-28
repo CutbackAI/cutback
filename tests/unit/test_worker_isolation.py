@@ -19,3 +19,26 @@ def test_failed_retention_and_schedule_cannot_starve_experiments(monkeypatch, ca
     assert result["maintenance"]["status"] == "FAILED"
     assert result["experiments"]["status"] == "OK"
     assert "private details" not in capsys.readouterr().out
+
+
+def test_quality_is_independent_disabled_by_default_and_has_isolated_failures(monkeypatch, capsys):
+    monkeypatch.setenv("CUTBACK_QUALITY_EXECUTION", "false")
+    monkeypatch.setenv("CUTBACK_ONLINE_EXECUTION", "false")
+    monkeypatch.setattr(worker_boot, "configured_execution_enabled", lambda: False)
+    assert "quality_evaluations" not in worker_boot.worker_cycle(
+        None, object(), maintenance_due=False
+    )
+    monkeypatch.setenv("CUTBACK_QUALITY_EXECUTION", "true")
+    calls = []
+
+    def unavailable(*args, **kwargs):
+        raise ValueError("synthetic private source should be suppressed")
+
+    monkeypatch.setattr("cutback.server.quality_service.backfill_quality_one", unavailable)
+    monkeypatch.setattr(
+        "cutback.server.quality_worker.run_quality_one", lambda *a, **k: calls.append("one")
+    )
+    result = worker_boot.worker_cycle(None, object(), maintenance_due=False)
+    assert calls == ["one"] and result["quality_backfill"]["status"] == "FAILED"
+    assert result["quality_evaluations"]["status"] == "OK"
+    assert "private source" not in capsys.readouterr().out

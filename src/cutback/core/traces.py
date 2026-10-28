@@ -175,8 +175,11 @@ class ObservedSpan(StrictModel):
 
 
 class AssertedEvaluation(EvaluationResult):
-    evidence: Literal["externally_asserted"] = "externally_asserted"
+    evidence: Literal[
+        "externally_asserted", "cutback_model_judge", "cutback_technical_contract"
+    ] = "externally_asserted"
     target_in_retained_page: bool | None = None
+    source_status: Literal["missing"] | None = None
 
 
 class TraceDetail(StrictModel):
