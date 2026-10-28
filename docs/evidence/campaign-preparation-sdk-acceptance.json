@@ -1,7 +1,7 @@
 {
   "contract": "cutback.campaign-preparation-sdk-compatibility-acceptance.v1",
   "date": "2026-10-28",
-  "publication": "working_source_hosted_and_final_package_acceptance_pending_no_new_pypi_upload",
+  "publication": "locally_accepted_final_public_artifact_and_hosted_checks_pending_no_new_pypi_upload",
   "scope": [
     "campaign_basis_without_cheaper_static_model",
     "explicit_additional_generator_vendor_authorization",
@@ -12,7 +12,22 @@
     "complete_instruction_only_native_pg_journey": 1,
     "unit_agent": 4,
     "unit_agent_skip": "Windows_symlink_privilege_unavailable",
-    "full_installed_basis_regression": "running"
+    "full_installed_basis_regression": {
+      "passed": 653,
+      "skipped": 5,
+      "seconds": 881.0,
+      "installed_wheel_origin_verified": true,
+      "includes": [
+        "real_postgresql",
+        "authenticated_browser_mobile_axe",
+        "isolated_cpu_training",
+        "owned_docker_lifecycle"
+      ],
+      "skip_reasons": [
+        "four_legacy_sdk_cases_exercised_separately",
+        "windows_symlink_privilege_unavailable"
+      ]
+    }
   },
   "openai_3351": {
     "source_native_privacy_and_executor_checks": 61,
@@ -32,7 +47,15 @@
       "four_legacy_sdk_cases_qualified_separately",
       "windows_symlink_privilege_unavailable"
     ],
-    "authenticated_browser_and_examples": "running",
+    "authenticated_browser_and_examples": {
+      "passed": 5,
+      "seconds": 38.02,
+      "includes": [
+        "authenticated_campaign_browser_mobile_axe",
+        "authenticated_task_economics_browser_mobile_axe",
+        "actual_sdk_framework_examples"
+      ]
+    },
     "sdk": "3.35.1",
     "transport": "httpx2_2_16_0_and_legacy_httpx_0_28_1_bridge",
     "new_model_names_qualified": false,
@@ -61,8 +84,25 @@
   "production_deployment": false,
   "pypi_upload": false,
   "remaining": [
-    "final_artifacts_and_installed_backend_identity",
+    "final_public_artifact_identity",
     "exact_head_hosted_checks",
     "remaining_market_baseline_and_roadmap_not_completed"
-  ]
+  ],
+  "final_installed_default_sdk_followup": {
+    "passed": 56,
+    "seconds": 76.32,
+    "includes": [
+      "campaign_cheapest_minimum_cap_native_journey",
+      "campaign_native_http_pg_authenticated_browser",
+      "native_observer_retry_agent_and_prompt_executors"
+    ]
+  },
+  "package_checkpoint": {
+    "wheel_sdist_twine_utf8": "passed",
+    "fresh_core_only_forced_ansi_consumer": "passed",
+    "backend_entries_identical_to_locked_installed_wheel": 177,
+    "source_files": 583,
+    "archive_members": 770,
+    "boundary_findings": 0
+  }
 }
