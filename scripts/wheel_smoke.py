@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -103,7 +104,10 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
         cwd=consumer,
         check=True,
     )
-    assert "--execute-local" in help_result.stdout
+    # CI can force Rich's ANSI styling even with captured stdout. Options may
+    # contain separate escape-delimited dash/name spans; inspect visible text.
+    visible_help = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", help_result.stdout)
+    assert "--execute-local" in visible_help
     subprocess.run(
         [str(executable), "-m", "cutback.cli", "sample", str(Path(temporary) / "support-desk")],
         check=True,
