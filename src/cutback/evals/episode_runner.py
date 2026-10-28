@@ -45,9 +45,15 @@ def episode_forecast(plan, dataset):
             bound = min(bound, plan.episode_execution.max_turns)
         turns += bound
     models = [plan.baseline, *plan.candidates]
+    judge_calls = (
+        len(selected_items(plan, dataset)) * len(models) * plan.repeats
+        if plan.episode_execution.semantic_judging
+        else 0
+    )
     return (
-        turns * len(models) * plan.repeats,
-        turns * plan.repeats * sum((upper_cost(m) for m in models), Decimal(0)),
+        turns * len(models) * plan.repeats + judge_calls,
+        turns * plan.repeats * sum((upper_cost(m) for m in models), Decimal(0))
+        + (judge_calls * upper_cost(plan.judge) if plan.judge else Decimal(0)),
     )
 
 
@@ -216,17 +222,38 @@ def run_episodes(
                 ledger.known_cost_requests,
             )
             latencies: list[float] = []
+            semantic = plan.episode_execution.semantic_judging
+            judge_requests, judge_spend = 0, Decimal(0)
+            semantic_results = []
             for repeat in range(plan.repeats):
                 for item in items:
                     case = item["case"]
                     scenario = effective_scenario(plan, case)
                     if episode_lifecycle:
                         episode_lifecycle.start_episode(
-                            model, case["id"], repeat, scenario.max_turns
+                            model,
+                            case["id"],
+                            repeat,
+                            scenario.max_turns + int(semantic is not None),
                         )
                     observed, assessment = execute_episode(
                         plan, model, case, ledger, executor, check_authority=check_authority
                     )
+                    judge_raw = None
+                    if semantic:
+                        from cutback.evals.episode_judging import (
+                            combine_assessment,
+                            perform_episode_judging,
+                        )
+
+                        calls_before, spend_before = ledger.requests, ledger.spent
+                        judged, judge_raw = perform_episode_judging(
+                            plan, scenario, observed, case, ledger, executor, check_authority
+                        )
+                        judge_requests += ledger.requests - calls_before
+                        judge_spend += ledger.spent - spend_before
+                        semantic_results.append(judged)
+                        assessment = combine_assessment(assessment, judged)
                     if check_authority:
                         check_authority()
                     if episode_lifecycle:
@@ -256,8 +283,11 @@ def run_episodes(
                                 "metric_value": assessment["score"],
                                 "episode_assessment": assessment,
                                 "criteria": [],
+                                **({"episode_judge_output": judge_raw} if semantic else {}),
                             }
                         )
+                    if semantic and judged.get("stop_execution"):
+                        raise ValueError("EPISODE_JUDGE_BILLING_UNCERTAIN_NO_FURTHER_REQUESTS")
             total = len(items) * plan.repeats
             decided = states["passed"] + states["failed"]
             score = states["passed"] / total if decided == total and total else None
@@ -273,42 +303,84 @@ def run_episodes(
                 "confidence_95": {"low": None, "high": None},
                 "failures": states["failed"],
                 "semantic_quality": "NOT VERIFIED",
-                "evidence_tier": 1,
+                "evidence_tier": 3 if semantic else 1,
                 "unknown": states["unknown"],
                 "errors": states["error"],
-                "scope": "declared_synthetic_episode_contract",
+                "scope": "declared_fixture_and_model_proxy"
+                if semantic
+                else "declared_synthetic_episode_contract",
             }
-            model_results.append(
-                {
-                    "model": model.model_dump(mode="json"),
-                    "quality": quality,
-                    "metric_min": score,
-                    "metric_max": score,
-                    "repeats": [quality],
-                    "criteria": [],
-                    "episodes": total,
-                    "outcomes": dict(outcomes),
-                    "assessment_states": dict(states),
-                    "failed_checks": dict(failures),
-                    "decided_coverage": decided / total if total else None,
-                    "known_cost_subtotal_usd": str(cost),
-                    "modeled_cost_usd": str(cost) if known == requests else None,
-                    "cost_complete": known == requests,
-                    "requests": requests,
-                    "known_cost_requests": known,
-                    "latency_ms": latencies,
-                    "latency_coverage": len(latencies) / requests if requests else None,
-                    "latency_scope": "native_responses_excludes_tool_and_worker_time",
-                    "model_cost_per_declared_success_usd": str(cost / states["passed"])
-                    if known == requests and decided == total and states["passed"]
-                    else None,
-                    "production_task_cost_usd": None,
-                    "population_coverage": "unknown",
-                    "cost_evidence": "scripted_fixture_usage"
-                    if plan.episode_execution.transport == "scripted_test_only"
-                    else "provider_usage_with_pinned_public_rate",
+            result = {
+                "model": model.model_dump(mode="json"),
+                "quality": quality,
+                "metric_min": score,
+                "metric_max": score,
+                "repeats": [quality],
+                "criteria": [],
+                "episodes": total,
+                "outcomes": dict(outcomes),
+                "assessment_states": dict(states),
+                "failed_checks": dict(failures),
+                "decided_coverage": decided / total if total else None,
+                "known_cost_subtotal_usd": str(cost),
+                "modeled_cost_usd": str(cost) if known == requests else None,
+                "cost_complete": known == requests,
+                "requests": requests,
+                "known_cost_requests": known,
+                "latency_ms": latencies,
+                "latency_coverage": len(latencies) / (requests - judge_requests)
+                if requests - judge_requests
+                else None,
+                "latency_scope": "native_responses_excludes_tool_and_worker_time",
+                "model_cost_per_declared_success_usd": str((cost - judge_spend) / states["passed"])
+                if known == requests and decided == total and states["passed"]
+                else None,
+                "production_task_cost_usd": None,
+                "population_coverage": "unknown",
+                "cost_evidence": "scripted_fixture_usage"
+                if plan.episode_execution.transport == "scripted_test_only"
+                else "provider_usage_with_pinned_public_rate",
+            }
+            if semantic:
+                result["semantic_judging"] = {
+                    "version": semantic.version,
+                    "judge_requests": judge_requests,
+                    "known_judge_cost_subtotal_usd": str(judge_spend),
+                    "evidence_tier": 3,
+                    "semantic_quality": "NOT VERIFIED",
+                    "criteria": [
+                        {
+                            "key": criterion.key,
+                            "kind": criterion.kind,
+                            "valid": sum(
+                                c["status"] in {"passed", "failed"}
+                                for r in semantic_results
+                                for c in r["checks"]
+                                if c["key"] == criterion.key
+                            ),
+                            "passed": sum(
+                                c["status"] == "passed"
+                                for r in semantic_results
+                                for c in r["checks"]
+                                if c["key"] == criterion.key
+                            ),
+                            "unknown": sum(
+                                c["status"] == "unknown"
+                                for r in semantic_results
+                                for c in r["checks"]
+                                if c["key"] == criterion.key
+                            ),
+                        }
+                        for criterion in semantic.criteria
+                    ],
                 }
-            )
+                result["target_requests"] = requests - judge_requests
+                result["total_evaluation_cost_per_declared_success_usd"] = (
+                    str(cost / states["passed"])
+                    if known == requests and decided == total and states["passed"]
+                    else None
+                )
+            model_results.append(result)
         return {
             "schema_version": "1.0",
             "status": "COMPLETED",

@@ -11,6 +11,14 @@ uv run python examples/agent-evaluation/sample.py
 
 Expected: `status` is `COMPLETED`, baseline contract score is `1`, intentionally wrong score is `0`, and eight native SDK requests use the scripted HTTP transport. No request reaches a vendor. Token counts, answers and modeled prices are fixtures, not real-model benchmarks.
 
+To include semantic model assessment fixtures:
+
+```sh
+uv run python examples/agent-evaluation/sample.py --semantic
+```
+
+Expected: twelve requests (eight target, four judge), the same deliberate pass/failure and separate judge subtotals. Exact source quotations are checked, but every model assessment remains Tier 3, **NOT VERIFIED**. The interactive demo includes this variant and a guided criterion form. [Evidence, budgets and privacy](../../docs/episode-semantic-judging.md).
+
 The support agent must close a ticket exactly once and reach the declared final state. Both a direct close and lookup-then-close path are allowed. The RAG assistant must retrieve the policy, preserve relevance coverage, answer the question and cite an exact quotation. An unrelated document contains an injected instruction; tools outside the declared fixtures cannot execute.
 
 For the real PostgreSQL/worker/dashboard journey:

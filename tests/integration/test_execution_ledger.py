@@ -223,7 +223,7 @@ def test_lost_reservation_acknowledgement_cannot_claim_complete_billing_or_appro
     result = run_one(
         api[2].state.sessions, store, executor=executor, execution_enabled=True, only_run_id=run_id
     )
-    assert result["status"] == "COMPLETED", result
+    assert result["status"] == "FAILED" and executor.calls == [], result
     with api[2].state.sessions() as session:
         row = session.get(ExperimentRunRecord, run_id)
         assert row.requests_used == len(executor.calls) + 1

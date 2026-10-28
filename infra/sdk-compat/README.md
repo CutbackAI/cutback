@@ -8,7 +8,9 @@ From the repository root, run the same synthetic qualification used by CI:
 uv sync --project infra/sdk-compat/openai3 --locked --python 3.11.18
 uv run --project infra/sdk-compat/openai3 --locked python scripts/check.py -q \
   tests/unit tests/contract/test_migrations.py \
-  tests/integration/test_native_episodes.py tests/integration/test_campaign_workflow.py \
+  tests/integration/test_native_episodes.py tests/integration/test_semantic_episodes.py \
+  tests/integration/test_semantic_episode_controls.py tests/integration/test_episode_lifecycle.py \
+  tests/integration/test_execution_ledger.py tests/integration/test_campaign_workflow.py \
   tests/integration/test_campaign_preparation_basis.py \
   tests/integration/test_quality_native.py tests/integration/test_agent_workflow.py
 ```

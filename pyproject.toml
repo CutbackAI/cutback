@@ -89,6 +89,7 @@ include = [
   "/docs/online-monitoring.md",
   "/docs/online-quality.md",
   "/docs/agent-evaluation.md",
+  "/docs/episode-semantic-judging.md",
   "/docs/task-economics.md",
   "/docs/improvement-campaigns.md",
   "/docs/campaign-outcomes.md",

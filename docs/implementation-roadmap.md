@@ -64,7 +64,7 @@ Add alert-rule and incident records with minimum samples, threshold/window, cool
 
 ## Release 5 â€” evaluate agents, retrieval and state
 
-Implementation: the bounded native fixture journey is locally accepted, including durable per-turn receipts, typed task/retrieval/state checks, encrypted episode revision, scenario drafts and independent support-agent/RAG dashboard samples. [Contracts and limits](agent-evaluation.md), [actual acceptance/publication state](progress.md). Semantic groundedness, generative personas, real tools and specialty execution remain explicit gaps; this increment does not close the entire market baseline or Releases 6–7.
+Implementation: the bounded native fixture journey is locally accepted, including durable per-turn receipts, typed task/retrieval/state checks, encrypted episode revision, scenario drafts and independent support-agent/RAG dashboard samples. [Contracts and limits](agent-evaluation.md), [actual acceptance/publication state](progress.md). Optional [semantic episode judges](episode-semantic-judging.md) add bounded model proxies with separate reserved overhead; independent semantic verification, generative personas, real tools and specialty execution remain explicit gaps; this increment does not close the entire market baseline or Releases 6–7.
 
 **Baseline:** A01â€“A10, X01â€“X04 as qualified specialties. **User outcome:** test the complete task, including alternative tool paths and final state.
 

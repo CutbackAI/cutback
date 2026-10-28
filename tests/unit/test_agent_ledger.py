@@ -108,6 +108,9 @@ def test_lost_receipt_acknowledgement_does_not_repeat_the_observed_request():
         ledger.call(Native(), model(), "")
     assert "private" not in str(error.value) and calls == [1]
     assert ledger.spent == Decimal("0.001") and not ledger.billing_complete
+    with pytest.raises(ValueError, match="ACK_UNCERTAIN_NO_FURTHER_REQUESTS"):
+        ledger.call(Native(), model(), "")
+    assert calls == [1]
 
 
 def test_single_call_models_keep_the_released_serialized_shape():

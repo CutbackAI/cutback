@@ -59,7 +59,7 @@ test("synthetic agent and retrieval evidence, per-call accounting, authorized tr
     receipts
       .getByRole("table", { name: "Reserved native calls" })
       .locator("tbody tr"),
-  ).toHaveCount(8);
+  ).toHaveCount(12);
   releaseInitial();
   await delivered;
   await page.evaluate(
@@ -72,13 +72,25 @@ test("synthetic agent and retrieval evidence, per-call accounting, authorized tr
     receipts
       .getByRole("table", { name: "Reserved native calls" })
       .locator("tbody tr"),
-  ).toHaveCount(8);
+  ).toHaveCount(12);
   await expect(
     receipts
       .getByRole("table", { name: "Synthetic task episodes" })
       .locator("tbody tr"),
   ).toHaveCount(4);
-  await expect(receipts).toContainText("8 reserved requests");
+  await expect(receipts).toContainText("12 reserved requests");
+  await expect(
+    page.getByRole("region", {
+      name: "Semantic assessment for baseline",
+      exact: true,
+    }),
+  ).toContainText("NOT VERIFIED");
+  await expect(
+    page.getByRole("region", {
+      name: "Semantic assessment for baseline",
+      exact: true,
+    }),
+  ).toContainText("2 judge calls");
   await expect(receipts).toContainText("100.0%");
   await page
     .getByLabel("Purpose for reading case evidence")
@@ -87,6 +99,9 @@ test("synthetic agent and retrieval evidence, per-call accounting, authorized tr
     .getByRole("button", { name: "Read authorized case outputs", exact: true })
     .click();
   await expect(page.locator(".paired-case")).toHaveCount(2);
+  await expect(
+    page.getByRole("group", { name: "Semantic episode proxy" }).first(),
+  ).toContainText("exact source quotes");
   await expect(
     page
       .getByRole("list", { name: "Conversation and tool trajectory" })
@@ -131,5 +146,41 @@ test("synthetic agent and retrieval evidence, per-call accounting, authorized tr
     path: "../artifacts/agent-episodes-browser.png",
     fullPage: true,
   });
+  await page.getByRole("button", { name: "Experiments", exact: true }).click();
+  await page.getByText("Plan an experiment", { exact: true }).click();
+  const plan = page.getByRole("form", {
+    name: "Compare authorized alternatives",
+  });
+  const choice = plan
+    .getByLabel("Frozen dataset")
+    .locator("option")
+    .filter({ hasText: "synthetic.agent" })
+    .first();
+  await plan
+    .getByLabel("Frozen dataset")
+    .selectOption((await choice.getAttribute("value"))!);
+  await plan.getByLabel("Comparison strategy").selectOption("prompt_variant");
+  await plan
+    .getByLabel("Reviewed candidate instruction")
+    .fill("Use the declared fixtures and cite the supporting document.");
+  await plan.getByLabel("Add a semantic model judge", { exact: true }).check();
+  await plan
+    .getByLabel("Semantic evaluation rubric 1", { exact: true })
+    .fill("Assess agreement with the accepted reference.");
+  await plan
+    .getByRole("button", { name: "Add semantic criterion", exact: true })
+    .click();
+  await plan
+    .getByRole("combobox", { name: "Semantic check 2", exact: true })
+    .selectOption("conversation_constraints");
+  await plan
+    .getByLabel("Semantic evaluation rubric 2", { exact: true })
+    .fill("Assess compliance with the observed user request.");
+  await plan.getByLabel("Maximum experiment USD", { exact: true }).fill("10");
+  await plan
+    .getByRole("button", { name: "Freeze proposed plan", exact: true })
+    .click();
+  await expect(plan.getByRole("status")).toContainText("frozen.");
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   expect(errors).toEqual([]);
 });

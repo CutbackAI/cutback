@@ -6,6 +6,8 @@ Cutback is an Apache-2.0 Python tool with an offline scanner and a self-hosted c
 
 Source checkouts also include [agent and RAG evaluation](https://github.com/CutbackAI/cutback/blob/main/docs/agent-evaluation.md): native tool-call conversations, declared final-state checks, retrieval/citation evidence and individual durable request receipts. Try the [independent applications](https://github.com/CutbackAI/cutback/blob/main/examples/agent-evaluation/README.md), then inspect them in the guided demo. PyPI dev5 remains the earlier package.
 
+Optional [semantic episode checks](https://github.com/CutbackAI/cutback/blob/main/docs/episode-semantic-judging.md) assess answers against declared references, actually returned documents and observed conversation constraints. The guided dashboard separates judge costs, exact-quote checks and unknown results. These are model assessments, not independent verification of customer quality.
+
 ## Start with a working application
 
 The support-desk sample routes tickets by category and priority. Two workflows, ticket triage and escalation, share one native SDK call. It shows why a cheaper configuration that mishandles urgent tickets must be rejected.

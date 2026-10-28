@@ -1852,6 +1852,45 @@ function RunEvidence({ detail }: { detail: RecordData }) {
       </p>
       {result.models.map((row: RecordData) => (
         <section key={row.model.key}>
+          {row.semantic_judging && (
+            <section aria-label={`Semantic assessment for ${row.model.key}`}>
+              <h3>{row.model.key}: semantic model assessment</h3>
+              <p>
+                Tier 3 · NOT VERIFIED. Model judgments are proxies; missing or
+                invalid evidence stays unknown.
+              </p>
+              <p>
+                {row.target_requests ?? "Unknown"} target calls ·{" "}
+                {row.semantic_judging.judge_requests ?? "Unknown"} judge calls ·{" "}
+                {money(row.semantic_judging.known_judge_cost_subtotal_usd)}{" "}
+                known judge subtotal. Judge latency is excluded from target
+                latency.
+              </p>
+              <div className="table-scroll" tabIndex={0}>
+                <table>
+                  <caption>Semantic checks for {row.model.key}</caption>
+                  <thead>
+                    <tr>
+                      <th>Check</th>
+                      <th>Valid assessments</th>
+                      <th>Passed</th>
+                      <th>Unknown</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {row.semantic_judging.criteria?.map((check: RecordData) => (
+                      <tr key={check.key}>
+                        <th scope="row">{check.key}</th>
+                        <td>{check.valid ?? "Unknown"}</td>
+                        <td>{check.passed ?? "Unknown"}</td>
+                        <td>{check.unknown ?? "Unknown"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
           {!!row.criteria?.length && (
             <>
               <h3>{row.model.key}: quality scorecard</h3>

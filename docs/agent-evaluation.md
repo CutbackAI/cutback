@@ -57,6 +57,8 @@ Retrieval events are projected from actual returned fixture documents, preservin
 
 ## Reviewable scenario generation
 
+Optional [semantic judging](episode-semantic-judging.md) adds separately scoped answer-reference, retrieved-document and conversation proxy criteria. It uses a frozen `deterministic-v5` / `native-fixture-episode-v2` contract, with an encrypted rubric and a separate pre-call judge reservation. Exact quotation checks do not turn a model score into independently verified task quality. Existing v4 plans and hashes remain unchanged.
+
 ```sh
 uv run cutback episodes generate owned-episodes.json --output scenario-draft.json
 uv run cutback episodes assess scenario.json observation.json

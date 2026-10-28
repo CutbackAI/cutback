@@ -8,9 +8,9 @@ from uuid import UUID
 
 from fastapi import Depends, HTTPException, Query
 from pydantic import Field
-from sqlalchemy import event as sql_event
 from sqlalchemy import func, select
 
+from cutback.core.episode_judging import EpisodeJudgingSpec
 from cutback.core.models import Identifier, StrictModel
 from cutback.evals.artifacts import configured_store
 from cutback.evals.datasets import (
@@ -78,6 +78,9 @@ class QueueInput(StrictModel):
 
 
 class DraftInput(StrictModel):
+    episode_judging: EpisodeJudgingSpec | None = None
+    episode_judge: ModelSpec | None = None
+    episode_max_turns: int = Field(default=32, ge=1, le=32)
     name: str | None = Field(
         default=None, min_length=1, max_length=100, pattern=r"^[A-Za-z0-9][A-Za-z0-9 .:/_-]*$"
     )
@@ -579,6 +582,9 @@ def install_evaluation(app, sessions, authorize, scope):
                 max_wall_seconds=body.max_wall_seconds,
                 criteria=body.criteria,
                 retain_case_outputs=body.retain_case_outputs,
+                episode_judging=body.episode_judging,
+                episode_judge=body.episode_judge,
+                episode_max_turns=body.episode_max_turns,
             )
             spec = spec.model_copy(update={"name": body.name})
         except ValueError as exc:
@@ -593,7 +599,10 @@ def install_evaluation(app, sessions, authorize, scope):
     @app.post("/v1/projects/{project_id}/experiments/plans", status_code=201)
     def create_plan(project_id: UUID, body: PlanInput, auth=Depends(authorize)):
         scope(auth, project_id, ("analyst",))
-        with sessions.begin() as session:
+        from cutback.server.campaign_content import content_transaction
+
+        store = require_store(app)
+        with content_transaction(sessions, store, project_id) as (session, refs):
             from cutback.server.dataset_lineage import lock_lineage
             from cutback.server.prompt_experiments import register_bindings, validate_bindings
 
@@ -662,12 +671,7 @@ def install_evaluation(app, sessions, authorize, scope):
                     ).isoformat()
             except ValueError:
                 raise HTTPException(422, "PLAN_CONTENT_POLICY_DENIED") from None
-            sql_event.listen(
-                session,
-                "after_rollback",
-                lambda unused: store.delete(project_id, frozen["artifact_ref"]),
-                once=True,
-            )
+            refs.append(frozen["artifact_ref"])
             row = ExperimentPlanRecord(
                 project_id=project_id,
                 dataset_id=dataset.id,

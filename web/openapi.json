@@ -12423,6 +12423,33 @@
       },
       "DraftInput": {
         "properties": {
+          "episode_judging": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EpisodeJudgingSpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "episode_judge": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ModelSpec-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "episode_max_turns": {
+            "type": "integer",
+            "maximum": 32.0,
+            "minimum": 1.0,
+            "title": "Episode Max Turns",
+            "default": 32
+          },
           "name": {
             "anyOf": [
               {
@@ -12718,7 +12745,10 @@
         "properties": {
           "version": {
             "type": "string",
-            "const": "native-fixture-episode-v1",
+            "enum": [
+              "native-fixture-episode-v1",
+              "native-fixture-episode-v2"
+            ],
             "title": "Version",
             "default": "native-fixture-episode-v1"
           },
@@ -12753,11 +12783,46 @@
             ],
             "title": "Transport",
             "default": "native_provider"
+          },
+          "semantic_judging": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EpisodeJudgingSpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
         "type": "object",
         "title": "EpisodeExecutionSpec"
+      },
+      "EpisodeJudgingSpec": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "episode-semantic-proxy-v1",
+            "title": "Version",
+            "default": "episode-semantic-proxy-v1"
+          },
+          "criteria": {
+            "items": {
+              "$ref": "#/components/schemas/EpisodeSemanticCriterion"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Criteria"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "criteria"
+        ],
+        "title": "EpisodeJudgingSpec"
       },
       "EpisodePage": {
         "properties": {
@@ -12978,6 +13043,45 @@
         "additionalProperties": false,
         "type": "object",
         "title": "EpisodeScenario"
+      },
+      "EpisodeSemanticCriterion": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Key"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "answer_correctness",
+              "retrieval_groundedness",
+              "conversation_constraints"
+            ],
+            "title": "Kind"
+          },
+          "judge_rubric": {
+            "type": "string",
+            "maxLength": 8000,
+            "minLength": 1,
+            "title": "Judge Rubric"
+          },
+          "minimum": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Minimum",
+            "default": 1.0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "kind",
+          "judge_rubric"
+        ],
+        "title": "EpisodeSemanticCriterion"
       },
       "EvaluationBatch": {
         "properties": {
@@ -13400,7 +13504,8 @@
             "type": "string",
             "enum": [
               "deterministic-v3",
-              "deterministic-v4"
+              "deterministic-v4",
+              "deterministic-v5"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -13672,7 +13777,8 @@
             "type": "string",
             "enum": [
               "deterministic-v3",
-              "deterministic-v4"
+              "deterministic-v4",
+              "deterministic-v5"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"

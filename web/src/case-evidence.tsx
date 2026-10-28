@@ -323,6 +323,7 @@ export function CaseEvidence({
                   <EpisodeContent
                     value={row.output}
                     assessment={row.episode_assessment}
+                    judgeOutput={row.episode_judge_output}
                   />
                 ) : (
                   <pre tabIndex={0}>
