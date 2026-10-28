@@ -200,6 +200,15 @@ class RateOverride(Base):
     approved_by: Mapped[str] = mapped_column(String(100))
 
 
+Index(
+    "ix_rate_override_effective_lookup",
+    RateOverride.project_id,
+    RateOverride.provider,
+    RateOverride.model,
+    RateOverride.valid_from.desc(),
+)
+
+
 class CapturePolicyRecord(Base):
     __tablename__ = "capture_policies"
     __table_args__ = (UniqueConstraint("id", "project_id", name="uq_capture_policy_scope"),)

@@ -3,11 +3,24 @@ from decimal import Decimal
 from typing import Protocol
 from uuid import UUID, uuid4
 
-from sqlalchemy import BigInteger, Float, String, cast, column, exists, func, select, true
+from sqlalchemy import (
+    BigInteger,
+    DateTime,
+    Float,
+    Integer,
+    String,
+    cast,
+    column,
+    exists,
+    func,
+    select,
+    true,
+    values,
+)
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import aliased
 
-from cutback.core.models import EventBatch, IngestReceipt
+from cutback.core.models import EventBatch, IngestReceipt, LLMEvent
 from cutback.pricing import Catalog
 from cutback.server.db import DailyUsage, RateOverride, StoredEvent
 
@@ -127,44 +140,88 @@ class PostgresEventRepository:
         self.catalog = Catalog()
 
     def ingest_batch(self, session, batch, environments):
-        accepted = 0
+        # Preserve first-wins semantics inside a batch, then acquire unique-index
+        # conflicts in stable order across concurrent overlapping submissions.
+        first: dict[UUID, LLMEvent] = {}
         for event in batch.events:
-            rates = session.scalars(
-                select(RateOverride)
-                .where(
-                    RateOverride.project_id == batch.project_id,
-                    RateOverride.provider == event.provider,
-                    RateOverride.model == (event.response_model or event.requested_model),
-                    RateOverride.valid_from <= event.occurred_at,
-                    (RateOverride.valid_to.is_(None) | (RateOverride.valid_to > event.occurred_at)),
-                )
-                .order_by(RateOverride.valid_from.desc())
-            ).all()
-            match = next(
-                (
-                    row
-                    for row in rates
-                    if row.region == event.region and row.service_tier == event.service_tier
-                ),
-                None,
+            first.setdefault(event.event_id, event)
+        ordered = sorted(first.values(), key=lambda event: event.event_id.int)
+        context = (
+            values(
+                column("ordinal", Integer),
+                column("provider", String),
+                column("model", String),
+                column("occurred_at", DateTime(timezone=True)),
+                column("region", String),
+                column("service_tier", String),
             )
+            .data(
+                [
+                    (
+                        index,
+                        event.provider,
+                        event.response_model or event.requested_model,
+                        event.occurred_at,
+                        event.region,
+                        event.service_tier,
+                    )
+                    for index, event in enumerate(ordered)
+                ]
+            )
+            .alias("event_rate_context")
+        )
+        # A correlated LIMIT returns at most one matching override per event,
+        # without fetching unbounded project history or one round trip per row.
+        best = (
+            select(
+                RateOverride.id,
+                RateOverride.rates,
+                RateOverride.valid_from,
+            )
+            .where(
+                RateOverride.project_id == batch.project_id,
+                RateOverride.provider == context.c.provider,
+                RateOverride.model == context.c.model,
+                RateOverride.region.is_not_distinct_from(context.c.region),
+                RateOverride.service_tier.is_not_distinct_from(context.c.service_tier),
+                RateOverride.valid_from <= context.c.occurred_at,
+                RateOverride.valid_to.is_(None) | (RateOverride.valid_to > context.c.occurred_at),
+            )
+            .order_by(RateOverride.valid_from.desc())
+            .limit(1)
+            .correlate(context)
+            .lateral("best_rate")
+        )
+        rates = {
+            row.ordinal: row
+            for row in session.execute(
+                select(
+                    context.c.ordinal,
+                    best.c.id,
+                    best.c.rates,
+                    best.c.valid_from,
+                ).select_from(context.outerjoin(best, true()))
+            )
+        }
+        records = []
+        for index, event in enumerate(ordered):
+            match = rates[index]
             override = (
                 {
                     **match.rates,
                     "snapshot_id": "project-override:" + str(match.id),
                     "effective_from": match.valid_from.isoformat(),
                 }
-                if match
+                if match.id is not None
                 else None
             )
             cost = self.catalog.price(event, override)
-            if match and cost.amount is not None:
+            if match.id is not None and cost.amount is not None:
                 from dataclasses import replace
 
                 cost = replace(cost, status="contract_rate")
-            statement = (
-                insert(StoredEvent)
-                .values(
+            records.append(
+                dict(
                     id=uuid4(),
                     event_id=event.event_id,
                     project_id=batch.project_id,
@@ -181,11 +238,15 @@ class PostgresEventRepository:
                     cost_breakdown=cost.breakdown,
                     event=event.model_dump(mode="json"),
                 )
+            )
+        accepted = len(
+            session.scalars(
+                insert(StoredEvent)
+                .values(records)
                 .on_conflict_do_nothing(index_elements=["project_id", "event_id"])
                 .returning(StoredEvent.id)
-            )
-            if session.execute(statement).scalar_one_or_none():
-                accepted += 1
+            ).all()
+        )
         from cutback.server.billing import meter_ingestion
 
         meter_ingestion(session, batch.project_id, accepted)

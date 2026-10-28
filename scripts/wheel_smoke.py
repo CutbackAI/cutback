@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -96,6 +97,17 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
     assert job["phase"] == "ANALYZED" and job["profiles"]
     assert job["next_action"]["provider_calls"] == 0
     assert command("workflow", "status")["id"] == job["id"]
+    help_result = subprocess.run(
+        [str(executable), "-m", "cutback.cli", "qualify", "load", "--help"],
+        capture_output=True,
+        text=True,
+        cwd=consumer,
+        check=True,
+    )
+    # CI can force Rich's ANSI styling even with captured stdout. Options may
+    # contain separate escape-delimited dash/name spans; inspect visible text.
+    visible_help = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", help_result.stdout)
+    assert "--execute-local" in visible_help
     subprocess.run(
         [str(executable), "-m", "cutback.cli", "sample", str(Path(temporary) / "support-desk")],
         check=True,
