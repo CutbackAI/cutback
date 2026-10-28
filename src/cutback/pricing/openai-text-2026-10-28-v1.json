@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.1",
+  "snapshot_id": "openai-text-2026-10-28-v1",
+  "checked_at": "2026-10-28",
+  "provenance": "Manually transcribed public numerical facts and token-partition semantics from official OpenAI documentation checked on 28 October 2026. No upstream implementation copied.",
+  "limitations": [
+    "Public list-price model, not an invoice",
+    "Observation-only addition; does not qualify paid experiment execution",
+    "Text-only standard processing on the qualified public endpoint",
+    "Unknown regions, deployments, service tiers and missing write lifetimes remain unpriced",
+    "No automatic refresh or historical repricing",
+    "Rates are known only from the declared effective date"
+  ],
+  "rates": [
+    {
+      "provider": "openai",
+      "model": "gpt-6-luna",
+      "aliases": [],
+      "input": "0.10",
+      "cache_read": "0.01",
+      "cache_write_30m": "0.125",
+      "cache_write_12h": "0.25",
+      "output": "0.50",
+      "input_token_contract": "openai-inclusive-cache-writes-v2",
+      "long_context_threshold": 272000,
+      "long_context_input_multiplier": "2",
+      "long_context_output_multiplier": "1.5",
+      "effective_from": "2026-10-28T00:00:00+00:00",
+      "source": "https://developers.openai.com/api/docs/models/gpt-6-luna"
+    }
+  ]
+}

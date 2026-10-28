@@ -8,7 +8,7 @@ from typing import Literal
 from uuid import NAMESPACE_URL, UUID, uuid5
 
 from fastapi import Depends, HTTPException, Query
-from pydantic import Field
+from pydantic import Field, model_validator
 from sqlalchemy import case, delete, func, select, text, true
 from sqlalchemy.dialects.postgresql import insert
 
@@ -299,13 +299,51 @@ class OverrideInput(StrictModel):
     model: Identifier
     region: Identifier | None = None
     service_tier: Identifier | None = None
-    input: Decimal = Field(ge=0)
-    output: Decimal = Field(ge=0)
-    cache_read: Decimal = Field(ge=0)
-    cache_write: Decimal | None = Field(default=None, ge=0)
-    cache_write_1h: Decimal | None = Field(default=None, ge=0)
+    input: Decimal = Field(ge=0, le=1000000, max_digits=24, decimal_places=12)
+    output: Decimal = Field(ge=0, le=1000000, max_digits=24, decimal_places=12)
+    cache_read: Decimal = Field(ge=0, le=1000000, max_digits=24, decimal_places=12)
+    cache_write: Decimal | None = Field(
+        default=None, ge=0, le=1000000, max_digits=24, decimal_places=12
+    )
+    cache_write_1h: Decimal | None = Field(
+        default=None, ge=0, le=1000000, max_digits=24, decimal_places=12
+    )
+    input_token_contract: Literal["openai-inclusive-cache-writes-v2"] | None = None
+    cache_write_30m: Decimal | None = Field(default=None, ge=0, le=1000000)
+    cache_write_12h: Decimal | None = Field(default=None, ge=0, le=1000000)
+    long_context_threshold: int | None = Field(default=None, strict=True, ge=1, le=100000000)
+    long_context_input_multiplier: Decimal | None = Field(default=None, ge=1, le=10)
+    long_context_output_multiplier: Decimal | None = Field(default=None, ge=1, le=10)
     valid_from: datetime
     valid_to: datetime | None = None
+
+    @model_validator(mode="after")
+    def validate_versioned_rates(self):
+        modern = {
+            "input_token_contract",
+            "cache_write_30m",
+            "cache_write_12h",
+            "long_context_threshold",
+            "long_context_input_multiplier",
+            "long_context_output_multiplier",
+        }
+        if any(getattr(self, key) is not None for key in modern):
+            from cutback.pricing.importer import RateCard
+
+            RateCard.model_validate(
+                {
+                    **self.model_dump(
+                        include=modern
+                        | {"input", "output", "cache_read", "cache_write", "cache_write_1h"}
+                    ),
+                    "provider": self.provider,
+                    "model": self.model,
+                    "aliases": [],
+                    "effective_from": self.valid_from,
+                    "source": "https://owner-declared.invalid",
+                }
+            )
+        return self
 
 
 def install_operations(app, sessions, authorize, scope, repository):
@@ -494,13 +532,50 @@ def install_operations(app, sessions, authorize, scope, repository):
             body.valid_to and (not body.valid_to.tzinfo or body.valid_to <= body.valid_from)
         ):
             raise HTTPException(422, "INVALID_RATE_PERIOD")
+        fields = {"input", "output", "cache_read", "cache_write", "cache_write_1h"}
+        if body.input_token_contract is not None:
+            fields |= {
+                "input_token_contract",
+                "cache_write_30m",
+                "cache_write_12h",
+                "long_context_threshold",
+                "long_context_input_multiplier",
+                "long_context_output_multiplier",
+            }
         rates = {
-            key: str(value) if value is not None else None
-            for key, value in body.model_dump(
-                include={"input", "output", "cache_read", "cache_write", "cache_write_1h"}
-            ).items()
+            key: str(value) if isinstance(value, Decimal) else value
+            for key, value in body.model_dump(include=fields).items()
         }
         with sessions.begin() as session:
+            from cutback.server.dataset_lineage import lock_lineage
+
+            lock_lineage(session, project_id)
+            existing = session.scalar(
+                select(RateOverride)
+                .where(
+                    RateOverride.project_id == project_id,
+                    RateOverride.provider == body.provider,
+                    RateOverride.model == body.model,
+                    RateOverride.region.is_not_distinct_from(body.region),
+                    RateOverride.service_tier.is_not_distinct_from(body.service_tier),
+                    RateOverride.valid_from == body.valid_from,
+                )
+                .order_by(RateOverride.id)
+                .limit(1)
+            )
+            if existing is not None:
+                if existing.rates != rates or existing.valid_to != body.valid_to:
+                    raise HTTPException(409, "CONTRACT_RATE_PERIOD_START_CONFLICT")
+                return {"id": str(existing.id)}
+            if (
+                session.scalar(
+                    select(func.count())
+                    .select_from(RateOverride)
+                    .where(RateOverride.project_id == project_id)
+                )
+                >= 10000
+            ):
+                raise HTTPException(409, "PROJECT_RATE_OVERRIDE_QUOTA")
             row = RateOverride(
                 project_id=project_id,
                 provider=body.provider,
@@ -525,11 +600,21 @@ def install_operations(app, sessions, authorize, scope, repository):
         return {"id": str(row.id)}
 
     @app.get("/v1/projects/{project_id}/prices")
-    def prices(project_id: UUID, auth=Depends(authorize)):
+    def prices(
+        project_id: UUID,
+        after: UUID | None = None,
+        limit: int = Query(50, ge=1, le=100),
+        auth=Depends(authorize),
+    ):
         scope(auth, project_id)
         with sessions() as session:
+            query = select(RateOverride).where(RateOverride.project_id == project_id)
+            if after is not None:
+                query = query.where(RateOverride.id > after)
+            rows = session.scalars(query.order_by(RateOverride.id).limit(limit + 1)).all()
             return {
                 "catalog": repository.catalog.data,
+                "observation_catalogs": repository.catalog.observation_catalogs(),
                 "overrides": [
                     {
                         "id": str(row.id),
@@ -538,11 +623,12 @@ def install_operations(app, sessions, authorize, scope, repository):
                         "region": row.region,
                         "service_tier": row.service_tier,
                         "rates": row.rates,
+                        "valid_from": row.valid_from.isoformat(),
+                        "valid_to": row.valid_to.isoformat() if row.valid_to else None,
                     }
-                    for row in session.scalars(
-                        select(RateOverride).where(RateOverride.project_id == project_id)
-                    )
+                    for row in rows[:limit]
                 ],
+                "next_after": str(rows[limit - 1].id) if len(rows) > limit else None,
             }
 
     @app.get("/v1/projects/{project_id}/opportunities")

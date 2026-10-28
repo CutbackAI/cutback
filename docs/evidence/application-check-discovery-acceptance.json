@@ -1,6 +1,6 @@
 {
   "feature": "existing_application_check_discovery",
-  "status": "locally_qualified_public_gates_pending",
+  "status": "publicly_merged",
   "installed_default_unit_and_native_journeys": {
     "passed": 443,
     "skipped": 23,
@@ -24,8 +24,8 @@
     "broader_roadmap_incomplete"
   ],
   "pending": [
-    "required_hosted_checks_for_final_parent_integrated_head",
-    "public_merge"
+    "broader_roadmap_engineering",
+    "independent_customer_and_comparative_acceptance"
   ],
   "installed_exact_public_default": {
     "passed": 24,
@@ -39,5 +39,36 @@
   },
   "backend_modules_exact_in_public_source_and_both_installed_environments": 190,
   "full_source_typing": 190,
-  "public_pr": "https://github.com/CutbackAI/cutback/pull/30"
+  "public_pr": "https://github.com/CutbackAI/cutback/pull/30",
+  "public_merge": "56b76b5df07dff3b7e1329f649b18f66bb5ff7a0",
+  "reviewed_head": "0233d27b6860799191318bd7ee525d31ef2a006e",
+  "reviewed_and_merged_tree": "e57e904a82f24e0f91abc3882a5c11dd9afc3042",
+  "hosted_default_311": {
+    "passed": 771,
+    "skipped": 21,
+    "seconds": 693.33
+  },
+  "hosted_default_313": {
+    "passed": 769,
+    "skipped": 23,
+    "seconds": 496.93
+  },
+  "hosted_sdk3_311": {
+    "passed": 564,
+    "skipped": 4,
+    "seconds": 128.99
+  },
+  "hosted_sdk3_313": {
+    "passed": 564,
+    "skipped": 4,
+    "seconds": 126.3
+  },
+  "required_hosted_checks": "all_ten_pass",
+  "packaged_application_files_identical_to_final_source_and_qualified_installs": 200,
+  "final_boundary": {
+    "files": 625,
+    "objects": 2298,
+    "archive_members": 825,
+    "findings": 0
+  }
 }

@@ -17,7 +17,8 @@ from cutback.server.api import create_app
 
 @pytest.mark.postgres
 @pytest.mark.e2e
-def test_node_synthetic_provider_pipeline(postgres_url):
+@pytest.mark.parametrize("modern_cache", [False, True])
+def test_node_synthetic_provider_pipeline(postgres_url, modern_cache):
     root = Path(__file__).resolve().parents[2]
     package = root / "packages/js-sdk"
     if not shutil.which("node") or not (package / "node_modules/openai").exists():
@@ -33,7 +34,8 @@ def test_node_synthetic_provider_pipeline(postgres_url):
             f"/v1/projects/{project}/keys", headers=headers, json={"role": "ingest"}
         ).json()["token"]
         result = subprocess.run(
-            [shutil.which("node"), "examples/synthetic-pipeline.mjs"],
+            [shutil.which("node"), "examples/synthetic-pipeline.mjs"]
+            + (["--modern-cache"] if modern_cache else []),
             cwd=package,
             env={
                 **os.environ,
@@ -59,6 +61,7 @@ def test_node_synthetic_provider_pipeline(postgres_url):
         assert report["summary"]["modeled_cost_usd"] is not None
         from decimal import Decimal
 
-        assert Decimal(report["summary"]["modeled_cost_usd"]) == Decimal("0.0000604")
+        expected_cost = "0.00005007" if modern_cache else "0.0000604"
+        assert Decimal(report["summary"]["modeled_cost_usd"]) == Decimal(expected_cost)
         health = client.get(f"/v1/projects/{project}/health", headers=headers).json()
         assert health["instances"][0]["counters"]["exported"] == 2

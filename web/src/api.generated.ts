@@ -4608,9 +4608,9 @@ export interface components {
             /**
              * Event Schema Version
              * @default 1.0
-             * @constant
+             * @enum {string}
              */
-            event_schema_version: "1.0";
+            event_schema_version: "1.0" | "1.1";
             /**
              * Event Id
              * Format: uuid
@@ -4703,6 +4703,10 @@ export interface components {
             cache_write_tokens?: number | null;
             /** Cache Write 1H Tokens */
             cache_write_1h_tokens?: number | null;
+            /** Cache Write 30M Tokens */
+            cache_write_30m_tokens?: number | null;
+            /** Cache Write 12H Tokens */
+            cache_write_12h_tokens?: number | null;
             /** Reasoning Tokens */
             reasoning_tokens?: number | null;
             /**
@@ -5349,6 +5353,18 @@ export interface components {
             cache_write?: number | string | null;
             /** Cache Write 1H */
             cache_write_1h?: number | string | null;
+            /** Input Token Contract */
+            input_token_contract?: "openai-inclusive-cache-writes-v2" | null;
+            /** Cache Write 30M */
+            cache_write_30m?: number | string | null;
+            /** Cache Write 12H */
+            cache_write_12h?: number | string | null;
+            /** Long Context Threshold */
+            long_context_threshold?: number | null;
+            /** Long Context Input Multiplier */
+            long_context_input_multiplier?: number | string | null;
+            /** Long Context Output Multiplier */
+            long_context_output_multiplier?: number | string | null;
             /**
              * Valid From
              * Format: date-time
@@ -7968,7 +7984,10 @@ export interface operations {
     };
     prices_v1_projects__project_id__prices_get: {
         parameters: {
-            query?: never;
+            query?: {
+                after?: string | null;
+                limit?: number;
+            };
             header?: never;
             path: {
                 project_id: string;

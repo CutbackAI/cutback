@@ -27,6 +27,7 @@ import { Imports } from "./imports";
 import { Reviews } from "./reviews";
 import { Prompts } from "./prompts";
 import { Monitoring } from "./monitoring";
+import { PriceSnapshots } from "./price-snapshots";
 import { decisionLabel, criterionLabel, experimentTitle } from "./evidence";
 
 async function request(token: string, path: string, options: RequestInit = {}) {
@@ -2260,11 +2261,12 @@ function Security({
         are shown only once and should enter a secret store.
       </p>
       <h2>Pricing and overrides</h2>
+      <PriceSnapshots key={base} data={data.prices || {}} api={api} base={base} />
       <details>
         <summary>Recorded catalog and contract rates</summary>
         <JSONView data={data.prices} />
       </details>
-      <RateForm api={api} base={base} reload={reload} />
+      <RateForm key={base} api={api} base={base} reload={reload} />
       <DataControls
         api={api}
         base={base}
