@@ -35,7 +35,9 @@ class LLMEvent(StrictModel):
     logical_request_id: UUID | None = None
     call_site_id: Identifier = "unattributed"
     workflow_id: Identifier | None = None
-    traffic_kind: Literal["application", "evaluation", "judge", "unknown"] = "unknown"
+    traffic_kind: Literal[
+        "application", "evaluation", "judge", "optimization", "simulation", "unknown"
+    ] = "unknown"
     experiment_run_id: UUID | None = None
     source_commit: Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{7,40}$")] | None = None
     provider: Literal["openai", "anthropic"]

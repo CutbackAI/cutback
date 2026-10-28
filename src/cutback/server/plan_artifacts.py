@@ -17,7 +17,9 @@ def public_config(value, *, redact_content_hashes=False):
         return [public_config(item, redact_content_hashes=redact_content_hashes) for item in value]
     if not isinstance(value, dict):
         return value
-    redact_content_hashes = redact_content_hashes or bool(value.get("prompt_bindings"))
+    redact_content_hashes = redact_content_hashes or bool(
+        value.get("prompt_bindings") or value.get("content_nonce")
+    )
     result: dict[str, Any] = {}
     for key, item in value.items():
         if key in {"prompt_variables", "sampling_options", "content_nonce"} or (

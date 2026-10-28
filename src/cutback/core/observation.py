@@ -12,7 +12,7 @@ def current_purpose():
 
 @contextmanager
 def observation_scope(kind, *, run_id=None):
-    if kind not in {"application", "evaluation", "judge"}:
+    if kind not in {"application", "evaluation", "judge", "optimization", "simulation"}:
         raise ValueError("unsupported observation purpose")
     value = {**current_purpose(), "traffic_kind": kind}
     if run_id is not None:

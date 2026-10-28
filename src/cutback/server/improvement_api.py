@@ -165,11 +165,35 @@ def collect_run_costs(session, project, run_ids, change):
             ExperimentPlanRecord.id.in_([r.plan_id for r in runs]),
         )
     ).all()
-    missing = set()
+    missing: set[UUID] = set()
+    from cutback.server.campaign_db import CampaignRun
+
+    campaigns = select(CampaignRun.campaign_id).where(
+        CampaignRun.project_id == project, CampaignRun.run_id.in_(run_ids)
+    )
+    known_campaigns = set(session.scalars(campaigns).all())
+    siblings = session.scalars(
+        select(CampaignRun.run_id)
+        .where(CampaignRun.project_id == project, CampaignRun.campaign_id.in_(known_campaigns))
+        .limit(141)
+    ).all()
+    if len(siblings) > 140:
+        raise HTTPException(409, "OPTIMIZATION_CAMPAIGN_COST_CLOSURE_EXCEEDS_BOUND")
+    missing.update(identifier for identifier in siblings if identifier not in run_ids)
     for plan in plans:
+        marker = plan.specification.get("campaign_id")
+        if marker:
+            try:
+                campaign_id = UUID(marker)
+            except (ValueError, TypeError):
+                raise HTTPException(409, "OPTIMIZATION_CAMPAIGN_COST_CONTEXT_INVALID") from None
+            if campaign_id not in known_campaigns:
+                # Retention removed the family relation. Individual run totals
+                # cannot reconstruct missing parent/sibling coverage.
+                missing.add(campaign_id)
         predecessor = plan.specification.get("public_specification", {}).get("predecessor_run_id")
         if predecessor and UUID(predecessor) not in run_ids:
-            missing.add(predecessor)
+            missing.add(UUID(predecessor))
     return [
         OptimizationRunCost(
             run_id=r.id,

@@ -425,7 +425,10 @@ def create_app(
         group_by: Literal[
             "model", "provider", "workflow", "environment", "day", "call_site", "traffic"
         ] = "model",
-        traffic_kind: Literal["application", "evaluation", "judge", "unknown"] | None = None,
+        traffic_kind: Literal[
+            "application", "evaluation", "judge", "optimization", "simulation", "unknown"
+        ]
+        | None = None,
         call_site: Annotated[str | None, Query(max_length=200)] = None,
         auth=Depends(authorize),
     ):
@@ -458,7 +461,9 @@ def create_app(
                     .order_by(ScanRun.created_at.desc())
                     .limit(1)
                 )
-                labels = {}
+                from cutback.server.workflow_labels import workflow_labels
+
+                labels = workflow_labels(session, project_id)
                 if scan:
                     for site in scan.inventory["call_sites"]:
                         labels[site["call_site_id"]] = (
@@ -539,6 +544,9 @@ def create_app(
     from cutback.server.evaluation_api import install_evaluation
 
     import_dataset = install_evaluation(app, sessions, authorize, scope)
+    from cutback.server.campaign_api import install_campaigns
+
+    install_campaigns(app, sessions, authorize, scope)
     from cutback.server.execution_api import install_execution
 
     install_execution(app, sessions, authorize, scope)

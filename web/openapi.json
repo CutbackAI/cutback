@@ -453,6 +453,8 @@
                     "application",
                     "evaluation",
                     "judge",
+                    "optimization",
+                    "simulation",
                     "unknown"
                   ],
                   "type": "string"
@@ -2133,6 +2135,559 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/campaign-templates": {
+      "get": {
+        "summary": "Templates",
+        "operationId": "templates_v1_projects__project_id__campaign_templates_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignTemplatePage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/campaigns": {
+      "post": {
+        "summary": "Prepare",
+        "operationId": "prepare_v1_projects__project_id__campaigns_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CampaignInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignBrief"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Listing",
+        "operationId": "listing_v1_projects__project_id__campaigns_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "environment_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Environment Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/campaigns/draft": {
+      "post": {
+        "summary": "Draft",
+        "operationId": "draft_v1_projects__project_id__campaigns_draft_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CampaignDraft"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignBrief"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/campaigns/{campaign_id}": {
+      "get": {
+        "summary": "Detail",
+        "operationId": "detail_v1_projects__project_id__campaigns__campaign_id__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "campaign_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Campaign Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/campaigns/{campaign_id}/selected/content": {
+      "post": {
+        "summary": "Selected Content",
+        "operationId": "selected_content_v1_projects__project_id__campaigns__campaign_id__selected_content_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "campaign_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Campaign Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentPurpose"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignSelectedContent"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/campaigns/{campaign_id}/candidates/{candidate_id}/content": {
+      "post": {
+        "summary": "Candidate Content",
+        "operationId": "candidate_content_v1_projects__project_id__campaigns__campaign_id__candidates__candidate_id__content_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "campaign_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Campaign Id"
+            }
+          },
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Candidate Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentPurpose"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignCandidateContent"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/campaigns/{campaign_id}/approve": {
+      "post": {
+        "summary": "Approve",
+        "operationId": "approve_v1_projects__project_id__campaigns__campaign_id__approve_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "campaign_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Campaign Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CampaignApproval"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignBrief"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/campaigns/{campaign_id}/cancel": {
+      "post": {
+        "summary": "Cancel",
+        "operationId": "cancel_v1_projects__project_id__campaigns__campaign_id__cancel_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "campaign_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Campaign Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CampaignCancel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignBrief"
+                }
               }
             }
           },
@@ -9987,7 +10542,7 @@
         "type": "object",
         "title": "BillingCaps"
       },
-      "Budget": {
+      "Budget-Input": {
         "properties": {
           "max_usd": {
             "anyOf": [
@@ -10000,6 +10555,34 @@
                 "type": "string"
               }
             ],
+            "title": "Max Usd"
+          },
+          "max_requests": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Max Requests"
+          },
+          "max_wall_seconds": {
+            "type": "integer",
+            "maximum": 3600.0,
+            "minimum": 1.0,
+            "title": "Max Wall Seconds",
+            "default": 300
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "max_usd",
+          "max_requests"
+        ],
+        "title": "Budget"
+      },
+      "Budget-Output": {
+        "properties": {
+          "max_usd": {
+            "type": "string",
             "title": "Max Usd"
           },
           "max_requests": {
@@ -10616,6 +11199,730 @@
         ],
         "title": "CallSite"
       },
+      "CampaignApproval": {
+        "properties": {
+          "campaign_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Campaign Hash"
+          },
+          "approval_ref": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Approval Ref"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "campaign_hash",
+          "approval_ref"
+        ],
+        "title": "CampaignApproval"
+      },
+      "CampaignBrief": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Environment Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "approval_status": {
+            "type": "string",
+            "title": "Approval Status"
+          },
+          "campaign_hash": {
+            "type": "string",
+            "title": "Campaign Hash"
+          },
+          "workflow": {
+            "type": "string",
+            "title": "Workflow"
+          },
+          "workflow_label": {
+            "type": "string",
+            "title": "Workflow Label"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment"
+          },
+          "generator_model": {
+            "type": "string",
+            "title": "Generator Model"
+          },
+          "approved_providers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Approved Providers"
+          },
+          "max_wall_seconds": {
+            "type": "integer",
+            "title": "Max Wall Seconds"
+          },
+          "max_instruction_bytes": {
+            "type": "integer",
+            "title": "Max Instruction Bytes"
+          },
+          "source_profile_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Profile Sha256"
+          },
+          "instruction_edit_qualified": {
+            "type": "boolean",
+            "title": "Instruction Edit Qualified"
+          },
+          "specification": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Specification"
+          },
+          "economic_envelope": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Economic Envelope"
+          },
+          "current_round": {
+            "type": "integer",
+            "title": "Current Round"
+          },
+          "requests": {
+            "type": "integer",
+            "title": "Requests"
+          },
+          "known_cost_requests": {
+            "type": "integer",
+            "title": "Known Cost Requests"
+          },
+          "reserved_usd": {
+            "type": "string",
+            "title": "Reserved Usd"
+          },
+          "known_spend_subtotal_usd": {
+            "type": "string",
+            "title": "Known Spend Subtotal Usd"
+          },
+          "billing_complete": {
+            "type": "boolean",
+            "title": "Billing Complete"
+          },
+          "summary": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Summary"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "environment_id",
+          "status",
+          "approval_status",
+          "campaign_hash",
+          "workflow",
+          "workflow_label",
+          "environment",
+          "generator_model",
+          "approved_providers",
+          "max_wall_seconds",
+          "max_instruction_bytes",
+          "source_profile_sha256",
+          "instruction_edit_qualified",
+          "specification",
+          "economic_envelope",
+          "current_round",
+          "requests",
+          "known_cost_requests",
+          "reserved_usd",
+          "known_spend_subtotal_usd",
+          "billing_complete",
+          "summary",
+          "created_at",
+          "expires_at"
+        ],
+        "title": "CampaignBrief"
+      },
+      "CampaignBudget": {
+        "properties": {
+          "max_usd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 10000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Max Usd"
+          },
+          "max_requests": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Max Requests"
+          },
+          "max_wall_seconds": {
+            "type": "integer",
+            "maximum": 3600.0,
+            "minimum": 1.0,
+            "title": "Max Wall Seconds",
+            "default": 300
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "max_usd",
+          "max_requests"
+        ],
+        "title": "CampaignBudget"
+      },
+      "CampaignCancel": {
+        "properties": {},
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CampaignCancel"
+      },
+      "CampaignCandidateContent": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "configuration_sha256": {
+            "type": "string",
+            "title": "Configuration Sha256"
+          },
+          "configuration": {
+            "$ref": "#/components/schemas/ModelSpec-Output"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "configuration_sha256",
+          "configuration"
+        ],
+        "title": "CampaignCandidateContent"
+      },
+      "CampaignDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Environment Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "approval_status": {
+            "type": "string",
+            "title": "Approval Status"
+          },
+          "campaign_hash": {
+            "type": "string",
+            "title": "Campaign Hash"
+          },
+          "workflow": {
+            "type": "string",
+            "title": "Workflow"
+          },
+          "workflow_label": {
+            "type": "string",
+            "title": "Workflow Label"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment"
+          },
+          "generator_model": {
+            "type": "string",
+            "title": "Generator Model"
+          },
+          "approved_providers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Approved Providers"
+          },
+          "max_wall_seconds": {
+            "type": "integer",
+            "title": "Max Wall Seconds"
+          },
+          "max_instruction_bytes": {
+            "type": "integer",
+            "title": "Max Instruction Bytes"
+          },
+          "source_profile_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Profile Sha256"
+          },
+          "instruction_edit_qualified": {
+            "type": "boolean",
+            "title": "Instruction Edit Qualified"
+          },
+          "specification": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Specification"
+          },
+          "economic_envelope": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Economic Envelope"
+          },
+          "current_round": {
+            "type": "integer",
+            "title": "Current Round"
+          },
+          "requests": {
+            "type": "integer",
+            "title": "Requests"
+          },
+          "known_cost_requests": {
+            "type": "integer",
+            "title": "Known Cost Requests"
+          },
+          "reserved_usd": {
+            "type": "string",
+            "title": "Reserved Usd"
+          },
+          "known_spend_subtotal_usd": {
+            "type": "string",
+            "title": "Known Spend Subtotal Usd"
+          },
+          "billing_complete": {
+            "type": "boolean",
+            "title": "Billing Complete"
+          },
+          "summary": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Summary"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "runs": {
+            "items": {
+              "additionalProperties": {
+                "$ref": "#/components/schemas/JsonValue"
+              },
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Runs"
+          },
+          "candidates": {
+            "items": {
+              "additionalProperties": {
+                "$ref": "#/components/schemas/JsonValue"
+              },
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Candidates"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "environment_id",
+          "status",
+          "approval_status",
+          "campaign_hash",
+          "workflow",
+          "workflow_label",
+          "environment",
+          "generator_model",
+          "approved_providers",
+          "max_wall_seconds",
+          "max_instruction_bytes",
+          "source_profile_sha256",
+          "instruction_edit_qualified",
+          "specification",
+          "economic_envelope",
+          "current_round",
+          "requests",
+          "known_cost_requests",
+          "reserved_usd",
+          "known_spend_subtotal_usd",
+          "billing_complete",
+          "summary",
+          "created_at",
+          "expires_at",
+          "runs",
+          "candidates"
+        ],
+        "title": "CampaignDetail"
+      },
+      "CampaignDraft": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Request Id"
+          },
+          "template_plan_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Template Plan Id"
+          },
+          "baseline_snapshot_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Baseline Snapshot Id"
+          },
+          "generator_model": {
+            "$ref": "#/components/schemas/ModelSpec-Input"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/CampaignBudget"
+          },
+          "rounds": {
+            "type": "integer",
+            "maximum": 3.0,
+            "minimum": 1.0,
+            "title": "Rounds",
+            "default": 1
+          },
+          "variants_per_round": {
+            "type": "integer",
+            "maximum": 4.0,
+            "minimum": 1.0,
+            "title": "Variants Per Round",
+            "default": 2
+          },
+          "instruction_edit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LiteralInstructionEdit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "conservative_savings_per_success_usd": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 30
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conservative Savings Per Success Usd"
+          },
+          "forecast_successful_tasks": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000000000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forecast Successful Tasks"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "template_plan_id",
+          "baseline_snapshot_id",
+          "generator_model",
+          "budget"
+        ],
+        "title": "CampaignDraft"
+      },
+      "CampaignInput": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Request Id"
+          },
+          "specification": {
+            "$ref": "#/components/schemas/ImprovementCampaign"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "specification"
+        ],
+        "title": "CampaignInput"
+      },
+      "CampaignPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CampaignBrief"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_after"
+        ],
+        "title": "CampaignPage"
+      },
+      "CampaignSelectedContent": {
+        "properties": {
+          "campaign_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Campaign Id"
+          },
+          "campaign_hash": {
+            "type": "string",
+            "title": "Campaign Hash"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Run Id"
+          },
+          "plan_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Plan Id"
+          },
+          "plan_hash": {
+            "type": "string",
+            "title": "Plan Hash"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/ExperimentPlan-Output"
+          },
+          "recommendation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Recommendation Id"
+          },
+          "recommendation_status": {
+            "type": "string",
+            "title": "Recommendation Status"
+          },
+          "evidence": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Evidence"
+          },
+          "instruction_edit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LiteralInstructionEdit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "max_instruction_bytes": {
+            "type": "integer",
+            "title": "Max Instruction Bytes"
+          },
+          "deployment_authorized": {
+            "type": "boolean",
+            "title": "Deployment Authorized",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "campaign_id",
+          "campaign_hash",
+          "run_id",
+          "plan_id",
+          "plan_hash",
+          "plan",
+          "recommendation_id",
+          "recommendation_status",
+          "evidence",
+          "instruction_edit",
+          "max_instruction_bytes"
+        ],
+        "title": "CampaignSelectedContent"
+      },
+      "CampaignTemplate": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "dataset_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Dataset Id"
+          },
+          "workflow": {
+            "type": "string",
+            "title": "Workflow"
+          },
+          "workflow_label": {
+            "type": "string",
+            "title": "Workflow Label"
+          },
+          "baseline_provider": {
+            "type": "string",
+            "title": "Baseline Provider"
+          },
+          "baseline_model": {
+            "type": "string",
+            "title": "Baseline Model"
+          },
+          "source_bound": {
+            "type": "boolean",
+            "title": "Source Bound"
+          },
+          "instruction_edit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LiteralInstructionEdit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "dataset_id",
+          "workflow",
+          "workflow_label",
+          "baseline_provider",
+          "baseline_model",
+          "source_bound"
+        ],
+        "title": "CampaignTemplate"
+      },
+      "CampaignTemplatePage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CampaignTemplate"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_after"
+        ],
+        "title": "CampaignTemplatePage"
+      },
       "CanaryPolicy": {
         "properties": {
           "min_observations": {
@@ -11132,13 +12439,13 @@
             "title": "Dataset Id"
           },
           "baseline": {
-            "$ref": "#/components/schemas/ModelSpec"
+            "$ref": "#/components/schemas/ModelSpec-Input"
           },
           "candidates": {
             "anyOf": [
               {
                 "items": {
-                  "$ref": "#/components/schemas/ModelSpec"
+                  "$ref": "#/components/schemas/ModelSpec-Input"
                 },
                 "type": "array",
                 "maxItems": 5,
@@ -11871,7 +13178,7 @@
         ],
         "title": "EventBatch"
       },
-      "ExperimentPlan": {
+      "ExperimentPlan-Input": {
         "properties": {
           "schema_version": {
             "type": "string",
@@ -11904,11 +13211,11 @@
             "title": "Dataset Hash"
           },
           "baseline": {
-            "$ref": "#/components/schemas/ModelSpec"
+            "$ref": "#/components/schemas/ModelSpec-Input"
           },
           "candidates": {
             "items": {
-              "$ref": "#/components/schemas/ModelSpec"
+              "$ref": "#/components/schemas/ModelSpec-Input"
             },
             "type": "array",
             "maxItems": 5,
@@ -11989,7 +13296,7 @@
             "default": 0.2
           },
           "budget": {
-            "$ref": "#/components/schemas/Budget"
+            "$ref": "#/components/schemas/Budget-Input"
           },
           "approved_providers": {
             "items": {
@@ -12034,7 +13341,7 @@
           "judge": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/ModelSpec"
+                "$ref": "#/components/schemas/ModelSpec-Input"
               },
               {
                 "type": "null"
@@ -12116,6 +13423,290 @@
               }
             ],
             "title": "Prompt Bindings"
+          },
+          "content_nonce": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Nonce"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "workflow",
+          "dataset_hash",
+          "baseline",
+          "candidates",
+          "metric",
+          "budget",
+          "approved_providers"
+        ],
+        "title": "ExperimentPlan"
+      },
+      "ExperimentPlan-Output": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "1.0",
+            "title": "Schema Version",
+            "default": "1.0"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9 .:/_-]*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "workflow": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Workflow"
+          },
+          "dataset_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Dataset Hash"
+          },
+          "baseline": {
+            "$ref": "#/components/schemas/ModelSpec-Output"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/ModelSpec-Output"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "minItems": 1,
+            "title": "Candidates"
+          },
+          "metric": {
+            "$ref": "#/components/schemas/MetricSpec"
+          },
+          "criteria": {
+            "items": {
+              "$ref": "#/components/schemas/CriterionSpec"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "title": "Criteria"
+          },
+          "retain_case_outputs": {
+            "type": "boolean",
+            "title": "Retain Case Outputs",
+            "default": false
+          },
+          "stage": {
+            "type": "string",
+            "enum": [
+              "smoke",
+              "pilot",
+              "full"
+            ],
+            "title": "Stage",
+            "default": "full"
+          },
+          "staged": {
+            "type": "boolean",
+            "title": "Staged",
+            "default": false
+          },
+          "predecessor_run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9-]{36}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predecessor Run Id"
+          },
+          "sample_limit": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sample Limit"
+          },
+          "judge_swap_orders": {
+            "type": "boolean",
+            "title": "Judge Swap Orders",
+            "default": false
+          },
+          "judge_require_evidence": {
+            "type": "boolean",
+            "title": "Judge Require Evidence",
+            "default": false
+          },
+          "judge_max_invalid_fraction": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Judge Max Invalid Fraction",
+            "default": 0.2
+          },
+          "budget": {
+            "$ref": "#/components/schemas/Budget-Output"
+          },
+          "approved_providers": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "openai",
+                "anthropic",
+                "local"
+              ]
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Approved Providers"
+          },
+          "repeats": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Repeats",
+            "default": 1
+          },
+          "pilot_samples": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Pilot Samples",
+            "default": 0
+          },
+          "pilot_minimum": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pilot Minimum"
+          },
+          "judge": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ModelSpec-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "judge_rubric": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 8000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Judge Rubric"
+          },
+          "split": {
+            "type": "string",
+            "enum": [
+              "validation",
+              "test"
+            ],
+            "title": "Split",
+            "default": "test"
+          },
+          "price_snapshot_id": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Price Snapshot Id"
+          },
+          "price_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Price Sha256"
+          },
+          "evaluator_version": {
+            "type": "string",
+            "enum": [
+              "deterministic-v3",
+              "deterministic-v4"
+            ],
+            "title": "Evaluator Version",
+            "default": "deterministic-v3"
+          },
+          "episode_execution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EpisodeExecutionSpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_binding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceBinding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "prompt_bindings": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/PromptModelBinding"
+                },
+                "type": "array",
+                "maxItems": 6,
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Bindings"
+          },
+          "content_nonce": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Nonce"
           }
         },
         "additionalProperties": false,
@@ -12488,6 +14079,103 @@
         "additionalProperties": false,
         "type": "object",
         "title": "ImprovementAssumptions"
+      },
+      "ImprovementCampaign": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.improvement-campaign.v1",
+            "title": "Version",
+            "default": "cutback.improvement-campaign.v1"
+          },
+          "dataset_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Dataset Id"
+          },
+          "baseline_snapshot_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Baseline Snapshot Id"
+          },
+          "environment": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Environment"
+          },
+          "template": {
+            "$ref": "#/components/schemas/ExperimentPlan-Input"
+          },
+          "generator": {
+            "$ref": "#/components/schemas/NativeGeneratorSpec"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/CampaignBudget"
+          },
+          "instruction_edit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LiteralInstructionEdit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "conservative_savings_per_success_usd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conservative Savings Per Success Usd"
+          },
+          "forecast_successful_tasks": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000000000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forecast Successful Tasks"
+          },
+          "max_fraction_of_opportunity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 0.25,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Max Fraction Of Opportunity",
+            "default": "0.1"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "baseline_snapshot_id",
+          "environment",
+          "template",
+          "generator",
+          "budget"
+        ],
+        "title": "ImprovementCampaign"
       },
       "ImprovementEvidence": {
         "properties": {
@@ -13155,6 +14843,8 @@
               "application",
               "evaluation",
               "judge",
+              "optimization",
+              "simulation",
               "unknown"
             ],
             "title": "Traffic Kind",
@@ -13465,6 +15155,78 @@
         ],
         "title": "LineageReconciliation"
       },
+      "LiteralInstructionEdit": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "literal-instruction-edit-v1",
+            "title": "Version",
+            "default": "literal-instruction-edit-v1"
+          },
+          "source_profile_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Source Profile Sha256"
+          },
+          "source_file": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Source File"
+          },
+          "source_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Source Sha256"
+          },
+          "keyword": {
+            "type": "string",
+            "enum": [
+              "instructions",
+              "system"
+            ],
+            "title": "Keyword"
+          },
+          "call_index": {
+            "type": "integer",
+            "maximum": 200000.0,
+            "minimum": 0.0,
+            "title": "Call Index"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "replace",
+              "insert"
+            ],
+            "title": "Mode"
+          },
+          "start": {
+            "type": "integer",
+            "maximum": 1048576.0,
+            "minimum": 0.0,
+            "title": "Start"
+          },
+          "end": {
+            "type": "integer",
+            "maximum": 1048576.0,
+            "minimum": 0.0,
+            "title": "End"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_profile_sha256",
+          "source_file",
+          "source_sha256",
+          "keyword",
+          "call_index",
+          "mode",
+          "start",
+          "end"
+        ],
+        "title": "LiteralInstructionEdit"
+      },
       "LoginExchange": {
         "properties": {
           "state": {
@@ -13642,7 +15404,7 @@
         ],
         "title": "MetricSpec"
       },
-      "ModelSpec": {
+      "ModelSpec-Input": {
         "properties": {
           "key": {
             "type": "string",
@@ -13714,7 +15476,7 @@
           },
           "routes": {
             "items": {
-              "$ref": "#/components/schemas/RouteSpec"
+              "$ref": "#/components/schemas/RouteSpec-Input"
             },
             "type": "array",
             "maxItems": 8,
@@ -13754,6 +15516,190 @@
           "model"
         ],
         "title": "ModelSpec"
+      },
+      "ModelSpec-Output": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Key"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "anthropic",
+              "local",
+              "router"
+            ],
+            "title": "Provider"
+          },
+          "model": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Model"
+          },
+          "instruction": {
+            "type": "string",
+            "maxLength": 16000,
+            "title": "Instruction",
+            "default": ""
+          },
+          "max_output_tokens": {
+            "type": "integer",
+            "maximum": 16384.0,
+            "minimum": 16.0,
+            "title": "Max Output Tokens",
+            "default": 256
+          },
+          "max_input_tokens": {
+            "type": "integer",
+            "maximum": 100000.0,
+            "minimum": 1.0,
+            "title": "Max Input Tokens",
+            "default": 8192
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
+          },
+          "local_cost_upper_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Local Cost Upper Usd"
+          },
+          "routes": {
+            "items": {
+              "$ref": "#/components/schemas/RouteSpec-Output"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "title": "Routes"
+          },
+          "prompt_cache": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "anthropic-5m",
+                  "anthropic-1h"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Cache"
+          },
+          "request_contract": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RequestContract"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "provider",
+          "model"
+        ],
+        "title": "ModelSpec"
+      },
+      "NativeGeneratorSpec": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "native-prompt-proposer-v1",
+            "title": "Version",
+            "default": "native-prompt-proposer-v1"
+          },
+          "contract_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Contract Sha256",
+            "default": "0df05b24511a1ad72a2dbe210ff544ba4b704d7a6acd064649a3735ab0e8fe6d"
+          },
+          "model": {
+            "$ref": "#/components/schemas/ModelSpec-Input"
+          },
+          "transport": {
+            "type": "string",
+            "enum": [
+              "native_provider",
+              "scripted_test_only"
+            ],
+            "title": "Transport",
+            "default": "native_provider"
+          },
+          "rounds": {
+            "type": "integer",
+            "maximum": 3.0,
+            "minimum": 1.0,
+            "title": "Rounds",
+            "default": 1
+          },
+          "variants_per_round": {
+            "type": "integer",
+            "maximum": 4.0,
+            "minimum": 1.0,
+            "title": "Variants Per Round",
+            "default": 2
+          },
+          "max_training_examples": {
+            "type": "integer",
+            "maximum": 8.0,
+            "minimum": 1.0,
+            "title": "Max Training Examples",
+            "default": 8
+          },
+          "max_instruction_bytes": {
+            "type": "integer",
+            "maximum": 16000.0,
+            "minimum": 1.0,
+            "title": "Max Instruction Bytes",
+            "default": 1024
+          },
+          "min_output_tokens": {
+            "type": "integer",
+            "maximum": 16384.0,
+            "minimum": 16.0,
+            "title": "Min Output Tokens",
+            "default": 16
+          },
+          "max_output_tokens": {
+            "type": "integer",
+            "maximum": 16384.0,
+            "minimum": 16.0,
+            "title": "Max Output Tokens",
+            "default": 256
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "model"
+        ],
+        "title": "NativeGeneratorSpec"
       },
       "NativeObservation": {
         "properties": {
@@ -14434,7 +16380,7 @@
             "title": "Dataset Id"
           },
           "specification": {
-            "$ref": "#/components/schemas/ExperimentPlan"
+            "$ref": "#/components/schemas/ExperimentPlan-Input"
           }
         },
         "additionalProperties": false,
@@ -14915,7 +16861,7 @@
             "title": "Dataset Id"
           },
           "specification": {
-            "$ref": "#/components/schemas/ExperimentPlan"
+            "$ref": "#/components/schemas/ExperimentPlan-Input"
           },
           "selections": {
             "items": {
@@ -16164,7 +18110,7 @@
         ],
         "title": "RolloutTransition"
       },
-      "RouteSpec": {
+      "RouteSpec-Input": {
         "properties": {
           "max_input_bytes": {
             "type": "integer",
@@ -16173,7 +18119,27 @@
             "title": "Max Input Bytes"
           },
           "target": {
-            "$ref": "#/components/schemas/ModelSpec"
+            "$ref": "#/components/schemas/ModelSpec-Input"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "max_input_bytes",
+          "target"
+        ],
+        "title": "RouteSpec"
+      },
+      "RouteSpec-Output": {
+        "properties": {
+          "max_input_bytes": {
+            "type": "integer",
+            "maximum": 95904.0,
+            "minimum": 1.0,
+            "title": "Max Input Bytes"
+          },
+          "target": {
+            "$ref": "#/components/schemas/ModelSpec-Output"
           }
         },
         "additionalProperties": false,

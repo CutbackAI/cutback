@@ -2,37 +2,84 @@
   "contract": "cutback.task-economics-acceptance.v1",
   "date": "2026-10-28",
   "scope": "bounded_declared_task_outcomes_canonical_costs_frozen_window_and_improvement_receipts",
-  "publication": "locally_accepted_source_hosted_checks_and_merge_pending_no_pypi_upload",
+  "publication": "public_source_merged_no_new_pypi_upload",
   "migration": "0014",
   "released_migrations_preserved_through": "0013",
   "broad_regression_before_two_accounting_followups": {
     "passed": 564,
     "skipped": 5,
     "seconds": 435.21,
-    "includes": ["real_postgresql", "authenticated_browser", "mobile_and_axe", "isolated_cpu_training", "owned_docker_lifecycle"],
-    "skip_reasons": ["four_legacy_sdk_cases_run_in_separate_environment", "windows_symlink_privilege_unavailable"]
+    "includes": [
+      "real_postgresql",
+      "authenticated_browser",
+      "mobile_and_axe",
+      "isolated_cpu_training",
+      "owned_docker_lifecycle"
+    ],
+    "skip_reasons": [
+      "four_legacy_sdk_cases_run_in_separate_environment",
+      "windows_symlink_privilege_unavailable"
+    ]
   },
   "final_followups": {
     "native_receipt_and_improvement_pipeline_tests_passed": 15,
     "seconds": 15.98,
     "search_economics_unit_tests_passed": 12,
-    "changes": ["unreceipted_retained_llm_step_blocks_declared_zero_task_cost", "explicit_known_zero_search_cost_preserved_without_spend_authority"]
+    "changes": [
+      "unreceipted_retained_llm_step_blocks_declared_zero_task_cost",
+      "explicit_known_zero_search_cost_preserved_without_spend_authority"
+    ]
   },
   "installed_final_code_wheel": {
     "origin_verified": true,
     "passed": 49,
     "seconds": 30.98,
-    "includes": ["actual_pinned_sdk_owned_transport", "http_postgresql", "task_and_improvement_rbac", "migration_drift_and_populated_downgrade_guard", "uncertain_and_late_cost_receipts", "authenticated_browser_mobile_axe", "native_call_ledger_regression"]
+    "includes": [
+      "actual_pinned_sdk_owned_transport",
+      "http_postgresql",
+      "task_and_improvement_rbac",
+      "migration_drift_and_populated_downgrade_guard",
+      "uncertain_and_late_cost_receipts",
+      "authenticated_browser_mobile_axe",
+      "native_call_ledger_regression"
+    ]
   },
   "separate_legacy_sdk_and_scanner_passed": 21,
   "frontend_units_passed": 7,
   "native_node_sdk_tests_passed": 9,
   "native_node_typescript_check": "passed",
-  "static": {"ruff": "passed", "formatted_files": 394, "mypy_modules": 155, "locked_dependencies": "passed", "generated_openapi_and_types": "passed", "react_production_build": "passed"},
-  "package": {"local_wheel_and_sdist": "passed", "twine_and_utf8_reproducibility": "passed", "fresh_core_only_independent_consumer_smoke": "passed", "uploaded": false},
-  "boundary_before_final_evidence_document": {"source_files": 527, "archive_members": 692, "findings": 0, "private_marker_values_logged": false},
-  "audits": {"python_runtime_known_vulnerabilities": 0, "dashboard_known_vulnerabilities": 0, "native_node_known_vulnerabilities": 0},
-  "sample": {"tasks": 5, "actual_pinned_native_sdk_calls": 7, "provider_network_calls": 0, "transport": "owned_httpx_mock_transport", "representative_customer_evidence": false},
+  "static": {
+    "ruff": "passed",
+    "formatted_files": 394,
+    "mypy_modules": 155,
+    "locked_dependencies": "passed",
+    "generated_openapi_and_types": "passed",
+    "react_production_build": "passed"
+  },
+  "package": {
+    "local_wheel_and_sdist": "passed",
+    "twine_and_utf8_reproducibility": "passed",
+    "fresh_core_only_independent_consumer_smoke": "passed",
+    "uploaded": false
+  },
+  "boundary_before_final_evidence_document": {
+    "source_files": 527,
+    "archive_members": 692,
+    "findings": 0,
+    "private_marker_values_logged": false
+  },
+  "audits": {
+    "python_runtime_known_vulnerabilities": 0,
+    "dashboard_known_vulnerabilities": 0,
+    "native_node_known_vulnerabilities": 0
+  },
+  "sample": {
+    "tasks": 5,
+    "actual_pinned_native_sdk_calls": 7,
+    "provider_network_calls": 0,
+    "transport": "owned_httpx_mock_transport",
+    "representative_customer_evidence": false
+  },
   "failed_trials_retained": [
     "missing_fixture_cache_usage_remained_unpriced_until_fixture_corrected",
     "monotonic_duration_cannot_manufacture_a_utc_end_timestamp",
@@ -40,9 +87,51 @@
     "unknown_component_subtotal_must_not_become_zero",
     "initial_full_suite_collection_collision_fixed_with_unique_test_module_name"
   ],
-  "local_diagnostic_credential_incident": {"credential_rotated_and_verified": true, "owned_local_consumers_restarted": true, "fixture_arguments_suppressed_and_dsn_output_redacted": true, "production_credentials_involved": false},
-  "not_completed": ["native_dynamic_candidate_campaigns", "broader_strategy_automation", "release_7_platform_and_launch_qualification", "semantic_agent_judging_and_generative_simulation", "real_provider_or_customer_acceptance"],
+  "local_diagnostic_credential_incident": {
+    "credential_rotated_and_verified": true,
+    "owned_local_consumers_restarted": true,
+    "fixture_arguments_suppressed_and_dsn_output_redacted": true,
+    "production_credentials_involved": false
+  },
+  "not_completed": [
+    "native_dynamic_candidate_campaigns",
+    "broader_strategy_automation",
+    "release_7_platform_and_launch_qualification",
+    "semantic_agent_judging_and_generative_simulation",
+    "real_provider_or_customer_acceptance"
+  ],
   "paid_inference": false,
   "production_deployed": false,
-  "pypi_unchanged": "0.1.0.dev5"
+  "pypi_unchanged": "0.1.0.dev5",
+  "github": {
+    "pull_request": "https://github.com/CutbackAI/cutback/pull/23",
+    "reviewed_head": "01883a469d4a013f2cb57584d7f7788d491e80cb",
+    "merge_commit": "152179fcf3ce5513996725e1ddb826499b0b8c37",
+    "tree": "2f4e2f2d4255875950a03d1ee8a3550b77a8b0b6",
+    "required_checks_passed": 8,
+    "ci_run": 40637071169,
+    "security_run": 40637071285
+  },
+  "hosted_exact_head": {
+    "python_3_11": {
+      "passed": 567,
+      "skipped": 4,
+      "seconds": 354.32
+    },
+    "python_3_13": {
+      "passed": 565,
+      "skipped": 6,
+      "seconds": 223.28
+    },
+    "legacy_sdk_both_python_versions": "passed",
+    "audit_infrastructure_and_both_codeql": "passed"
+  },
+  "publication_boundary": {
+    "source_files": 528,
+    "archive_members": 693,
+    "reachable_public_objects_before_merge": 1802,
+    "findings": 0,
+    "private_marker_values_logged": false
+  },
+  "publication_archive_backend_python_entries_match_installed_qualified_wheel": 155
 }

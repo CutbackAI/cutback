@@ -90,6 +90,7 @@ include = [
   "/docs/online-quality.md",
   "/docs/agent-evaluation.md",
   "/docs/task-economics.md",
+  "/docs/improvement-campaigns.md",
   "/docs/identity-and-teams.md", "/docs/hosted-billing.md", "/docs/continuous-operations.md",
   "/docs/advanced-optimization.md", "/docs/local-training.md", "/docs/adr", "/docs/assets", "/packages/js-sdk/index.mjs", "/packages/js-sdk/index.d.ts",
   "/packages/js-sdk/package.json", "/packages/js-sdk/package-lock.json",
@@ -132,6 +133,7 @@ select = ["E", "F", "I", "UP", "B"]
 "src/cutback/server/execution_api.py" = ["B008"]
 "src/cutback/server/economics_api.py" = ["B008"]
 "src/cutback/server/improvement_api.py" = ["B008"]
+"src/cutback/server/campaign_api.py" = ["B008"]
 "src/cutback/server/privacy_api.py" = ["B008"]
 "src/cutback/server/organization_api.py" = ["B008"]
 "src/cutback/server/continuous.py" = ["B008"]

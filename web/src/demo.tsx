@@ -88,6 +88,16 @@ export function SampleGuide({
         <button onClick={() => navigate("Traces")}>
           Investigate a failed session
         </button>
+        {demo.task_economics_sample && (
+          <button onClick={() => navigate("Task economics")}>
+            Inspect task costs and missing coverage
+          </button>
+        )}
+        {demo.improvement_campaign_sample && (
+          <button onClick={() => navigate("Campaigns")}>
+            Follow an automatic improvement campaign
+          </button>
+        )}
         {demo.agent_episode_run_id && (
           <button onClick={() => inspect(demo.agent_episode_run_id)}>
             Inspect agent and retrieval tasks

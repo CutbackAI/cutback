@@ -8,6 +8,7 @@ from pathlib import Path
 
 from pydantic import Field
 
+from cutback.core.instruction_edits import LiteralInstructionEdit, qualify_instruction_edit
 from cutback.core.models import StrictModel
 
 
@@ -19,6 +20,53 @@ def model_patch(
     *,
     expected_source_sha256: str,
     proposal_only: bool = False,
+) -> dict:
+    return _request_patch(
+        root,
+        inventory,
+        call_site_id,
+        recommendation,
+        expected_source_sha256=expected_source_sha256,
+        proposal_only=proposal_only,
+    )
+
+
+def instruction_patch(
+    root: Path,
+    inventory: dict,
+    call_site_id: str,
+    recommendation: dict,
+    *,
+    expected_source_sha256: str,
+    instruction_edit: LiteralInstructionEdit,
+    max_instruction_bytes: int,
+    proposal_only: bool = False,
+) -> dict:
+    """Prepare a separately qualified literal instruction diff; never apply it."""
+    if type(max_instruction_bytes) is not int or not 1 <= max_instruction_bytes <= 16000:
+        raise ValueError("INSTRUCTION_PATCH_REQUIRES_APPROVED_BYTE_BOUND")
+    return _request_patch(
+        root,
+        inventory,
+        call_site_id,
+        recommendation,
+        expected_source_sha256=expected_source_sha256,
+        proposal_only=proposal_only,
+        instruction_edit=instruction_edit,
+        max_instruction_bytes=max_instruction_bytes,
+    )
+
+
+def _request_patch(
+    root: Path,
+    inventory: dict,
+    call_site_id: str,
+    recommendation: dict,
+    *,
+    expected_source_sha256: str,
+    proposal_only: bool = False,
+    instruction_edit: LiteralInstructionEdit | None = None,
+    max_instruction_bytes: int = 16000,
 ) -> dict:
     root = root.resolve(strict=True)
     if recommendation.get("status") != "accepted_for_staging" and not (
@@ -87,10 +135,20 @@ def model_patch(
         raise ValueError("REQUEST_VARIANT_REQUIRES_SEPARATE_PATCH")
     if candidate["provider"] != site["provider"] or baseline["provider"] != site["provider"]:
         raise ValueError("PROVIDER_CHANGE_REQUIRES_MANUAL_REVIEW")
-    if candidate.get("instruction") != baseline.get("instruction"):
+    instruction_changed = candidate.get("instruction") != baseline.get(
+        "instruction"
+    ) or candidate.get("instruction_sha256") != baseline.get("instruction_sha256")
+    if instruction_changed and instruction_edit is None:
         raise ValueError("PROMPT_VARIANT_REQUIRES_SEPARATE_TEMPLATE_PATCH")
-    if candidate.get("instruction_sha256") != baseline.get("instruction_sha256"):
-        raise ValueError("PROMPT_VARIANT_REQUIRES_SEPARATE_TEMPLATE_PATCH")
+    if instruction_edit is not None:
+        if qualify_instruction_edit(root, site, profile) != instruction_edit:
+            raise ValueError("INSTRUCTION_EDIT_CHANGED_SINCE_CAMPAIGN_APPROVAL")
+        if (
+            not isinstance(candidate.get("instruction"), str)
+            or instruction_changed
+            and len(candidate["instruction"].encode()) > max_instruction_bytes
+        ):
+            raise ValueError("INSTRUCTION_PATCH_OUTSIDE_APPROVED_BYTE_BOUND")
 
     def contract_hash(model):
         return model.get("request_contract_sha256") or fingerprint(model.get("request_contract"))
@@ -132,6 +190,13 @@ def model_patch(
         else []
     )
     transformations = ["model"] if edits else []
+    if instruction_changed:
+        assert instruction_edit is not None
+        instruction_text = repr(candidate["instruction"])
+        if instruction_edit.mode == "insert":
+            instruction_text = ", " + instruction_edit.keyword + "=" + instruction_text
+        edits.append((instruction_edit.start, instruction_edit.end, instruction_text.encode()))
+        transformations.append("instruction")
     if candidate.get("max_output_tokens") != baseline.get("max_output_tokens"):
         cap = candidate.get("max_output_tokens")
         if type(cap) is not int or not 16 <= cap < profile.max_output_tokens:
@@ -176,16 +241,27 @@ def model_patch(
         changed = changed[:begin] + replacement + changed[finish:]
     after = changed.decode()
     ast.parse(after)
+    if instruction_edit:
+        before_shape = _instruction_request_shape(
+            source, site, binding.model_binding, instruction_edit, baseline
+        )
+        after_shape = _instruction_request_shape(
+            after, site, binding.model_binding, instruction_edit, candidate
+        )
+        if before_shape != after_shape:
+            raise ValueError("INSTRUCTION_PATCH_CHANGED_UNEVALUATED_SOURCE")
     relative = path.relative_to(root).as_posix()
 
     def diff(before, after):
+        lines = difflib.unified_diff(
+            before.splitlines(keepends=True),
+            after.splitlines(keepends=True),
+            fromfile="a/" + relative,
+            tofile="b/" + relative,
+        )
         return "".join(
-            difflib.unified_diff(
-                before.splitlines(keepends=True),
-                after.splitlines(keepends=True),
-                fromfile="a/" + relative,
-                tofile="b/" + relative,
-            )
+            line if line.endswith("\n") else line + "\n\\ No newline at end of file\n"
+            for line in lines
         )
 
     patch = diff(source, after)
@@ -196,7 +272,10 @@ def model_patch(
     from cutback.core.inventory import workflow_identity
 
     affected = {binding.workflow_id}
-    for other in current["call_sites"][:200]:
+    unresolved = set()
+    if len(current["call_sites"]) > 200:
+        raise ValueError("AFFECTED_CONSUMER_ANALYSIS_BOUND_REQUIRES_SEPARATE_REVIEW")
+    for other in current["call_sites"]:
         entries = other["entry_points"] or [
             {"file": other["source_file"], "symbol": other["source_symbol"]}
         ]
@@ -207,8 +286,8 @@ def model_patch(
                 if other_profile.binding.model_binding == edit:
                     affected.add(identity)
             except (ValueError, OSError, SyntaxError, TypeError, RecursionError):
-                continue
-    return {
+                unresolved.add(identity)
+    result = {
         "status": "DRY_RUN_ONLY",
         "review_status": "human_review_required" if proposal_only else "accepted_for_staging",
         "diff": patch,
@@ -220,6 +299,9 @@ def model_patch(
         "source_binding": binding.model_dump(mode="json"),
         "affected_workflows": sorted(affected),
         "unvalidated_workflows": sorted(affected - {binding.workflow_id}),
+        "unresolved_consumer_workflows": sorted(unresolved),
+        "scanner_warning_codes": sorted({w["code"] for w in current.get("warnings", [])}),
+        "consumer_scope": "scanner_detected_source_only_not_runtime_or_external_consumers",
         "call_site_id": call_site_id,
         "source_commit": commit,
         "recommendation_id": recommendation["id"],
@@ -244,6 +326,70 @@ def model_patch(
         ],
         "canary": CanaryPolicy().model_dump(),
     }
+    if instruction_edit:
+        result["instruction_edit"] = instruction_edit.model_dump(mode="json")
+        result["verification"]["native_request_fields"] = (
+            "exact_literal_model_instruction_and_output_bound"
+        )
+    return result
+
+
+def _instruction_request_shape(source, site, model_binding, instruction_edit, expected):
+    """Compare entire parsed modules after removing only the approved field values.
+
+    No temporary source copy, application import, expression evaluation or file
+    mutation is needed to prove that unrelated request/source fields stayed intact.
+    """
+    tree = ast.parse(source)
+    calls = [
+        n
+        for n in ast.walk(tree)
+        if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr == "create"
+    ]
+    if instruction_edit.call_index >= len(calls):
+        raise ValueError("INSTRUCTION_PATCH_REQUEST_NOT_UNIQUE")
+    call = calls[instruction_edit.call_index]
+    keyword = instruction_edit.keyword
+    instructions = [k for k in call.keywords if k.arg == keyword]
+    if (
+        len(instructions) > 1
+        or instructions
+        and (
+            not isinstance(instructions[0].value, ast.Constant)
+            or instructions[0].value.value != expected.get("instruction")
+        )
+        or not instructions
+        and expected.get("instruction")
+    ):
+        raise ValueError("INSTRUCTION_PATCH_REQUEST_VALUE_MISMATCH")
+    call.keywords = [k for k in call.keywords if k.arg != keyword]
+    models = [k.value for k in call.keywords if k.arg == "model"]
+    if len(models) != 1:
+        raise ValueError("INSTRUCTION_PATCH_MODEL_NOT_UNIQUE")
+    if isinstance(models[0], ast.Constant):
+        model = models[0]
+    else:
+        literals = [
+            n
+            for n in ast.walk(tree)
+            if isinstance(n, ast.Constant)
+            and (n.lineno, n.col_offset) == (model_binding["line"], model_binding["column"])
+        ]
+        if len(literals) != 1:
+            raise ValueError("INSTRUCTION_PATCH_MODEL_BINDING_CHANGED")
+        model = literals[0]
+    if model.value != expected["model"]:
+        raise ValueError("INSTRUCTION_PATCH_MODEL_VALUE_MISMATCH")
+    model.value = "__CUTBACK_APPROVED_MODEL__"
+    cap_key = "max_output_tokens" if site["sdk_surface"] == "responses.create" else "max_tokens"
+    caps = [k.value for k in call.keywords if k.arg == cap_key]
+    if len(caps) != 1:
+        raise ValueError("INSTRUCTION_PATCH_OUTPUT_BOUND_NOT_UNIQUE")
+    if isinstance(caps[0], ast.Constant):
+        if type(caps[0].value) is not int or caps[0].value != expected["max_output_tokens"]:
+            raise ValueError("INSTRUCTION_PATCH_OUTPUT_BOUND_VALUE_MISMATCH")
+        caps[0].value = "__CUTBACK_APPROVED_OUTPUT_BOUND__"
+    return ast.dump(tree, include_attributes=False)
 
 
 class CanaryPolicy(StrictModel):

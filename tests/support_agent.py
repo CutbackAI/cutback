@@ -21,7 +21,7 @@ def extract(text):
         response_format={"type":"json_object"})
 """
     else:
-        (root / "config.py").write_text('MODEL = "gpt-4.1"\n')
+        (root / "config.py").write_text('MODEL = "gpt-4.1"\n', encoding="utf-8")
         source = """from openai import OpenAI
 from config import MODEL
 client = OpenAI()
@@ -33,7 +33,7 @@ def route(text):
 def classify(text):
     return shared(text)
 """
-    (root / "app.py").write_text(source)
+    (root / "app.py").write_text(source, encoding="utf-8")
     (root / "cases.jsonl").write_text(
         "\n".join(
             json.dumps(
@@ -44,7 +44,8 @@ def classify(text):
                 }
             )
             for i in range(200)
-        )
+        ),
+        encoding="utf-8",
     )
 
 

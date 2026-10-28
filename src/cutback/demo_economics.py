@@ -137,7 +137,15 @@ def seed_task_economics(client, endpoint, project, writer):
             ):
                 result = client.post(path, headers=headers, json=body)
                 if result.status_code != 200:
-                    raise ValueError("SYNTHETIC_TASK_SEED_FAILED")
+                    import re
+
+                    code = result.json().get("code", "REQUEST_FAILED")
+                    code = (
+                        code
+                        if isinstance(code, str) and re.fullmatch(r"[A-Z_]{3,100}", code)
+                        else "REQUEST_FAILED"
+                    )
+                    raise ValueError("SYNTHETIC_TASK_SEED_FAILED_" + code)
             tasks.append(outcome)
         if not observer.flush(5):
             raise ValueError("SYNTHETIC_TASK_OBSERVATION_FLUSH_FAILED")

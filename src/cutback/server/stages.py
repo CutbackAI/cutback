@@ -73,7 +73,12 @@ def validate_confirmation(session, store, project_id, plan, *, run_id=None):
             ExperimentPlanRecord,
             ExperimentRunRecord.plan_id == ExperimentPlanRecord.id,
         )
-        .where(ExperimentPlanRecord.dataset_id == dataset.id)
+        .where(
+            ExperimentPlanRecord.dataset_id == dataset.id,
+            ExperimentPlanRecord.specification["public_specification"]["operation"]
+            .as_string()
+            .is_distinct_from("candidate-generation-v1"),
+        )
     ).all()
     for other_run, other_plan in prior_runs:
         if (
@@ -105,7 +110,12 @@ def validate_stage(session, store, project_id, plan, *, run_id=None):
                     ExperimentPlanRecord,
                     ExperimentRunRecord.plan_id == ExperimentPlanRecord.id,
                 )
-                .where(ExperimentPlanRecord.dataset_id == dataset.id)
+                .where(
+                    ExperimentPlanRecord.dataset_id == dataset.id,
+                    ExperimentPlanRecord.specification["public_specification"]["operation"]
+                    .as_string()
+                    .is_distinct_from("candidate-generation-v1"),
+                )
             ).all()
             if any(
                 other_run.id != run_id

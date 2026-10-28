@@ -136,10 +136,11 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
             job = session.scalar(
                 select(JobRecord)
                 .where(
+                    JobRecord.execution_kind == "evaluation",
                     or_(
                         JobRecord.status == "QUEUED",
                         and_(JobRecord.status == "BLOCKED", JobRecord.available_at <= now),
-                    )
+                    ),
                 )
                 .where(JobRecord.run_id == only_run_id if only_run_id else true())
                 .order_by(JobRecord.created_at, JobRecord.id)
@@ -158,6 +159,19 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
             except Exception:
                 job.status = record.status = "FAILED"
                 record.results = {"code": "PLAN_ARTIFACT_EXPIRED_OR_UNAVAILABLE"}
+                return {"status": "FAILED", "provider_calls": 0}
+            from cutback.server.campaign_service import authorize_campaign_run
+
+            try:
+                authorize_campaign_run(
+                    session,
+                    store,
+                    record.id,
+                    synthetic_transport=getattr(executor, "synthetic_transport", False),
+                )
+            except ValueError:
+                job.status = record.status = "FAILED"
+                record.results = {"code": "CAMPAIGN_AUTHORITY_OR_TRANSPORT_INVALID"}
                 return {"status": "FAILED", "provider_calls": 0}
             if owned_executor:
                 if (
@@ -245,6 +259,12 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
 
             def authorize_execution(session):
                 require_payloads_enabled()
+                authorize_campaign_run(
+                    session,
+                    store,
+                    run_id,
+                    synthetic_transport=getattr(executor, "synthetic_transport", False),
+                )
                 from cutback.server.principals import principal_role
 
                 active_plan = session.get(ExperimentPlanRecord, plan_row.id, populate_existing=True)
@@ -352,7 +372,9 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
             lock_lineage(session, project_id)
             record = session.get(ExperimentRunRecord, run_id, with_for_update=True)
             job = session.get(JobRecord, job_id)
-            results = public_config(results, redact_content_hashes=bool(plan.prompt_bindings))
+            results = public_config(
+                results, redact_content_hashes=bool(plan.prompt_bindings or plan.content_nonce)
+            )
             if record.call_ledger_version == 1:
                 # The database may have committed a reservation whose acknowledgement
                 # was lost. In-memory callback counts cannot prove durable coverage.

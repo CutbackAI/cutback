@@ -24,6 +24,11 @@ def worker_cycle(sessions, store, *, maintenance_due=True):
             print(f"Cutback worker phase {phase} failed; details suppressed", flush=True)
 
     if maintenance_due:
+        from cutback.server.campaign_retention import expire_campaigns
+        from cutback.server.execution_ledger import recover_execution_leases
+
+        attempt("execution_recovery", lambda: recover_execution_leases(sessions))
+        attempt("campaign_expiry", lambda: expire_campaigns(sessions))
         attempt(
             "maintenance",
             lambda: maintain_all(
@@ -41,7 +46,12 @@ def worker_cycle(sessions, store, *, maintenance_due=True):
             attempt("cache_expiry", lambda: expire_cache(sessions, store))
             attempt("training_expiry", lambda: expire_training_artifacts(sessions, store))
     if store and configured_execution_enabled():
+        from cutback.server.campaign_worker import advance_one
         from cutback.server.continuous import queue_schedules
+        from cutback.server.proposal_worker import run_proposal_one
+
+        attempt("campaigns", lambda: advance_one(sessions, store, execution_enabled=True))
+        attempt("proposals", lambda: run_proposal_one(sessions, store, execution_enabled=True))
 
         attempt(
             "schedules",

@@ -137,10 +137,10 @@ test("newcomer explores real sample decisions, unknown intervals, private cases 
   await page.getByRole("button", { name: "Costs", exact: true }).click();
   await page.getByLabel("Traffic purpose").selectOption("application");
   await expect(
-    page.getByRole("cell", { name: "12", exact: true }),
+    page.getByRole("cell", { name: "16", exact: true }),
   ).toBeVisible();
   await page.getByLabel("Group by").selectOption("workflow");
-  await expect(page.locator("tbody tr")).toHaveCount(2);
+  await expect(page.locator("tbody tr")).toHaveCount(3);
   await expect(
     page.getByRole("rowheader", { name: /app.py · triage/ }),
   ).toBeVisible();
@@ -148,6 +148,14 @@ test("newcomer explores real sample decisions, unknown intervals, private cases 
     page.getByRole("rowheader", { name: /app.py · needs_escalation/ }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Traces", exact: true }).click();
+  const sample = await (await page.request.get("/v1/demo")).json();
+  await page.getByText("Filter retained traces", { exact: true }).click();
+  await page
+    .getByLabel("Workflow identifier", { exact: true })
+    .fill(sample.source_diff.source_binding.workflow_id);
+  await page
+    .getByRole("button", { name: "Apply trace filters", exact: true })
+    .click();
   await expect(
     page.getByRole("table", { name: /Retained traces/ }).getByRole("row"),
   ).toHaveCount(3);

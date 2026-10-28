@@ -202,6 +202,12 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
                         case["gold"] if name == "triage" else case["gold"]["priority"] == "urgent"
                     )
                     assert result == expected
+            if not observer.flush(5):
+                raise ValueError("SAMPLE_OBSERVATION_FLUSH_FAILED")
+            # Observe the application here. Internal evaluation calls have their
+            # own durable purpose-labeled ledger, not this application's writer.
+            observer.close()
+            observer = None
             specification = {
                 "split": "validation",
                 "workflow": workflow,
@@ -332,11 +338,14 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
                 base + f"/recommendations/{recommendation['id']}/patches",
                 {"approval_ref": "owned-synthetic-diff-review", "artifact": patch},
             )
-            if not observer.flush(5):
-                raise ValueError("SAMPLE_OBSERVATION_FLUSH_FAILED")
             from cutback.demo_agents import seed_agent_episodes
 
             agent_sample = seed_agent_episodes(app, control, project["id"])
+            from cutback.demo_campaigns import seed_campaign
+            from cutback.demo_economics import seed_task_economics
+
+            task_sample = seed_task_economics(control, endpoint, project["id"], ingest)
+            campaign_sample = seed_campaign(app, control, project["id"], ingest, workspace)
             manifest = {
                 "available": True,
                 "title": "Support-desk triage",
@@ -355,6 +364,8 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
                 "paid_provider_calls": 0,
                 "execution_samples": execution_samples,
                 "agent_episode_run_id": agent_sample["run_id"],
+                "task_economics_sample": task_sample,
+                "improvement_campaign_sample": campaign_sample,
             }
             workspace.mkdir(parents=True, exist_ok=True)
             (workspace / "sample-report.json").write_text(

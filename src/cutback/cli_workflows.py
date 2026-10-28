@@ -356,6 +356,11 @@ def register(app, output, request, fail):
                 return
             store = configured_store()
             while True:
+                from cutback.server.campaign_worker import advance_one
+                from cutback.server.proposal_worker import run_proposal_one
+
+                output(advance_one(sessions, store, execution_enabled=enabled))
+                output(run_proposal_one(sessions, store, execution_enabled=enabled))
                 output(run_one(sessions, store, execution_enabled=enabled))
                 if once:
                     break

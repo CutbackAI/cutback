@@ -54,12 +54,12 @@ def test_support_desk_decisions_stages_encrypted_cases_and_browser(
         )
         assert manifest["paid_provider_calls"] == 0
         usage = client.get(base + "/usage?traffic_kind=application&group_by=workflow").json()
-        assert usage["summary"]["observed_attempts"] == 12
-        assert len(usage["groups"]) == 2
+        assert usage["summary"]["observed_attempts"] == 19
+        assert len(usage["groups"]) == 3
         inventory = client.get(base + "/inventory").json()
         assert (
             sum(row["observed_attempts"] for row in inventory["runtime_by_call_site"].values())
-            == 12
+            == 19
         )
         assert client.get(base + "/changes").json()
         assert [s["stage"] for s in manifest["stages"]] == ["smoke", "pilot", "full"]

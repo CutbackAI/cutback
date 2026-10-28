@@ -4,6 +4,8 @@ The coding agent prepares the technical work. You decide data rights, business q
 
 The source checkout also offers a [multi-candidate search and independent confirmation workflow](optimization-search.md). It tests model/output-bound alternatives, freezes one validation candidate before untouched test groups, prepares a reviewed diff and exposes a fail-closed CI gate. Those commands are not in the published dev5 wheel; the single-plan instructions below remain compatible with dev5.
 
+The source-only [automatic improvement campaign](improvement-campaigns.md) adds bounded native instruction generation, adaptive validation, complete search-cost ceilings, frozen confirmation, exact literal instruction diffs/rollback and application-check/local-review-branch binding. It remains under release acceptance; consult the progress record before choosing an installed version.
+
 Ask your agent:
 
 > Use Cutback to optimize this application. Discover its AI workflows and existing examples, prepare instrumentation and an exact source-bound evaluation plan, then carry out every authorized step. Ask me only for missing rights, business criteria, destination or paid budget. Preserve my dependencies. Present a tested diff and rollback before deployment.

@@ -35,7 +35,7 @@ export function createSDK(request:Request) {return {
   ingest_v1_ingest_events_post: (args:{body:components["schemas"]["EventBatch"]}) => {
     const query=new URLSearchParams();
     return request(`/ingest/events`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
-  usage_v1_projects__project_id__usage_get: (args:{project_id:string;start?:string | null;end?:string | null;group_by?:"model" | "provider" | "workflow" | "environment" | "day" | "call_site" | "traffic";traffic_kind?:"application" | "evaluation" | "judge" | "unknown" | null;call_site?:string | null}) => {
+  usage_v1_projects__project_id__usage_get: (args:{project_id:string;start?:string | null;end?:string | null;group_by?:"model" | "provider" | "workflow" | "environment" | "day" | "call_site" | "traffic";traffic_kind?:"application" | "evaluation" | "judge" | "optimization" | "simulation" | "unknown" | null;call_site?:string | null}) => {
     const query=new URLSearchParams();
     if(args.start!==undefined && args.start!==null) query.set("start",String(args.start));
     if(args.end!==undefined && args.end!==null) query.set("end",String(args.end));
@@ -157,6 +157,38 @@ export function createSDK(request:Request) {return {
   prepare_playground_v1_projects__project_id__prompts_playground_post: (args:{project_id:string;body:components["schemas"]["PromptPlayground"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/prompts/playground`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  templates_v1_projects__project_id__campaign_templates_get: (args:{project_id:string;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/campaign-templates`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  prepare_v1_projects__project_id__campaigns_post: (args:{project_id:string;body:components["schemas"]["CampaignInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/campaigns`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  listing_v1_projects__project_id__campaigns_get: (args:{project_id:string;environment_id?:string | null;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.environment_id!==undefined && args.environment_id!==null) query.set("environment_id",String(args.environment_id));
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/campaigns`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  draft_v1_projects__project_id__campaigns_draft_post: (args:{project_id:string;body:components["schemas"]["CampaignDraft"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/campaigns/draft`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  detail_v1_projects__project_id__campaigns__campaign_id__get: (args:{project_id:string;campaign_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/campaigns/${encodeURIComponent(String(args.campaign_id))}`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  selected_content_v1_projects__project_id__campaigns__campaign_id__selected_content_post: (args:{project_id:string;campaign_id:string;body:components["schemas"]["ContentPurpose"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/campaigns/${encodeURIComponent(String(args.campaign_id))}/selected/content`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  candidate_content_v1_projects__project_id__campaigns__campaign_id__candidates__candidate_id__content_post: (args:{project_id:string;campaign_id:string;candidate_id:string;body:components["schemas"]["ContentPurpose"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/campaigns/${encodeURIComponent(String(args.campaign_id))}/candidates/${encodeURIComponent(String(args.candidate_id))}/content`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  approve_v1_projects__project_id__campaigns__campaign_id__approve_post: (args:{project_id:string;campaign_id:string;body:components["schemas"]["CampaignApproval"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/campaigns/${encodeURIComponent(String(args.campaign_id))}/approve`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  cancel_v1_projects__project_id__campaigns__campaign_id__cancel_post: (args:{project_id:string;campaign_id:string;body:components["schemas"]["CampaignCancel"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/campaigns/${encodeURIComponent(String(args.campaign_id))}/cancel`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   calls_v1_projects__project_id__experiments__run_id__calls_get: (args:{project_id:string;run_id:string;after?:number;limit?:number}) => {
     const query=new URLSearchParams();
     if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
