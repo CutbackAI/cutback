@@ -1,6 +1,6 @@
 {
   "feature": "finite_approved_outcome_observation",
-  "status": "qualification_in_progress",
+  "status": "publicly_merged",
   "migration": "0018",
   "released_migrations_unchanged": "0001-0017",
   "paid_provider_calls": 0,
@@ -13,11 +13,8 @@
   "native_source_campaign_watch_sample": "passed_real_closed_window",
   "backend_modules_byte_identical": 189,
   "pending": [
-    "passing_full_installed_default_suite",
-    "passing_installed_sdk3_suite",
-    "exact_public_wheel_checks",
-    "all_required_hosted_checks",
-    "public_source_merge"
+    "broader_roadmap_engineering",
+    "independent_customer_and_comparative_acceptance"
   ],
   "limits": [
     "producer_declared_outcomes",
@@ -25,5 +22,47 @@
     "no_automatic_rollback_or_deployment",
     "no_real_customer_or_causal_savings_claim",
     "broader_roadmap_incomplete"
-  ]
+  ],
+  "public_pr": "https://github.com/CutbackAI/cutback/pull/29",
+  "public_merge": "8bc242239e4408bfb552571dd50851fafd4490fd",
+  "reviewed_head": "f92a0cd401e9b0bb943791425671b1519afd7734",
+  "reviewed_and_merged_tree": "a2bfc003fffe6bf26ad713cb4751645c37d589ef",
+  "migration_released": true,
+  "installed_full_public_default": {
+    "passed": 756,
+    "skipped": 23,
+    "seconds": 1139.98
+  },
+  "node_pipeline_followup": {
+    "passed": 1,
+    "seconds": 7.99
+  },
+  "node_native_tests": 9,
+  "node_types": "pass",
+  "installed_public_sdk3": {
+    "passed": 550,
+    "skipped": 5,
+    "seconds": 377.39
+  },
+  "installed_public_focused": {
+    "passed": 50,
+    "seconds": 167.54
+  },
+  "hosted_default_311": {
+    "passed": 758,
+    "skipped": 21,
+    "seconds": 607.64
+  },
+  "hosted_default_313": {
+    "passed": 756,
+    "skipped": 23,
+    "seconds": 478.62
+  },
+  "required_hosted_checks": "all_ten_pass",
+  "public_boundary": {
+    "files": 622,
+    "history_objects": 2254,
+    "archive_members": 821,
+    "findings": 0
+  }
 }

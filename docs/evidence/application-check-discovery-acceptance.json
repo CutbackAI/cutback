@@ -24,9 +24,20 @@
     "broader_roadmap_incomplete"
   ],
   "pending": [
-    "final_full_source_typing",
-    "sanitized_public_promotion_and_exact_wheel",
-    "required_hosted_checks",
+    "required_hosted_checks_for_final_parent_integrated_head",
     "public_merge"
-  ]
+  ],
+  "installed_exact_public_default": {
+    "passed": 24,
+    "skipped": 1,
+    "seconds": 206.85
+  },
+  "installed_exact_public_sdk3": {
+    "passed": 24,
+    "skipped": 1,
+    "seconds": 195.4
+  },
+  "backend_modules_exact_in_public_source_and_both_installed_environments": 190,
+  "full_source_typing": 190,
+  "public_pr": "https://github.com/CutbackAI/cutback/pull/30"
 }
