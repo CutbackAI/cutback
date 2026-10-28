@@ -1,12 +1,19 @@
 {
   "feature": "versioned_modern_text_observation_and_private_contract_rates",
-  "status": "installed_focused_qualified_broad_and_hosted_gates_pending",
+  "status": "locally_qualified_exact_public_hosted_gates_pending",
   "event_schema": "1.1 optional OpenAI cache-write durations; released 1.0 bytes preserved",
   "released_migrations_unchanged": "0001-0018",
   "primary_execution_snapshot_sha256": "57acf5108329471b4280a09c65714aeb235542effa7bcf93fa16434f301e897d",
   "observation_snapshot": "openai-text-2026-10-28-v1",
-  "installed_exact_public_default": {"passed": 71, "seconds": 20.76},
-  "installed_exact_public_sdk3": {"passed": 73, "seconds": 13.28},
+  "installed_exact_public_default": {"passed": 118, "seconds": 18.75},
+  "installed_exact_public_sdk3": {"passed": 127, "seconds": 18.30},
+  "pre_final_guards_installed_default": {"passed": 818, "skipped": 23, "seconds": 763.90},
+  "pre_final_guards_default_skip_reasons": [
+    "two Windows symlink privilege skips",
+    "four separately qualified legacy SDK cases",
+    "seventeen separately qualified SDK 3 cases"
+  ],
+  "broad_artifact_scope": "code-dist before final zero-aggregate and served-tier guards; final focused artifacts include both",
   "pre_final_guard_installed_sdk3": {"passed": 609, "skipped": 6, "seconds": 276.70},
   "pre_final_guard_sdk3_skip_reasons": [
     "two Windows symlink privilege skips",
@@ -38,5 +45,5 @@
     "synthetic arithmetic and transports are not live model or customer validation",
     "broader roadmap incomplete"
   ],
-  "pending": ["broad installed default regression", "hosted exact-head checks", "public merge"]
+  "pending": ["hosted exact-head checks", "public merge", "broader roadmap engineering"]
 }
