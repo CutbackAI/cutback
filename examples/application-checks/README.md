@@ -9,6 +9,14 @@ cutback checks run artifacts/check-example/contract.json artifacts/check-example
 cutback checks verify artifacts/check-example/contract.json artifacts/check-example/receipt.json artifacts/check-example/base artifacts/check-example/proposed
 ```
 
+The working-source `checks discover` command can replace the `checks prepare` line above, avoiding a handwritten command file:
+
+```sh
+cutback checks discover artifacts/check-example/base artifacts/check-example/proposed --output artifacts/check-example/contract.json --report artifacts/check-example/discovery.json
+```
+
+Inspect the proposed commands and discovery limitations, then use the same explicit `checks run` and `checks verify` commands. Discovery does not import `app.py`, collect tests or run package scripts. Source-only availability and publication gates are in [progress](../../docs/progress.md).
+
 Expected: both application checks pass, a source-bound JSON receipt and JUnit report are written outside the two source roots, and verification returns `PASSED_RECORDED_LOCAL_CHECKS`. Neither command output nor inherited provider/admin secrets enter the receipt. Change a tracked file after preparation and the runner rejects it before any check. Commit a deliberate regression in the proposed workspace, prepare a new contract and the proposed check fails with exit status one.
 
 Preparation is parse-only Git/file inspection. `--execute-local` explicitly authorizes the exact declared application commands. The process runner is not an OS sandbox: use reviewed code in an isolated development/CI environment without mounted secrets or live infrastructure access. See [contract scope, bounds and attestation limits](../../docs/application-checks.md).

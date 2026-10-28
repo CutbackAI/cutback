@@ -190,11 +190,15 @@ def git(root, *arguments):
             job.close()
 
 
-def snapshot(root: Path):
+def source_root(root: Path):
     root = root.absolute()
     if root.is_symlink() or any(p.is_symlink() for p in root.parents):
         raise ValueError("APPLICATION_CHECK_SYMLINK_ROOT_DENIED")
-    root = root.resolve(strict=True)
+    return root.resolve(strict=True)
+
+
+def snapshot(root: Path):
+    root = source_root(root)
     if Path(os.fsdecode(git(root, "rev-parse", "--show-toplevel")).strip()).resolve() != root:
         raise ValueError("APPLICATION_CHECK_REPOSITORY_ROOT_REQUIRED")
     # Do not run git status/diff: clean filters and fsmonitor can execute repository
@@ -261,7 +265,7 @@ def snapshot(root: Path):
 
 
 def prepare(base: Path, proposed: Path, commands):
-    a, b = base.resolve(strict=True), proposed.resolve(strict=True)
+    a, b = source_root(base), source_root(proposed)
     if a == b or a.is_relative_to(b) or b.is_relative_to(a):
         raise ValueError("APPLICATION_CHECK_INDEPENDENT_WORKSPACES_REQUIRED")
     return ApplicationCheckContract(

@@ -118,6 +118,50 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
     sample_source = Path(temporary) / "support-desk" / "app.py"
     assert "from openai import OpenAI" in sample_source.read_text()
     assert "import cutback" not in sample_source.read_text()
-    print(
-        "Core-only wheel and independent consumer doctor/scan/opportunities/instrument plan passed."
+    # Installed core alone discovers and executes an independent application's
+    # own guarded check. No SDK/server/evaluator dependency is installed here.
+    check_root = Path(temporary) / "application-checks"
+    subprocess.run(
+        [str(executable), str(root / "examples/application-checks/sample.py"), str(check_root)],
+        check=True,
+        capture_output=True,
+        text=True,
+        cwd=temporary,
     )
+    contract_file, discovery_file = check_root / "contract.json", check_root / "discovery.json"
+    for arguments in (
+        [
+            "checks",
+            "discover",
+            str(check_root / "base"),
+            str(check_root / "proposed"),
+            "--output",
+            str(contract_file),
+            "--report",
+            str(discovery_file),
+        ],
+        [
+            "checks",
+            "run",
+            str(contract_file),
+            str(check_root / "base"),
+            str(check_root / "proposed"),
+            "--execute-local",
+            "--output",
+            str(check_root / "receipt.json"),
+            "--junit",
+            str(check_root / "junit.xml"),
+        ],
+    ):
+        subprocess.run(
+            [str(executable), "-m", "cutback.cli", *arguments],
+            check=True,
+            capture_output=True,
+            text=True,
+            cwd=temporary,
+        )
+    assert json.loads((check_root / "receipt.json").read_text(encoding="utf-8"))["all_passed"]
+    assert (
+        json.loads(discovery_file.read_text(encoding="utf-8"))["application_commands_executed"] == 0
+    )
+    print("Core-only wheel, independent consumer scan and discovered application checks passed.")

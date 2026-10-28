@@ -35,6 +35,8 @@ def test_ordinary_campaign_checks_uploaded_diff_and_later_rollback_review(
         == result["native_calls"]
     )
     assert result["application_check_native_calls"] == 2 and result["paid_provider_calls"] == 0
+    assert result["application_check_discovery"]["executed_during_discovery"] == 0
+    assert len(result["application_check_discovery"]["commands"]) == 1
     assert result["review"]["status"] == "READY_FOR_PR_REVIEW"
     assert result["outcome_review"]["next_action"] == "REVIEW_ROLLBACK"
     evidence = result["outcome_review"]["receipt"]["evidence"]

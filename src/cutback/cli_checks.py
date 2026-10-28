@@ -20,6 +20,33 @@ def register_checks(app, output, fail):
     )
     app.add_typer(checks, name="checks")
 
+    @checks.command("discover")
+    def discover_checks(
+        base_root: Path,
+        proposed_root: Path,
+        destination: Annotated[Path, typer.Option("--output")],
+        report: Annotated[Path, typer.Option("--report")],
+    ):
+        """Inspect existing application checks and prepare a contract without executing code."""
+        from cutback.application_check_discovery import discover
+
+        try:
+            if destination.resolve() == report.resolve() or any(
+                path.resolve().is_relative_to(root.resolve())
+                for path in (destination, report)
+                for root in (base_root, proposed_root)
+            ):
+                raise ValueError("APPLICATION_CHECK_OUTPUTS_MUST_STAY_OUTSIDE_FROZEN_TREES")
+            result = discover(base_root, proposed_root)
+        except (ValueError, OSError, SyntaxError, TypeError):
+            fail(
+                "APPLICATION_CHECK_DISCOVERY_NEEDS_EXPLICIT_REVIEW",
+                "Use clean independent Git roots with existing pytest, native node tests, "
+                "a guarded check_application.py or explicit pyproject command declarations.",
+            )
+        output(result["contract"], destination)
+        output(result, report)
+
     @checks.command("prepare")
     def prepare_checks(
         base_root: Path,
