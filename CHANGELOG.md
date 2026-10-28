@@ -2,6 +2,8 @@
 
 ## Unreleased source after dev5
 
+Encrypted immutable prompt registry, typed composition, scoped reader grants, native-contract playground plans, current-policy experiment uses, compare-and-swap aliases and exact rollback; metadata-only consumer observations with unknown coverage. Explicit local application-check contracts bind independent base/proposed Git trees and emit content-free JSON/JUnit receipts with process/output/time bounds. Independent no-inference examples accompany both workflows. Local checks are not independent authenticity or customer-quality evidence. Migration `0010` is additive. Package publication and broader roadmap completion remain separate gates.
+
 Qualified model/output-cap validation search and separate confirmation; generic metadata traces/sessions, delayed external results, a waterfall and explicit encrypted trace-content reads; qualified native/OpenInference/Promptfoo import preview, frozen blind review queues, immutable judgments/adjudication and new regression datasets. Persistent cross-version dataset families and exposure receipts block recycled test claims; older unknown lineage requires authorized conservative reconciliation. New migration revisions preserve released migrations. These source capabilities are not in the published dev5 wheel. The broader platform roadmap remains unfinished; synthetic acceptance is not customer quality or production validation.
 
 ## 0.1.0.dev5

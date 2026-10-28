@@ -12,6 +12,7 @@ import typer
 
 from cutback import __version__
 from cutback.cli_agent import register_agent
+from cutback.cli_checks import register_checks
 from cutback.cli_workflows import register
 
 app = typer.Typer(
@@ -455,7 +456,8 @@ def create_project(
 def create_key(
     project: Annotated[str, typer.Option("--project")],
     role: Annotated[
-        Literal["ingest", "viewer", "analyst", "editor", "project_admin"], typer.Option("--role")
+        Literal["ingest", "viewer", "analyst", "editor", "project_admin", "prompt_reader"],
+        typer.Option("--role"),
     ],
     destination: Annotated[Path, typer.Option("--output")],
     environment: str = "staging",
@@ -494,6 +496,7 @@ def create_key(
 register(app, output, request, fail)
 
 register_agent(app, output, fail)
+register_checks(app, output, fail)
 
 if __name__ == "__main__":
     app()

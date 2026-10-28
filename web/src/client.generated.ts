@@ -154,6 +154,9 @@ export function createSDK(request:Request) {return {
   review_v1_projects__project_id__recommendations__recommendation_id__review_post: (args:{project_id:string;recommendation_id:string;body:components["schemas"]["ReviewInput"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/recommendations/${encodeURIComponent(String(args.recommendation_id))}/review`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  prepare_playground_v1_projects__project_id__prompts_playground_post: (args:{project_id:string;body:components["schemas"]["PromptPlayground"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/prompts/playground`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   preview_v1_projects__project_id__imports_preview_post: (args:{project_id:string;body:components["schemas"]["ImportPreviewInput"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/imports/preview`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
@@ -221,6 +224,70 @@ export function createSDK(request:Request) {return {
   calibration_v1_projects__project_id__reviews__queue_id__calibration_post: (args:{project_id:string;queue_id:string;body:components["schemas"]["ContentPurpose"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/reviews/${encodeURIComponent(String(args.queue_id))}/calibration`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  ingest_prompt_observations_v1_ingest_prompt_observations_post: (args:{body:components["schemas"]["PromptObservationBatch"]}) => {
+    const query=new URLSearchParams();
+    return request(`/ingest/prompt-observations`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  impact_v1_projects__project_id__prompts__prompt_id__impact_get: (args:{project_id:string;prompt_id:string;days?:number;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.days!==undefined && args.days!==null) query.set("days",String(args.days));
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/prompts/${encodeURIComponent(String(args.prompt_id))}/impact`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  prompts_v1_projects__project_id__prompts_get: (args:{project_id:string;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/prompts`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  create_v1_projects__project_id__prompts_post: (args:{project_id:string;body:components["schemas"]["PromptCreate"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/prompts`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  versions_v1_projects__project_id__prompts__prompt_id__versions_get: (args:{project_id:string;prompt_id:string;before?:number | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.before!==undefined && args.before!==null) query.set("before",String(args.before));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/prompts/${encodeURIComponent(String(args.prompt_id))}/versions`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  create_version_v1_projects__project_id__prompts__prompt_id__versions_post: (args:{project_id:string;prompt_id:string;body:components["schemas"]["PromptVersionInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/prompts/${encodeURIComponent(String(args.prompt_id))}/versions`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  content_v1_projects__project_id__prompts__prompt_id__versions__version_id__content_post: (args:{project_id:string;prompt_id:string;version_id:string;body:components["schemas"]["PromptContext"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/prompts/${encodeURIComponent(String(args.prompt_id))}/versions/${encodeURIComponent(String(args.version_id))}/content`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  preview_v1_projects__project_id__prompts__prompt_id__versions__version_id__preview_post: (args:{project_id:string;prompt_id:string;version_id:string;body:components["schemas"]["PromptRender"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/prompts/${encodeURIComponent(String(args.prompt_id))}/versions/${encodeURIComponent(String(args.version_id))}/preview`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  resolve_v1_projects__project_id__prompts_resolve__key__post: (args:{project_id:string;key:string;body:components["schemas"]["PromptResolve"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/prompts/resolve/${encodeURIComponent(String(args.key))}`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  grants_v1_projects__project_id__prompt_read_grants_get: (args:{project_id:string;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/prompt-read-grants`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  grant_v1_projects__project_id__prompts__prompt_id__read_grants_post: (args:{project_id:string;prompt_id:string;body:components["schemas"]["PromptGrantInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/prompts/${encodeURIComponent(String(args.prompt_id))}/read-grants`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  revoke_v1_projects__project_id__prompt_read_grants__grant_id__delete: (args:{project_id:string;grant_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/prompt-read-grants/${encodeURIComponent(String(args.grant_id))}`+(query.size?"?"+query.toString():""),{method:"DELETE"});},
+  aliases_v1_projects__project_id__prompts__prompt_id__aliases_get: (args:{project_id:string;prompt_id:string;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/prompts/${encodeURIComponent(String(args.prompt_id))}/aliases`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  promote_v1_projects__project_id__prompts__prompt_id__aliases_post: (args:{project_id:string;prompt_id:string;body:components["schemas"]["PromptPromote"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/prompts/${encodeURIComponent(String(args.prompt_id))}/aliases`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  history_v1_projects__project_id__prompt_aliases__alias_id__history_get: (args:{project_id:string;alias_id:string;before_revision?:number | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.before_revision!==undefined && args.before_revision!==null) query.set("before_revision",String(args.before_revision));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/prompt-aliases/${encodeURIComponent(String(args.alias_id))}/history`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  rollback_v1_projects__project_id__prompt_aliases__alias_id__rollback_post: (args:{project_id:string;alias_id:string;body:components["schemas"]["PromptRollback"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/prompt-aliases/${encodeURIComponent(String(args.alias_id))}/rollback`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  diff_v1_projects__project_id__prompts__prompt_id__diff_post: (args:{project_id:string;prompt_id:string;body:components["schemas"]["PromptDiff"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/prompts/${encodeURIComponent(String(args.prompt_id))}/diff`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   export_v1_projects__project_id__export_get: (args:{project_id:string}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/export`+(query.size?"?"+query.toString():""),{method:"GET"});},

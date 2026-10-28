@@ -1,0 +1,11 @@
+[
+  {
+    "key": "synthetic-ticket-contract",
+    "runtime": "python",
+    "arguments": ["app.py"],
+    "working_directory": ".",
+    "environment": {"CUTBACK_FIXTURE_MODE": "synthetic"},
+    "timeout_seconds": 10,
+    "max_output_bytes": 1024
+  }
+]

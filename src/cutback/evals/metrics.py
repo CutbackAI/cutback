@@ -50,10 +50,24 @@ class MetricSpec(StrictModel):
                     raise ValueError(
                         "untrusted regex evaluation requires an isolated custom evaluator"
                     )
-                if any(k in value for k in ("$ref", "$dynamicRef")):
+                if any(k in value for k in ("$ref", "$dynamicRef", "$recursiveRef", "$vocabulary")):
                     raise ValueError("evaluation schemas cannot resolve external or recursive refs")
-                for nested in value.values():
-                    inspect(nested, depth + 1)
+                if (
+                    "$schema" in value
+                    and value["$schema"] != "https://json-schema.org/draft/2020-12/schema"
+                ):
+                    raise ValueError("evaluation schema dialect is not qualified")
+                for key, nested in value.items():
+                    if key in {
+                        "properties",
+                        "$defs",
+                        "definitions",
+                        "dependentSchemas",
+                    } and isinstance(nested, dict):
+                        for child in nested.values():
+                            inspect(child, depth + 1)
+                    else:
+                        inspect(nested, depth + 1)
             elif isinstance(value, list):
                 for nested in value:
                     inspect(nested, depth + 1)
@@ -63,8 +77,12 @@ class MetricSpec(StrictModel):
                 raise ValueError("JSON schema required")
             inspect(self.schema_definition)
             from jsonschema import Draft202012Validator
+            from jsonschema.exceptions import SchemaError
 
-            Draft202012Validator.check_schema(self.schema_definition)
+            try:
+                Draft202012Validator.check_schema(self.schema_definition)
+            except SchemaError:
+                raise ValueError("invalid bounded JSON schema") from None
         return self
 
 

@@ -33,6 +33,8 @@ Read [the walkthrough and testing checklist](https://github.com/CutbackAI/cutbac
 
 ## Try the offline scanner without Docker
 
+The current source checkout also includes a [prompt release workspace](https://github.com/CutbackAI/cutback/blob/main/docs/prompt-releases.md): encrypted text/chat versions, typed components, purpose-bound reads, frozen playground plans and exact alias rollback. Try the [independent prompt example](https://github.com/CutbackAI/cutback/blob/main/examples/prompt-releases/README.md) or [portable application checks](https://github.com/CutbackAI/cutback/blob/main/examples/application-checks/README.md). These capabilities are not in the published dev5 wheel; see [acceptance and remaining roadmap](https://github.com/CutbackAI/cutback/blob/main/docs/progress.md).
+
 ```sh
 cutback sample support-desk
 cutback scan support-desk

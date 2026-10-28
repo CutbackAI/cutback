@@ -200,8 +200,7 @@ def test_native_cpu_lora_training_is_train_only_encrypted_and_not_semantic_valid
         headers=admin,
         json={"approval_hash": job["approval_hash"], "approval_ref": "owned-cpu-fixture-only"},
     ).raise_for_status()
-    slug = client.get("/v1/projects", headers=admin).json()
-    slug = next(p["slug"] for p in slug if p["id"] == tenant[0])
+    slug = client.get(path, headers=admin).json()["slug"]
     assert client.delete(path, params={"confirm_slug": slug}, headers=admin).status_code == 409
     # Synthetic-only native-runtime diagnostics. Production subprocesses suppress logs.
     original_popen = subprocess.Popen

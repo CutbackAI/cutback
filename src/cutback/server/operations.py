@@ -153,6 +153,13 @@ def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False
             from cutback.server.traces import prune_traces
 
             prune_traces(session, cutoff, selected)
+            from cutback.server.prompt_db import PromptObservation
+
+            session.execute(
+                delete(PromptObservation).where(
+                    PromptObservation.received_at < cutoff, selected(PromptObservation.project_id)
+                )
+            )
             session.execute(
                 delete(DailyUsage).where(
                     DailyUsage.day < now - timedelta(days=aggregate_days),

@@ -1,5 +1,7 @@
 # Provider compatibility
 
+Unreleased prompt-registry experiment contracts use the same pinned clients: OpenAI 2.29.0 Responses/Chat preserve declared roles and qualified JSON output options; Anthropic 2.3.0 maps initial system messages to native system blocks. Local Chat now executes its declared bound messages/options instead of ignoring them. A configured local server/model still needs its own acceptance. These synchronous text experiments add no tool execution, streaming replay or new provider/model support claim. [Prompt contract limits](prompt-releases.md).
+
 | Runtime surface | Tested version | Exercised behavior |
 |---|---|---|
 | OpenAI Responses create | 2.29.0 | sync/async/native streams, retries/errors/outages, usage/cache/reasoning, privacy |

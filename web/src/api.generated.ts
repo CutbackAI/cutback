@@ -609,6 +609,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/prompts/playground": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Prepare Playground */
+        post: operations["prepare_playground_v1_projects__project_id__prompts_playground_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/imports/preview": {
         parameters: {
             query?: never;
@@ -910,6 +927,247 @@ export interface paths {
         put?: never;
         /** Calibration */
         post: operations["calibration_v1_projects__project_id__reviews__queue_id__calibration_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ingest/prompt-observations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ingest Prompt Observations */
+        post: operations["ingest_prompt_observations_v1_ingest_prompt_observations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/prompts/{prompt_id}/impact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Impact */
+        get: operations["impact_v1_projects__project_id__prompts__prompt_id__impact_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/prompts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Prompts */
+        get: operations["prompts_v1_projects__project_id__prompts_get"];
+        put?: never;
+        /** Create */
+        post: operations["create_v1_projects__project_id__prompts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/prompts/{prompt_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Versions */
+        get: operations["versions_v1_projects__project_id__prompts__prompt_id__versions_get"];
+        put?: never;
+        /** Create Version */
+        post: operations["create_version_v1_projects__project_id__prompts__prompt_id__versions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/prompts/{prompt_id}/versions/{version_id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Content */
+        post: operations["content_v1_projects__project_id__prompts__prompt_id__versions__version_id__content_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/prompts/{prompt_id}/versions/{version_id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview */
+        post: operations["preview_v1_projects__project_id__prompts__prompt_id__versions__version_id__preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/prompts/resolve/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resolve */
+        post: operations["resolve_v1_projects__project_id__prompts_resolve__key__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/prompt-read-grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Grants */
+        get: operations["grants_v1_projects__project_id__prompt_read_grants_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/prompts/{prompt_id}/read-grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Grant */
+        post: operations["grant_v1_projects__project_id__prompts__prompt_id__read_grants_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/prompt-read-grants/{grant_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke */
+        delete: operations["revoke_v1_projects__project_id__prompt_read_grants__grant_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/prompts/{prompt_id}/aliases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Aliases */
+        get: operations["aliases_v1_projects__project_id__prompts__prompt_id__aliases_get"];
+        put?: never;
+        /** Promote */
+        post: operations["promote_v1_projects__project_id__prompts__prompt_id__aliases_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/prompt-aliases/{alias_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** History */
+        get: operations["history_v1_projects__project_id__prompt_aliases__alias_id__history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/prompt-aliases/{alias_id}/rollback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Rollback */
+        post: operations["rollback_v1_projects__project_id__prompt_aliases__alias_id__rollback_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/prompts/{prompt_id}/diff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Diff */
+        post: operations["diff_v1_projects__project_id__prompts__prompt_id__diff_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2424,6 +2682,8 @@ export interface components {
              */
             evaluator_version: "deterministic-v3";
             source_binding?: components["schemas"]["SourceBinding"] | null;
+            /** Prompt Bindings */
+            prompt_bindings?: components["schemas"]["PromptModelBinding"][] | null;
         };
         /** GrantInput */
         GrantInput: {
@@ -2437,7 +2697,7 @@ export interface components {
              * @default viewer
              * @enum {string}
              */
-            role: "viewer" | "analyst" | "editor" | "project_admin";
+            role: "viewer" | "analyst" | "editor" | "project_admin" | "prompt_reader";
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -2553,7 +2813,7 @@ export interface components {
              * Role
              * @enum {string}
              */
-            role: "ingest" | "viewer" | "analyst" | "editor" | "project_admin";
+            role: "ingest" | "viewer" | "analyst" | "editor" | "project_admin" | "prompt_reader";
             /**
              * Environment
              * @default staging
@@ -2932,6 +3192,217 @@ export interface components {
             /** Organization Id */
             organization_id?: string | null;
         };
+        /** PromptContext */
+        PromptContext: {
+            /** Purpose */
+            purpose: string;
+            /** Environment */
+            environment: string;
+            /** Workflow */
+            workflow: string;
+        };
+        /** PromptCreate */
+        PromptCreate: {
+            /** Key */
+            key: string;
+            /** Workflow */
+            workflow: string;
+        };
+        /** PromptDiff */
+        PromptDiff: {
+            /** Purpose */
+            purpose: string;
+            /** Environment */
+            environment: string;
+            /** Workflow */
+            workflow: string;
+            /**
+             * Left Version Id
+             * Format: uuid
+             */
+            left_version_id: string;
+            /**
+             * Right Version Id
+             * Format: uuid
+             */
+            right_version_id: string;
+        };
+        /** PromptDocument */
+        PromptDocument: {
+            /**
+             * Schema Version
+             * @default cutback.prompt.v1
+             * @constant
+             */
+            schema_version: "cutback.prompt.v1";
+            /**
+             * Kind
+             * @default text
+             * @enum {string}
+             */
+            kind: "text" | "chat";
+            /** Text */
+            text?: string | null;
+            /** Messages */
+            messages?: components["schemas"]["PromptMessage"][];
+            /** Variables */
+            variables?: {
+                [key: string]: "string" | "integer" | "boolean" | "json";
+            };
+            /** Dependencies */
+            dependencies?: {
+                [key: string]: string;
+            };
+            /** Output Schema */
+            output_schema?: {
+                [key: string]: components["schemas"]["JsonValue"];
+            } | null;
+        };
+        /** PromptGrantInput */
+        PromptGrantInput: {
+            /** Actor */
+            actor: string;
+            /** Environment */
+            environment: string;
+            /** Workflow */
+            workflow: string;
+            /**
+             * Policy Id
+             * Format: uuid
+             */
+            policy_id: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Approval Ref */
+            approval_ref: string;
+            /**
+             * Expected Revision
+             * @default 0
+             */
+            expected_revision: number;
+        };
+        /** PromptMessage */
+        PromptMessage: {
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "system" | "developer" | "user" | "assistant";
+            /** Content */
+            content: string;
+        };
+        /** PromptModelBinding */
+        PromptModelBinding: {
+            /** Model Key */
+            model_key: string;
+            /**
+             * Version Id
+             * Format: uuid
+             */
+            version_id: string;
+            /** Version Hash */
+            version_hash: string;
+            /** Environment */
+            environment: string;
+            /** Prompt Variables */
+            prompt_variables?: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Sampling Options */
+            sampling_options?: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /**
+             * Content Nonce
+             * Format: uuid
+             */
+            content_nonce?: string;
+        };
+        /** PromptObservation */
+        PromptObservation: {
+            /**
+             * Observation Id
+             * Format: uuid
+             */
+            observation_id: string;
+            /**
+             * Version Id
+             * Format: uuid
+             */
+            version_id: string;
+            /** Version Hash */
+            version_hash: string;
+            /** Environment */
+            environment: string;
+            /** Workflow */
+            workflow: string;
+            /** Consumer */
+            consumer: string;
+            /** Release */
+            release: string;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            /**
+             * Status
+             * @default unknown
+             * @enum {string}
+             */
+            status: "success" | "error" | "incomplete" | "unknown";
+            /** Duration Ms */
+            duration_ms?: number | null;
+            /** Alias Id */
+            alias_id?: string | null;
+            /** Alias Revision */
+            alias_revision?: number | null;
+        };
+        /** PromptObservationBatch */
+        PromptObservationBatch: {
+            /** Observations */
+            observations: components["schemas"]["PromptObservation"][];
+        };
+        /** PromptPlayground */
+        PromptPlayground: {
+            /**
+             * Dataset Id
+             * Format: uuid
+             */
+            dataset_id: string;
+            specification: components["schemas"]["ExperimentPlan"];
+            /** Selections */
+            selections: components["schemas"]["PromptSelection"][];
+            /** Purpose */
+            purpose: string;
+        };
+        /** PromptPromote */
+        PromptPromote: {
+            /**
+             * Version Id
+             * Format: uuid
+             */
+            version_id: string;
+            /** Environment */
+            environment: string;
+            /** Alias */
+            alias: string;
+            /** Expected Revision */
+            expected_revision: number;
+            /** Expected Version Id */
+            expected_version_id?: string | null;
+            /** Approval Ref */
+            approval_ref: string;
+            /** Quality Unverified Acknowledged */
+            quality_unverified_acknowledged: boolean;
+            /** Evidence Run Id */
+            evidence_run_id?: string | null;
+            /** Evidence Model Key */
+            evidence_model_key?: string | null;
+        };
         /** PromptReference */
         PromptReference: {
             /** Argument */
@@ -2951,6 +3422,91 @@ export interface components {
             /** Static Characters */
             static_characters?: number | null;
         };
+        /** PromptRender */
+        PromptRender: {
+            /** Purpose */
+            purpose: string;
+            /** Environment */
+            environment: string;
+            /** Workflow */
+            workflow: string;
+            /** Variables */
+            variables: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Values Authorized */
+            values_authorized: boolean;
+        };
+        /** PromptResolve */
+        PromptResolve: {
+            /** Purpose */
+            purpose: string;
+            /** Environment */
+            environment: string;
+            /** Workflow */
+            workflow: string;
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "local" | "openai" | "anthropic";
+            /** Version Id */
+            version_id?: string | null;
+            /** Alias */
+            alias?: string | null;
+        };
+        /** PromptRollback */
+        PromptRollback: {
+            /**
+             * Receipt Id
+             * Format: uuid
+             */
+            receipt_id: string;
+            /** Expected Revision */
+            expected_revision: number;
+            /** Approval Ref */
+            approval_ref: string;
+        };
+        /** PromptSelection */
+        PromptSelection: {
+            /** Model Key */
+            model_key: string;
+            /**
+             * Version Id
+             * Format: uuid
+             */
+            version_id: string;
+            /** Environment */
+            environment: string;
+            /** Prompt Variables */
+            prompt_variables?: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Sampling Options */
+            sampling_options?: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+        };
+        /** PromptVersionInput */
+        PromptVersionInput: {
+            /**
+             * Version Id
+             * Format: uuid
+             */
+            version_id: string;
+            /** Expected Latest Ordinal */
+            expected_latest_ordinal: number;
+            /**
+             * Policy Id
+             * Format: uuid
+             */
+            policy_id: string;
+            /** Environment */
+            environment: string;
+            /** Provenance Ref */
+            provenance_ref: string;
+            document: components["schemas"]["PromptDocument"];
+        };
         /** QueueInput */
         QueueInput: {
             /**
@@ -2964,9 +3520,9 @@ export interface components {
             /**
              * Version
              * @default native-text-v1
-             * @constant
+             * @enum {string}
              */
-            version: "native-text-v1";
+            version: "native-text-v1" | "native-prompt-v1";
             /**
              * Sdk Surface
              * @enum {string}
@@ -5082,6 +5638,41 @@ export interface operations {
             };
         };
     };
+    prepare_playground_v1_projects__project_id__prompts_playground_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromptPlayground"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     preview_v1_projects__project_id__imports_preview_post: {
         parameters: {
             query?: never;
@@ -5732,6 +6323,605 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ContentPurpose"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ingest_prompt_observations_v1_ingest_prompt_observations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromptObservationBatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    impact_v1_projects__project_id__prompts__prompt_id__impact_get: {
+        parameters: {
+            query?: {
+                days?: number;
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                prompt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    prompts_v1_projects__project_id__prompts_get: {
+        parameters: {
+            query?: {
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_v1_projects__project_id__prompts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromptCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    versions_v1_projects__project_id__prompts__prompt_id__versions_get: {
+        parameters: {
+            query?: {
+                before?: number | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                prompt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_version_v1_projects__project_id__prompts__prompt_id__versions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                prompt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromptVersionInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    content_v1_projects__project_id__prompts__prompt_id__versions__version_id__content_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                prompt_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromptContext"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_v1_projects__project_id__prompts__prompt_id__versions__version_id__preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                prompt_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromptRender"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resolve_v1_projects__project_id__prompts_resolve__key__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromptResolve"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    grants_v1_projects__project_id__prompt_read_grants_get: {
+        parameters: {
+            query?: {
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    grant_v1_projects__project_id__prompts__prompt_id__read_grants_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                prompt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromptGrantInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_v1_projects__project_id__prompt_read_grants__grant_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                grant_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    aliases_v1_projects__project_id__prompts__prompt_id__aliases_get: {
+        parameters: {
+            query?: {
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                prompt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    promote_v1_projects__project_id__prompts__prompt_id__aliases_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                prompt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromptPromote"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    history_v1_projects__project_id__prompt_aliases__alias_id__history_get: {
+        parameters: {
+            query?: {
+                before_revision?: number | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                alias_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rollback_v1_projects__project_id__prompt_aliases__alias_id__rollback_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                alias_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromptRollback"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    diff_v1_projects__project_id__prompts__prompt_id__diff_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                prompt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromptDiff"];
             };
         };
         responses: {

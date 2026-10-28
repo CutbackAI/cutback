@@ -10,6 +10,24 @@ from cutback.evals.experiments import Execution, route_target
 from cutback.pricing import Catalog
 
 
+def chat_text_result(response):
+    if not response.choices:
+        return "", False, False
+    message = response.choices[0].message
+    unsupported = bool(
+        getattr(message, "tool_calls", None)
+        or getattr(message, "function_call", None)
+        or getattr(message, "audio", None)
+    )
+    complete = (
+        len(response.choices) == 1
+        and response.choices[0].finish_reason == "stop"
+        and not getattr(message, "refusal", None)
+        and not unsupported
+    )
+    return message.content or "", bool(complete), unsupported
+
+
 class OpenAIExecutor:
     def __init__(self, *, http_client=None):
         key = os.getenv("CUTBACK_EXPERIMENT_OPENAI_KEY")
@@ -37,6 +55,9 @@ class OpenAIExecutor:
         started = time.perf_counter()
         contract = model.request_contract
         payload = contract.render(text) if contract else text
+        bundle = contract is not None and contract.version == "native-prompt-v1"
+        if bundle and model.instruction:
+            raise ValueError("BOUND_PROMPT_INSTRUCTIONS_MUST_BE_IN_CONTRACT")
         options = contract.options if contract else {}
         chat = contract is not None and contract.sdk_surface == "chat.completions.create"
         if contract and contract.sdk_surface not in {"responses.create", "chat.completions.create"}:
@@ -46,25 +67,35 @@ class OpenAIExecutor:
                 raise ValueError("CHAT_INSTRUCTIONS_BELONG_IN_BOUND_MESSAGES")
             response = self.client.chat.completions.create(
                 model=model.model,
-                messages=payload,
+                messages=payload["messages"] if bundle else payload,
                 max_tokens=model.max_output_tokens,
                 store=False,
                 timeout=timeout_seconds,
                 **options,
             )
-            complete = bool(response.choices) and response.choices[0].finish_reason == "stop"
-            output = response.choices[0].message.content or "" if response.choices else ""
+            output, complete, unsupported = chat_text_result(response)
         else:
             response = self.client.responses.create(
                 model=model.model,
-                input=payload,
-                instructions=model.instruction or None,
+                input=payload["input"] if bundle else payload,
+                instructions=payload.get("instructions") if bundle else model.instruction or None,
                 max_output_tokens=model.max_output_tokens,
                 store=False,
                 timeout=timeout_seconds,
                 **options,
             )
             complete, output = response.status == "completed", response.output_text
+            unsupported = any(
+                item.type not in {"message", "reasoning"}
+                or item.type == "message"
+                and any(block.type not in {"output_text", "refusal"} for block in item.content)
+                for item in response.output or []
+            )
+            refused = any(
+                item.type == "message" and any(block.type == "refusal" for block in item.content)
+                for item in response.output or []
+            )
+            complete = complete and not unsupported and not refused
         latency = (time.perf_counter() - started) * 1000
         from cutback.instrumentation.openai import normalize_usage
 
@@ -80,7 +111,7 @@ class OpenAIExecutor:
             occurred_at=datetime.now(UTC),
             duration_ms=latency,
             status="success" if complete else "incomplete",
-            metering_status="text_only",
+            metering_status="unsupported_units" if unsupported else "text_only",
             **normalize_usage(response, "chat.completions.create" if chat else "responses.create"),
         )
         cost = Catalog().price(event)
@@ -100,9 +131,13 @@ class OpenAIExecutor:
 class LocalExecutor:
     """Explicit customer Chat endpoint; no tool execution or dataset-supplied URLs."""
 
-    def __init__(self):
+    def __init__(self, *, http_client=None):
+        from importlib.metadata import version
+
         from cutback.core.config import validate_endpoint
 
+        if version("openai") != "2.29.0":
+            raise ValueError("UNSUPPORTED_EXPERIMENT_SDK_VERSION")
         endpoint = os.getenv("CUTBACK_LOCAL_INFERENCE_ENDPOINT")
         if not endpoint:
             raise ValueError("NO_LOCAL_INFERENCE_ENDPOINT")
@@ -113,8 +148,10 @@ class LocalExecutor:
             base_url=validate_endpoint(endpoint),
             api_key=os.getenv("CUTBACK_LOCAL_INFERENCE_KEY", "local-inference-no-auth"),
             max_retries=0,
-            http_client=httpx.Client(trust_env=False, follow_redirects=False),
+            http_client=http_client or httpx.Client(trust_env=False, follow_redirects=False),
         )
+        self.client.organization = None
+        self.client.project = None
 
     def execute(self, model, text, timeout_seconds):
         if model.provider != "local":
@@ -126,17 +163,29 @@ class LocalExecutor:
         if model.instruction:
             messages.append({"role": "system", "content": model.instruction})
         messages.append({"role": "user", "content": text})
+        options = {}
+        if model.request_contract:
+            contract = model.request_contract
+            if contract.sdk_surface != "chat.completions.create":
+                raise ValueError("EXECUTOR_REQUEST_SURFACE_UNSUPPORTED")
+            if model.instruction:
+                raise ValueError("CHAT_INSTRUCTIONS_BELONG_IN_BOUND_MESSAGES")
+            rendered = contract.render(text)
+            messages = rendered["messages"] if contract.version == "native-prompt-v1" else rendered
+            options = contract.options
         response = self.client.chat.completions.create(
             model=model.model,
             messages=messages,
             max_tokens=model.max_output_tokens,
             timeout=timeout_seconds,
+            **options,
         )
+        output, complete, _ = chat_text_result(response)
         return Execution(
-            response.choices[0].message.content or "",
+            output,
             model.local_cost_upper_usd,
             (time.perf_counter() - started) * 1000,
-            complete=response.choices[0].finish_reason == "stop",
+            complete=complete,
         )
 
     def close(self):
@@ -210,6 +259,18 @@ class AnthropicExecutor:
             if model.request_contract.sdk_surface != "messages.create":
                 raise ValueError("EXECUTOR_REQUEST_SURFACE_UNSUPPORTED")
             params.update(model.request_contract.options)
+            if model.request_contract.version == "native-prompt-v1":
+                if model.instruction:
+                    raise ValueError("BOUND_PROMPT_INSTRUCTIONS_MUST_BE_IN_CONTRACT")
+                bundle = params["messages"]
+                params["messages"] = bundle["messages"]
+                if "system" in bundle:
+                    params["system"] = [dict(block) for block in bundle["system"]]
+                    if model.prompt_cache:
+                        params["system"][-1]["cache_control"] = {
+                            "type": "ephemeral",
+                            "ttl": "1h" if model.prompt_cache == "anthropic-1h" else "5m",
+                        }
         if model.instruction:
             params["system"] = (
                 [
@@ -228,7 +289,11 @@ class AnthropicExecutor:
         response = self.client.messages.create(**params)
         from cutback.instrumentation.anthropic import normalize_usage
 
-        complete = response.stop_reason in {"end_turn", "stop_sequence"}
+        unsupported = any(
+            block.type not in {"text", "thinking", "redacted_thinking"}
+            for block in response.content
+        )
+        complete = response.stop_reason in {"end_turn", "stop_sequence"} and not unsupported
         event = LLMEvent(
             environment="experiment",
             service_name="cutback-worker",
@@ -241,7 +306,7 @@ class AnthropicExecutor:
             occurred_at=datetime.now(UTC),
             duration_ms=(time.perf_counter() - started) * 1000,
             status="success" if complete else "incomplete",
-            metering_status="text_only",
+            metering_status="unsupported_units" if unsupported else "text_only",
             **normalize_usage(response, "messages.create"),
         )
         cost = Catalog().price(event)

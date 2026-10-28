@@ -557,6 +557,13 @@ def install_evaluation(app, sessions, authorize, scope):
     def create_plan(project_id: UUID, body: PlanInput, auth=Depends(authorize)):
         scope(auth, project_id, ("analyst",))
         with sessions.begin() as session:
+            from cutback.server.dataset_lineage import lock_lineage
+            from cutback.server.prompt_experiments import register_bindings, validate_bindings
+
+            lock_lineage(session, project_id)
+            loaded_prompts = validate_bindings(
+                session, require_store(app), project_id, body.specification, auth
+            )
             from cutback.server.stages import validate_stage
 
             try:
@@ -602,6 +609,11 @@ def install_evaluation(app, sessions, authorize, scope):
                 frozen = freeze_plan(
                     store, project_id, body.specification, policy, dataset.provenance["policy_id"]
                 )
+                if loaded_prompts:
+                    frozen["expires_at"] = min(
+                        datetime.fromisoformat(frozen["expires_at"]),
+                        *(graph.expires_at for _, graph in loaded_prompts),
+                    ).isoformat()
             except ValueError:
                 raise HTTPException(422, "PLAN_CONTENT_POLICY_DENIED") from None
             sql_event.listen(
@@ -617,6 +629,7 @@ def install_evaluation(app, sessions, authorize, scope):
             )
             session.add(row)
             session.flush()
+            register_bindings(session, project_id, row.id, body.specification, auth, loaded_prompts)
             session.add(
                 AuditEvent(
                     project_id=project_id,
@@ -640,6 +653,9 @@ def install_evaluation(app, sessions, authorize, scope):
             active_policy(session, project_id, UUID(row.specification["policy_id"]))
             try:
                 plan = load_plan(store, project_id, row.specification)
+                from cutback.server.prompt_experiments import recheck_bindings
+
+                recheck_bindings(session, store, project_id, row, plan)
             except ValueError as exc:
                 raise HTTPException(409, str(exc)) from None
             session.add(
@@ -697,6 +713,9 @@ def install_evaluation(app, sessions, authorize, scope):
 
             try:
                 frozen = load_plan(require_store(app), project_id, plan.specification)
+                from cutback.server.prompt_experiments import recheck_bindings
+
+                recheck_bindings(session, require_store(app), project_id, plan, frozen)
                 validate_stage(
                     session,
                     require_store(app),
@@ -908,4 +927,7 @@ def install_evaluation(app, sessions, authorize, scope):
             )
         return {"status": body.decision, "deployment": "not_performed"}
 
+    from cutback.server.prompt_playground import install_prompt_playground
+
+    install_prompt_playground(app, sessions, authorize, scope, create_plan)
     return import_dataset

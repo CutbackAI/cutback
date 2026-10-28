@@ -29,7 +29,7 @@ Evidence for expectations: [Phoenix](https://github.com/Arize-ai/phoenix), [Brai
 | F06 | Read an existing OTel/OpenInference producer without requiring a new model client | Bounded | `server/workflow_otel.py`, pinned OpenTelemetry 1.45.1 / OpenInference 0.1.42 producer; explicit bounded JSON metadata projection, not all exporters |
 | F07 | Import a qualified existing trace export while preserving provenance and unknown fields | Bounded | `evals/importers.py`: actual pinned OpenInference OTLP JSON projection, source hash/mapping/rejections; no universal Phoenix/Langfuse/Braintrust export claim |
 | F08 | Import an existing evaluation suite with declared inputs/expected outputs/criteria | Bounded | Actual Promptfoo 0.125.1 version-3 result projection, literal unreviewed expectations, historical output and externally asserted score/error distinctions; no external code or unsupported criteria execution |
-| F09 | Produce a portable result consumable in another workspace or CI runner | Partial | Canonical server reports exist; local workflow journal/gate binds the original workspace/source |
+| F09 | Produce a portable result consumable in another workspace or CI runner | Bounded | Canonical reports plus source-bound `checks` JSON/JUnit for two independent Git workspaces; local receipts are not independent authenticity attestation |
 | F10 | Versioned documentation tells installed-wheel users which commands are unreleased | Bounded | `docs/optimization-search.md`, release artifact validation; maintain on every release |
 
 ## 2. Trace, session and workflow investigation — core baseline
@@ -94,10 +94,10 @@ Evidence: [Promptfoo assertions](https://www.promptfoo.dev/docs/configuration/ex
 | E03 | Run approved model judges with frozen rubrics, invalid-vote handling and complete costs | Bounded | `evals/experiments.py`; calibration remains external |
 | E04 | Compare paired baseline/candidate cases and slices with grouped uncertainty | Bounded | `evals/comparisons.py`, `server/case_evidence.py`; sample adequacy still matters |
 | E05 | Repeat stochastic tasks and expose variation without hiding failed attempts | Bounded | Experiment repetitions and cost/completeness reporting |
-| E06 | Run the application's real local regression contract against a proposed change | Missing | Native request replay is not executing and verifying the whole application's behavior |
+| E06 | Run the application's real local regression contract against a proposed change | Bounded | `application_checks.py`: explicit Python/Node argv against frozen base/proposed trees, minimal fixture environment, process/time/output limits; no OS sandbox |
 | E07 | Accept precomputed outputs without secretly rerunning an application/model | Bounded | External scalar results plus qualified native/OpenInference/Promptfoo historical outputs import with zero inference; source assertions remain unverified and unsupported evaluator code never executes |
-| E08 | Produce machine-readable CI/JUnit outcomes with exact artifact/source provenance | Partial | `workflow gate` provides an exit status for same-workspace evidence; portable JUnit/PR pipeline absent |
-| E09 | Compare changed and unchanged workflows when a shared config/prompt is modified | Partial | `changes.py` warns about consumers; automatic impact regression testing missing |
+| E08 | Produce machine-readable CI/JUnit outcomes with exact artifact/source provenance | Bounded | Source/contract/runtime-bound metadata JSON/JUnit, stale/tampered/mutating-tree rejection and independent-workspace verification; CI authenticity remains external |
+| E09 | Compare changed and unchanged workflows when a shared config/prompt is modified | Partial | Source consumer warnings plus pinned registry dependency/experiment uses; explicit multi-command checks exist, automatic shared-consumer scheduling remains missing |
 | E10 | Reproduce an experiment from pinned data, evaluator, native request and price snapshots | Bounded | Frozen native contract; identical stochastic outputs are not promised |
 
 ## 6. Prompt development and release — core baseline / platform expansion
@@ -106,16 +106,16 @@ Evidence: [MLflow registry](https://www.mlflow.org/genai/prompt-registry/), [Max
 
 | ID | Acceptance requirement | Cutback state | Current anchor / remaining work |
 |---|---|---|---|
-| P01 | Author encrypted text/chat prompt versions with stable immutable identities | Partial | Frozen plan artifacts exist; prompt registry authoring/version lifecycle absent |
-| P02 | Declare template variables/types and validate missing/extra variables deterministically | Partial | Qualified source request-template rendering exists; no general prompt template contract |
-| P03 | Diff versions and link prompts to source, experiments and observed releases | Partial | Native request/source hashes exist; registry UI/lineage absent |
-| P04 | Compare prompt/model/parameter variants in a playground under explicit total budgets | Partial | Frozen experiments exist; interactive author/compare playground absent |
-| P05 | Reuse prompt components with dependency/version tracking and cycle detection | Missing | No composable prompt registry |
-| P06 | Promote an exact reviewed prompt version through environment aliases with concurrency protection | Missing | No immutable prompt alias promotion record |
-| P07 | Resolve a pinned prompt/alias via scoped credentials without returning unauthorized content | Missing | Must use encrypted content rights, expiry and auditable purpose, not public metadata |
-| P08 | Roll back an alias and show which application releases still use an older version | Missing | Source diff rollback exists; registry rollout is a different lifecycle |
+| P01 | Author encrypted text/chat prompt versions with stable immutable identities | Bounded | PostgreSQL immutable versions, salted encrypted content receipts, client UUID/idempotence and ordinal CAS; dashboard authoring |
+| P02 | Declare template variables/types and validate missing/extra variables deterministically | Bounded | Limited declarative text/chat templates, exact string/integer/boolean/JSON variables, local rendering and bounded composition; no Python/Jinja/includes |
+| P03 | Diff versions and link prompts to source, experiments and observed releases | Partial | Purpose-bound diffs, immutable experiment bindings and externally reported releases; source provenance references are manual and source-patch integration remains separate |
+| P04 | Compare prompt/model/parameter variants in a playground under explicit total budgets | Bounded | Playground compiles exact native versions/variables/supported sampling/schema into separately approved plans; no browser inference or hidden calls |
+| P05 | Reuse prompt components with dependency/version tracking and cycle detection | Bounded | Pinned text components in text/chat roots, transitive current rights, cycle/depth/size/type-conflict checks and consumer indexes |
+| P06 | Promote an exact reviewed prompt version through environment aliases with concurrency protection | Bounded | Expected-version/revision CAS, immutable approvals/evidence receipts; manual/synthetic quality remains unverified |
+| P07 | Resolve a pinned prompt/alias via scoped credentials without returning unauthorized content | Bounded | Dedicated environment-scoped prompt readers, per-component expiring grants, current policy/OIDC checks, purpose audits and verified local graph rendering |
+| P08 | Roll back an alias and show which application releases still use an older version | Partial | Exact latest-receipt alias rollback and retained release/version reports exist; reports have unknown coverage and do not establish a complete current deployment inventory |
 | P09 | Pin generated rubrics/test criteria before evaluation instead of changing the goal during search | Partial | Plan hashes freeze criteria; automatic rubric generation is not implemented |
-| P10 | Test structured output/tool schemas alongside prompt changes, including negative cases | Partial | Text/structured request contracts exist; tool execution/replay not qualified |
+| P10 | Test structured output/tool schemas alongside prompt changes, including negative cases | Partial | Required frozen JSON-schema checks, alternative valid outputs, negative/refusal/incomplete/unrequested-tool tests with pinned native clients; actual tool execution/replay remains Release 5 |
 
 ## 7. RAG, tools and conversation evaluation — core baseline for agent claims
 
@@ -148,7 +148,7 @@ Evidence: [Opik Optimizer](https://www.comet.com/docs/opik/development/optimizat
 | C06 | Count generator/judge/failed trial/routing overhead in the optimization economics | Partial | Existing experiment ledger is durable; future optimizer orchestration must join it |
 | C07 | Independently confirm the selected change on disjoint untouched groups | Bounded | Search validation then same-dataset test confirmation; no global proof of unseen data across reimports |
 | C08 | Produce an exact source-bound diff, affected-consumer explanation and reversible rollback | Partial | Literal model and same-file output-bound reductions; prompt/framework/tool diffs absent |
-| C09 | Run the application's checks and prepare a reviewable branch/PR without deploying | Missing | Diff artifacts are not a turnkey application-PR pipeline |
+| C09 | Run the application's checks and prepare a reviewable branch/PR without deploying | Partial | Portable explicit local checks and exact diff artifacts exist; automatic application branch/PR preparation and affected-consumer scheduling remain Release 6 |
 | C10 | Measure accepted change outcomes over later traffic and recommend rollback on regression | Partial | Operator rollout windows exist; linked actual task-outcome/savings lifecycle missing |
 
 ## 9. Gateway and performance controls — platform expansion

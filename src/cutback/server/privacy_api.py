@@ -29,6 +29,16 @@ from cutback.server.enterprise_db import (
     TrainingJob,
 )
 from cutback.server.lineage_db import DatasetAlias, DatasetExposure, DatasetFamily
+from cutback.server.prompt_db import (
+    PromptAlias,
+    PromptAliasChange,
+    PromptDependency,
+    PromptExperimentUse,
+    PromptObservation,
+    PromptReadGrant,
+    PromptRecord,
+    PromptVersion,
+)
 from cutback.server.review_db import (
     ReviewItem,
     ReviewLease,
@@ -73,6 +83,14 @@ def install_privacy(app, sessions, authorize, scope):
                     DatasetFamily,
                     DatasetAlias,
                     DatasetExposure,
+                    PromptRecord,
+                    PromptVersion,
+                    PromptDependency,
+                    PromptAlias,
+                    PromptAliasChange,
+                    PromptReadGrant,
+                    PromptObservation,
+                    PromptExperimentUse,
                     ReviewQueue,
                     ReviewItem,
                     ReviewLease,
@@ -178,6 +196,14 @@ def install_privacy(app, sessions, authorize, scope):
             from cutback.server.db import ChangeProposal, DatasetItem, RecommendationRecord
 
             for cls in (
+                PromptAliasChange,
+                PromptAlias,
+                PromptDependency,
+                PromptObservation,
+                PromptExperimentUse,
+                PromptReadGrant,
+                PromptVersion,
+                PromptRecord,
                 ReviewResolution,
                 ReviewVote,
                 ReviewLease,

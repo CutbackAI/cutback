@@ -76,7 +76,7 @@ def safe_relative(name: str):
 
 
 class RequestContract(StrictModel):
-    version: Literal["native-text-v1"] = "native-text-v1"
+    version: Literal["native-text-v1", "native-prompt-v1"] = "native-text-v1"
     sdk_surface: Literal["responses.create", "chat.completions.create", "messages.create"]
     payload: dict[str, Any]
     options: dict[str, Any] = Field(default_factory=dict, max_length=8)
@@ -89,7 +89,8 @@ class RequestContract(StrictModel):
         allowed = {
             "responses.create": {"temperature", "top_p", "text"},
             "chat.completions.create": {"temperature", "top_p", "stop", "response_format"},
-            "messages.create": {"temperature", "top_p", "stop_sequences"},
+            "messages.create": {"stop_sequences"}
+            | ({"output_config"} if self.version == "native-prompt-v1" else set()),
         }[self.sdk_surface]
         if set(self.options) - allowed:
             raise ValueError("UNQUALIFIED_REQUEST_OPTIONS")
@@ -132,19 +133,28 @@ class RequestContract(StrictModel):
         return self
 
     def render(self, text: str):
+        rendered_bytes = 0
+
+        def bounded_value(value):
+            nonlocal rendered_bytes
+            rendered_bytes += len(json.dumps(value, allow_nan=False).encode())
+            if rendered_bytes > 128000:
+                raise ValueError("RENDERED_REQUEST_EXCEEDS_BYTE_BOUND")
+            return value
+
         def walk(node, depth=0):
             if depth > 24 or not isinstance(node, dict):
                 raise ValueError("INVALID_REQUEST_TEMPLATE")
             op = node.get("op")
             if op == "literal":
-                return node["value"]
+                return bounded_value(node["value"])
             if op == "parameter":
                 if len(self.parameters) == 1:
-                    return text
+                    return bounded_value(text)
                 value = json.loads(text)
                 if not isinstance(value, dict) or node["name"] not in value:
                     raise ValueError("CASE_PARAMETER_MAPPING_REQUIRED")
-                return value[node["name"]]
+                return bounded_value(value[node["name"]])
             if op == "lookup":
                 value = walk(node["value"], depth + 1)
                 if isinstance(value, str):
@@ -159,8 +169,41 @@ class RequestContract(StrictModel):
             raise ValueError("UNQUALIFIED_REQUEST_TEMPLATE")
 
         value = walk(self.payload)
+        bundle = value if self.version == "native-prompt-v1" else None
+        if bundle is not None:
+            required = "input" if self.sdk_surface == "responses.create" else "messages"
+            optional = (
+                {"instructions"}
+                if self.sdk_surface == "responses.create"
+                else {"system"}
+                if self.sdk_surface == "messages.create"
+                else set()
+            )
+            if (
+                not isinstance(bundle, dict)
+                or required not in bundle
+                or set(bundle) - {required} - optional
+            ):
+                raise ValueError("QUALIFIED_NATIVE_PROMPT_ARGUMENTS_REQUIRED")
+            if "instructions" in bundle and not isinstance(bundle["instructions"], str):
+                raise ValueError("QUALIFIED_NATIVE_PROMPT_INSTRUCTIONS_REQUIRED")
+            if "system" in bundle:
+                system = bundle["system"]
+                if (
+                    not isinstance(system, list)
+                    or not 1 <= len(system) <= 32
+                    or any(
+                        not isinstance(block, dict)
+                        or set(block) != {"type", "text"}
+                        or block.get("type") != "text"
+                        or not isinstance(block.get("text"), str)
+                        for block in system
+                    )
+                ):
+                    raise ValueError("QUALIFIED_ANTHROPIC_SYSTEM_BLOCKS_REQUIRED")
+            value = bundle[required]
         if self.sdk_surface == "responses.create" and isinstance(value, str):
-            return value
+            return bundle if bundle is not None else value
         if not isinstance(value, list) or not 1 <= len(value) <= 100:
             raise ValueError("QUALIFIED_TEXT_MESSAGES_REQUIRED")
         for message in value:
@@ -173,7 +216,7 @@ class RequestContract(StrictModel):
             )
             if message.get("role") not in roles or not isinstance(message.get("content"), str):
                 raise ValueError("QUALIFIED_TEXT_MESSAGES_REQUIRED")
-        return value
+        return bundle if bundle is not None else value
 
 
 @dataclass
@@ -471,7 +514,7 @@ def prepare_profile(
     option_names = {
         "responses.create": {"temperature", "top_p", "text"},
         "chat.completions.create": {"temperature", "top_p", "stop", "response_format"},
-        "messages.create": {"temperature", "top_p", "stop_sequences"},
+        "messages.create": {"stop_sequences"},
     }[site["sdk_surface"]]
     allowed = {"model", payload_key, output_key, "instructions", "system", "store", *option_names}
     if set(values) - allowed:
