@@ -1,33 +1,73 @@
 {
   "feature": "explicit_native_modern_text_execution",
-  "status": "installed_public_wheel_locally_qualified_exact_hosted_gates_pending",
-  "native_sdks": ["openai 2.29.0", "openai 3.35.1"],
+  "status": "publicly_merged_bounded_native_text_contract",
+  "native_sdks": [
+    "openai 2.29.0",
+    "openai 3.35.1"
+  ],
   "scope": "synchronous nonstreaming Luna Responses text; explicit frozen reference",
-  "source_defaults": {"reasoning": "medium", "requested_tier": "auto"},
-  "owned_sample_proposer": {"reasoning": "none", "requested_tier": "default"},
+  "source_defaults": {
+    "reasoning": "medium",
+    "requested_tier": "auto"
+  },
+  "owned_sample_proposer": {
+    "reasoning": "none",
+    "requested_tier": "default"
+  },
   "primary_execution_price_and_legacy_serialization": "unchanged",
   "released_migrations_unchanged": "0001-0018",
-  "earlier_source_unit_group": {"passed": 528, "skipped": 23, "seconds": 113.41},
+  "earlier_source_unit_group": {
+    "passed": 528,
+    "skipped": 23,
+    "seconds": 113.41
+  },
   "earlier_unit_scope": "before final scope, per-model receipt and proposer guards",
-  "focused_sdk3_native_pg_and_ordinary_campaign": {"passed": 36, "deselected": 2, "seconds": 42.39},
+  "focused_sdk3_native_pg_and_ordinary_campaign": {
+    "passed": 36,
+    "deselected": 2,
+    "seconds": 42.39
+  },
   "authenticated_native_campaign_and_experiment_browser": {
-    "passed": 1, "deselected": 2, "seconds": 43.11,
+    "passed": 1,
+    "deselected": 2,
+    "seconds": 43.11,
     "desktop_mobile_axe": true
   },
-  "pg_unknown_cost_and_shared_ledger": {"passed": 10, "seconds": 19.76},
+  "pg_unknown_cost_and_shared_ledger": {
+    "passed": 10,
+    "seconds": 19.76
+  },
   "source_typing_modules": 192,
   "generated_api_types_and_react_build": "pass",
   "installed_artifact": "sanitized public source wheel, version 0.1.0.dev5; qualification only, not uploaded",
-  "installed_default_full": {"passed": 871, "skipped": 23, "seconds": 1023.04},
+  "installed_default_full": {
+    "passed": 871,
+    "skipped": 23,
+    "seconds": 1023.04
+  },
   "installed_default_skip_reasons": {
     "windows_symlink_privilege": 2,
     "separate_legacy_sdk_matrix": 4,
     "separate_openai3_matrix": 17
   },
-  "installed_openai3_broad": {"passed": 661, "skipped": 6, "seconds": 316.49},
-  "installed_openai3_skip_reasons": {"windows_symlink_privilege": 2, "separate_legacy_sdk_matrix": 4},
-  "installed_openai3_ordinary_modern_campaign": {"passed": 1, "deselected": 2, "seconds": 41.15},
-  "installed_legacy_sdk_and_scanner": {"passed": 21, "seconds": 2.41},
+  "installed_openai3_broad": {
+    "passed": 661,
+    "skipped": 6,
+    "seconds": 316.49
+  },
+  "installed_openai3_skip_reasons": {
+    "windows_symlink_privilege": 2,
+    "separate_legacy_sdk_matrix": 4
+  },
+  "installed_openai3_ordinary_modern_campaign": {
+    "passed": 1,
+    "deselected": 2,
+    "seconds": 41.15
+  },
+  "installed_legacy_sdk_and_scanner": {
+    "passed": 21,
+    "seconds": 2.41
+  },
   "packaged_application_files_equal_public_source_and_both_installs": 204,
   "packaged_backend_modules": 192,
   "node_native_tests": 13,
@@ -35,7 +75,12 @@
   "frontend_unit_tests": 7,
   "core_only_smoke": "pass, including parse-only modern preparation with no SDK or server dependencies",
   "twine_and_archive_identity": "pass",
-  "pre_evidence_update_public_boundary": {"files": 647, "reachable_objects": 2464, "archive_members": 851, "findings": 0},
+  "pre_evidence_update_public_boundary": {
+    "files": 647,
+    "reachable_objects": 2464,
+    "archive_members": 851,
+    "findings": 0
+  },
   "earlier_failed_runs": [
     "Same-model synthetic proposals converged to duplicate configurations; the guard correctly stopped them. Distinct fixture variants now pass.",
     "A new assertion conflated separate proposer plans with application target plans; assertions now verify both roles.",
@@ -46,8 +91,40 @@
   "production_deployment": false,
   "pypi_upload": false,
   "pending": [
-    "final evidence-only archive rebuild and source/history boundary",
-    "exact hosted checks and public merge",
-    "broader roadmap and independent real/customer acceptance"
-  ]
+    "broader roadmap and independent real/customer acceptance",
+    "new separately versioned package release; published dev5 unchanged"
+  ],
+  "public_pr": "https://github.com/CutbackAI/cutback/pull/32",
+  "reviewed_head": "93e3376b7236bc419f44e82c6eee60ab11d80919",
+  "public_merge": "5175b0800ee99ce87b9149e2b16aef386d10b434",
+  "accepted_private": "c2602ead1df03559cb3016040ec81873de2bafc9",
+  "matching_reviewed_merged_private_tree": "606536c5fe34a98acb09affbd5adc3ef360b932c",
+  "required_hosted_checks_passed": 10,
+  "hosted_default_python311": {
+    "passed": 873,
+    "skipped": 21,
+    "seconds": 659.06
+  },
+  "hosted_default_python313": {
+    "passed": 871,
+    "skipped": 23,
+    "seconds": 610.66
+  },
+  "hosted_sdk3_python311": {
+    "passed": 663,
+    "skipped": 4,
+    "seconds": 132.0
+  },
+  "hosted_sdk3_python313": {
+    "passed": 663,
+    "skipped": 4,
+    "seconds": 128.52
+  },
+  "final_evidence_only_archives": {
+    "application_files_equal_qualified_installs": 204,
+    "files": 647,
+    "reachable_objects": 2470,
+    "archive_members": 851,
+    "findings": 0
+  }
 }

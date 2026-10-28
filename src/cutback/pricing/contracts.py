@@ -22,7 +22,7 @@ def inclusive_write_breakdown(event, rate):
     short, long = event.cache_write_30m_tokens, event.cache_write_12h_tokens
     if writes == 0 and short in {None, 0} and long in {None, 0}:
         short, long = 0, 0
-    elif event.event_schema_version != "1.1" or short is None or long is None:
+    elif event.event_schema_version not in {"1.1", "1.2"} or short is None or long is None:
         return "modern_cache_write_duration_unavailable"
     if (
         any(type(value) is not int or value < 0 for value in (short, long))

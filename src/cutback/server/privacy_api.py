@@ -1,6 +1,7 @@
 """Audited project deletion/export. Delete encrypted objects before relational pointers."""
 
 import json
+from datetime import UTC, datetime
 from uuid import UUID
 
 from fastapi import Depends, HTTPException
@@ -42,6 +43,12 @@ from cutback.server.enterprise_db import (
     TrainingJob,
 )
 from cutback.server.execution_db import ExecutionCall, ExecutionEpisode
+from cutback.server.gateway_db import (
+    GatewayBudgetRow,
+    GatewayCallRow,
+    GatewayKeyRow,
+    GatewayPolicyRow,
+)
 from cutback.server.lineage_db import DatasetAlias, DatasetExposure, DatasetFamily
 from cutback.server.monitoring_db import (
     AlertRule,
@@ -101,6 +108,10 @@ def install_privacy(app, sessions, authorize, scope):
         def records():
             with sessions() as session:
                 for cls in (
+                    GatewayPolicyRow,
+                    GatewayKeyRow,
+                    GatewayBudgetRow,
+                    GatewayCallRow,
                     OutcomeWatch,
                     OutcomeWatchWindow,
                     CampaignRecord,
@@ -173,6 +184,8 @@ def install_privacy(app, sessions, authorize, scope):
                             column.name: getattr(row, column.name)
                             for column in cls.__table__.columns
                             if cls is not PayloadSample or column.name != "object_ref"
+                            if cls is not GatewayKeyRow or column.name != "digest"
+                            if cls is not GatewayCallRow or column.name != "request_hmac"
                         }
                         yield (
                             json.dumps({"table": cls.__tablename__, "record": data}, default=str)
@@ -195,8 +208,16 @@ def install_privacy(app, sessions, authorize, scope):
             project = session.get(Project, project_id, with_for_update=True)
             if not project or confirm_slug != project.slug:
                 raise HTTPException(409, "PROJECT_DELETE_REQUIRES_EXACT_SLUG")
-            from datetime import UTC, datetime
-
+            if session.scalar(
+                select(GatewayCallRow.operation_id)
+                .where(
+                    GatewayCallRow.project_id == project_id,
+                    GatewayCallRow.state == "DISPATCHED",
+                    GatewayCallRow.lease_until > datetime.now(UTC),
+                )
+                .limit(1)
+            ):
+                raise HTTPException(409, "FINISH_IN_FLIGHT_GATEWAY_CALL_FIRST")
             if session.scalar(
                 select(NotificationDelivery.id)
                 .where(
@@ -285,6 +306,10 @@ def install_privacy(app, sessions, authorize, scope):
             from cutback.server.db import ChangeProposal, DatasetItem, RecommendationRecord
 
             for cls in (
+                GatewayCallRow,
+                GatewayKeyRow,
+                GatewayBudgetRow,
+                GatewayPolicyRow,
                 OutcomeWatchWindow,
                 OutcomeWatch,
                 CampaignSelection,

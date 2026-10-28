@@ -29,6 +29,24 @@ export function explain(error: unknown) {
     SCOPE_DENIED: "Your role does not permit this action in this project.",
     INVALID_OR_EXPIRED_KEY:
       "This key is expired or revoked. Connect with an authorized replacement.",
+    GATEWAY_APPROVED_WINDOWS_MUST_NOT_OVERLAP:
+      "An approved policy already covers this window. Resume that policy with its retained limits, or prepare a later nonoverlapping window.",
+    GATEWAY_MODEL_LIMIT_BELOW_ONE_FULL_RESERVATION:
+      "The model allowance must cover at least one full-context reservation. Review its context, output ceiling and price contract.",
+    GATEWAY_KEY_LIMIT_BELOW_ONE_FULL_RESERVATION:
+      "This key's allowance cannot cover one full-context reservation. Review the selected model and key limit.",
+    GATEWAY_KEY_ALREADY_ISSUED_REVOKE_BEFORE_REPLACEMENT:
+      "This key intent was already issued. Inspect the key records and revoke an inaccessible key before deliberately issuing a replacement.",
+    GATEWAY_CURRENT_ADMIN_REQUIRED:
+      "The approving or issuing principal no longer has project administration rights. A current administrator must review recovery and replacement keys.",
+    GATEWAY_ACTIVATION_APPROVAL_ALREADY_CONSUMED:
+      "That activation approval already ended. Review the current policy and explicitly choose Resume again to authorize a new activation; nothing has been resumed automatically.",
+    GATEWAY_APPROVAL_HISTORY_CAPACITY_REACHED:
+      "This finite policy has used its 1,024 activation approvals. Keep its existing accounting and prepare a later nonoverlapping window.",
+    GATEWAY_STATE_VERSION_CONFLICT_REVIEW_CURRENT_POLICY:
+      "The policy changed after this action was reviewed. Inspect its current state and explicitly choose the action again; no stale activation or stop was applied.",
+    GATEWAY_KEY_LIMIT_EXCEEDS_POLICY:
+      "The key limits must fit each approved project, team and model limit.",
     CONTRACT_RATE_PERIOD_START_CONFLICT:
       "A different rate already uses this exact scope and start time. Inspect the saved rate or choose the reviewed new effective time.",
     PROJECT_RATE_OVERRIDE_QUOTA:

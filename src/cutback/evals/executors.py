@@ -364,6 +364,7 @@ class AnthropicExecutor:
         )
         cost = Catalog().price(event)
         output = "".join(block.text for block in response.content if block.type == "text")
+        assert event.duration_ms is not None
         return Execution(
             output,
             cost.amount,

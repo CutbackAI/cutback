@@ -166,6 +166,7 @@ class Exporter:
                 "captured_exported",
                 "captured_dropped",
                 "capture_enabled",
+                "gateway_delegated",
             }
             health = HealthBatch(
                 project_id=self.project_id,

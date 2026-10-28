@@ -1,0 +1,109 @@
+{
+  "feature": "finite_application_gateway_budgets",
+  "status": "bounded_implementation_final_acceptance_tracked_in_pull_request_33",
+  "final_gate_record": "https://github.com/CutbackAI/cutback/pull/33",
+  "scope": "project/environment virtual keys, shared project/team/model/key modeled budgets; native synchronous/asynchronous nonstreaming Luna Responses text",
+  "released_migrations_unchanged": "0001-0018",
+  "additive_migration_unreleased": "0019",
+  "source_combined_default": {
+    "passed": 59,
+    "skipped": 8,
+    "seconds": 35.64
+  },
+  "source_combined_skips": "native HTTPX2 cases require separate SDK3 environment",
+  "source_sdk3_exploratory_broad": {
+    "passed": 616,
+    "skipped": 6,
+    "seconds": 139.82
+  },
+  "source_sdk3_skip_reasons": {
+    "windows_symlink_privilege": 2,
+    "separate_legacy_sdk_matrix": 4
+  },
+  "source_legacy_and_scanner": {
+    "passed": 21,
+    "seconds": 2.08
+  },
+  "source_authenticated_browser_after_money_tables_and_lazy_route": {
+    "passed": 1,
+    "seconds": 14.75
+  },
+  "desktop_mobile_axe_and_viewer": true,
+  "frontend_units": 9,
+  "source_typing_modules": 204,
+  "expiry_fix_source_default": {
+    "passed": 32,
+    "skipped": 8,
+    "seconds": 44.11
+  },
+  "expiry_fix_source_sdk3": {
+    "passed": 40,
+    "seconds": 45.69
+  },
+  "before_state_fencing_public_wheel_sdk3": {
+    "passed": 727,
+    "skipped": 6,
+    "seconds": 478.84
+  },
+  "before_state_fencing_public_wheel_sdk3_skips": {
+    "windows_symlink_privilege": 2,
+    "separate_legacy_sdk_matrix": 4
+  },
+  "before_state_fencing_public_wheel_legacy_scanner": {
+    "passed": 21,
+    "seconds": 5.83
+  },
+  "before_state_fencing_public_wheel_migrations_authenticated_gateway_browser_and_pipeline": "pass within full default run; complete run status is in the final gate record",
+  "before_state_fencing_public_wheel_independent_cli_sample": "pass with owned Docker/PostgreSQL, metadata-only startup, two synthetic provider requests, duplicate/shared limits enforced and confirmed project deletion",
+  "before_state_fencing_public_wheel_core_only": "pass, including native preparation and discovered application checks without server/provider SDK dependencies",
+  "before_state_fencing_public_wheel_gateway_without_provider_sdks": "pass; disabled HTTP response is nonretryable",
+  "full_default_and_hosted_acceptance": "Consult the final gate record; do not infer these results from focused/source checks.",
+  "generated_api_types_and_production_react": "pass",
+  "independent_native_http_pg_report_sample": "pass within combined source group",
+  "earlier_failed_runs": [
+    "Native test setup used an ingestion token shorter than the existing 32-character guard; corrected synthetic token.",
+    "Gateway quota namespacing exceeded the existing 64-character shared bucket key; hash the namespace and credential together.",
+    "First browser locator matched both main and repeated component headings; component now has a distinct heading and main-heading assertion is explicit.",
+    "Source typing required explicit Decimal construction and a literal context default; corrected.",
+    "React build caught two missing newly frozen reservation fields; authoring now supplies both.",
+    "Initial mobile table over-wrapped opaque IDs; bounded horizontal tables preserve readability.",
+    "The added dashboard exceeded the initial bundle warning; route-level lazy loading removes that warning and provides a failure boundary.",
+    "Initial hosted SDK3 and audit jobs rejected stale optional-extra metadata in the nested compatibility lockfile. Regenerated it without changing dependency versions.",
+    "An additional real-PG concurrency test reproduced expiry being checked before a shared lock wait. Real time is now refreshed under the mutation lock before policy/key actions and money reservation; the regression passes.",
+    "The obsolete pre-expiry-fix default installed run was stopped and is not counted as final acceptance; the fixed wheel has a separate complete gate.",
+    "Three real-PG replay regressions first received 200 instead of 409. One-use activation history now rejects initial, recent and older consumed references; reviewed state versions also reject unused delayed approvals after a newer stop.",
+    "The first replay error assertion expected a generic detail envelope; it now checks the gateway's actual code envelope.",
+    "Malformed successful upstream JSON, non-object JSON, duplicate keys and nonfinite values now stop with unknown billing and block the policy. Their four protocol cases pass."
+  ],
+  "native_sdk_requests": "actual pinned SDKs with synthetic provider transports",
+  "paid_provider_requests": 0,
+  "production_deployment": false,
+  "pypi_upload": false,
+  "pending": [
+    "broader providers, surfaces, reliability, operations and roadmap acceptance",
+    "independent real user/customer and live provider acceptance"
+  ],
+  "before_state_fencing_exact_packaged_application_files": 217,
+  "before_state_fencing_exact_packaged_python_modules": 204,
+  "before_state_fencing_public_source_and_both_installed_environments_match": true,
+  "before_state_fencing_full_installed_default": {
+    "passed": 930,
+    "skipped": 31,
+    "seconds": 1437.06
+  },
+  "state_fenced_source_default": {
+    "passed": 71,
+    "skipped": 8,
+    "seconds": 56.07
+  },
+  "state_fenced_source_sdk3": {
+    "passed": 79,
+    "seconds": 57.51
+  },
+  "state_fenced_source_browser_desktop_mobile_axe": {
+    "passed": 1,
+    "seconds": 17.84
+  },
+  "state_fenced_package_and_hosted_gates": "Final exact-wheel gates and hosted revision are tracked in PR 33; earlier installed results are explicitly labeled before_state_fencing.",
+  "unreleased_migration_0019_review_fields": "state_version and bounded one-use activation approval identities; released migrations 0001-0018 are unchanged"
+}

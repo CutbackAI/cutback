@@ -415,6 +415,12 @@ class OpenAIInstrumentation:
             if self.closed or os.getenv("CUTBACK_ENABLED", "true").lower() == "false":
                 return None
             try:
+                if self.sdk_package == "openai" and surface == "responses.create":
+                    from cutback.gateway.client import delegated
+
+                    if delegated(resource, kwargs):
+                        self.exporter.count("gateway_delegated")
+                        return None
                 return self.observation_type(self, resource, surface, kwargs)
             except Exception:
                 self.exporter.count("normalization_failed")

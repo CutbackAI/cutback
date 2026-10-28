@@ -658,6 +658,18 @@ eval = [
     { name = "cryptography" },
     { name = "jsonschema" },
 ]
+gateway = [
+    { name = "alembic" },
+    { name = "cryptography" },
+    { name = "fastapi" },
+    { name = "httpcore" },
+    { name = "httpx" },
+    { name = "jsonschema" },
+    { name = "opentelemetry-api" },
+    { name = "psycopg", extra = ["binary"] },
+    { name = "sqlalchemy" },
+    { name = "uvicorn" },
+]
 identity = [
     { name = "pyjwt", extra = ["crypto"] },
 ]
@@ -715,6 +727,7 @@ requires-dist = [
     { name = "cutback", extras = ["eval"], marker = "extra == 'server'" },
     { name = "cutback", extras = ["instrumentation"], marker = "extra == 'anthropic'" },
     { name = "cutback", extras = ["instrumentation"], marker = "extra == 'openai'" },
+    { name = "cutback", extras = ["server", "instrumentation"], marker = "extra == 'gateway'" },
     { name = "fastapi", marker = "extra == 'server'", specifier = ">=0.120,<1" },
     { name = "httpcore", marker = "extra == 'server'", specifier = "==1.0.9" },
     { name = "httpx", marker = "extra == 'instrumentation'", specifier = ">=0.28,<1" },
@@ -735,7 +748,7 @@ requires-dist = [
     { name = "typer", specifier = ">=0.20,<1" },
     { name = "uvicorn", marker = "extra == 'server'", specifier = ">=0.38,<1" },
 ]
-provides-extras = ["prompts", "instrumentation", "openai", "server", "eval", "anthropic", "storage", "identity", "commercial", "javascript"]
+provides-extras = ["prompts", "instrumentation", "openai", "server", "gateway", "eval", "anthropic", "storage", "identity", "commercial", "javascript"]
 
 [package.metadata.requires-dev]
 dev = [

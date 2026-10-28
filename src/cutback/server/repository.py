@@ -77,6 +77,7 @@ def usage_columns(table, metadata):
             )
         ).label("operations"),
         func.count(table.cost_usd).label("priced_requests"),
+        func.count(duration).label("timed_requests"),
         func.sum(table.cost_usd).label("known_cost"),
         func.sum(input_tokens).filter(reported).label("input_tokens"),
         func.sum(output_tokens).filter(reported).label("output_tokens"),
@@ -121,6 +122,7 @@ def render_usage(row):
         "external_otel_observations": row.external_otel,
         "latency_p50_ms": row.p50,
         "latency_p95_ms": row.p95,
+        "observed_duration_requests": getattr(row, "timed_requests", None),
         "latest_observation": row.latest.isoformat() if row.latest else None,
         "price_snapshot_ids": row.snapshots or [],
         "actual_billed_cost_usd": None,
@@ -140,6 +142,8 @@ class PostgresEventRepository:
         self.catalog = Catalog()
 
     def ingest_batch(self, session, batch, environments):
+        if any(event.event_schema_version == "1.2" for event in batch.events):
+            raise ValueError("GATEWAY_RECEIPTS_REQUIRE_INTERNAL_RESERVATION")
         # Preserve first-wins semantics inside a batch, then acquire unique-index
         # conflicts in stable order across concurrent overlapping submissions.
         first: dict[UUID, LLMEvent] = {}
@@ -424,6 +428,12 @@ class PostgresEventRepository:
 def merge_usage(target: dict, source: dict):
     """Sum additive facts; do not average quantiles or invent cross-day operation identities."""
     old_count = target["observed_attempts"]
+    target["observed_duration_requests"] = (
+        target["observed_duration_requests"] + source["observed_duration_requests"]
+        if target.get("observed_duration_requests") is not None
+        and source.get("observed_duration_requests") is not None
+        else None
+    )
     counts = (
         "observed_requests",
         "observed_attempts",

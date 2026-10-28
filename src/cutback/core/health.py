@@ -19,6 +19,7 @@ CounterName = Literal[
     "captured_exported",
     "captured_dropped",
     "capture_enabled",
+    "gateway_delegated",
 ]
 
 
