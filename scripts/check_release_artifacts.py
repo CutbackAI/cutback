@@ -99,6 +99,8 @@ def check(directory: Path):
             "docs/improvement-campaigns.md",
             "docs/campaign-outcomes.md",
             "docs/load-qualification.md",
+            "docs/modern-model-accounting.md",
+            "examples/modern-pricing/sample.py",
             "examples/load-qualification/profile.json",
             "examples/load-qualification/compare.py",
             "src/cutback/server/migrations/versions/0016_effective_rate_lookup_index.py",

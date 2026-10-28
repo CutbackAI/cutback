@@ -288,9 +288,11 @@ export function createObserver(options = {}) {
         : Array.isArray(request.messages) &&
           request.messages.every((m) => typeof m.content === "string");
     const metering =
-      isText && !request.tools && !request.audio && !request.web_search_options
+      isText && !request.tools && !request.audio && !request.modalities &&
+      !request.extra_body && !request.web_search_options
         ? "text_only"
         : "unsupported_units";
+    const requestedTier = identifier(request.service_tier);
     request = null; // Keep only approved metadata across the request await.
     const started = performance.now(),
       event = {
@@ -314,7 +316,7 @@ export function createObserver(options = {}) {
         response_model: null,
         region: null,
         deployment: null,
-        service_tier: null,
+        service_tier: requestedTier,
         duration_ms: 0,
         status: "incomplete",
         http_status: null,
@@ -348,7 +350,7 @@ export function createObserver(options = {}) {
         Math.max(0, performance.now() - started),
       );
       event.response_model = responseModel;
-      event.service_tier = serviceTier;
+      event.service_tier = serviceTier ?? event.service_tier;
       if (usage && status === "success") {
         const data = normalize(provider, usage);
         Object.assign(event, data);
@@ -549,17 +551,39 @@ function normalize(provider, u) {
     (reasoning !== null && reasoning > output)
   )
     return {};
-  return {
+  let five = integer(u.cache_creation?.ephemeral_5m_input_tokens),
+    hour = integer(u.cache_creation?.ephemeral_1h_input_tokens);
+  const creation = integer(u.cache_creation_input_tokens);
+  if (provider === "anthropic" && creation === 0) {
+    const detail = u.cache_creation;
+    if ([detail?.ephemeral_5m_input_tokens, detail?.ephemeral_1h_input_tokens]
+      .some((value) => value != null && (typeof value !== "number" || value !== 0))) return {};
+    five = hour = 0;
+  }
+  if (provider === "anthropic" && five !== null && hour !== null &&
+      creation !== null && five + hour !== creation) return {};
+  const details = u.input_tokens_details ?? u.prompt_tokens_details;
+  const writes = integer(details?.cache_write_tokens);
+  const result = {
     input_tokens: input,
     output_tokens: output,
     cache_read_tokens: cached,
     cache_write_tokens:
-      provider === "anthropic" ? integer(u.cache_creation_input_tokens) : null,
+      provider === "anthropic" ? five : writes,
     cache_write_1h_tokens:
       provider === "anthropic"
-        ? integer(u.cache_creation?.ephemeral_1h_input_tokens)
+        ? hour
         : null,
     reasoning_tokens: reasoning,
     usage_source: "provider_reported",
   };
+  if (provider === "openai" && details?.cache_write_tokens_details != null) {
+    const short = integer(details.cache_write_tokens_details.ttl_30m_tokens),
+      long = integer(details.cache_write_tokens_details.ttl_12h_tokens);
+    if (short === null || long === null || writes === null ||
+        short + long !== writes || (cached !== null && cached + writes > input)) return {};
+    Object.assign(result, {event_schema_version: "1.1",
+      cache_write_30m_tokens: short, cache_write_12h_tokens: long});
+  }
+  return result;
 }

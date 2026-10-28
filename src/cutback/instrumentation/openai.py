@@ -39,7 +39,7 @@ def normalize_usage(response, surface):
         return {"usage_source": "unavailable"}
     input_detail = field(usage, "prompt_tokens_details" if chat else "input_tokens_details")
     output_detail = field(usage, "completion_tokens_details" if chat else "output_tokens_details")
-    return {
+    result = {
         "usage_source": "provider_reported",
         "input_tokens": inp,
         "output_tokens": out,
@@ -47,14 +47,46 @@ def normalize_usage(response, surface):
         "cache_write_tokens": field(input_detail, "cache_write_tokens"),
         "reasoning_tokens": field(output_detail, "reasoning_tokens"),
     }
+    lifetime = field(input_detail, "cache_write_tokens_details")
+    if lifetime is not None:
+        short, long = field(lifetime, "ttl_30m_tokens"), field(lifetime, "ttl_12h_tokens")
+        total, read = result["cache_write_tokens"], result["cache_read_tokens"]
+        if (
+            any(
+                type(value) is not int or not 0 <= value <= 10**12 for value in (short, long, total)
+            )
+            or any(
+                value is not None and (type(value) is not int or not 0 <= value <= 10**12)
+                for value in (inp, out, read)
+            )
+            or short + long != total
+            or (inp is not None and read is not None and read + total > inp)
+        ):
+            # Preserve the observed call, but never turn inconsistent new usage into a price.
+            return {"usage_source": "unavailable"}
+        result.update(
+            event_schema_version="1.1", cache_write_30m_tokens=short, cache_write_12h_tokens=long
+        )
+    return result
 
 
 def text_only(kwargs, surface):
+    extra = kwargs.get("extra_body")
+    qualified_cache_options = (
+        isinstance(extra, dict)
+        and set(extra) == {"prompt_cache_options"}
+        and isinstance(extra["prompt_cache_options"], dict)
+        and set(extra["prompt_cache_options"]) == {"ttl"}
+        and isinstance(extra["prompt_cache_options"]["ttl"], str)
+        and extra["prompt_cache_options"]["ttl"] in {"30m", "12h"}
+        and surface == "responses.create"
+        and kwargs.get("model") == "gpt-6-luna"
+    )
     if (
         kwargs.get("tools")
         or kwargs.get("modalities")
         or kwargs.get("audio")
-        or kwargs.get("extra_body")
+        or (extra and not qualified_cache_options)
     ):
         return False
     value = kwargs.get("messages" if surface.startswith("chat") else "input")
@@ -153,8 +185,11 @@ class Observation:
             remote_status = field(response, "status")
             if remote_status in {"incomplete", "failed", "cancelled", "in_progress", "queued"}:
                 status = "error" if remote_status == "failed" else "incomplete"
+            metadata = dict(self.base)
+            if field(response, "service_tier") is not None:
+                metadata["service_tier"] = field(response, "service_tier")
             event = LLMEvent(
-                **self.base,
+                **metadata,
                 response_model=field(response, "model"),
                 duration_ms=(time.perf_counter() - self.start) * 1000,
                 status=status,

@@ -977,6 +977,8 @@ export function RateForm({
   base: string;
   reload: () => void;
 }) {
+  const [provider, setProvider] = useState("openai");
+  const [modern, setModern] = useState(false);
   return (
     <Editor title="Add effective-dated contract rate">
       <Form
@@ -985,7 +987,7 @@ export function RateForm({
         description="USD per million tokens. Only exact provider/model/region/tier matches apply; previous event valuations remain unchanged."
         onSubmit={async (data) => {
           await json(api, base + "/prices/overrides", {
-            provider: data.provider,
+            provider,
             model: data.model,
             region: String(data.region || "") || null,
             service_tier: String(data.tier || "") || null,
@@ -993,9 +995,17 @@ export function RateForm({
             output: String(data.output),
             cache_read: String(data.cache_read),
             cache_write:
-              data.cache_write === "" ? null : String(data.cache_write),
+              modern || !data.cache_write ? null : String(data.cache_write),
             cache_write_1h:
-              data.cache_hour === "" ? null : String(data.cache_hour),
+              modern || !data.cache_hour ? null : String(data.cache_hour),
+            ...(modern ? {
+              input_token_contract: "openai-inclusive-cache-writes-v2",
+              cache_write_30m: String(data.cache_30m),
+              cache_write_12h: String(data.cache_12h),
+              long_context_threshold: Number(data.context_threshold),
+              long_context_input_multiplier: String(data.context_input),
+              long_context_output_multiplier: String(data.context_output),
+            } : {}),
             valid_from: new Date(String(data.starts)).toISOString(),
             valid_to: data.ends
               ? new Date(String(data.ends)).toISOString()
@@ -1005,10 +1015,18 @@ export function RateForm({
           return "Contract rate recorded.";
         }}
       >
-        <Select label="Rate provider" name="provider">
+        <Select label="Rate provider" name="provider" value={provider} onChange={(event) => {
+          setProvider(event.target.value);
+          if (event.target.value !== "openai") setModern(false);
+        }}>
           <option>openai</option>
           <option>anthropic</option>
         </Select>
+        {provider === "openai" && <Select label="Input token contract" name="token_contract"
+          value={modern ? "modern" : "legacy"} onChange={(event) => setModern(event.target.value === "modern")}>
+          <option value="legacy">Legacy input includes cached reads</option>
+          <option value="modern">OpenAI input includes disjoint cache reads and writes</option>
+        </Select>}
         <Field label="Exact model ID" name="model" required />
         <Field label="Region (optional)" name="region" />
         <Field label="Service tier (optional)" name="tier" />
@@ -1025,11 +1043,16 @@ export function RateForm({
             min="0"
             step="any"
             required
-            defaultValue="0"
           />
         ))}
-        <Field
-          label="Cache write rate (optional)"
+        {modern ? <>
+          <Field label="30-minute cache write rate" name="cache_30m" type="number" min="0" step="any" required />
+          <Field label="12-hour cache write rate" name="cache_12h" type="number" min="0" step="any" required />
+          <Field label="Long-context threshold tokens" name="context_threshold" type="number" min="1" max="100000000" defaultValue="272000" required />
+          <Field label="Long-context input/cache multiplier" name="context_input" type="number" min="1" max="10" step="any" defaultValue="2" required />
+          <Field label="Long-context output multiplier" name="context_output" type="number" min="1" max="10" step="any" defaultValue="1.5" required />
+        </> : provider === "anthropic" ? <><Field
+          label="Five-minute cache write rate (optional)"
           name="cache_write"
           type="number"
           min="0"
@@ -1042,6 +1065,7 @@ export function RateForm({
           min="0"
           step="any"
         />
+        </> : <p className="hint">Choose the versioned write contract to declare OpenAI cache-write rates.</p>}
         <Field
           label="Effective from (local time)"
           name="starts"

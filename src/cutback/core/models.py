@@ -8,6 +8,7 @@ from pydantic import (
     Field,
     StringConstraints,
     field_validator,
+    model_serializer,
     model_validator,
 )
 
@@ -22,7 +23,7 @@ class StrictModel(BaseModel):
 
 
 class LLMEvent(StrictModel):
-    event_schema_version: Literal["1.0"] = "1.0"
+    event_schema_version: Literal["1.0", "1.1"] = "1.0"
     event_id: UUID = Field(default_factory=uuid4)
     occurred_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     environment: Identifier
@@ -57,6 +58,8 @@ class LLMEvent(StrictModel):
     cache_read_tokens: TokenCount | None = None
     cache_write_tokens: TokenCount | None = None
     cache_write_1h_tokens: TokenCount | None = None
+    cache_write_30m_tokens: TokenCount | None = None
+    cache_write_12h_tokens: TokenCount | None = None
     reasoning_tokens: TokenCount | None = None
     usage_source: Literal["provider_reported", "counted", "estimated", "unavailable"] = (
         "unavailable"
@@ -67,6 +70,14 @@ class LLMEvent(StrictModel):
         "all-supported-calls-v1"
     )
     # No arbitrary attributes, raw usage maps, request IDs, error messages, or content fields.
+
+    @model_serializer(mode="wrap")
+    def preserve_released_event_serialization(self, handler):
+        result = handler(self)
+        if self.event_schema_version == "1.0":
+            result.pop("cache_write_30m_tokens", None)
+            result.pop("cache_write_12h_tokens", None)
+        return result
 
     @field_validator("occurred_at")
     @classmethod
@@ -83,10 +94,31 @@ class LLMEvent(StrictModel):
             self.cache_read_tokens,
             self.cache_write_tokens,
             self.cache_write_1h_tokens,
+            self.cache_write_30m_tokens,
+            self.cache_write_12h_tokens,
             self.reasoning_tokens,
         ]
         if self.usage_source == "unavailable" and any(v is not None for v in values):
             raise ValueError("unavailable usage must remain null")
+        split = (self.cache_write_30m_tokens, self.cache_write_12h_tokens)
+        if any(value is not None for value in split) and (
+            self.event_schema_version != "1.1" or self.provider != "openai"
+        ):
+            raise ValueError("OpenAI write lifetime counts require event schema 1.1")
+        if self.event_schema_version == "1.1" and self.provider != "openai":
+            raise ValueError("event schema 1.1 is qualified only for OpenAI usage")
+        if self.event_schema_version == "1.1":
+            if all(value is not None for value in (*split, self.cache_write_tokens)) and (
+                sum(value for value in split if value is not None) != self.cache_write_tokens
+            ):
+                raise ValueError("OpenAI write lifetime partitions must match total writes")
+            if (
+                self.input_tokens is not None
+                and self.cache_read_tokens is not None
+                and self.cache_write_tokens is not None
+                and self.cache_read_tokens + self.cache_write_tokens > self.input_tokens
+            ):
+                raise ValueError("OpenAI reads and writes are disjoint subsets of input")
         if self.provider == "openai":
             if (
                 self.input_tokens is not None

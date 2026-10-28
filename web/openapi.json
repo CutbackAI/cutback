@@ -985,6 +985,35 @@
               "format": "uuid",
               "title": "Project Id"
             }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
           }
         ],
         "responses": {
@@ -15442,7 +15471,10 @@
         "properties": {
           "event_schema_version": {
             "type": "string",
-            "const": "1.0",
+            "enum": [
+              "1.0",
+              "1.1"
+            ],
             "title": "Event Schema Version",
             "default": "1.0"
           },
@@ -15761,6 +15793,32 @@
               }
             ],
             "title": "Cache Write 1H Tokens"
+          },
+          "cache_write_30m_tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000000000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Write 30M Tokens"
+          },
+          "cache_write_12h_tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000000000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Write 12H Tokens"
           },
           "reasoning_tokens": {
             "anyOf": [
@@ -17339,6 +17397,7 @@
             "anyOf": [
               {
                 "type": "number",
+                "maximum": 1000000.0,
                 "minimum": 0.0
               },
               {
@@ -17351,6 +17410,7 @@
             "anyOf": [
               {
                 "type": "number",
+                "maximum": 1000000.0,
                 "minimum": 0.0
               },
               {
@@ -17363,6 +17423,7 @@
             "anyOf": [
               {
                 "type": "number",
+                "maximum": 1000000.0,
                 "minimum": 0.0
               },
               {
@@ -17375,6 +17436,7 @@
             "anyOf": [
               {
                 "type": "number",
+                "maximum": 1000000.0,
                 "minimum": 0.0
               },
               {
@@ -17390,6 +17452,7 @@
             "anyOf": [
               {
                 "type": "number",
+                "maximum": 1000000.0,
                 "minimum": 0.0
               },
               {
@@ -17400,6 +17463,95 @@
               }
             ],
             "title": "Cache Write 1H"
+          },
+          "input_token_contract": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "openai-inclusive-cache-writes-v2"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Token Contract"
+          },
+          "cache_write_30m": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Write 30M"
+          },
+          "cache_write_12h": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Write 12H"
+          },
+          "long_context_threshold": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Long Context Threshold"
+          },
+          "long_context_input_multiplier": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 10.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Long Context Input Multiplier"
+          },
+          "long_context_output_multiplier": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 10.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Long Context Output Multiplier"
           },
           "valid_from": {
             "type": "string",

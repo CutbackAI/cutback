@@ -1,5 +1,5 @@
 from datetime import UTC, datetime, timedelta
-from decimal import Decimal
+from decimal import Decimal, localcontext
 from typing import Protocol
 from uuid import UUID, uuid4
 
@@ -21,7 +21,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import aliased
 
 from cutback.core.models import EventBatch, IngestReceipt, LLMEvent
-from cutback.pricing import Catalog
+from cutback.pricing import Catalog, Cost
 from cutback.server.db import DailyUsage, RateOverride, StoredEvent
 
 
@@ -177,6 +177,7 @@ class PostgresEventRepository:
                 RateOverride.id,
                 RateOverride.rates,
                 RateOverride.valid_from,
+                func.count().over(partition_by=RateOverride.valid_from).label("same_start_count"),
             )
             .where(
                 RateOverride.project_id == batch.project_id,
@@ -187,7 +188,7 @@ class PostgresEventRepository:
                 RateOverride.valid_from <= context.c.occurred_at,
                 RateOverride.valid_to.is_(None) | (RateOverride.valid_to > context.c.occurred_at),
             )
-            .order_by(RateOverride.valid_from.desc())
+            .order_by(RateOverride.valid_from.desc(), RateOverride.id.desc())
             .limit(1)
             .correlate(context)
             .lateral("best_rate")
@@ -200,6 +201,7 @@ class PostgresEventRepository:
                     best.c.id,
                     best.c.rates,
                     best.c.valid_from,
+                    best.c.same_start_count,
                 ).select_from(context.outerjoin(best, true()))
             )
         }
@@ -215,7 +217,31 @@ class PostgresEventRepository:
                 if match.id is not None
                 else None
             )
-            cost = self.catalog.price(event, override)
+            cost = (
+                Cost(None, "unpriced", "ambiguous_contract_rates", "ambiguous-project-override", {})
+                if match.id is not None and match.same_start_count > 1
+                else self.catalog.price(event, override)
+            )
+            amount = cost.amount
+            if amount is not None:
+                with localcontext() as money_context:
+                    money_context.prec = 80
+                    if not amount.is_finite() or not Decimal(0) <= amount < Decimal("1e12"):
+                        cost = Cost(
+                            None,
+                            "unpriced",
+                            "modeled_price_outside_storage_bounds",
+                            cost.snapshot_id,
+                            cost.breakdown,
+                        )
+                    elif amount != amount.quantize(Decimal("0.000000000001")):
+                        cost = Cost(
+                            None,
+                            "unpriced",
+                            "modeled_price_precision_unavailable",
+                            cost.snapshot_id,
+                            cost.breakdown,
+                        )
             if match.id is not None and cost.amount is not None:
                 from dataclasses import replace
 

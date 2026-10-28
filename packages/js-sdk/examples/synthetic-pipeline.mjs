@@ -3,6 +3,9 @@ import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { createObserver } from "../index.mjs";
 
+const modernCache = process.argv.includes("--modern-cache");
+const observedModel = modernCache ? "gpt-6-luna" : "gpt-4.1-mini";
+
 const observer = createObserver({
   enabled: true,
   endpoint: process.env.CUTBACK_ENDPOINT ?? "http://127.0.0.1:8080",
@@ -17,14 +20,17 @@ const observer = createObserver({
           id: "resp_synthetic",
           object: "response",
           created_at: 1,
-          model: "gpt-4.1-mini",
+          model: observedModel,
+          service_tier: "default",
           status: "completed",
           output: [],
           usage: {
             input_tokens: 20,
             output_tokens: 5,
             total_tokens: 25,
-            input_tokens_details: { cached_tokens: 2 },
+            input_tokens_details: modernCache ? { cached_tokens: 2, cache_write_tokens: 10,
+              cache_write_tokens_details: {ttl_30m_tokens: 6, ttl_12h_tokens: 4} }
+              : { cached_tokens: 2 },
             output_tokens_details: { reasoning_tokens: 0 },
           },
         }),
@@ -69,7 +75,7 @@ try {
   });
   await observer.run({ workflowId: "node-synthetic" }, () =>
     openai.responses.create({
-      model: "gpt-4.1-mini",
+      model: observedModel,
       input: "Synthetic input",
     }),
   );

@@ -75,6 +75,76 @@ const reply = (value) =>
     },
   });
 
+test("zero aggregate Anthropic writes cannot erase positive or invalid duration counts", async () => {
+  for (const detail of [
+    {ephemeral_1h_input_tokens: 2}, {ephemeral_5m_input_tokens: 1},
+    {ephemeral_1h_input_tokens: false}, null, {ephemeral_5m_input_tokens: 0},
+  ]) {
+    const payload = structuredClone(anthropic);
+    payload.usage.cache_creation_input_tokens = 0;
+    payload.usage.cache_creation = detail;
+    const {observer, batches} = setup(async () => reply(payload));
+    const client = new Anthropic({apiKey: "synthetic-not-a-key", fetch: observer.fetch, maxRetries: 0});
+    const result = await client.messages.create({model: "claude-haiku-4-5", max_tokens: 8,
+      messages: [{role: "user", content: "PRIVATE INPUT"}]});
+    assert.equal(result.id, payload.id);
+    await observer.close();
+    const [event] = events(batches);
+    if (detail === null || detail.ephemeral_5m_input_tokens === 0) {
+      assert.equal(event.cache_write_tokens, 0);
+      assert.equal(event.cache_write_1h_tokens, 0);
+    } else {
+      assert.equal(event.usage_source, "unavailable");
+      assert.equal(event.input_tokens, null);
+    }
+    assert.equal(JSON.stringify(event).includes("PRIVATE"), false);
+  }
+});
+
+test("native lifetime partitions and actual service tier survive metadata projection", async () => {
+  const payload = structuredClone(openai);
+  payload.model = "gpt-6-luna";
+  payload.service_tier = "default";
+  payload.usage.input_tokens_details = {cached_tokens: 2, cache_write_tokens: 10,
+    cache_write_tokens_details: {ttl_30m_tokens: 6, ttl_12h_tokens: 4}};
+  const {observer, batches} = setup(async () => reply(payload));
+  const client = new OpenAI({apiKey: "synthetic-not-a-key", fetch: observer.fetch, maxRetries: 0});
+  const result = await client.responses.create({model: "gpt-6-luna", input: "PRIVATE INPUT", service_tier: "auto"});
+  assert.equal(result.id, payload.id);
+  assert.deepEqual(result.usage.input_tokens_details, payload.usage.input_tokens_details);
+  await observer.close();
+  const [event] = events(batches);
+  assert.equal(event.event_schema_version, "1.1");
+  assert.equal(event.service_tier, "default");
+  assert.equal(event.cache_write_tokens, 10);
+  assert.equal(event.cache_write_30m_tokens, 6);
+  assert.equal(event.cache_write_12h_tokens, 4);
+  assert.ok(!JSON.stringify(event).includes("PRIVATE"));
+});
+
+test("inconsistent native lifetimes preserve the response and keep usage unknown", async () => {
+  const payload = structuredClone(openai);
+  payload.model = "gpt-6-luna";
+  payload.usage.input_tokens_details = {cached_tokens: 2, cache_write_tokens: 10,
+    cache_write_tokens_details: {ttl_30m_tokens: 6, ttl_12h_tokens: 5}};
+  const {observer, batches} = setup(async () => reply(payload));
+  const client = new OpenAI({apiKey: "synthetic-not-a-key", fetch: observer.fetch, maxRetries: 0});
+  assert.equal((await client.responses.create({model: "gpt-6-luna", input: "synthetic"})).id, payload.id);
+  await observer.close();
+  const [event] = events(batches);
+  assert.equal(event.status, "success");
+  assert.equal(event.usage_source, "unavailable");
+  assert.equal(event.input_tokens, null);
+});
+
+test("requested fast tier is preserved when the provider omits its served tier", async () => {
+  const {observer, batches} = setup(async () => reply(openai));
+  const client = new OpenAI({apiKey: "synthetic-not-a-key", fetch: observer.fetch, maxRetries: 0});
+  await client.responses.create({model: "gpt-4.1-mini", input: "synthetic", service_tier: "priority"});
+  await observer.close();
+  assert.equal(events(batches)[0].service_tier, "priority");
+});
+
 test("native OpenAI APIPromise, response methods, bytes and metadata survive observation", async () => {
   const { observer, batches } = setup(async () => reply(openai));
   const client = new OpenAI({
@@ -127,7 +197,7 @@ test("native Anthropic message and terminal SSE usage are observed without chang
   await observer.close();
   const [event] = events(batches);
   assert.equal(event.status, "success");
-  assert.equal(event.cache_write_tokens, 4);
+  assert.equal(event.cache_write_tokens, 2);
   assert.equal(event.cache_write_1h_tokens, 2);
   assert.equal(event.response_model, "claude-haiku-4-5");
   const frames = [

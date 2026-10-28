@@ -29,6 +29,10 @@ export function explain(error: unknown) {
     SCOPE_DENIED: "Your role does not permit this action in this project.",
     INVALID_OR_EXPIRED_KEY:
       "This key is expired or revoked. Connect with an authorized replacement.",
+    CONTRACT_RATE_PERIOD_START_CONFLICT:
+      "A different rate already uses this exact scope and start time. Inspect the saved rate or choose the reviewed new effective time.",
+    PROJECT_RATE_OVERRIDE_QUOTA:
+      "This project has reached its 10,000 retained contract-rate limit. Export and inspect its pricing history before adding more rates.",
     INVALID_SCHEMA_OR_CONTENT_FIELDS:
       "Check the required fields, allowed identifiers and file format.",
     NO_COMPATIBLE_CHEAPER_MODEL_SUBMIT_REVIEWED_PROMPT_VARIANT:

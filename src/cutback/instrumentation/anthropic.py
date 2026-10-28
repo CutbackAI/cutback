@@ -12,8 +12,22 @@ def normalize_usage(response, surface):
     total_write = field(usage, "cache_creation_input_tokens")
     five = field(creation, "ephemeral_5m_input_tokens")
     # Old SDK/server responses omit duration detail. Never price an ambiguous TTL as five minutes.
-    if five is None and total_write == 0:
+    if type(total_write) is int and total_write == 0:
+        if any(
+            value is not None and (type(value) is not int or value != 0) for value in (five, hour)
+        ):
+            return {"usage_source": "unavailable"}
         five, hour = 0, 0
+    if (
+        five is not None
+        and hour is not None
+        and total_write is not None
+        and (
+            any(type(value) is not int or value < 0 for value in (five, hour, total_write))
+            or five + hour != total_write
+        )
+    ):
+        return {"usage_source": "unavailable"}
     return {
         "usage_source": "provider_reported",
         "input_tokens": field(usage, "input_tokens"),

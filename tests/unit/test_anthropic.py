@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import json
 from uuid import uuid4
 
@@ -25,6 +26,53 @@ MESSAGE = {
         "cache_creation": {"ephemeral_5m_input_tokens": 10, "ephemeral_1h_input_tokens": 5},
     },
 }
+
+
+@pytest.mark.parametrize(
+    "detail",
+    [
+        {"ephemeral_1h_input_tokens": 2},
+        {"ephemeral_5m_input_tokens": 1},
+        {"ephemeral_1h_input_tokens": False},
+        None,
+        {"ephemeral_5m_input_tokens": 0},
+    ],
+)
+def test_zero_aggregate_cannot_erase_inconsistent_native_duration_counts(monkeypatch, detail):
+    monkeypatch.setenv("CUTBACK_PROJECT_TOKEN", "a" * 48)
+    monkeypatch.setattr("cutback.instrumentation.openai.Exporter", MemoryExporter)
+    observer = cutback.init(
+        service_name="synthetic-cache-partition",
+        environment="staging",
+        enabled=True,
+        endpoint="http://127.0.0.1:8080/v1/ingest/events",
+        project_id=str(uuid4()),
+        providers=("anthropic",),
+    )
+    wire = copy.deepcopy(MESSAGE)
+    wire["usage"].update(cache_creation_input_tokens=0, cache_creation=detail)
+    try:
+        with anthropic.Anthropic(
+            api_key="synthetic",
+            max_retries=0,
+            http_client=httpx2.Client(
+                transport=httpx2.MockTransport(lambda _: httpx2.Response(200, json=wire))
+            ),
+        ) as client:
+            response = client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=32,
+                messages=[{"role": "user", "content": "SYNTHETIC_PRIVATE_INPUT"}],
+            )
+        assert response.id == wire["id"]
+        (event,) = observer.exporter.events
+        if detail is None or detail == {"ephemeral_5m_input_tokens": 0}:
+            assert event.cache_write_tokens == event.cache_write_1h_tokens == 0
+        else:
+            assert event.usage_source == "unavailable" and event.input_tokens is None
+        assert "PRIVATE" not in event.model_dump_json()
+    finally:
+        observer.close()
 
 
 @pytest.mark.parametrize("asynchronous", [False, True])

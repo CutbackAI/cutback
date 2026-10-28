@@ -91,6 +91,7 @@ jobs:
           tests/integration/test_outcome_watch_draft.py tests/integration/test_outcome_watch_migration.py
           tests/integration/test_outcome_watch_fairness.py
           tests/integration/test_quality_native.py tests/integration/test_agent_workflow.py
+          tests/integration/test_modern_accounting.py
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 30
