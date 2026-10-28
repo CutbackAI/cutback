@@ -68,8 +68,8 @@ def policy_spec(row):
 
 
 def create_policy(session, project, specification: GatewayPolicy, actor, *, now=None):
-    now = now or datetime.now(UTC)
     lock_project(session, project)
+    now = now or datetime.now(UTC)
     current_admin(session, project, actor)
     prior = session.scalar(
         select(GatewayPolicyRow).where(
@@ -126,8 +126,8 @@ def create_policy(session, project, specification: GatewayPolicy, actor, *, now=
 
 
 def approve_policy(session, project, row_id, approval_hash, approval_ref, actor, *, now=None):
-    now = now or datetime.now(UTC)
     lock_project(session, project)
+    now = now or datetime.now(UTC)
     current_admin(session, project, actor)
     row = session.get(GatewayPolicyRow, row_id)
     if row is None or row.project_id != project:
@@ -181,8 +181,8 @@ def approve_policy(session, project, row_id, approval_hash, approval_ref, actor,
 
 def resume_policy(session, project, row_id, approval_hash, approval_ref, actor, *, now=None):
     """Resume the original window without resetting money, request counts or operation IDs."""
-    now = now or datetime.now(UTC)
     lock_project(session, project)
+    now = now or datetime.now(UTC)
     current_admin(session, project, actor)
     row = session.get(GatewayPolicyRow, row_id)
     if row is None or row.project_id != project:
@@ -220,8 +220,8 @@ def resume_policy(session, project, row_id, approval_hash, approval_ref, actor, 
 
 
 def issue_key(session, project, specification: GatewayKeyInput, actor, *, now=None):
-    now = now or datetime.now(UTC)
     lock_project(session, project)
+    now = now or datetime.now(UTC)
     current_admin(session, project, actor)
     prior = session.scalar(
         select(GatewayKeyRow.id).where(
@@ -353,14 +353,16 @@ def reserve(
     now=None,
     traceparent=None,
 ):
-    now = now or datetime.now(UTC)
     if operation_id.int == 0 or len(request_hmac) != 64:
         raise GatewayError("GATEWAY_OPERATION_ID_REQUIRED", 400)
     with sessions() as session:
-        key = active_key(session, token, now)
+        key = active_key(session, token, now or datetime.now(UTC))
         project = key.project_id
     with sessions.begin() as session:
         lock_project(session, project)
+        # A queued mutation may outlive its key or approved window. Refresh the
+        # real clock after acquiring the shared lock, before reserving money.
+        now = now or datetime.now(UTC)
         key = active_key(session, token, now)
         policy = session.get(GatewayPolicyRow, key.policy_id)
         if (
