@@ -1,0 +1,13 @@
+[project]
+name = "cutback-openai3-qualification"
+version = "0.0.0"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  "cutback[server,instrumentation,anthropic,storage,identity,commercial,javascript]",
+  "openai==3.35.1",
+  "pytest>=8.4,<10",
+  "django==5.2.18",
+]
+
+[tool.uv.sources]
+cutback = { path = "../../.." }

@@ -100,6 +100,7 @@ include = [
   "/infra/README.md", "/infra/helm", "/infra/terraform/kubernetes/*.tf",
   "/infra/terraform/kubernetes/.terraform.lock.hcl", "/infra/terraform/kubernetes/tests",
   "/infra/training/Dockerfile", "/infra/training/pyproject.toml", "/infra/training/uv.lock",
+  "/infra/sdk-compat",
   "/scripts/check_public_boundary.py", "/docs/application-onboarding.md", "/docs/agent-workflow.md",
   "/web/public", "/web/unit", "/scripts/create_training_fixture.py", "/scripts/scale_smoke.py",
   "/SECURITY.md", "/GOVERNANCE.md", "/.github", "/src", "/tests", "/examples", "/README.md", "/LICENSE", "/NOTICE",

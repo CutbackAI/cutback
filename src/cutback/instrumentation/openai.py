@@ -17,6 +17,7 @@ from opentelemetry import trace
 
 from cutback.core.models import LLMEvent
 from cutback.core.observation import current_purpose
+from cutback.core.sdk_compat import OPENAI_OBSERVER_SDKS
 from cutback.instrumentation import _identity
 from cutback.instrumentation.exporter import Exporter
 
@@ -265,7 +266,7 @@ class OpenAIInstrumentation:
     ):
         installed = version(self.sdk_package)
         self.attribution = attribution
-        allowed = {"1.55.3", "2.29.0"} if self.sdk_package == "openai" else {self.sdk_version}
+        allowed = OPENAI_OBSERVER_SDKS if self.sdk_package == "openai" else {self.sdk_version}
         if installed not in allowed:
             raise ValueError("unsupported SDK version: install the pinned Cutback provider extra")
         self.sdk_version = installed

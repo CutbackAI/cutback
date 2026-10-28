@@ -123,8 +123,10 @@ def rag_case():
 
 
 def synthetic_executor():
-    if version("openai") != "2.29.0":
-        raise ValueError("SAMPLE_REQUIRES_QUALIFIED_OPENAI_2_29_0")
+    from cutback.core.sdk_compat import OPENAI_TEXT_SDKS
+
+    if version("openai") not in OPENAI_TEXT_SDKS:
+        raise ValueError("SAMPLE_REQUIRES_QUALIFIED_OPENAI_SDK")
     from openai import OpenAI
 
     def handle(request):

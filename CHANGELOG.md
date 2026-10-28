@@ -1,5 +1,7 @@
 # Changelog
 
+Source follow-up, 28 October 2026: explicit campaign preparation now supports cheapest-model/minimum-cap applications with an honest unchanged control and explicit additional generator-vendor permission. Separately locked OpenAI 3.35.1 compatibility preserves the main 2.29.0 extra and application pins, with native HTTPX2 response/retry/stream/cancellation/privacy and PostgreSQL worker qualification. This does not qualify new model names or cache-write pricing. PyPI dev5 is unchanged; [acceptance/publication status](docs/progress.md).
+
 ## Unreleased source after dev5
 
 Owned-local service qualification with declared request/latency/sample/throughput bounds, retained raw timings, two synthetic tenants, viewer isolation, duplicate/unknown-cost verification and confirmed project cleanup. A paired before/after/after/before example retains incomplete trials and recomputes quantiles from raw samples. Native-event pricing/upserts, trace/session/span/intake ingestion and trace-page counts now use bounded set operations; financial windows, duplicate identities, atomic billing and conflict rollback are preserved. Migration `0016` adds an effective-rate lookup index. Local paired diagnostics retain the worse usage-query latency alongside measured ingest/span/trace improvements; they are not production capacity or causal/customer-benefit claims. Installed and hosted acceptance state remains in progress.md; broader Release 7 work is unfinished.

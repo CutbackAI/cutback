@@ -1,0 +1,68 @@
+{
+  "contract": "cutback.campaign-preparation-sdk-compatibility-acceptance.v1",
+  "date": "2026-10-28",
+  "publication": "working_source_hosted_and_final_package_acceptance_pending_no_new_pypi_upload",
+  "scope": [
+    "campaign_basis_without_cheaper_static_model",
+    "explicit_additional_generator_vendor_authorization",
+    "exact_openai_3_35_1_native_transport_compatibility"
+  ],
+  "campaign_preparation": {
+    "focused_pg_existing_and_new": 10,
+    "complete_instruction_only_native_pg_journey": 1,
+    "unit_agent": 4,
+    "unit_agent_skip": "Windows_symlink_privilege_unavailable",
+    "full_installed_basis_regression": "running"
+  },
+  "openai_3351": {
+    "source_native_privacy_and_executor_checks": 61,
+    "native_httpx2_stream_cancel_retry_and_exporter_checks": 26,
+    "source_unit_pg_campaign_episode_quality_migration_qualification": {
+      "passed": 440,
+      "skipped": 5,
+      "seconds": 237.95
+    },
+    "separately_locked_installed_qualification": {
+      "origin_verified": true,
+      "passed": 440,
+      "skipped": 5,
+      "seconds": 256.98
+    },
+    "skip_reasons": [
+      "four_legacy_sdk_cases_qualified_separately",
+      "windows_symlink_privilege_unavailable"
+    ],
+    "authenticated_browser_and_examples": "running",
+    "sdk": "3.35.1",
+    "transport": "httpx2_2_16_0_and_legacy_httpx_0_28_1_bridge",
+    "new_model_names_qualified": false,
+    "openai_cache_write_prices_qualified": false
+  },
+  "preserved_compatibility": {
+    "main_sdk_229_native_checks": 70,
+    "legacy_1553_scanner_and_native_checks": 21,
+    "main_openai_extra_pin": "2.29.0",
+    "main_lock_changed": false,
+    "released_migrations_changed": false
+  },
+  "static_checks": {
+    "ruff": "passed",
+    "format": "passed",
+    "mypy_modules": 177,
+    "generated_openapi_and_types": "unchanged_after_regeneration",
+    "runtime_compatibility_dependency_audit": "zero_known_vulnerabilities"
+  },
+  "privacy": {
+    "source_files_checked": 582,
+    "findings": 0,
+    "private_marker_values_logged": false
+  },
+  "paid_provider_calls": 0,
+  "production_deployment": false,
+  "pypi_upload": false,
+  "remaining": [
+    "final_artifacts_and_installed_backend_identity",
+    "exact_head_hosted_checks",
+    "remaining_market_baseline_and_roadmap_not_completed"
+  ]
+}

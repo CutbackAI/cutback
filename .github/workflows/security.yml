@@ -24,6 +24,8 @@ jobs:
       - run: uv run python scripts/check_toolchain.py
       - run: uv export --all-extras --no-dev --no-emit-project --format requirements-txt --output-file /tmp/runtime.txt
       - run: uv run pip-audit -r /tmp/runtime.txt --no-deps --disable-pip --strict
+      - run: uv export --project infra/sdk-compat/openai3 --locked --no-emit-project --no-emit-package cutback --format requirements-txt --output-file /tmp/openai3-runtime.txt > /dev/null
+      - run: uv run pip-audit -r /tmp/openai3-runtime.txt --no-deps --disable-pip --strict
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '24'

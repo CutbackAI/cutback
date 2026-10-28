@@ -3,7 +3,7 @@
 import json
 
 
-def fresh_application(root, kind="classifier"):
+def fresh_application(root, kind="classifier", *, model=None, output_cap=None):
     if kind == "classifier":
         source = """from openai import OpenAI
 client = OpenAI()
@@ -20,6 +20,14 @@ def extract(text):
                   {"role":"user","content":text}], max_tokens=64,
         response_format={"type":"json_object"})
 """
+    elif kind == "messages":
+        source = """from anthropic import Anthropic
+client = Anthropic()
+def classify(text):
+    return client.messages.create(model="claude-haiku-4-5", max_tokens=16,
+        system="Owned synthetic classification task",
+        messages=[{"role":"user", "content":text}])
+"""
     else:
         (root / "config.py").write_text('MODEL = "gpt-4.1"\n', encoding="utf-8")
         source = """from openai import OpenAI
@@ -33,6 +41,12 @@ def route(text):
 def classify(text):
     return shared(text)
 """
+    if model is not None:
+        assert kind == "classifier"
+        source = source.replace('model="gpt-4.1"', f'model="{model}"')
+    if output_cap is not None:
+        assert kind == "classifier"
+        source = source.replace("max_output_tokens=64", f"max_output_tokens={output_cap}")
     (root / "app.py").write_text(source, encoding="utf-8")
     (root / "cases.jsonl").write_text(
         "\n".join(
@@ -106,7 +120,19 @@ def native_response(request):
     )
 
 
-def prepare_fresh(api, tenant, tmp_path, monkeypatch, kind="classifier", *, search=False):
+def prepare_fresh(
+    api,
+    tenant,
+    tmp_path,
+    monkeypatch,
+    kind="classifier",
+    *,
+    search=False,
+    for_campaign=False,
+    campaign_generator_provider=None,
+    model=None,
+    output_cap=None,
+):
     import os
 
     from cutback.agent import analyze, prepare
@@ -115,7 +141,7 @@ def prepare_fresh(api, tenant, tmp_path, monkeypatch, kind="classifier", *, sear
 
     root = tmp_path / "application"
     root.mkdir()
-    fresh_application(root, kind)
+    fresh_application(root, kind, model=model, output_cap=output_cap)
     state = analyze(root)
     client, admin, application = api
     monkeypatch.setenv("CUTBACK_ALLOW_PAYLOADS", "true")
@@ -132,6 +158,8 @@ def prepare_fresh(api, tenant, tmp_path, monkeypatch, kind="classifier", *, sear
         minimum=0.7,
         independent_labels=True,
         search=search,
+        for_campaign=for_campaign,
+        campaign_generator_provider=campaign_generator_provider,
     )
     result = prepare(root, control, tenant[0], **args)
     return root, control, result, args

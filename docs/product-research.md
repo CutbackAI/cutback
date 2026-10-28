@@ -2,9 +2,9 @@
 
 27 October 2026. The expanded primary-source review covers **46 documented product/service families plus one gated research lead**, selected upstream implementation files, evaluation research and the actual Cutback code. This supersedes the earlier 14-product overview as the product-planning reference. It does not supersede the master architecture/privacy specification or turn planned features into implemented ones.
 
-**Cutback is not yet ready to claim a complete, competitive evaluation and monitoring platform.** Its scanner/native SDK/collector/PostgreSQL/evaluation/change pipeline is working within documented bounds. Important everyday workflows—general agent execution, collaborative review, prompt releases, production quality incidents and application-level regression tests—remain incomplete. Previous engineering-release completion records describe their specific release scopes, not this broader market baseline.
+**Cutback is not yet ready to claim a complete, competitive evaluation and monitoring platform.** Its scanner/native SDK/collector/PostgreSQL/evaluation/change pipeline is working within documented bounds. Source now also includes scoped blind review, prompt versions and releases, quality incidents, synthetic tool/RAG execution, task-cost windows, bounded native improvement campaigns and application checks. Important gaps remain in general application/tool execution, semantic agent judging and generative simulation, broader optimizer/source adapters, application gateway policies and observed first-use/comparative acceptance. Previous engineering-release completion records describe their specific release scopes, not this broader market baseline.
 
-Source checkouts now implement the first bounded [workflow investigation increment](workflow-tracing.md). Review, prompt, live-quality and application-execution workflows in the remaining roadmap are still unfinished.
+The [implementation roadmap](implementation-roadmap.md) records the bounded implementations for Releases 1–6 and the owned-local ingestion/query qualification in Release 7. Each walkthrough states its narrower limits. General agent execution, all optimization strategies and the broad platform are still unfinished; a passing synthetic sample does not close those gaps.
 
 ## Read these first
 

@@ -92,6 +92,8 @@ Add task outcome and change-observation records joining application release, ver
 
 ## Release 7 â€” broad platform and launch qualification
 
+Implementation: the owned-loopback ingestion/query load profile, raw-sample receipts and scoped bulk storage paths are publicly merged; [qualification and limits](load-qualification.md), [executed evidence](progress.md). Worker/online-evaluator/gateway capacity, gateway policy/reliability, specialties, clean-host operational modes and observed user/comparative acceptance remain incomplete. Separate SDK compatibility qualification preserves application dependency pins; it does not establish universal gateway/model compatibility.
+
 **Baseline:** remaining F/G/R/X rows and all core end-to-end journeys. **User outcome:** a new team can adopt, operate and recover the product independently.
 
 Complete gateway interoperability and, where built, application virtual-key budgets/model policies/reliability under distinct authorization. Add declared load/SLO tests for ingestion, trace queries, online evaluators and worker fairness. Qualify supported storage/backup/identity/deployment modes and retention/export/delete across every new table. Keep SCIM, voice, GPU and other specialties visible until qualified or explicitly designated integrations with their own acceptance evidence.

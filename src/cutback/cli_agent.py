@@ -75,6 +75,8 @@ def register_agent(app, output, fail):
         project: str | None = None,
         mapping: Path | None = None,
         search: bool = False,
+        for_campaign: bool = False,
+        campaign_generator_provider: Literal["openai"] | None = None,
     ):
         """Prepare permitted examples and the request in an approved encrypted store."""
         from cutback.agent import prepare as run
@@ -98,6 +100,8 @@ def register_agent(app, output, fail):
                 representative=representative,
                 mapping=read_json(mapping) if mapping else None,
                 search=search,
+                for_campaign=for_campaign,
+                campaign_generator_provider=campaign_generator_provider,
             )
         )
 
