@@ -72,6 +72,10 @@ def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False
     if not 1 <= raw_days <= aggregate_days <= 3650:
         raise ValueError("invalid retention periods")
     now = now or datetime.now(UTC)
+    if apply:
+        from cutback.server.gateway_service import recover_leases
+
+        recover_leases(sessions, project_id=project_id, now=now)
     cutoff = (now - timedelta(days=raw_days)).replace(hour=0, minute=0, second=0, microsecond=0)
     with sessions() as session:
         session.connection(execution_options={"isolation_level": "REPEATABLE READ"})
@@ -244,6 +248,9 @@ def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False
                     },
                 )
             )
+            from cutback.server.gateway_service import maintain_gateway
+
+            maintain_gateway(session, selected, cutoff, now - timedelta(days=aggregate_days))
             session.commit()
         return {
             "apply": apply,

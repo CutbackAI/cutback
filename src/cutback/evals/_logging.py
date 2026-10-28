@@ -1,7 +1,7 @@
 """Suppress SDK payload logging only inside explicitly owned worker requests."""
 
 import logging
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
 from functools import wraps
 from typing import ParamSpec, TypeVar
@@ -43,6 +43,19 @@ def owned_sdk_request(function: Callable[P, T]) -> Callable[P, T]:
         token = _owned_request.set(True)
         try:
             return function(*args, **kwargs)
+        finally:
+            _owned_request.reset(token)
+
+    return execute
+
+
+def owned_async_sdk_request(function: Callable[P, Awaitable[T]]) -> Callable[P, Awaitable[T]]:
+    @wraps(function)
+    async def execute(*args: P.args, **kwargs: P.kwargs) -> T:
+        _install()
+        token = _owned_request.set(True)
+        try:
+            return await function(*args, **kwargs)
         finally:
             _owned_request.reset(token)
 

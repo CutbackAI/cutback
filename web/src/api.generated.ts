@@ -1933,6 +1933,144 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/gateway/policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Policies */
+        get: operations["policies_v1_projects__project_id__gateway_policies_get"];
+        put?: never;
+        /** Create */
+        post: operations["create_v1_projects__project_id__gateway_policies_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/gateway/policies/{policy_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Detail */
+        get: operations["detail_v1_projects__project_id__gateway_policies__policy_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/gateway/policies/{policy_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve */
+        post: operations["approve_v1_projects__project_id__gateway_policies__policy_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/gateway/policies/{policy_id}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Disable */
+        post: operations["disable_v1_projects__project_id__gateway_policies__policy_id__disable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/gateway/policies/{policy_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resume */
+        post: operations["resume_v1_projects__project_id__gateway_policies__policy_id__resume_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/gateway/keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Keys */
+        get: operations["keys_v1_projects__project_id__gateway_keys_get"];
+        put?: never;
+        /** Issue */
+        post: operations["issue_v1_projects__project_id__gateway_keys_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/gateway/keys/{key_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke */
+        delete: operations["revoke_v1_projects__project_id__gateway_keys__key_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/gateway/calls": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Calls */
+        get: operations["calls_v1_projects__project_id__gateway_calls_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/export": {
         parameters: {
             query?: never;
@@ -4221,6 +4359,339 @@ export interface components {
             /** Fixtures */
             fixtures: components["schemas"]["ToolFixture"][];
         };
+        /** GatewayApproval */
+        GatewayApproval: {
+            /** Approval Hash */
+            approval_hash: string;
+            /**
+             * Approval Ref
+             * Format: uuid
+             */
+            approval_ref: string;
+        };
+        /** GatewayBudgetReceipt */
+        GatewayBudgetReceipt: {
+            /**
+             * Scope Kind
+             * @enum {string}
+             */
+            scope_kind: "project" | "team" | "model" | "key";
+            /** Scope Key */
+            scope_key: string;
+            limit: components["schemas"]["SpendLimit-Output"];
+            /** Requests Used */
+            requests_used: number;
+            /** Active Requests */
+            active_requests: number;
+            /** Uncertain Requests */
+            uncertain_requests: number;
+            /** Known Modeled Spent Usd */
+            known_modeled_spent_usd: string;
+            /** Retained Reservations Usd */
+            retained_reservations_usd: string;
+            /** Remaining Modeled Usd */
+            remaining_modeled_usd: string;
+            /** Complete Modeled Cost Usd */
+            complete_modeled_cost_usd: string | null;
+        };
+        /** GatewayCallPage */
+        GatewayCallPage: {
+            /** Items */
+            items: components["schemas"]["GatewayCallReceipt"][];
+            /** Next After */
+            next_after: string | null;
+        };
+        /** GatewayCallReceipt */
+        GatewayCallReceipt: {
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            /**
+             * Policy Id
+             * Format: uuid
+             */
+            policy_id: string;
+            /**
+             * Key Id
+             * Format: uuid
+             */
+            key_id: string;
+            /**
+             * Team Id
+             * Format: uuid
+             */
+            team_id: string;
+            /** Model Key */
+            model_key: string;
+            /** Traffic Kind */
+            traffic_kind: string;
+            /** Max Output Tokens */
+            max_output_tokens: number;
+            /** State */
+            state: string;
+            /** Price Sha256 */
+            price_sha256: string;
+            /** Reserved Usd */
+            reserved_usd: string;
+            /** Cost Usd */
+            cost_usd: string | null;
+            /** Code */
+            code: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Completed At */
+            completed_at: string | null;
+        };
+        /** GatewayExactPolicy */
+        GatewayExactPolicy: {
+            /** Approval Hash */
+            approval_hash: string;
+        };
+        /** GatewayIssuedKey */
+        GatewayIssuedKey: {
+            key: components["schemas"]["GatewayKeyReceipt"];
+            /** Token */
+            token: string;
+            /**
+             * Display Once
+             * @default true
+             * @constant
+             */
+            display_once: true;
+        };
+        /** GatewayKeyInput */
+        "GatewayKeyInput-Input": {
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /**
+             * Policy Id
+             * Format: uuid
+             */
+            policy_id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            /**
+             * Team Id
+             * Format: uuid
+             */
+            team_id: string;
+            /**
+             * Traffic Kind
+             * @default application
+             * @enum {string}
+             */
+            traffic_kind: "application" | "evaluation" | "judge" | "optimization" | "simulation" | "unknown";
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            limit: components["schemas"]["SpendLimit-Input"];
+            /** Model Keys */
+            model_keys: "openai-luna-responses-text-v1"[];
+        };
+        /** GatewayKeyInput */
+        "GatewayKeyInput-Output": {
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /**
+             * Policy Id
+             * Format: uuid
+             */
+            policy_id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            /**
+             * Team Id
+             * Format: uuid
+             */
+            team_id: string;
+            /**
+             * Traffic Kind
+             * @default application
+             * @enum {string}
+             */
+            traffic_kind: "application" | "evaluation" | "judge" | "optimization" | "simulation" | "unknown";
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            limit: components["schemas"]["SpendLimit-Output"];
+            /** Model Keys */
+            model_keys: "openai-luna-responses-text-v1"[];
+        };
+        /** GatewayKeyPage */
+        GatewayKeyPage: {
+            /** Items */
+            items: components["schemas"]["GatewayKeyReceipt"][];
+            /** Next After */
+            next_after: string | null;
+        };
+        /** GatewayKeyReceipt */
+        GatewayKeyReceipt: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Policy Id
+             * Format: uuid
+             */
+            policy_id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            /**
+             * Team Id
+             * Format: uuid
+             */
+            team_id: string;
+            specification: components["schemas"]["GatewayKeyInput-Output"];
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Revoked At */
+            revoked_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** GatewayPolicy */
+        "GatewayPolicy-Input": {
+            /**
+             * Version
+             * @default cutback.gateway-policy.v1
+             * @constant
+             */
+            version: "cutback.gateway-policy.v1";
+            /**
+             * Policy Id
+             * Format: uuid
+             */
+            policy_id: string;
+            /** Environment Ids */
+            environment_ids: string[];
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            project_limit: components["schemas"]["SpendLimit-Input"];
+            /** Teams */
+            teams: components["schemas"]["TeamLimit-Input"][];
+            /** Models */
+            models: components["schemas"]["ModelLimit-Input"][];
+        };
+        /** GatewayPolicy */
+        "GatewayPolicy-Output": {
+            /**
+             * Version
+             * @default cutback.gateway-policy.v1
+             * @constant
+             */
+            version: "cutback.gateway-policy.v1";
+            /**
+             * Policy Id
+             * Format: uuid
+             */
+            policy_id: string;
+            /** Environment Ids */
+            environment_ids: string[];
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            project_limit: components["schemas"]["SpendLimit-Output"];
+            /** Teams */
+            teams: components["schemas"]["TeamLimit-Output"][];
+            /** Models */
+            models: components["schemas"]["ModelLimit-Output"][];
+        };
+        /** GatewayPolicyDetail */
+        GatewayPolicyDetail: {
+            policy: components["schemas"]["GatewayPolicyReceipt"];
+            /** Budgets */
+            budgets: components["schemas"]["GatewayBudgetReceipt"][];
+        };
+        /** GatewayPolicyPage */
+        GatewayPolicyPage: {
+            /** Items */
+            items: components["schemas"]["GatewayPolicyReceipt"][];
+            /** Next After */
+            next_after: string | null;
+        };
+        /** GatewayPolicyReceipt */
+        GatewayPolicyReceipt: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            specification: components["schemas"]["GatewayPolicy-Output"];
+            /** Approval Hash */
+            approval_hash: string;
+            /** State */
+            state: string;
+            /** Approved At */
+            approved_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Qualified Reservations Usd */
+            qualified_reservations_usd: {
+                [key: string]: string | null;
+            };
+            /**
+             * Budget Evidence
+             * @default frozen_public_list_price_model_not_invoice_limit
+             */
+            budget_evidence: string;
+            /** Provider Credentials Configured */
+            provider_credentials_configured?: null;
+        };
         /** GrantInput */
         GrantInput: {
             /**
@@ -4610,7 +5081,7 @@ export interface components {
              * @default 1.0
              * @enum {string}
              */
-            event_schema_version: "1.0" | "1.1";
+            event_schema_version: "1.0" | "1.1" | "1.2";
             /**
              * Event Id
              * Format: uuid
@@ -4681,7 +5152,7 @@ export interface components {
             /** Service Tier */
             service_tier?: string | null;
             /** Duration Ms */
-            duration_ms: number;
+            duration_ms: number | null;
             /**
              * Status
              * @enum {string}
@@ -4732,7 +5203,7 @@ export interface components {
              * @default all-supported-calls-v1
              * @enum {string}
              */
-            sampling_policy_id: "all-supported-calls-v1" | "external-otel-spans-v1";
+            sampling_policy_id: "all-supported-calls-v1" | "external-otel-spans-v1" | "gateway-native-text-v1";
         };
         /** LineageReconciliation */
         LineageReconciliation: {
@@ -4841,6 +5312,108 @@ export interface components {
              * @default 0
              */
             numeric_tolerance: number;
+        };
+        /** ModelLimit */
+        "ModelLimit-Input": {
+            /**
+             * Key
+             * @default openai-luna-responses-text-v1
+             * @constant
+             */
+            key: "openai-luna-responses-text-v1";
+            /**
+             * Provider
+             * @default openai
+             * @constant
+             */
+            provider: "openai";
+            /**
+             * Model
+             * @default gpt-6-luna
+             * @constant
+             */
+            model: "gpt-6-luna";
+            /**
+             * Sdk Surface
+             * @default responses.create
+             * @constant
+             */
+            sdk_surface: "responses.create";
+            /**
+             * Reservation Contract
+             * @default openai-luna-full-context-fast-reserve-v1
+             * @constant
+             */
+            reservation_contract: "openai-luna-full-context-fast-reserve-v1";
+            /**
+             * Context Tokens
+             * @default 1050000
+             * @constant
+             */
+            context_tokens: 1050000;
+            price_contract: components["schemas"]["NativeModelContract"];
+            /**
+             * Max Output Tokens
+             * @default 1024
+             */
+            max_output_tokens: number;
+            /**
+             * Timeout Seconds
+             * @default 60
+             */
+            timeout_seconds: number;
+            limit: components["schemas"]["SpendLimit-Input"];
+        };
+        /** ModelLimit */
+        "ModelLimit-Output": {
+            /**
+             * Key
+             * @default openai-luna-responses-text-v1
+             * @constant
+             */
+            key: "openai-luna-responses-text-v1";
+            /**
+             * Provider
+             * @default openai
+             * @constant
+             */
+            provider: "openai";
+            /**
+             * Model
+             * @default gpt-6-luna
+             * @constant
+             */
+            model: "gpt-6-luna";
+            /**
+             * Sdk Surface
+             * @default responses.create
+             * @constant
+             */
+            sdk_surface: "responses.create";
+            /**
+             * Reservation Contract
+             * @default openai-luna-full-context-fast-reserve-v1
+             * @constant
+             */
+            reservation_contract: "openai-luna-full-context-fast-reserve-v1";
+            /**
+             * Context Tokens
+             * @default 1050000
+             * @constant
+             */
+            context_tokens: 1050000;
+            price_contract: components["schemas"]["NativeModelContract"];
+            /**
+             * Max Output Tokens
+             * @default 1024
+             */
+            max_output_tokens: number;
+            /**
+             * Timeout Seconds
+             * @default 60
+             */
+            timeout_seconds: number;
+            limit: components["schemas"]["SpendLimit-Output"];
         };
         /** ModelSpec */
         "ModelSpec-Input": {
@@ -6403,6 +6976,24 @@ export interface components {
             /** Kind */
             kind?: ("agent" | "chain" | "llm" | "tool" | "retriever" | "reranker" | "embedding" | "guardrail" | "evaluator" | "prompt" | "unknown") | null;
         };
+        /** SpendLimit */
+        "SpendLimit-Input": {
+            /** Modeled Usd */
+            modeled_usd: number | string;
+            /** Requests */
+            requests: number;
+            /** Concurrent Requests */
+            concurrent_requests: number;
+        };
+        /** SpendLimit */
+        "SpendLimit-Output": {
+            /** Modeled Usd */
+            modeled_usd: string;
+            /** Requests */
+            requests: number;
+            /** Concurrent Requests */
+            concurrent_requests: number;
+        };
         /** TaskCostComponent */
         "TaskCostComponent-Input": {
             /** Key */
@@ -6845,6 +7436,24 @@ export interface components {
              * @default retained_evidence_at_calculation_time_not_frozen_telemetry
              */
             evidence_scope: string;
+        };
+        /** TeamLimit */
+        "TeamLimit-Input": {
+            /**
+             * Team Id
+             * Format: uuid
+             */
+            team_id: string;
+            limit: components["schemas"]["SpendLimit-Input"];
+        };
+        /** TeamLimit */
+        "TeamLimit-Output": {
+            /**
+             * Team Id
+             * Format: uuid
+             */
+            team_id: string;
+            limit: components["schemas"]["SpendLimit-Output"];
         };
         /** ToolArgumentCheck */
         ToolArgumentCheck: {
@@ -11975,6 +12584,350 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    policies_v1_projects__project_id__gateway_policies_get: {
+        parameters: {
+            query?: {
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GatewayPolicyPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_v1_projects__project_id__gateway_policies_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GatewayPolicy-Input"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GatewayPolicyReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    detail_v1_projects__project_id__gateway_policies__policy_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GatewayPolicyDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_v1_projects__project_id__gateway_policies__policy_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GatewayApproval"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GatewayPolicyReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    disable_v1_projects__project_id__gateway_policies__policy_id__disable_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GatewayExactPolicy"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GatewayPolicyReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resume_v1_projects__project_id__gateway_policies__policy_id__resume_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GatewayApproval"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GatewayPolicyReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    keys_v1_projects__project_id__gateway_keys_get: {
+        parameters: {
+            query?: {
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GatewayKeyPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    issue_v1_projects__project_id__gateway_keys_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GatewayKeyInput-Input"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GatewayIssuedKey"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_v1_projects__project_id__gateway_keys__key_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                key_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    calls_v1_projects__project_id__gateway_calls_get: {
+        parameters: {
+            query?: {
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GatewayCallPage"];
                 };
             };
             /** @description Validation Error */

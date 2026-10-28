@@ -29,6 +29,18 @@ export function explain(error: unknown) {
     SCOPE_DENIED: "Your role does not permit this action in this project.",
     INVALID_OR_EXPIRED_KEY:
       "This key is expired or revoked. Connect with an authorized replacement.",
+    GATEWAY_APPROVED_WINDOWS_MUST_NOT_OVERLAP:
+      "An approved policy already covers this window. Resume that policy with its retained limits, or prepare a later nonoverlapping window.",
+    GATEWAY_MODEL_LIMIT_BELOW_ONE_FULL_RESERVATION:
+      "The model allowance must cover at least one full-context reservation. Review its context, output ceiling and price contract.",
+    GATEWAY_KEY_LIMIT_BELOW_ONE_FULL_RESERVATION:
+      "This key's allowance cannot cover one full-context reservation. Review the selected model and key limit.",
+    GATEWAY_KEY_ALREADY_ISSUED_REVOKE_BEFORE_REPLACEMENT:
+      "This key intent was already issued. Inspect the key records and revoke an inaccessible key before deliberately issuing a replacement.",
+    GATEWAY_CURRENT_ADMIN_REQUIRED:
+      "The approving or issuing principal no longer has project administration rights. A current administrator must review recovery and replacement keys.",
+    GATEWAY_KEY_LIMIT_EXCEEDS_POLICY:
+      "The key limits must fit each approved project, team and model limit.",
     CONTRACT_RATE_PERIOD_START_CONFLICT:
       "A different rate already uses this exact scope and start time. Inspect the saved rate or choose the reviewed new effective time.",
     PROJECT_RATE_OVERRIDE_QUOTA:

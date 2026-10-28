@@ -29,6 +29,8 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
             "-c",
             "import importlib.util; from cutback.pricing import Catalog; "
             f"import cutback; assert cutback.__version__=={version!r}; "
+            "from cutback.gateway.client import operation_headers; from uuid import UUID; "
+            "assert UUID(operation_headers()['X-Cutback-Operation-ID']).int != 0; "
             'assert importlib.util.find_spec("openai") is None; '
             'assert importlib.util.find_spec("fastapi") is None; print(Catalog().snapshot_id)',
         ],

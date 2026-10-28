@@ -7863,6 +7863,587 @@
         }
       }
     },
+    "/v1/projects/{project_id}/gateway/policies": {
+      "post": {
+        "summary": "Create",
+        "operationId": "create_v1_projects__project_id__gateway_policies_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GatewayPolicy-Input"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayPolicyReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Policies",
+        "operationId": "policies_v1_projects__project_id__gateway_policies_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayPolicyPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/gateway/policies/{policy_id}": {
+      "get": {
+        "summary": "Detail",
+        "operationId": "detail_v1_projects__project_id__gateway_policies__policy_id__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "policy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Policy Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayPolicyDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/gateway/policies/{policy_id}/approve": {
+      "post": {
+        "summary": "Approve",
+        "operationId": "approve_v1_projects__project_id__gateway_policies__policy_id__approve_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "policy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Policy Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GatewayApproval"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayPolicyReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/gateway/policies/{policy_id}/disable": {
+      "post": {
+        "summary": "Disable",
+        "operationId": "disable_v1_projects__project_id__gateway_policies__policy_id__disable_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "policy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Policy Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GatewayExactPolicy"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayPolicyReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/gateway/policies/{policy_id}/resume": {
+      "post": {
+        "summary": "Resume",
+        "operationId": "resume_v1_projects__project_id__gateway_policies__policy_id__resume_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "policy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Policy Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GatewayApproval"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayPolicyReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/gateway/keys": {
+      "post": {
+        "summary": "Issue",
+        "operationId": "issue_v1_projects__project_id__gateway_keys_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GatewayKeyInput-Input"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayIssuedKey"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Keys",
+        "operationId": "keys_v1_projects__project_id__gateway_keys_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayKeyPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/gateway/keys/{key_id}": {
+      "delete": {
+        "summary": "Revoke",
+        "operationId": "revoke_v1_projects__project_id__gateway_keys__key_id__delete",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "key_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Key Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/gateway/calls": {
+      "get": {
+        "summary": "Calls",
+        "operationId": "calls_v1_projects__project_id__gateway_calls_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayCallPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{project_id}/export": {
       "get": {
         "summary": "Export",
@@ -14501,6 +15082,764 @@
         ],
         "title": "FixtureTool"
       },
+      "GatewayApproval": {
+        "properties": {
+          "approval_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Approval Hash"
+          },
+          "approval_ref": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Approval Ref"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "approval_hash",
+          "approval_ref"
+        ],
+        "title": "GatewayApproval"
+      },
+      "GatewayBudgetReceipt": {
+        "properties": {
+          "scope_kind": {
+            "type": "string",
+            "enum": [
+              "project",
+              "team",
+              "model",
+              "key"
+            ],
+            "title": "Scope Kind"
+          },
+          "scope_key": {
+            "type": "string",
+            "title": "Scope Key"
+          },
+          "limit": {
+            "$ref": "#/components/schemas/SpendLimit-Output"
+          },
+          "requests_used": {
+            "type": "integer",
+            "title": "Requests Used"
+          },
+          "active_requests": {
+            "type": "integer",
+            "title": "Active Requests"
+          },
+          "uncertain_requests": {
+            "type": "integer",
+            "title": "Uncertain Requests"
+          },
+          "known_modeled_spent_usd": {
+            "type": "string",
+            "title": "Known Modeled Spent Usd"
+          },
+          "retained_reservations_usd": {
+            "type": "string",
+            "title": "Retained Reservations Usd"
+          },
+          "remaining_modeled_usd": {
+            "type": "string",
+            "title": "Remaining Modeled Usd"
+          },
+          "complete_modeled_cost_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Complete Modeled Cost Usd"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "scope_kind",
+          "scope_key",
+          "limit",
+          "requests_used",
+          "active_requests",
+          "uncertain_requests",
+          "known_modeled_spent_usd",
+          "retained_reservations_usd",
+          "remaining_modeled_usd",
+          "complete_modeled_cost_usd"
+        ],
+        "title": "GatewayBudgetReceipt"
+      },
+      "GatewayCallPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/GatewayCallReceipt"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_after"
+        ],
+        "title": "GatewayCallPage"
+      },
+      "GatewayCallReceipt": {
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Operation Id"
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Environment Id"
+          },
+          "policy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Policy Id"
+          },
+          "key_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Key Id"
+          },
+          "team_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Team Id"
+          },
+          "model_key": {
+            "type": "string",
+            "title": "Model Key"
+          },
+          "traffic_kind": {
+            "type": "string",
+            "title": "Traffic Kind"
+          },
+          "max_output_tokens": {
+            "type": "integer",
+            "title": "Max Output Tokens"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "price_sha256": {
+            "type": "string",
+            "title": "Price Sha256"
+          },
+          "reserved_usd": {
+            "type": "string",
+            "title": "Reserved Usd"
+          },
+          "cost_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Usd"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "operation_id",
+          "environment_id",
+          "policy_id",
+          "key_id",
+          "team_id",
+          "model_key",
+          "traffic_kind",
+          "max_output_tokens",
+          "state",
+          "price_sha256",
+          "reserved_usd",
+          "cost_usd",
+          "code",
+          "created_at",
+          "completed_at"
+        ],
+        "title": "GatewayCallReceipt"
+      },
+      "GatewayExactPolicy": {
+        "properties": {
+          "approval_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Approval Hash"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "approval_hash"
+        ],
+        "title": "GatewayExactPolicy"
+      },
+      "GatewayIssuedKey": {
+        "properties": {
+          "key": {
+            "$ref": "#/components/schemas/GatewayKeyReceipt"
+          },
+          "token": {
+            "type": "string",
+            "title": "Token"
+          },
+          "display_once": {
+            "type": "boolean",
+            "const": true,
+            "title": "Display Once",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "token"
+        ],
+        "title": "GatewayIssuedKey"
+      },
+      "GatewayKeyInput-Input": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Request Id"
+          },
+          "policy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Policy Id"
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Environment Id"
+          },
+          "team_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Team Id"
+          },
+          "traffic_kind": {
+            "type": "string",
+            "enum": [
+              "application",
+              "evaluation",
+              "judge",
+              "optimization",
+              "simulation",
+              "unknown"
+            ],
+            "title": "Traffic Kind",
+            "default": "application"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "limit": {
+            "$ref": "#/components/schemas/SpendLimit-Input"
+          },
+          "model_keys": {
+            "items": {
+              "type": "string",
+              "const": "openai-luna-responses-text-v1"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "minItems": 1,
+            "title": "Model Keys"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "policy_id",
+          "environment_id",
+          "team_id",
+          "expires_at",
+          "limit",
+          "model_keys"
+        ],
+        "title": "GatewayKeyInput"
+      },
+      "GatewayKeyInput-Output": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Request Id"
+          },
+          "policy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Policy Id"
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Environment Id"
+          },
+          "team_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Team Id"
+          },
+          "traffic_kind": {
+            "type": "string",
+            "enum": [
+              "application",
+              "evaluation",
+              "judge",
+              "optimization",
+              "simulation",
+              "unknown"
+            ],
+            "title": "Traffic Kind",
+            "default": "application"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "limit": {
+            "$ref": "#/components/schemas/SpendLimit-Output"
+          },
+          "model_keys": {
+            "items": {
+              "type": "string",
+              "const": "openai-luna-responses-text-v1"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "minItems": 1,
+            "title": "Model Keys"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "policy_id",
+          "environment_id",
+          "team_id",
+          "expires_at",
+          "limit",
+          "model_keys"
+        ],
+        "title": "GatewayKeyInput"
+      },
+      "GatewayKeyPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/GatewayKeyReceipt"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_after"
+        ],
+        "title": "GatewayKeyPage"
+      },
+      "GatewayKeyReceipt": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "policy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Policy Id"
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Environment Id"
+          },
+          "team_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Team Id"
+          },
+          "specification": {
+            "$ref": "#/components/schemas/GatewayKeyInput-Output"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "policy_id",
+          "environment_id",
+          "team_id",
+          "specification",
+          "expires_at",
+          "revoked_at",
+          "created_at"
+        ],
+        "title": "GatewayKeyReceipt"
+      },
+      "GatewayPolicy-Input": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.gateway-policy.v1",
+            "title": "Version",
+            "default": "cutback.gateway-policy.v1"
+          },
+          "policy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Policy Id"
+          },
+          "environment_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Environment Ids"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Starts At"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "project_limit": {
+            "$ref": "#/components/schemas/SpendLimit-Input"
+          },
+          "teams": {
+            "items": {
+              "$ref": "#/components/schemas/TeamLimit-Input"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Teams"
+          },
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/ModelLimit-Input"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "minItems": 1,
+            "title": "Models"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "policy_id",
+          "environment_ids",
+          "starts_at",
+          "expires_at",
+          "project_limit",
+          "teams",
+          "models"
+        ],
+        "title": "GatewayPolicy"
+      },
+      "GatewayPolicy-Output": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.gateway-policy.v1",
+            "title": "Version",
+            "default": "cutback.gateway-policy.v1"
+          },
+          "policy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Policy Id"
+          },
+          "environment_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Environment Ids"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Starts At"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "project_limit": {
+            "$ref": "#/components/schemas/SpendLimit-Output"
+          },
+          "teams": {
+            "items": {
+              "$ref": "#/components/schemas/TeamLimit-Output"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Teams"
+          },
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/ModelLimit-Output"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "minItems": 1,
+            "title": "Models"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "policy_id",
+          "environment_ids",
+          "starts_at",
+          "expires_at",
+          "project_limit",
+          "teams",
+          "models"
+        ],
+        "title": "GatewayPolicy"
+      },
+      "GatewayPolicyDetail": {
+        "properties": {
+          "policy": {
+            "$ref": "#/components/schemas/GatewayPolicyReceipt"
+          },
+          "budgets": {
+            "items": {
+              "$ref": "#/components/schemas/GatewayBudgetReceipt"
+            },
+            "type": "array",
+            "title": "Budgets"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "policy",
+          "budgets"
+        ],
+        "title": "GatewayPolicyDetail"
+      },
+      "GatewayPolicyPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/GatewayPolicyReceipt"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_after"
+        ],
+        "title": "GatewayPolicyPage"
+      },
+      "GatewayPolicyReceipt": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "specification": {
+            "$ref": "#/components/schemas/GatewayPolicy-Output"
+          },
+          "approval_hash": {
+            "type": "string",
+            "title": "Approval Hash"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "approved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "qualified_reservations_usd": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Qualified Reservations Usd"
+          },
+          "budget_evidence": {
+            "type": "string",
+            "title": "Budget Evidence",
+            "default": "frozen_public_list_price_model_not_invoice_limit"
+          },
+          "provider_credentials_configured": {
+            "type": "null",
+            "title": "Provider Credentials Configured"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "specification",
+          "approval_hash",
+          "state",
+          "approved_at",
+          "created_at",
+          "qualified_reservations_usd"
+        ],
+        "title": "GatewayPolicyReceipt"
+      },
       "GrantInput": {
         "properties": {
           "project_id": {
@@ -14588,7 +15927,8 @@
                 "captured_queued",
                 "captured_exported",
                 "captured_dropped",
-                "capture_enabled"
+                "capture_enabled",
+                "gateway_delegated"
               ]
             },
             "type": "object",
@@ -15473,7 +16813,8 @@
             "type": "string",
             "enum": [
               "1.0",
-              "1.1"
+              "1.1",
+              "1.2"
             ],
             "title": "Event Schema Version",
             "default": "1.0"
@@ -15676,9 +17017,16 @@
             "title": "Service Tier"
           },
           "duration_ms": {
-            "type": "number",
-            "maximum": 86400000.0,
-            "minimum": 0.0,
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 86400000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Duration Ms"
           },
           "status": {
@@ -15864,7 +17212,8 @@
             "type": "string",
             "enum": [
               "all-supported-calls-v1",
-              "external-otel-spans-v1"
+              "external-otel-spans-v1",
+              "gateway-native-text-v1"
             ],
             "title": "Sampling Policy Id",
             "default": "all-supported-calls-v1"
@@ -16153,6 +17502,140 @@
           "minimum"
         ],
         "title": "MetricSpec"
+      },
+      "ModelLimit-Input": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "const": "openai-luna-responses-text-v1",
+            "title": "Key",
+            "default": "openai-luna-responses-text-v1"
+          },
+          "provider": {
+            "type": "string",
+            "const": "openai",
+            "title": "Provider",
+            "default": "openai"
+          },
+          "model": {
+            "type": "string",
+            "const": "gpt-6-luna",
+            "title": "Model",
+            "default": "gpt-6-luna"
+          },
+          "sdk_surface": {
+            "type": "string",
+            "const": "responses.create",
+            "title": "Sdk Surface",
+            "default": "responses.create"
+          },
+          "reservation_contract": {
+            "type": "string",
+            "const": "openai-luna-full-context-fast-reserve-v1",
+            "title": "Reservation Contract",
+            "default": "openai-luna-full-context-fast-reserve-v1"
+          },
+          "context_tokens": {
+            "type": "integer",
+            "const": 1050000,
+            "title": "Context Tokens",
+            "default": 1050000
+          },
+          "price_contract": {
+            "$ref": "#/components/schemas/NativeModelContract"
+          },
+          "max_output_tokens": {
+            "type": "integer",
+            "maximum": 16384.0,
+            "minimum": 16.0,
+            "title": "Max Output Tokens",
+            "default": 1024
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "maximum": 120.0,
+            "minimum": 1.0,
+            "title": "Timeout Seconds",
+            "default": 60
+          },
+          "limit": {
+            "$ref": "#/components/schemas/SpendLimit-Input"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "price_contract",
+          "limit"
+        ],
+        "title": "ModelLimit"
+      },
+      "ModelLimit-Output": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "const": "openai-luna-responses-text-v1",
+            "title": "Key",
+            "default": "openai-luna-responses-text-v1"
+          },
+          "provider": {
+            "type": "string",
+            "const": "openai",
+            "title": "Provider",
+            "default": "openai"
+          },
+          "model": {
+            "type": "string",
+            "const": "gpt-6-luna",
+            "title": "Model",
+            "default": "gpt-6-luna"
+          },
+          "sdk_surface": {
+            "type": "string",
+            "const": "responses.create",
+            "title": "Sdk Surface",
+            "default": "responses.create"
+          },
+          "reservation_contract": {
+            "type": "string",
+            "const": "openai-luna-full-context-fast-reserve-v1",
+            "title": "Reservation Contract",
+            "default": "openai-luna-full-context-fast-reserve-v1"
+          },
+          "context_tokens": {
+            "type": "integer",
+            "const": 1050000,
+            "title": "Context Tokens",
+            "default": 1050000
+          },
+          "price_contract": {
+            "$ref": "#/components/schemas/NativeModelContract"
+          },
+          "max_output_tokens": {
+            "type": "integer",
+            "maximum": 16384.0,
+            "minimum": 16.0,
+            "title": "Max Output Tokens",
+            "default": 1024
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "maximum": 120.0,
+            "minimum": 1.0,
+            "title": "Timeout Seconds",
+            "default": 60
+          },
+          "limit": {
+            "$ref": "#/components/schemas/SpendLimit-Output"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "price_contract",
+          "limit"
+        ],
+        "title": "ModelLimit"
       },
       "ModelSpec-Input": {
         "properties": {
@@ -20192,6 +21675,75 @@
         "type": "object",
         "title": "SpanFilter"
       },
+      "SpendLimit-Input": {
+        "properties": {
+          "modeled_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Modeled Usd",
+            "decimal_places": 12,
+            "gt": 0,
+            "lt": "1000000000"
+          },
+          "requests": {
+            "type": "integer",
+            "maximum": 100000.0,
+            "minimum": 1.0,
+            "title": "Requests"
+          },
+          "concurrent_requests": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Concurrent Requests"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "modeled_usd",
+          "requests",
+          "concurrent_requests"
+        ],
+        "title": "SpendLimit"
+      },
+      "SpendLimit-Output": {
+        "properties": {
+          "modeled_usd": {
+            "type": "string",
+            "title": "Modeled Usd",
+            "decimal_places": 12,
+            "gt": 0,
+            "lt": "1000000000"
+          },
+          "requests": {
+            "type": "integer",
+            "maximum": 100000.0,
+            "minimum": 1.0,
+            "title": "Requests"
+          },
+          "concurrent_requests": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Concurrent Requests"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "modeled_usd",
+          "requests",
+          "concurrent_requests"
+        ],
+        "title": "SpendLimit"
+      },
       "TaskCostComponent-Input": {
         "properties": {
           "key": {
@@ -21296,6 +22848,44 @@
           "calculated_at"
         ],
         "title": "TaskWindow"
+      },
+      "TeamLimit-Input": {
+        "properties": {
+          "team_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Team Id"
+          },
+          "limit": {
+            "$ref": "#/components/schemas/SpendLimit-Input"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "team_id",
+          "limit"
+        ],
+        "title": "TeamLimit"
+      },
+      "TeamLimit-Output": {
+        "properties": {
+          "team_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Team Id"
+          },
+          "limit": {
+            "$ref": "#/components/schemas/SpendLimit-Output"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "team_id",
+          "limit"
+        ],
+        "title": "TeamLimit"
       },
       "ToolArgumentCheck": {
         "properties": {

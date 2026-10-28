@@ -4,6 +4,8 @@ Find where an AI application spends money. Test cheaper alternatives against its
 
 Cutback is an Apache-2.0 Python tool with an offline scanner and a self-hosted collector, PostgreSQL worker and dashboard. **Pre-alpha: synthetic tests demonstrate the workflow; production behavior and real customer savings are not validated.**
 
+[What works, which version to install, and what remains](https://github.com/CutbackAI/cutback/blob/main/docs/status.md). The GitHub source contains workflows that are not yet in the published PyPI package.
+
 Source checkouts also include [agent and RAG evaluation](https://github.com/CutbackAI/cutback/blob/main/docs/agent-evaluation.md): native tool-call conversations, declared final-state checks, retrieval/citation evidence and individual durable request receipts. Try the [independent applications](https://github.com/CutbackAI/cutback/blob/main/examples/agent-evaluation/README.md), then inspect them in the guided demo. PyPI dev5 remains the earlier package.
 
 Optional [semantic episode checks](https://github.com/CutbackAI/cutback/blob/main/docs/episode-semantic-judging.md) assess answers against declared references, actually returned documents and observed conversation constraints. The guided dashboard separates judge costs, exact-quote checks and unknown results. These are model assessments, not independent verification of customer quality.
@@ -72,6 +74,7 @@ The commands above target the published dev5 package. For the newer source-check
 | Keep an existing OpenAI 3.35.1 application pin | [Separate locked SDK qualification and limits](https://github.com/CutbackAI/cutback/blob/main/infra/sdk-compat/README.md) |
 | Understand modern cache usage and private contract rates | [Independent arithmetic and readable pricing tables](https://github.com/CutbackAI/cutback/blob/main/docs/modern-model-accounting.md) |
 | Preserve a modern application's request during instruction search | [Explicit native text contracts and independent application](https://github.com/CutbackAI/cutback/blob/main/docs/native-modern-text.md) |
+| Enforce shared modeled application allowances | [Native gateway sample, scopes and uncertainty](https://github.com/CutbackAI/cutback/blob/main/examples/gateway/README.md) |
 | Measure an owned local ingest/query envelope | [Load profile and diagnostic limits, source checkout](https://github.com/CutbackAI/cutback/blob/main/docs/load-qualification.md) |
 | Review failures and build a versioned regression dataset | [Import and review](https://github.com/CutbackAI/cutback/blob/main/docs/imports-and-review.md) |
 | Version a prompt, compare it and roll back an alias | [Prompt sample](https://github.com/CutbackAI/cutback/blob/main/examples/prompt-releases/README.md) and [application checks](https://github.com/CutbackAI/cutback/blob/main/examples/application-checks/README.md) |

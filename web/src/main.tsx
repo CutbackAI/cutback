@@ -31,6 +31,31 @@ import { PriceSnapshots } from "./price-snapshots";
 import { NativeContracts } from "./native-contracts";
 import { decisionLabel, criterionLabel, experimentTitle } from "./evidence";
 
+const GatewayBudgets = React.lazy(() =>
+  import("./gateway").then((module) => ({
+    default: module.GatewayBudgets,
+  })),
+);
+
+class BudgetViewBoundary extends React.Component<
+  { children: React.ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? (
+      <p role="alert">
+        Budget controls could not load. Reload this dashboard and reconnect.
+      </p>
+    ) : (
+      this.props.children
+    );
+  }
+}
+
 async function request(token: string, path: string, options: RequestInit = {}) {
   const response = await fetch("/v1" + path, {
     ...options,
@@ -75,6 +100,7 @@ const views = [
   "Review",
   "Prompts",
   "Monitoring",
+  "Application budgets",
   "Changes",
   "Integrations",
   "Security",
@@ -777,6 +803,20 @@ function App() {
                   "editor",
                 ].includes(identity.project_roles?.[project] || identity.role)}
               />
+            )}
+            {view === "Application budgets" && project && (
+              <BudgetViewBoundary key={project}>
+                <React.Suspense
+                  fallback={<p role="status">Loading application budgets…</p>}
+                >
+                  <GatewayBudgets
+                    key={project}
+                    api={api}
+                    project={project}
+                    canApprove={admin}
+                  />
+                </React.Suspense>
+              </BudgetViewBoundary>
             )}
             {view === "Training" && data.jobs && (
               <Training
@@ -2263,7 +2303,12 @@ function Security({
         are shown only once and should enter a secret store.
       </p>
       <h2>Pricing and overrides</h2>
-      <PriceSnapshots key={base} data={data.prices || {}} api={api} base={base} />
+      <PriceSnapshots
+        key={base}
+        data={data.prices || {}}
+        api={api}
+        base={base}
+      />
       <details>
         <summary>Recorded catalog and contract rates</summary>
         <JSONView data={data.prices} />

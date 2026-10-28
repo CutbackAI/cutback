@@ -400,6 +400,8 @@ def create_app(
     @app.post("/v1/ingest/events")
     def ingest(body: EventBatch, auth=Depends(authorize)):
         scope(auth, body.project_id, ("ingest",))
+        if any(event.event_schema_version == "1.2" for event in body.events):
+            raise HTTPException(422, "GATEWAY_RECEIPTS_REQUIRE_INTERNAL_RESERVATION")
         now = datetime.now(UTC)
         with sessions() as session:
             environment = session.get(Environment, auth["environment_id"])
@@ -579,6 +581,9 @@ def create_app(
     from cutback.server.quality_api import install_quality
 
     install_quality(app, sessions, authorize, scope)
+    from cutback.server.gateway_api import install_gateway_controls
+
+    install_gateway_controls(app, sessions, authorize, scope)
     from cutback.server.privacy_api import install_privacy
 
     install_privacy(app, sessions, authorize, scope)

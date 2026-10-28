@@ -23,7 +23,7 @@ class StrictModel(BaseModel):
 
 
 class LLMEvent(StrictModel):
-    event_schema_version: Literal["1.0", "1.1"] = "1.0"
+    event_schema_version: Literal["1.0", "1.1", "1.2"] = "1.0"
     event_id: UUID = Field(default_factory=uuid4)
     occurred_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     environment: Identifier
@@ -48,7 +48,7 @@ class LLMEvent(StrictModel):
     region: Identifier | None = None
     deployment: Identifier | None = None
     service_tier: Identifier | None = None
-    duration_ms: Annotated[float, Field(ge=0, le=86400000)]
+    duration_ms: Annotated[float, Field(ge=0, le=86400000)] | None
     status: Literal["success", "error", "cancelled", "incomplete"]
     http_status: Annotated[int, Field(ge=100, le=599)] | None = None
     error_type: Identifier | None = None
@@ -66,9 +66,9 @@ class LLMEvent(StrictModel):
     )
     metering_status: Literal["text_only", "unsupported_units", "unknown"] = "unknown"
     content_capture_status: Literal["disabled"] = "disabled"
-    sampling_policy_id: Literal["all-supported-calls-v1", "external-otel-spans-v1"] = (
-        "all-supported-calls-v1"
-    )
+    sampling_policy_id: Literal[
+        "all-supported-calls-v1", "external-otel-spans-v1", "gateway-native-text-v1"
+    ] = "all-supported-calls-v1"
     # No arbitrary attributes, raw usage maps, request IDs, error messages, or content fields.
 
     @model_serializer(mode="wrap")
@@ -88,6 +88,12 @@ class LLMEvent(StrictModel):
 
     @model_validator(mode="after")
     def usage_consistency(self):
+        gateway = self.sampling_policy_id == "gateway-native-text-v1"
+        if self.event_schema_version == "1.2":
+            if not gateway or self.provider != "openai":
+                raise ValueError("event schema 1.2 is reserved for gateway-owned OpenAI receipts")
+        elif gateway or self.duration_ms is None:
+            raise ValueError("gateway source and unknown duration require event schema 1.2")
         values = [
             self.input_tokens,
             self.output_tokens,
@@ -102,12 +108,12 @@ class LLMEvent(StrictModel):
             raise ValueError("unavailable usage must remain null")
         split = (self.cache_write_30m_tokens, self.cache_write_12h_tokens)
         if any(value is not None for value in split) and (
-            self.event_schema_version != "1.1" or self.provider != "openai"
+            self.event_schema_version not in {"1.1", "1.2"} or self.provider != "openai"
         ):
             raise ValueError("OpenAI write lifetime counts require event schema 1.1")
-        if self.event_schema_version == "1.1" and self.provider != "openai":
+        if self.event_schema_version in {"1.1", "1.2"} and self.provider != "openai":
             raise ValueError("event schema 1.1 is qualified only for OpenAI usage")
-        if self.event_schema_version == "1.1":
+        if self.event_schema_version in {"1.1", "1.2"}:
             if all(value is not None for value in (*split, self.cache_write_tokens)) and (
                 sum(value for value in split if value is not None) != self.cache_write_tokens
             ):

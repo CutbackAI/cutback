@@ -1,0 +1,38 @@
+{
+  "feature": "finite_application_gateway_budgets",
+  "status": "source_focused_qualified_frozen_installed_and_public_gates_pending",
+  "scope": "project/environment virtual keys, shared project/team/model/key modeled budgets; native synchronous/asynchronous nonstreaming Luna Responses text",
+  "released_migrations_unchanged": "0001-0018",
+  "additive_migration_unreleased": "0019",
+  "source_combined_default": {"passed": 59, "skipped": 8, "seconds": 35.64},
+  "source_combined_skips": "native HTTPX2 cases require separate SDK3 environment",
+  "source_sdk3_exploratory_broad": {"passed": 616, "skipped": 6, "seconds": 139.82},
+  "source_sdk3_skip_reasons": {"windows_symlink_privilege": 2, "separate_legacy_sdk_matrix": 4},
+  "source_legacy_and_scanner": {"passed": 21, "seconds": 2.08},
+  "source_authenticated_browser_after_money_tables_and_lazy_route": {"passed": 1, "seconds": 14.75},
+  "desktop_mobile_axe_and_viewer": true,
+  "frontend_units": 9,
+  "source_typing_modules": 204,
+  "generated_api_types_and_production_react": "pass",
+  "independent_native_http_pg_report_sample": "pass within combined source group",
+  "earlier_failed_runs": [
+    "Native test setup used an ingestion token shorter than the existing 32-character guard; corrected synthetic token.",
+    "Gateway quota namespacing exceeded the existing 64-character shared bucket key; hash the namespace and credential together.",
+    "First browser locator matched both main and repeated component headings; component now has a distinct heading and main-heading assertion is explicit.",
+    "Source typing required explicit Decimal construction and a literal context default; corrected.",
+    "React build caught two missing newly frozen reservation fields; authoring now supplies both.",
+    "Initial mobile table over-wrapped opaque IDs; bounded horizontal tables preserve readability.",
+    "The added dashboard exceeded the initial bundle warning; route-level lazy loading removes that warning and provides a failure boundary."
+  ],
+  "native_sdk_requests": "actual pinned SDKs with synthetic provider transports",
+  "paid_provider_requests": 0,
+  "production_deployment": false,
+  "pypi_upload": false,
+  "pending": [
+    "final frozen installed default, SDK3 and legacy qualification",
+    "core-only/archive/publication boundary and packaged-byte comparisons",
+    "exact hosted checks and sanitized public merge",
+    "broader providers, surfaces, reliability, operations and roadmap acceptance",
+    "independent real user/customer and live provider acceptance"
+  ]
+}
