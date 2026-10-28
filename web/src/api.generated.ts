@@ -660,6 +660,128 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/ingest/task-outcomes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ingest */
+        post: operations["ingest_v1_ingest_task_outcomes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/task-outcomes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tasks */
+        get: operations["tasks_v1_projects__project_id__task_outcomes_get"];
+        put?: never;
+        /** Record */
+        post: operations["record_v1_projects__project_id__task_outcomes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/task-economics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Economics */
+        get: operations["economics_v1_projects__project_id__task_economics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/task-cost-snapshots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Snapshots */
+        get: operations["snapshots_v1_projects__project_id__task_cost_snapshots_get"];
+        put?: never;
+        /** Freeze */
+        post: operations["freeze_v1_projects__project_id__task_cost_snapshots_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/task-cost-snapshots/{snapshot_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Snapshot */
+        get: operations["snapshot_v1_projects__project_id__task_cost_snapshots__snapshot_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/search-effort": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Effort */
+        post: operations["effort_v1_projects__project_id__search_effort_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/improvement-observations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Observations */
+        get: operations["observations_v1_projects__project_id__improvement_observations_get"];
+        put?: never;
+        /** Observe */
+        post: operations["observe_v1_projects__project_id__improvement_observations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/imports/preview": {
         parameters: {
             query?: never;
@@ -3471,6 +3593,202 @@ export interface components {
             /** Provenance Ref */
             provenance_ref: string;
         };
+        /** ImprovementAssumptions */
+        "ImprovementAssumptions-Input": {
+            /**
+             * All Optimization Runs Declared Complete
+             * @default false
+             */
+            all_optimization_runs_declared_complete: boolean;
+            /**
+             * Other Optimization Costs Declared Complete
+             * @default false
+             */
+            other_optimization_costs_declared_complete: boolean;
+            /** Other Optimization Costs */
+            other_optimization_costs?: components["schemas"]["TaskCostComponent-Input"][];
+            /**
+             * Min Tasks Per Window
+             * @default 30
+             */
+            min_tasks_per_window: number;
+            /**
+             * Max Absolute Success Rate Loss
+             * @default 0
+             */
+            max_absolute_success_rate_loss: number | string;
+            /** Forecast Successful Tasks */
+            forecast_successful_tasks?: number | null;
+        };
+        /** ImprovementAssumptions */
+        "ImprovementAssumptions-Output": {
+            /**
+             * All Optimization Runs Declared Complete
+             * @default false
+             */
+            all_optimization_runs_declared_complete: boolean;
+            /**
+             * Other Optimization Costs Declared Complete
+             * @default false
+             */
+            other_optimization_costs_declared_complete: boolean;
+            /** Other Optimization Costs */
+            other_optimization_costs?: components["schemas"]["TaskCostComponent-Output"][];
+            /**
+             * Min Tasks Per Window
+             * @default 30
+             */
+            min_tasks_per_window: number;
+            /**
+             * Max Absolute Success Rate Loss
+             * @default 0
+             */
+            max_absolute_success_rate_loss: string;
+            /** Forecast Successful Tasks */
+            forecast_successful_tasks?: number | null;
+        };
+        /** ImprovementEvidence */
+        ImprovementEvidence: {
+            report: components["schemas"]["ImprovementReport"];
+            assumptions: components["schemas"]["ImprovementAssumptions-Output"];
+            /**
+             * Baseline Snapshot Id
+             * Format: uuid
+             */
+            baseline_snapshot_id: string;
+            /** Baseline Sha256 */
+            baseline_sha256: string;
+            /**
+             * Candidate Snapshot Id
+             * Format: uuid
+             */
+            candidate_snapshot_id: string;
+            /** Candidate Sha256 */
+            candidate_sha256: string;
+            /** Change Id */
+            change_id: string | null;
+            /** Source Diff Sha256 */
+            source_diff_sha256: string | null;
+            /** Release Linkage */
+            release_linkage: string;
+            /** Workflow */
+            workflow: string;
+            /** Service */
+            service: string;
+            /** Baseline Release */
+            baseline_release: string;
+            /** Candidate Release */
+            candidate_release: string;
+            /** Run Costs */
+            run_costs: components["schemas"]["OptimizationRunCost"][];
+            /** Missing Predecessor Costs */
+            missing_predecessor_costs: number;
+            /**
+             * Run Set Evidence
+             * @default owner_declared_run_set_canonical_cumulative_ledger_totals
+             */
+            run_set_evidence: string;
+        };
+        /** ImprovementInput */
+        ImprovementInput: {
+            /**
+             * Observation Id
+             * Format: uuid
+             */
+            observation_id: string;
+            /**
+             * Baseline Snapshot Id
+             * Format: uuid
+             */
+            baseline_snapshot_id: string;
+            /**
+             * Candidate Snapshot Id
+             * Format: uuid
+             */
+            candidate_snapshot_id: string;
+            /** Change Id */
+            change_id?: string | null;
+            /**
+             * Release Linkage Attested
+             * @default false
+             */
+            release_linkage_attested: boolean;
+            /** Optimization Run Ids */
+            optimization_run_ids?: string[];
+            assumptions?: components["schemas"]["ImprovementAssumptions-Input"];
+        };
+        /** ImprovementPage */
+        ImprovementPage: {
+            /** Items */
+            items: components["schemas"]["ImprovementReceipt"][];
+            /** Next After */
+            next_after: string | null;
+        };
+        /** ImprovementReceipt */
+        ImprovementReceipt: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            /** Evidence Sha256 */
+            evidence_sha256: string;
+            evidence: components["schemas"]["ImprovementEvidence"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** ImprovementReport */
+        ImprovementReport: {
+            /** Contract */
+            contract: string;
+            /** Decision */
+            decision: string;
+            /** Reasons */
+            reasons: string[];
+            /** Baseline Declared Success Rate */
+            baseline_declared_success_rate: string | null;
+            /** Candidate Declared Success Rate */
+            candidate_declared_success_rate: string | null;
+            /** Descriptive Outcome Non Regression */
+            descriptive_outcome_non_regression: boolean | null;
+            /** Modeled Cost Per Success Delta Usd */
+            modeled_cost_per_success_delta_usd: string | null;
+            /** Known Optimization Run Subtotal Usd */
+            known_optimization_run_subtotal_usd: string | null;
+            /** Known Other Optimization Subtotal Usd */
+            known_other_optimization_subtotal_usd: string | null;
+            /** Optimization Cost Complete Under Declaration */
+            optimization_cost_complete_under_declaration: boolean;
+            /** Declared Optimization Total Usd */
+            declared_optimization_total_usd: string | null;
+            /** Forecast Successful Tasks */
+            forecast_successful_tasks: number | null;
+            /** Forecast Net Modeled Benefit Usd */
+            forecast_net_modeled_benefit_usd: string | null;
+            /** Forecast Break Even Successful Tasks */
+            forecast_break_even_successful_tasks: string | null;
+            /** Forecast Evidence */
+            forecast_evidence: string;
+            /** Quality Evidence */
+            quality_evidence: string;
+            /** Causal Attribution */
+            causal_attribution: string;
+            /** Production Savings Usd */
+            production_savings_usd?: null;
+            /**
+             * Deployment Authorized
+             * @default false
+             */
+            deployment_authorized: boolean;
+        };
         /** IncidentTransition */
         IncidentTransition: {
             /** Expected Revision */
@@ -3923,6 +4241,26 @@ export interface components {
             wait_seconds: number;
             /** Approval Ref */
             approval_ref: string;
+        };
+        /** OptimizationRunCost */
+        OptimizationRunCost: {
+            /**
+             * Run Id
+             * Format: uuid
+             */
+            run_id: string;
+            /** Status */
+            status: string;
+            /** Requests Reserved */
+            requests_reserved: number;
+            /** Known Cost Requests */
+            known_cost_requests: number | null;
+            /** Known Cost Subtotal Usd */
+            known_cost_subtotal_usd: string;
+            /** Ledger Version */
+            ledger_version: number | null;
+            /** Uncertain Or Reserved Calls */
+            uncertain_or_reserved_calls: number;
         };
         /** OrganizationInput */
         OrganizationInput: {
@@ -4791,6 +5129,54 @@ export interface components {
             /** Spans */
             spans?: components["schemas"]["Span"][];
         };
+        /** SearchEffortInput */
+        SearchEffortInput: {
+            /** Conservative Savings Per Success Usd */
+            conservative_savings_per_success_usd?: number | string | null;
+            /** Forecast Successful Tasks */
+            forecast_successful_tasks?: number | null;
+            /** Per Candidate Upper Cost Usd */
+            per_candidate_upper_cost_usd?: number | string | null;
+            /** Fixed Proposer Upper Cost Usd */
+            fixed_proposer_upper_cost_usd?: number | string | null;
+            /** Owner Spend Cap Usd */
+            owner_spend_cap_usd: number | string;
+            /**
+             * Max Fraction Of Opportunity
+             * @default 0.1
+             */
+            max_fraction_of_opportunity: number | string;
+            /**
+             * Max Candidates
+             * @default 5
+             */
+            max_candidates: number;
+            /**
+             * Evidence
+             * @default owner_forecast_not_verified
+             * @constant
+             */
+            evidence: "owner_forecast_not_verified";
+        };
+        /** SearchEffortReceipt */
+        SearchEffortReceipt: {
+            /** Decision */
+            decision: string;
+            /** Candidate Limit */
+            candidate_limit: number;
+            /** Forecast Gross Modeled Opportunity Usd */
+            forecast_gross_modeled_opportunity_usd: string | null;
+            /** Suggested Total Spend Cap Usd */
+            suggested_total_spend_cap_usd: string | null;
+            /** Reasons */
+            reasons: string[];
+            /** Evidence */
+            evidence: string;
+            /** Paid Calls Authorized */
+            paid_calls_authorized: boolean;
+            /** Provider Calls */
+            provider_calls: number;
+        };
         /** SessionPage */
         SessionPage: {
             /** Items */
@@ -4898,6 +5284,445 @@ export interface components {
             release?: string | null;
             /** Kind */
             kind?: ("agent" | "chain" | "llm" | "tool" | "retriever" | "reranker" | "embedding" | "guardrail" | "evaluator" | "prompt" | "unknown") | null;
+        };
+        /** TaskCostComponent */
+        "TaskCostComponent-Input": {
+            /** Key */
+            key: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "tool" | "retrieval" | "compute" | "hosting" | "other";
+            /** Amount Usd */
+            amount_usd?: number | string | null;
+            /**
+             * Currency
+             * @default USD
+             * @constant
+             */
+            currency: "USD";
+        };
+        /** TaskCostComponent */
+        "TaskCostComponent-Output": {
+            /** Key */
+            key: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "tool" | "retrieval" | "compute" | "hosting" | "other";
+            /** Amount Usd */
+            amount_usd?: string | null;
+            /**
+             * Currency
+             * @default USD
+             * @constant
+             */
+            currency: "USD";
+        };
+        /** TaskCostReport */
+        TaskCostReport: {
+            /**
+             * Task Id
+             * Format: uuid
+             */
+            task_id: string;
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "success" | "failure" | "unknown" | "error";
+            /** Outcome Evidence */
+            outcome_evidence: string;
+            /** Outcome Basis */
+            outcome_basis: string;
+            /** Outcome Source Version */
+            outcome_source_version: string;
+            /** Observed Native Attempts */
+            observed_native_attempts: number;
+            /** Priced Native Attempts */
+            priced_native_attempts: number;
+            /** Expected Native Attempts */
+            expected_native_attempts: number | null;
+            /** Native Attempt Count Matches Declaration */
+            native_attempt_count_matches_declaration: boolean | null;
+            /** Excluded Non Application Attempts */
+            excluded_non_application_attempts: number;
+            /** Known Native Modeled Subtotal Usd */
+            known_native_modeled_subtotal_usd: string | null;
+            /** Known Other Asserted Subtotal Usd */
+            known_other_asserted_subtotal_usd: string | null;
+            /** Unknown Declared Components */
+            unknown_declared_components: number;
+            /** Declared Cost Complete */
+            declared_cost_complete: boolean;
+            /** Declared Modeled Total Usd */
+            declared_modeled_total_usd: string | null;
+            /** Cost Evidence */
+            cost_evidence: string;
+            /** Billing Verification */
+            billing_verification: string;
+            /** Population Coverage */
+            population_coverage: string;
+        };
+        /** TaskEconomicsSummary */
+        TaskEconomicsSummary: {
+            /** Submitted Tasks */
+            submitted_tasks: number;
+            /** Declared Successes */
+            declared_successes: number;
+            /** Declared Failures */
+            declared_failures: number;
+            /** Unknown Or Error Outcomes */
+            unknown_or_error_outcomes: number;
+            /** Declared Cost Complete Tasks */
+            declared_cost_complete_tasks: number;
+            /** Expected Tasks */
+            expected_tasks: number | null;
+            /** Task Count Matches Declaration */
+            task_count_matches_declaration: boolean | null;
+            /** Declared Sample Total Usd */
+            declared_sample_total_usd: string | null;
+            /** Known Declared Complete Task Subtotal Usd */
+            known_declared_complete_task_subtotal_usd: string | null;
+            /** Known Failed Task Native Modeled Subtotal Usd */
+            known_failed_task_native_modeled_subtotal_usd: string | null;
+            /** Failed Tasks With Known Native Cost */
+            failed_tasks_with_known_native_cost: number;
+            /** Declared Sample Cost Per Success Usd */
+            declared_sample_cost_per_success_usd: string | null;
+            /** Window Cost Complete Under Declaration */
+            window_cost_complete_under_declaration: boolean;
+            /** Declared Window Cost Per Success Usd */
+            declared_window_cost_per_success_usd: string | null;
+            /** Population Coverage */
+            population_coverage: string;
+            /** Billing Verification */
+            billing_verification: string;
+            /** Production Savings Usd */
+            production_savings_usd?: null;
+        };
+        /** TaskIngestReceipt */
+        TaskIngestReceipt: {
+            /** Accepted */
+            accepted: number;
+            /** Duplicates */
+            duplicates: number;
+            /** Receipts */
+            receipts: components["schemas"]["TaskRevisionReceipt"][];
+        };
+        /** TaskOutcomeBatch */
+        TaskOutcomeBatch: {
+            /** Items */
+            items: components["schemas"]["TaskOutcomeInput-Input"][];
+        };
+        /** TaskOutcomeInput */
+        "TaskOutcomeInput-Input": {
+            /**
+             * Schema Version
+             * @default cutback.task-outcome.v1
+             * @constant
+             */
+            schema_version: "cutback.task-outcome.v1";
+            /**
+             * Task Id
+             * Format: uuid
+             */
+            task_id: string;
+            /**
+             * Result Id
+             * Format: uuid
+             */
+            result_id: string;
+            /**
+             * Expected Previous Revision
+             * @default 0
+             */
+            expected_previous_revision: number;
+            /** Environment */
+            environment: string;
+            /** Trace Id */
+            trace_id: string;
+            /** Workflow */
+            workflow: string;
+            /** Service */
+            service: string;
+            /** Release */
+            release?: string | null;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "success" | "failure" | "unknown" | "error";
+            /** Source */
+            source: string;
+            /** Source Version */
+            source_version: string;
+            /**
+             * Basis
+             * @enum {string}
+             */
+            basis: "business_event" | "human_review" | "deterministic_evaluation" | "model_assessment";
+            /** Expected Native Attempts */
+            expected_native_attempts?: number | null;
+            /**
+             * Other Costs Declared Complete
+             * @default false
+             */
+            other_costs_declared_complete: boolean;
+            /** Components */
+            components?: components["schemas"]["TaskCostComponent-Input"][];
+        };
+        /** TaskOutcomeInput */
+        "TaskOutcomeInput-Output": {
+            /**
+             * Schema Version
+             * @default cutback.task-outcome.v1
+             * @constant
+             */
+            schema_version: "cutback.task-outcome.v1";
+            /**
+             * Task Id
+             * Format: uuid
+             */
+            task_id: string;
+            /**
+             * Result Id
+             * Format: uuid
+             */
+            result_id: string;
+            /**
+             * Expected Previous Revision
+             * @default 0
+             */
+            expected_previous_revision: number;
+            /** Environment */
+            environment: string;
+            /** Trace Id */
+            trace_id: string;
+            /** Workflow */
+            workflow: string;
+            /** Service */
+            service: string;
+            /** Release */
+            release?: string | null;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "success" | "failure" | "unknown" | "error";
+            /** Source */
+            source: string;
+            /** Source Version */
+            source_version: string;
+            /**
+             * Basis
+             * @enum {string}
+             */
+            basis: "business_event" | "human_review" | "deterministic_evaluation" | "model_assessment";
+            /** Expected Native Attempts */
+            expected_native_attempts?: number | null;
+            /**
+             * Other Costs Declared Complete
+             * @default false
+             */
+            other_costs_declared_complete: boolean;
+            /** Components */
+            components?: components["schemas"]["TaskCostComponent-Output"][];
+        };
+        /** TaskPage */
+        TaskPage: {
+            /** Items */
+            items: components["schemas"]["TaskReceipt"][];
+            /** Next After */
+            next_after: string | null;
+            /**
+             * Declarations As Of
+             * Format: date-time
+             */
+            declarations_as_of: string;
+            /**
+             * Calculated At
+             * Format: date-time
+             */
+            calculated_at: string;
+            /**
+             * Evidence Scope
+             * @default retained_evidence_at_calculation_time_not_frozen_telemetry
+             */
+            evidence_scope: string;
+        };
+        /** TaskReceipt */
+        TaskReceipt: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Result Record Id
+             * Format: uuid
+             */
+            result_record_id: string;
+            /** Revision */
+            revision: number;
+            declaration: components["schemas"]["TaskOutcomeInput-Output"];
+            /** Trace Integrity */
+            trace_integrity: string[];
+            /** Span Issue Count */
+            span_issue_count: number;
+            economics: components["schemas"]["TaskCostReport"];
+        };
+        /** TaskRevisionReceipt */
+        TaskRevisionReceipt: {
+            /**
+             * Result Id
+             * Format: uuid
+             */
+            result_id: string;
+            /** Revision */
+            revision: number;
+        };
+        /** TaskSnapshotBrief */
+        TaskSnapshotBrief: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            /** Evidence Sha256 */
+            evidence_sha256: string;
+            summary: components["schemas"]["TaskEconomicsSummary"];
+            /** Workflow */
+            workflow: string | null;
+            /** Release */
+            release: string | null;
+            /**
+             * Start
+             * Format: date-time
+             */
+            start: string;
+            /**
+             * End
+             * Format: date-time
+             */
+            end: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** TaskSnapshotInput */
+        TaskSnapshotInput: {
+            /**
+             * Snapshot Id
+             * Format: uuid
+             */
+            snapshot_id: string;
+            /**
+             * Start
+             * Format: date-time
+             */
+            start: string;
+            /**
+             * End
+             * Format: date-time
+             */
+            end: string;
+            /** Workflow */
+            workflow?: string | null;
+            /** Release */
+            release?: string | null;
+            /** Expected Tasks */
+            expected_tasks?: number | null;
+            /** As Of */
+            as_of?: string | null;
+        };
+        /** TaskSnapshotPage */
+        TaskSnapshotPage: {
+            /** Items */
+            items: components["schemas"]["TaskSnapshotBrief"][];
+            /** Next After */
+            next_after: string | null;
+        };
+        /** TaskSnapshotReceipt */
+        TaskSnapshotReceipt: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            /** Evidence Sha256 */
+            evidence_sha256: string;
+            report: components["schemas"]["TaskWindow"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Evidence Scope
+             * @default frozen_retained_evidence_not_independent_or_causal_verification
+             */
+            evidence_scope: string;
+        };
+        /** TaskWindow */
+        TaskWindow: {
+            summary: components["schemas"]["TaskEconomicsSummary"];
+            /** Items */
+            items: components["schemas"]["TaskReceipt"][];
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            /**
+             * Start
+             * Format: date-time
+             */
+            start: string;
+            /**
+             * End
+             * Format: date-time
+             */
+            end: string;
+            /**
+             * Declarations As Of
+             * Format: date-time
+             */
+            declarations_as_of: string;
+            /**
+             * Calculated At
+             * Format: date-time
+             */
+            calculated_at: string;
+            /**
+             * Evidence Scope
+             * @default retained_evidence_at_calculation_time_not_frozen_telemetry
+             */
+            evidence_scope: string;
         };
         /** ToolArgumentCheck */
         ToolArgumentCheck: {
@@ -6739,6 +7564,359 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EpisodePage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ingest_v1_ingest_task_outcomes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskOutcomeBatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskIngestReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tasks_v1_projects__project_id__task_outcomes_get: {
+        parameters: {
+            query: {
+                environment_id: string;
+                as_of?: string | null;
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    record_v1_projects__project_id__task_outcomes_post: {
+        parameters: {
+            query: {
+                environment_id: string;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskOutcomeBatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskIngestReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    economics_v1_projects__project_id__task_economics_get: {
+        parameters: {
+            query: {
+                environment_id: string;
+                start: string;
+                end: string;
+                workflow?: string | null;
+                release?: string | null;
+                expected_tasks?: number | null;
+                as_of?: string | null;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskWindow"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    snapshots_v1_projects__project_id__task_cost_snapshots_get: {
+        parameters: {
+            query: {
+                environment_id: string;
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskSnapshotPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    freeze_v1_projects__project_id__task_cost_snapshots_post: {
+        parameters: {
+            query: {
+                environment_id: string;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskSnapshotInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskSnapshotReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    snapshot_v1_projects__project_id__task_cost_snapshots__snapshot_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskSnapshotReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    effort_v1_projects__project_id__search_effort_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SearchEffortInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchEffortReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    observations_v1_projects__project_id__improvement_observations_get: {
+        parameters: {
+            query?: {
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImprovementPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    observe_v1_projects__project_id__improvement_observations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImprovementInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImprovementReceipt"];
                 };
             };
             /** @description Validation Error */

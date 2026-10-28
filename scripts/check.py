@@ -1,6 +1,7 @@
 """Run all tests against an isolated DB on the local Compose server. No credentials printed."""
 
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -14,5 +15,22 @@ if "CUTBACK_TEST_DATABASE_URL" not in env and secret.exists():
     env["CUTBACK_TEST_DATABASE_URL"] = (
         f"postgresql+psycopg://cutback:{password}@127.0.0.1:55432/cutback"
     )
-result = subprocess.run([sys.executable, "-m", "pytest", *sys.argv[1:]], cwd=root, env=env)
-raise SystemExit(result.returncode)
+process = subprocess.Popen(
+    [sys.executable, "-m", "pytest", *sys.argv[1:], "--tb=short", "--no-showlocals"],
+    cwd=root,
+    env=env,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
+    text=True,
+)
+assert process.stdout is not None
+for line in process.stdout:
+    # A pytest fixture argument or third-party diagnostic must not expose a DSN.
+    safe = re.sub(
+        r"(postgres(?:ql)?(?:\+[a-z0-9_]+)?://)[^@\s'\"]+@",
+        r"\1<credentials-omitted>@",
+        line,
+        flags=re.IGNORECASE,
+    )
+    print(safe, end="", flush=True)
+raise SystemExit(process.wait())

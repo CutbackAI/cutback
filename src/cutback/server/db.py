@@ -319,6 +319,7 @@ class RecommendationRecord(Base):
 
 class ChangeProposal(Base):
     __tablename__ = "change_proposals"
+    __table_args__ = (UniqueConstraint("id", "project_id", name="uq_change_project_identity"),)
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
     project_id: Mapped[UUID] = mapped_column(
         ForeignKey("projects.id", ondelete="CASCADE"), index=True
@@ -361,3 +362,4 @@ importlib.import_module("cutback.server.prompt_db")
 importlib.import_module("cutback.server.monitoring_db")
 importlib.import_module("cutback.server.quality_db")
 importlib.import_module("cutback.server.execution_db")
+importlib.import_module("cutback.server.economics_db")

@@ -2302,6 +2302,695 @@
         }
       }
     },
+    "/v1/ingest/task-outcomes": {
+      "post": {
+        "summary": "Ingest",
+        "operationId": "ingest_v1_ingest_task_outcomes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskOutcomeBatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskIngestReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/task-outcomes": {
+      "post": {
+        "summary": "Record",
+        "operationId": "record_v1_projects__project_id__task_outcomes_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "environment_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Environment Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskOutcomeBatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskIngestReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Tasks",
+        "operationId": "tasks_v1_projects__project_id__task_outcomes_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "environment_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Environment Id"
+            }
+          },
+          {
+            "name": "as_of",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/task-economics": {
+      "get": {
+        "summary": "Economics",
+        "operationId": "economics_v1_projects__project_id__task_economics_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "environment_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Environment Id"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "title": "End"
+            }
+          },
+          {
+            "name": "workflow",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "pattern": "^[a-zA-Z0-9_.:-]+$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Workflow"
+            }
+          },
+          {
+            "name": "release",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "pattern": "^[a-zA-Z0-9_.:-]+$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Release"
+            }
+          },
+          {
+            "name": "expected_tasks",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 1000000,
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Expected Tasks"
+            }
+          },
+          {
+            "name": "as_of",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskWindow"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/task-cost-snapshots": {
+      "post": {
+        "summary": "Freeze",
+        "operationId": "freeze_v1_projects__project_id__task_cost_snapshots_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "environment_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Environment Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskSnapshotInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskSnapshotReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Snapshots",
+        "operationId": "snapshots_v1_projects__project_id__task_cost_snapshots_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "environment_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Environment Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 20,
+              "minimum": 1,
+              "default": 10,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskSnapshotPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/task-cost-snapshots/{snapshot_id}": {
+      "get": {
+        "summary": "Snapshot",
+        "operationId": "snapshot_v1_projects__project_id__task_cost_snapshots__snapshot_id__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "snapshot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Snapshot Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskSnapshotReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/search-effort": {
+      "post": {
+        "summary": "Effort",
+        "operationId": "effort_v1_projects__project_id__search_effort_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchEffortInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchEffortReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/improvement-observations": {
+      "post": {
+        "summary": "Observe",
+        "operationId": "observe_v1_projects__project_id__improvement_observations_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImprovementInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImprovementReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Observations",
+        "operationId": "observations_v1_projects__project_id__improvement_observations_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImprovementPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{project_id}/imports/preview": {
       "post": {
         "summary": "Preview",
@@ -11691,6 +12380,520 @@
         ],
         "title": "ImportPreviewInput"
       },
+      "ImprovementAssumptions-Input": {
+        "properties": {
+          "all_optimization_runs_declared_complete": {
+            "type": "boolean",
+            "title": "All Optimization Runs Declared Complete",
+            "default": false
+          },
+          "other_optimization_costs_declared_complete": {
+            "type": "boolean",
+            "title": "Other Optimization Costs Declared Complete",
+            "default": false
+          },
+          "other_optimization_costs": {
+            "items": {
+              "$ref": "#/components/schemas/TaskCostComponent-Input"
+            },
+            "type": "array",
+            "maxItems": 32,
+            "title": "Other Optimization Costs"
+          },
+          "min_tasks_per_window": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Min Tasks Per Window",
+            "default": 30
+          },
+          "max_absolute_success_rate_loss": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Max Absolute Success Rate Loss",
+            "default": "0"
+          },
+          "forecast_successful_tasks": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000000000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forecast Successful Tasks"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ImprovementAssumptions"
+      },
+      "ImprovementAssumptions-Output": {
+        "properties": {
+          "all_optimization_runs_declared_complete": {
+            "type": "boolean",
+            "title": "All Optimization Runs Declared Complete",
+            "default": false
+          },
+          "other_optimization_costs_declared_complete": {
+            "type": "boolean",
+            "title": "Other Optimization Costs Declared Complete",
+            "default": false
+          },
+          "other_optimization_costs": {
+            "items": {
+              "$ref": "#/components/schemas/TaskCostComponent-Output"
+            },
+            "type": "array",
+            "maxItems": 32,
+            "title": "Other Optimization Costs"
+          },
+          "min_tasks_per_window": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Min Tasks Per Window",
+            "default": 30
+          },
+          "max_absolute_success_rate_loss": {
+            "type": "string",
+            "title": "Max Absolute Success Rate Loss",
+            "default": "0"
+          },
+          "forecast_successful_tasks": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000000000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forecast Successful Tasks"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ImprovementAssumptions"
+      },
+      "ImprovementEvidence": {
+        "properties": {
+          "report": {
+            "$ref": "#/components/schemas/ImprovementReport"
+          },
+          "assumptions": {
+            "$ref": "#/components/schemas/ImprovementAssumptions-Output"
+          },
+          "baseline_snapshot_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Baseline Snapshot Id"
+          },
+          "baseline_sha256": {
+            "type": "string",
+            "title": "Baseline Sha256"
+          },
+          "candidate_snapshot_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Candidate Snapshot Id"
+          },
+          "candidate_sha256": {
+            "type": "string",
+            "title": "Candidate Sha256"
+          },
+          "change_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change Id"
+          },
+          "source_diff_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Diff Sha256"
+          },
+          "release_linkage": {
+            "type": "string",
+            "title": "Release Linkage"
+          },
+          "workflow": {
+            "type": "string",
+            "title": "Workflow"
+          },
+          "service": {
+            "type": "string",
+            "title": "Service"
+          },
+          "baseline_release": {
+            "type": "string",
+            "title": "Baseline Release"
+          },
+          "candidate_release": {
+            "type": "string",
+            "title": "Candidate Release"
+          },
+          "run_costs": {
+            "items": {
+              "$ref": "#/components/schemas/OptimizationRunCost"
+            },
+            "type": "array",
+            "title": "Run Costs"
+          },
+          "missing_predecessor_costs": {
+            "type": "integer",
+            "title": "Missing Predecessor Costs"
+          },
+          "run_set_evidence": {
+            "type": "string",
+            "title": "Run Set Evidence",
+            "default": "owner_declared_run_set_canonical_cumulative_ledger_totals"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "report",
+          "assumptions",
+          "baseline_snapshot_id",
+          "baseline_sha256",
+          "candidate_snapshot_id",
+          "candidate_sha256",
+          "change_id",
+          "source_diff_sha256",
+          "release_linkage",
+          "workflow",
+          "service",
+          "baseline_release",
+          "candidate_release",
+          "run_costs",
+          "missing_predecessor_costs"
+        ],
+        "title": "ImprovementEvidence"
+      },
+      "ImprovementInput": {
+        "properties": {
+          "observation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Observation Id"
+          },
+          "baseline_snapshot_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Baseline Snapshot Id"
+          },
+          "candidate_snapshot_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Candidate Snapshot Id"
+          },
+          "change_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change Id"
+          },
+          "release_linkage_attested": {
+            "type": "boolean",
+            "title": "Release Linkage Attested",
+            "default": false
+          },
+          "optimization_run_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Optimization Run Ids"
+          },
+          "assumptions": {
+            "$ref": "#/components/schemas/ImprovementAssumptions-Input"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "observation_id",
+          "baseline_snapshot_id",
+          "candidate_snapshot_id"
+        ],
+        "title": "ImprovementInput"
+      },
+      "ImprovementPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ImprovementReceipt"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_after"
+        ],
+        "title": "ImprovementPage"
+      },
+      "ImprovementReceipt": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Environment Id"
+          },
+          "evidence_sha256": {
+            "type": "string",
+            "title": "Evidence Sha256"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/ImprovementEvidence"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "environment_id",
+          "evidence_sha256",
+          "evidence",
+          "created_at"
+        ],
+        "title": "ImprovementReceipt"
+      },
+      "ImprovementReport": {
+        "properties": {
+          "contract": {
+            "type": "string",
+            "title": "Contract"
+          },
+          "decision": {
+            "type": "string",
+            "title": "Decision"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reasons"
+          },
+          "baseline_declared_success_rate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Declared Success Rate"
+          },
+          "candidate_declared_success_rate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Declared Success Rate"
+          },
+          "descriptive_outcome_non_regression": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descriptive Outcome Non Regression"
+          },
+          "modeled_cost_per_success_delta_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modeled Cost Per Success Delta Usd"
+          },
+          "known_optimization_run_subtotal_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Known Optimization Run Subtotal Usd"
+          },
+          "known_other_optimization_subtotal_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Known Other Optimization Subtotal Usd"
+          },
+          "optimization_cost_complete_under_declaration": {
+            "type": "boolean",
+            "title": "Optimization Cost Complete Under Declaration"
+          },
+          "declared_optimization_total_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Declared Optimization Total Usd"
+          },
+          "forecast_successful_tasks": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forecast Successful Tasks"
+          },
+          "forecast_net_modeled_benefit_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forecast Net Modeled Benefit Usd"
+          },
+          "forecast_break_even_successful_tasks": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forecast Break Even Successful Tasks"
+          },
+          "forecast_evidence": {
+            "type": "string",
+            "title": "Forecast Evidence"
+          },
+          "quality_evidence": {
+            "type": "string",
+            "title": "Quality Evidence"
+          },
+          "causal_attribution": {
+            "type": "string",
+            "title": "Causal Attribution"
+          },
+          "production_savings_usd": {
+            "type": "null",
+            "title": "Production Savings Usd"
+          },
+          "deployment_authorized": {
+            "type": "boolean",
+            "title": "Deployment Authorized",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "contract",
+          "decision",
+          "reasons",
+          "baseline_declared_success_rate",
+          "candidate_declared_success_rate",
+          "descriptive_outcome_non_regression",
+          "modeled_cost_per_success_delta_usd",
+          "known_optimization_run_subtotal_usd",
+          "known_other_optimization_subtotal_usd",
+          "optimization_cost_complete_under_declaration",
+          "declared_optimization_total_usd",
+          "forecast_successful_tasks",
+          "forecast_net_modeled_benefit_usd",
+          "forecast_break_even_successful_tasks",
+          "forecast_evidence",
+          "quality_evidence",
+          "causal_attribution"
+        ],
+        "title": "ImprovementReport"
+      },
       "IncidentTransition": {
         "properties": {
           "expected_revision": {
@@ -12984,6 +14187,71 @@
           "approval_ref"
         ],
         "title": "OnlineRuleInput"
+      },
+      "OptimizationRunCost": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Run Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "requests_reserved": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Requests Reserved"
+          },
+          "known_cost_requests": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Known Cost Requests"
+          },
+          "known_cost_subtotal_usd": {
+            "type": "string",
+            "title": "Known Cost Subtotal Usd"
+          },
+          "ledger_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ledger Version"
+          },
+          "uncertain_or_reserved_calls": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Uncertain Or Reserved Calls"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "run_id",
+          "status",
+          "requests_reserved",
+          "known_cost_requests",
+          "known_cost_subtotal_usd",
+          "ledger_version",
+          "uncertain_or_reserved_calls"
+        ],
+        "title": "OptimizationRunCost"
       },
       "OrganizationInput": {
         "properties": {
@@ -15145,6 +16413,179 @@
         "type": "object",
         "title": "ScopeSpans"
       },
+      "SearchEffortInput": {
+        "properties": {
+          "conservative_savings_per_success_usd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conservative Savings Per Success Usd"
+          },
+          "forecast_successful_tasks": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000000000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forecast Successful Tasks"
+          },
+          "per_candidate_upper_cost_usd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Per Candidate Upper Cost Usd"
+          },
+          "fixed_proposer_upper_cost_usd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fixed Proposer Upper Cost Usd"
+          },
+          "owner_spend_cap_usd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Owner Spend Cap Usd"
+          },
+          "max_fraction_of_opportunity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 0.25,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Max Fraction Of Opportunity",
+            "default": "0.1"
+          },
+          "max_candidates": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Max Candidates",
+            "default": 5
+          },
+          "evidence": {
+            "type": "string",
+            "const": "owner_forecast_not_verified",
+            "title": "Evidence",
+            "default": "owner_forecast_not_verified"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "owner_spend_cap_usd"
+        ],
+        "title": "SearchEffortInput"
+      },
+      "SearchEffortReceipt": {
+        "properties": {
+          "decision": {
+            "type": "string",
+            "title": "Decision"
+          },
+          "candidate_limit": {
+            "type": "integer",
+            "title": "Candidate Limit"
+          },
+          "forecast_gross_modeled_opportunity_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forecast Gross Modeled Opportunity Usd"
+          },
+          "suggested_total_spend_cap_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Total Spend Cap Usd"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reasons"
+          },
+          "evidence": {
+            "type": "string",
+            "title": "Evidence"
+          },
+          "paid_calls_authorized": {
+            "type": "boolean",
+            "title": "Paid Calls Authorized"
+          },
+          "provider_calls": {
+            "type": "integer",
+            "title": "Provider Calls"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "decision",
+          "candidate_limit",
+          "forecast_gross_modeled_opportunity_usd",
+          "suggested_total_spend_cap_usd",
+          "reasons",
+          "evidence",
+          "paid_calls_authorized",
+          "provider_calls"
+        ],
+        "title": "SearchEffortReceipt"
+      },
       "SessionPage": {
         "properties": {
           "items": {
@@ -15476,6 +16917,1088 @@
         "additionalProperties": false,
         "type": "object",
         "title": "SpanFilter"
+      },
+      "TaskCostComponent-Input": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Key"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "tool",
+              "retrieval",
+              "compute",
+              "hosting",
+              "other"
+            ],
+            "title": "Kind"
+          },
+          "amount_usd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Usd"
+          },
+          "currency": {
+            "type": "string",
+            "const": "USD",
+            "title": "Currency",
+            "default": "USD"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "kind"
+        ],
+        "title": "TaskCostComponent"
+      },
+      "TaskCostComponent-Output": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Key"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "tool",
+              "retrieval",
+              "compute",
+              "hosting",
+              "other"
+            ],
+            "title": "Kind"
+          },
+          "amount_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Usd"
+          },
+          "currency": {
+            "type": "string",
+            "const": "USD",
+            "title": "Currency",
+            "default": "USD"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "kind"
+        ],
+        "title": "TaskCostComponent"
+      },
+      "TaskCostReport": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Task Id"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "success",
+              "failure",
+              "unknown",
+              "error"
+            ],
+            "title": "Outcome"
+          },
+          "outcome_evidence": {
+            "type": "string",
+            "title": "Outcome Evidence"
+          },
+          "outcome_basis": {
+            "type": "string",
+            "title": "Outcome Basis"
+          },
+          "outcome_source_version": {
+            "type": "string",
+            "title": "Outcome Source Version"
+          },
+          "observed_native_attempts": {
+            "type": "integer",
+            "title": "Observed Native Attempts"
+          },
+          "priced_native_attempts": {
+            "type": "integer",
+            "title": "Priced Native Attempts"
+          },
+          "expected_native_attempts": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Native Attempts"
+          },
+          "native_attempt_count_matches_declaration": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Native Attempt Count Matches Declaration"
+          },
+          "excluded_non_application_attempts": {
+            "type": "integer",
+            "title": "Excluded Non Application Attempts"
+          },
+          "known_native_modeled_subtotal_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Known Native Modeled Subtotal Usd"
+          },
+          "known_other_asserted_subtotal_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Known Other Asserted Subtotal Usd"
+          },
+          "unknown_declared_components": {
+            "type": "integer",
+            "title": "Unknown Declared Components"
+          },
+          "declared_cost_complete": {
+            "type": "boolean",
+            "title": "Declared Cost Complete"
+          },
+          "declared_modeled_total_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Declared Modeled Total Usd"
+          },
+          "cost_evidence": {
+            "type": "string",
+            "title": "Cost Evidence"
+          },
+          "billing_verification": {
+            "type": "string",
+            "title": "Billing Verification"
+          },
+          "population_coverage": {
+            "type": "string",
+            "title": "Population Coverage"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "task_id",
+          "outcome",
+          "outcome_evidence",
+          "outcome_basis",
+          "outcome_source_version",
+          "observed_native_attempts",
+          "priced_native_attempts",
+          "expected_native_attempts",
+          "native_attempt_count_matches_declaration",
+          "excluded_non_application_attempts",
+          "known_native_modeled_subtotal_usd",
+          "known_other_asserted_subtotal_usd",
+          "unknown_declared_components",
+          "declared_cost_complete",
+          "declared_modeled_total_usd",
+          "cost_evidence",
+          "billing_verification",
+          "population_coverage"
+        ],
+        "title": "TaskCostReport"
+      },
+      "TaskEconomicsSummary": {
+        "properties": {
+          "submitted_tasks": {
+            "type": "integer",
+            "title": "Submitted Tasks"
+          },
+          "declared_successes": {
+            "type": "integer",
+            "title": "Declared Successes"
+          },
+          "declared_failures": {
+            "type": "integer",
+            "title": "Declared Failures"
+          },
+          "unknown_or_error_outcomes": {
+            "type": "integer",
+            "title": "Unknown Or Error Outcomes"
+          },
+          "declared_cost_complete_tasks": {
+            "type": "integer",
+            "title": "Declared Cost Complete Tasks"
+          },
+          "expected_tasks": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Tasks"
+          },
+          "task_count_matches_declaration": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Count Matches Declaration"
+          },
+          "declared_sample_total_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Declared Sample Total Usd"
+          },
+          "known_declared_complete_task_subtotal_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Known Declared Complete Task Subtotal Usd"
+          },
+          "known_failed_task_native_modeled_subtotal_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Known Failed Task Native Modeled Subtotal Usd"
+          },
+          "failed_tasks_with_known_native_cost": {
+            "type": "integer",
+            "title": "Failed Tasks With Known Native Cost"
+          },
+          "declared_sample_cost_per_success_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Declared Sample Cost Per Success Usd"
+          },
+          "window_cost_complete_under_declaration": {
+            "type": "boolean",
+            "title": "Window Cost Complete Under Declaration"
+          },
+          "declared_window_cost_per_success_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Declared Window Cost Per Success Usd"
+          },
+          "population_coverage": {
+            "type": "string",
+            "title": "Population Coverage"
+          },
+          "billing_verification": {
+            "type": "string",
+            "title": "Billing Verification"
+          },
+          "production_savings_usd": {
+            "type": "null",
+            "title": "Production Savings Usd"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "submitted_tasks",
+          "declared_successes",
+          "declared_failures",
+          "unknown_or_error_outcomes",
+          "declared_cost_complete_tasks",
+          "expected_tasks",
+          "task_count_matches_declaration",
+          "declared_sample_total_usd",
+          "known_declared_complete_task_subtotal_usd",
+          "known_failed_task_native_modeled_subtotal_usd",
+          "failed_tasks_with_known_native_cost",
+          "declared_sample_cost_per_success_usd",
+          "window_cost_complete_under_declaration",
+          "declared_window_cost_per_success_usd",
+          "population_coverage",
+          "billing_verification"
+        ],
+        "title": "TaskEconomicsSummary"
+      },
+      "TaskIngestReceipt": {
+        "properties": {
+          "accepted": {
+            "type": "integer",
+            "title": "Accepted"
+          },
+          "duplicates": {
+            "type": "integer",
+            "title": "Duplicates"
+          },
+          "receipts": {
+            "items": {
+              "$ref": "#/components/schemas/TaskRevisionReceipt"
+            },
+            "type": "array",
+            "title": "Receipts"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "accepted",
+          "duplicates",
+          "receipts"
+        ],
+        "title": "TaskIngestReceipt"
+      },
+      "TaskOutcomeBatch": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TaskOutcomeInput-Input"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Items"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "TaskOutcomeBatch"
+      },
+      "TaskOutcomeInput-Input": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "cutback.task-outcome.v1",
+            "title": "Schema Version",
+            "default": "cutback.task-outcome.v1"
+          },
+          "task_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Task Id"
+          },
+          "result_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Result Id"
+          },
+          "expected_previous_revision": {
+            "type": "integer",
+            "maximum": 99.0,
+            "minimum": 0.0,
+            "title": "Expected Previous Revision",
+            "default": 0
+          },
+          "environment": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Environment"
+          },
+          "trace_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "title": "Trace Id"
+          },
+          "workflow": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Workflow"
+          },
+          "service": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Service"
+          },
+          "release": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release"
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Occurred At"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "success",
+              "failure",
+              "unknown",
+              "error"
+            ],
+            "title": "Outcome"
+          },
+          "source": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Source"
+          },
+          "source_version": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Source Version"
+          },
+          "basis": {
+            "type": "string",
+            "enum": [
+              "business_event",
+              "human_review",
+              "deterministic_evaluation",
+              "model_assessment"
+            ],
+            "title": "Basis"
+          },
+          "expected_native_attempts": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Native Attempts"
+          },
+          "other_costs_declared_complete": {
+            "type": "boolean",
+            "title": "Other Costs Declared Complete",
+            "default": false
+          },
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/TaskCostComponent-Input"
+            },
+            "type": "array",
+            "maxItems": 32,
+            "title": "Components"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "task_id",
+          "result_id",
+          "environment",
+          "trace_id",
+          "workflow",
+          "service",
+          "occurred_at",
+          "outcome",
+          "source",
+          "source_version",
+          "basis"
+        ],
+        "title": "TaskOutcomeInput"
+      },
+      "TaskOutcomeInput-Output": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "cutback.task-outcome.v1",
+            "title": "Schema Version",
+            "default": "cutback.task-outcome.v1"
+          },
+          "task_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Task Id"
+          },
+          "result_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Result Id"
+          },
+          "expected_previous_revision": {
+            "type": "integer",
+            "maximum": 99.0,
+            "minimum": 0.0,
+            "title": "Expected Previous Revision",
+            "default": 0
+          },
+          "environment": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Environment"
+          },
+          "trace_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "title": "Trace Id"
+          },
+          "workflow": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Workflow"
+          },
+          "service": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Service"
+          },
+          "release": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release"
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Occurred At"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "success",
+              "failure",
+              "unknown",
+              "error"
+            ],
+            "title": "Outcome"
+          },
+          "source": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Source"
+          },
+          "source_version": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Source Version"
+          },
+          "basis": {
+            "type": "string",
+            "enum": [
+              "business_event",
+              "human_review",
+              "deterministic_evaluation",
+              "model_assessment"
+            ],
+            "title": "Basis"
+          },
+          "expected_native_attempts": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Native Attempts"
+          },
+          "other_costs_declared_complete": {
+            "type": "boolean",
+            "title": "Other Costs Declared Complete",
+            "default": false
+          },
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/TaskCostComponent-Output"
+            },
+            "type": "array",
+            "maxItems": 32,
+            "title": "Components"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "task_id",
+          "result_id",
+          "environment",
+          "trace_id",
+          "workflow",
+          "service",
+          "occurred_at",
+          "outcome",
+          "source",
+          "source_version",
+          "basis"
+        ],
+        "title": "TaskOutcomeInput"
+      },
+      "TaskPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TaskReceipt"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          },
+          "declarations_as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Declarations As Of"
+          },
+          "calculated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Calculated At"
+          },
+          "evidence_scope": {
+            "type": "string",
+            "title": "Evidence Scope",
+            "default": "retained_evidence_at_calculation_time_not_frozen_telemetry"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_after",
+          "declarations_as_of",
+          "calculated_at"
+        ],
+        "title": "TaskPage"
+      },
+      "TaskReceipt": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "result_record_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Result Record Id"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "declaration": {
+            "$ref": "#/components/schemas/TaskOutcomeInput-Output"
+          },
+          "trace_integrity": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Trace Integrity"
+          },
+          "span_issue_count": {
+            "type": "integer",
+            "title": "Span Issue Count"
+          },
+          "economics": {
+            "$ref": "#/components/schemas/TaskCostReport"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "result_record_id",
+          "revision",
+          "declaration",
+          "trace_integrity",
+          "span_issue_count",
+          "economics"
+        ],
+        "title": "TaskReceipt"
+      },
+      "TaskRevisionReceipt": {
+        "properties": {
+          "result_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Result Id"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "result_id",
+          "revision"
+        ],
+        "title": "TaskRevisionReceipt"
+      },
+      "TaskSnapshotBrief": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Environment Id"
+          },
+          "evidence_sha256": {
+            "type": "string",
+            "title": "Evidence Sha256"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/TaskEconomicsSummary"
+          },
+          "workflow": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workflow"
+          },
+          "release": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "environment_id",
+          "evidence_sha256",
+          "summary",
+          "workflow",
+          "release",
+          "start",
+          "end",
+          "created_at"
+        ],
+        "title": "TaskSnapshotBrief"
+      },
+      "TaskSnapshotInput": {
+        "properties": {
+          "snapshot_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Snapshot Id"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End"
+          },
+          "workflow": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workflow"
+          },
+          "release": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release"
+          },
+          "expected_tasks": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Tasks"
+          },
+          "as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "snapshot_id",
+          "start",
+          "end"
+        ],
+        "title": "TaskSnapshotInput"
+      },
+      "TaskSnapshotPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TaskSnapshotBrief"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_after"
+        ],
+        "title": "TaskSnapshotPage"
+      },
+      "TaskSnapshotReceipt": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Environment Id"
+          },
+          "evidence_sha256": {
+            "type": "string",
+            "title": "Evidence Sha256"
+          },
+          "report": {
+            "$ref": "#/components/schemas/TaskWindow"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "evidence_scope": {
+            "type": "string",
+            "title": "Evidence Scope",
+            "default": "frozen_retained_evidence_not_independent_or_causal_verification"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "environment_id",
+          "evidence_sha256",
+          "report",
+          "created_at"
+        ],
+        "title": "TaskSnapshotReceipt"
+      },
+      "TaskWindow": {
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/TaskEconomicsSummary"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TaskReceipt"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Environment Id"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End"
+          },
+          "declarations_as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Declarations As Of"
+          },
+          "calculated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Calculated At"
+          },
+          "evidence_scope": {
+            "type": "string",
+            "title": "Evidence Scope",
+            "default": "retained_evidence_at_calculation_time_not_frozen_telemetry"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "summary",
+          "items",
+          "environment_id",
+          "start",
+          "end",
+          "declarations_as_of",
+          "calculated_at"
+        ],
+        "title": "TaskWindow"
       },
       "ToolArgumentCheck": {
         "properties": {

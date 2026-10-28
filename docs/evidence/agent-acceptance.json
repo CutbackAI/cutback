@@ -2,7 +2,7 @@
   "contract": "cutback.agent-acceptance.v1",
   "date": "2026-10-28",
   "scope": "bounded_native_function_conversations_synthetic_state_retrieval_and_per_call_accounting",
-  "publication": "locally_accepted_hosted_gates_pending_no_new_pypi_upload",
+  "publication": "public_source_merged_no_new_pypi_upload",
   "migration": "0013",
   "released_migrations_preserved_through": "0012",
   "native_profiles": {
@@ -101,8 +101,8 @@
   "paid_vendor_calls_authorized": false,
   "production_deployment": false,
   "pypi": "unchanged_0.1.0.dev5",
-  "public_source_pr": null,
-  "hosted_checks": "pending",
+  "public_source_pr": "https://github.com/CutbackAI/cutback/pull/22",
+  "hosted_checks": "all_eight_required_checks_success",
   "publication_archive": {
     "backend_entries_identical_to_installed_qualified_wheel": 148,
     "source_files_checked": 503,
@@ -111,5 +111,24 @@
     "utf8_text_validation": true,
     "release_identity_and_twine": true,
     "not_uploaded_to_pypi": true
+  },
+  "public_tested_head": "df1ad57b17ec2b033e87685cbefd275e1ca4f3d0",
+  "public_merge_commit": "e07633b0c2de720aca6a5a664eb78b4a65742362",
+  "public_tree": "fa29498d7919d46f3919f010619be3782ce0bbdb",
+  "hosted_regression": {
+    "python_3_11": {
+      "passed": 525,
+      "skipped": 4,
+      "seconds": 330.4
+    },
+    "python_3_13": {
+      "passed": 523,
+      "skipped": 6,
+      "seconds": 280.97
+    },
+    "ci_run": 40631070848,
+    "security_run": 40631070855,
+    "required_checks": 8,
+    "tested_head_tree_matches_merge": true
   }
 }
