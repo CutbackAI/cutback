@@ -216,6 +216,7 @@ class ExperimentPlan(StrictModel):
     prompt_bindings: list[PromptModelBinding] | None = Field(
         default=None, min_length=1, max_length=6
     )
+    content_nonce: UUID | None = None
 
     @model_serializer(mode="wrap")
     def preserve_existing_plan_hashes(self, handler):
@@ -224,6 +225,8 @@ class ExperimentPlan(StrictModel):
             result.pop("prompt_bindings", None)
         if self.episode_execution is None:
             result.pop("episode_execution", None)
+        if self.content_nonce is None:
+            result.pop("content_nonce", None)
         return result
 
     @model_validator(mode="after")

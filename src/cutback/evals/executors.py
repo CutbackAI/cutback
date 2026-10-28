@@ -35,6 +35,8 @@ def require_single_call_model(model):
 
 
 class OpenAIExecutor:
+    synthetic_transport = False
+
     def __init__(self, *, http_client=None):
         key = os.getenv("CUTBACK_EXPERIMENT_OPENAI_KEY")
         if not key:

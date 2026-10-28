@@ -78,6 +78,8 @@ Voice requires audio transport, turn-taking/interruptions, acoustic conditions a
 
 ## Release 6 â€” automatic economically useful improvements
 
+Implementation: task outcomes, complete declared task-cost windows and cumulative improvement receipts are public source. Native adaptive text campaigns, exact literal instruction source changes, portable application-check binding and local review branches now have broad local and installed-wheel acceptance; final follow-up/hosted/publication state is recorded in [progress](progress.md). [Campaign workflow and limits](improvement-campaigns.md). This bounded increment does not implement every optimizer strategy, dynamic source adapter, affected-test discovery or the Release 7 platform.
+
 **Baseline:** C03â€“C10, G05/G06/G08/G09, X07/X08. **User outcome:** the agent prepares a useful change with less engineer effort and defensible total economics.
 
 Add pluggable candidate generators/optimizers with a strict adapter boundary. Start with qualified prompt and parameter search, then workload-eligible caching/routing/retrieval/compression/training. Every proposer/evaluator/target/simulator call uses the canonical ledger; no optimizer may make hidden out-of-band calls. Translate external optimizer budgets into this envelope rather than treating an in-process callback count as durable dollar control. Log exact candidate versions and rejection reasons without leaking permitted examples.

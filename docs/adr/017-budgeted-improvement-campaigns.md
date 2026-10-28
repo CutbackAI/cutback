@@ -1,6 +1,6 @@
 # Budgeted improvement campaigns
 
-Status: implementation design, 28 October 2026. Task economics and frozen observations are working source; the campaign described here is **not implemented or accepted** yet. Existing released plans, source bindings, reservations and test-lineage rules remain valid.
+Status: source implementation under final release acceptance, 28 October 2026. The encrypted envelope, scoped APIs, native proposer, shared parent/child ledger, adaptive validation, untouched confirmation, exact literal instruction diffs/rollback and portable application-check/local-branch binding are implemented. Broad local regression and installed-wheel campaign checks pass; final follow-up/artifact/publication evidence is recorded in [progress](../progress.md). This is not completion of the broader Releases 6–7. Existing released plans, source bindings, reservations and test-lineage rules remain valid. [Runnable independent sample](../../examples/improvement-campaign/README.md), [agent workflow and limits](../improvement-campaigns.md).
 
 ## Decision
 

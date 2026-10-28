@@ -7,6 +7,13 @@ from fastapi import Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy import delete, select
 
+from cutback.server.campaign_db import (
+    CampaignCandidate,
+    CampaignEconomicReference,
+    CampaignRecord,
+    CampaignRun,
+    CampaignSelection,
+)
 from cutback.server.db import (
     AccessKey,
     AuditEvent,
@@ -93,6 +100,11 @@ def install_privacy(app, sessions, authorize, scope):
         def records():
             with sessions() as session:
                 for cls in (
+                    CampaignRecord,
+                    CampaignRun,
+                    CampaignCandidate,
+                    CampaignSelection,
+                    CampaignEconomicReference,
                     TaskRecord,
                     TaskResult,
                     TaskCostSnapshot,
@@ -270,6 +282,11 @@ def install_privacy(app, sessions, authorize, scope):
             from cutback.server.db import ChangeProposal, DatasetItem, RecommendationRecord
 
             for cls in (
+                CampaignSelection,
+                CampaignCandidate,
+                CampaignRun,
+                CampaignEconomicReference,
+                CampaignRecord,
                 ImprovementObservation,
                 TaskResult,
                 TaskRecord,

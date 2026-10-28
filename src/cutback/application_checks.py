@@ -135,7 +135,16 @@ def git(root, *arguments):
     process = None
     try:
         process = subprocess.Popen(
-            [executable, "-c", "core.fsmonitor=false", "-C", str(root), *arguments],
+            [
+                executable,
+                "-c",
+                "core.fsmonitor=false",
+                "-c",
+                "core.hooksPath=" + os.devnull,
+                "-C",
+                str(root),
+                *arguments,
+            ],
             env=env,
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,

@@ -626,6 +626,143 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/campaign-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Templates */
+        get: operations["templates_v1_projects__project_id__campaign_templates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listing */
+        get: operations["listing_v1_projects__project_id__campaigns_get"];
+        put?: never;
+        /** Prepare */
+        post: operations["prepare_v1_projects__project_id__campaigns_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/campaigns/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Draft */
+        post: operations["draft_v1_projects__project_id__campaigns_draft_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/campaigns/{campaign_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Detail */
+        get: operations["detail_v1_projects__project_id__campaigns__campaign_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/campaigns/{campaign_id}/selected/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Selected Content */
+        post: operations["selected_content_v1_projects__project_id__campaigns__campaign_id__selected_content_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/campaigns/{campaign_id}/candidates/{candidate_id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Candidate Content */
+        post: operations["candidate_content_v1_projects__project_id__campaigns__campaign_id__candidates__candidate_id__content_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/campaigns/{campaign_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve */
+        post: operations["approve_v1_projects__project_id__campaigns__campaign_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/campaigns/{campaign_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel */
+        post: operations["cancel_v1_projects__project_id__campaigns__campaign_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/experiments/{run_id}/calls": {
         parameters: {
             query?: never;
@@ -2666,9 +2803,21 @@ export interface components {
             hosted_spend_cap_usd?: number | string | null;
         };
         /** Budget */
-        Budget: {
+        "Budget-Input": {
             /** Max Usd */
             max_usd: number | string;
+            /** Max Requests */
+            max_requests: number;
+            /**
+             * Max Wall Seconds
+             * @default 300
+             */
+            max_wall_seconds: number;
+        };
+        /** Budget */
+        "Budget-Output": {
+            /** Max Usd */
+            max_usd: string;
             /** Max Requests */
             max_requests: number;
             /**
@@ -2896,6 +3045,312 @@ export interface components {
             /** Actual Latency */
             actual_latency?: null;
         };
+        /** CampaignApproval */
+        CampaignApproval: {
+            /** Campaign Hash */
+            campaign_hash: string;
+            /** Approval Ref */
+            approval_ref: string;
+        };
+        /** CampaignBrief */
+        CampaignBrief: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            /** Status */
+            status: string;
+            /** Approval Status */
+            approval_status: string;
+            /** Campaign Hash */
+            campaign_hash: string;
+            /** Workflow */
+            workflow: string;
+            /** Workflow Label */
+            workflow_label: string;
+            /** Environment */
+            environment: string;
+            /** Generator Model */
+            generator_model: string;
+            /** Approved Providers */
+            approved_providers: string[];
+            /** Max Wall Seconds */
+            max_wall_seconds: number;
+            /** Max Instruction Bytes */
+            max_instruction_bytes: number;
+            /** Source Profile Sha256 */
+            source_profile_sha256: string | null;
+            /** Instruction Edit Qualified */
+            instruction_edit_qualified: boolean;
+            /** Specification */
+            specification: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Economic Envelope */
+            economic_envelope: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Current Round */
+            current_round: number;
+            /** Requests */
+            requests: number;
+            /** Known Cost Requests */
+            known_cost_requests: number;
+            /** Reserved Usd */
+            reserved_usd: string;
+            /** Known Spend Subtotal Usd */
+            known_spend_subtotal_usd: string;
+            /** Billing Complete */
+            billing_complete: boolean;
+            /** Summary */
+            summary: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+        };
+        /** CampaignBudget */
+        CampaignBudget: {
+            /** Max Usd */
+            max_usd: number | string;
+            /** Max Requests */
+            max_requests: number;
+            /**
+             * Max Wall Seconds
+             * @default 300
+             */
+            max_wall_seconds: number;
+        };
+        /** CampaignCancel */
+        CampaignCancel: Record<string, never>;
+        /** CampaignCandidateContent */
+        CampaignCandidateContent: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Configuration Sha256 */
+            configuration_sha256: string;
+            configuration: components["schemas"]["ModelSpec-Output"];
+        };
+        /** CampaignDetail */
+        CampaignDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            /** Status */
+            status: string;
+            /** Approval Status */
+            approval_status: string;
+            /** Campaign Hash */
+            campaign_hash: string;
+            /** Workflow */
+            workflow: string;
+            /** Workflow Label */
+            workflow_label: string;
+            /** Environment */
+            environment: string;
+            /** Generator Model */
+            generator_model: string;
+            /** Approved Providers */
+            approved_providers: string[];
+            /** Max Wall Seconds */
+            max_wall_seconds: number;
+            /** Max Instruction Bytes */
+            max_instruction_bytes: number;
+            /** Source Profile Sha256 */
+            source_profile_sha256: string | null;
+            /** Instruction Edit Qualified */
+            instruction_edit_qualified: boolean;
+            /** Specification */
+            specification: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Economic Envelope */
+            economic_envelope: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Current Round */
+            current_round: number;
+            /** Requests */
+            requests: number;
+            /** Known Cost Requests */
+            known_cost_requests: number;
+            /** Reserved Usd */
+            reserved_usd: string;
+            /** Known Spend Subtotal Usd */
+            known_spend_subtotal_usd: string;
+            /** Billing Complete */
+            billing_complete: boolean;
+            /** Summary */
+            summary: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Runs */
+            runs: {
+                [key: string]: components["schemas"]["JsonValue"];
+            }[];
+            /** Candidates */
+            candidates: {
+                [key: string]: components["schemas"]["JsonValue"];
+            }[];
+        };
+        /** CampaignDraft */
+        CampaignDraft: {
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /**
+             * Template Plan Id
+             * Format: uuid
+             */
+            template_plan_id: string;
+            /**
+             * Baseline Snapshot Id
+             * Format: uuid
+             */
+            baseline_snapshot_id: string;
+            generator_model: components["schemas"]["ModelSpec-Input"];
+            budget: components["schemas"]["CampaignBudget"];
+            /**
+             * Rounds
+             * @default 1
+             */
+            rounds: number;
+            /**
+             * Variants Per Round
+             * @default 2
+             */
+            variants_per_round: number;
+            instruction_edit?: components["schemas"]["LiteralInstructionEdit"] | null;
+            /** Conservative Savings Per Success Usd */
+            conservative_savings_per_success_usd?: string | null;
+            /** Forecast Successful Tasks */
+            forecast_successful_tasks?: number | null;
+        };
+        /** CampaignInput */
+        CampaignInput: {
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            specification: components["schemas"]["ImprovementCampaign"];
+        };
+        /** CampaignPage */
+        CampaignPage: {
+            /** Items */
+            items: components["schemas"]["CampaignBrief"][];
+            /** Next After */
+            next_after: string | null;
+        };
+        /** CampaignSelectedContent */
+        CampaignSelectedContent: {
+            /**
+             * Campaign Id
+             * Format: uuid
+             */
+            campaign_id: string;
+            /** Campaign Hash */
+            campaign_hash: string;
+            /**
+             * Run Id
+             * Format: uuid
+             */
+            run_id: string;
+            /**
+             * Plan Id
+             * Format: uuid
+             */
+            plan_id: string;
+            /** Plan Hash */
+            plan_hash: string;
+            plan: components["schemas"]["ExperimentPlan-Output"];
+            /**
+             * Recommendation Id
+             * Format: uuid
+             */
+            recommendation_id: string;
+            /** Recommendation Status */
+            recommendation_status: string;
+            /** Evidence */
+            evidence: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            instruction_edit: components["schemas"]["LiteralInstructionEdit"] | null;
+            /** Max Instruction Bytes */
+            max_instruction_bytes: number;
+            /**
+             * Deployment Authorized
+             * @default false
+             */
+            deployment_authorized: boolean;
+        };
+        /** CampaignTemplate */
+        CampaignTemplate: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Dataset Id
+             * Format: uuid
+             */
+            dataset_id: string;
+            /** Workflow */
+            workflow: string;
+            /** Workflow Label */
+            workflow_label: string;
+            /** Baseline Provider */
+            baseline_provider: string;
+            /** Baseline Model */
+            baseline_model: string;
+            /** Source Bound */
+            source_bound: boolean;
+            instruction_edit?: components["schemas"]["LiteralInstructionEdit"] | null;
+        };
+        /** CampaignTemplatePage */
+        CampaignTemplatePage: {
+            /** Items */
+            items: components["schemas"]["CampaignTemplate"][];
+            /** Next After */
+            next_after: string | null;
+        };
         /** CanaryPolicy */
         CanaryPolicy: {
             /**
@@ -3110,9 +3565,9 @@ export interface components {
              * Format: uuid
              */
             dataset_id: string;
-            baseline: components["schemas"]["ModelSpec"];
+            baseline: components["schemas"]["ModelSpec-Input"];
             /** Candidates */
-            candidates?: components["schemas"]["ModelSpec"][] | null;
+            candidates?: components["schemas"]["ModelSpec-Input"][] | null;
             /** Minimum */
             minimum?: number | null;
             /**
@@ -3393,7 +3848,7 @@ export interface components {
             events: components["schemas"]["LLMEvent"][];
         };
         /** ExperimentPlan */
-        ExperimentPlan: {
+        "ExperimentPlan-Input": {
             /**
              * Schema Version
              * @default 1.0
@@ -3406,9 +3861,9 @@ export interface components {
             workflow: string;
             /** Dataset Hash */
             dataset_hash: string;
-            baseline: components["schemas"]["ModelSpec"];
+            baseline: components["schemas"]["ModelSpec-Input"];
             /** Candidates */
-            candidates: components["schemas"]["ModelSpec"][];
+            candidates: components["schemas"]["ModelSpec-Input"][];
             metric: components["schemas"]["MetricSpec"];
             /** Criteria */
             criteria?: components["schemas"]["CriterionSpec"][];
@@ -3447,7 +3902,7 @@ export interface components {
              * @default 0.2
              */
             judge_max_invalid_fraction: number;
-            budget: components["schemas"]["Budget"];
+            budget: components["schemas"]["Budget-Input"];
             /** Approved Providers */
             approved_providers: ("openai" | "anthropic" | "local")[];
             /**
@@ -3462,7 +3917,7 @@ export interface components {
             pilot_samples: number;
             /** Pilot Minimum */
             pilot_minimum?: number | null;
-            judge?: components["schemas"]["ModelSpec"] | null;
+            judge?: components["schemas"]["ModelSpec-Input"] | null;
             /** Judge Rubric */
             judge_rubric?: string | null;
             /**
@@ -3485,6 +3940,104 @@ export interface components {
             source_binding?: components["schemas"]["SourceBinding"] | null;
             /** Prompt Bindings */
             prompt_bindings?: components["schemas"]["PromptModelBinding"][] | null;
+            /** Content Nonce */
+            content_nonce?: string | null;
+        };
+        /** ExperimentPlan */
+        "ExperimentPlan-Output": {
+            /**
+             * Schema Version
+             * @default 1.0
+             * @constant
+             */
+            schema_version: "1.0";
+            /** Name */
+            name?: string | null;
+            /** Workflow */
+            workflow: string;
+            /** Dataset Hash */
+            dataset_hash: string;
+            baseline: components["schemas"]["ModelSpec-Output"];
+            /** Candidates */
+            candidates: components["schemas"]["ModelSpec-Output"][];
+            metric: components["schemas"]["MetricSpec"];
+            /** Criteria */
+            criteria?: components["schemas"]["CriterionSpec"][];
+            /**
+             * Retain Case Outputs
+             * @default false
+             */
+            retain_case_outputs: boolean;
+            /**
+             * Stage
+             * @default full
+             * @enum {string}
+             */
+            stage: "smoke" | "pilot" | "full";
+            /**
+             * Staged
+             * @default false
+             */
+            staged: boolean;
+            /** Predecessor Run Id */
+            predecessor_run_id?: string | null;
+            /** Sample Limit */
+            sample_limit?: number | null;
+            /**
+             * Judge Swap Orders
+             * @default false
+             */
+            judge_swap_orders: boolean;
+            /**
+             * Judge Require Evidence
+             * @default false
+             */
+            judge_require_evidence: boolean;
+            /**
+             * Judge Max Invalid Fraction
+             * @default 0.2
+             */
+            judge_max_invalid_fraction: number;
+            budget: components["schemas"]["Budget-Output"];
+            /** Approved Providers */
+            approved_providers: ("openai" | "anthropic" | "local")[];
+            /**
+             * Repeats
+             * @default 1
+             */
+            repeats: number;
+            /**
+             * Pilot Samples
+             * @default 0
+             */
+            pilot_samples: number;
+            /** Pilot Minimum */
+            pilot_minimum?: number | null;
+            judge?: components["schemas"]["ModelSpec-Output"] | null;
+            /** Judge Rubric */
+            judge_rubric?: string | null;
+            /**
+             * Split
+             * @default test
+             * @enum {string}
+             */
+            split: "validation" | "test";
+            /** Price Snapshot Id */
+            price_snapshot_id?: string;
+            /** Price Sha256 */
+            price_sha256?: string;
+            /**
+             * Evaluator Version
+             * @default deterministic-v3
+             * @enum {string}
+             */
+            evaluator_version: "deterministic-v3" | "deterministic-v4";
+            episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
+            source_binding?: components["schemas"]["SourceBinding"] | null;
+            /** Prompt Bindings */
+            prompt_bindings?: components["schemas"]["PromptModelBinding"][] | null;
+            /** Content Nonce */
+            content_nonce?: string | null;
         };
         /** FixtureTool */
         FixtureTool: {
@@ -3646,6 +4199,40 @@ export interface components {
             max_absolute_success_rate_loss: string;
             /** Forecast Successful Tasks */
             forecast_successful_tasks?: number | null;
+        };
+        /** ImprovementCampaign */
+        ImprovementCampaign: {
+            /**
+             * Version
+             * @default cutback.improvement-campaign.v1
+             * @constant
+             */
+            version: "cutback.improvement-campaign.v1";
+            /**
+             * Dataset Id
+             * Format: uuid
+             */
+            dataset_id: string;
+            /**
+             * Baseline Snapshot Id
+             * Format: uuid
+             */
+            baseline_snapshot_id: string;
+            /** Environment */
+            environment: string;
+            template: components["schemas"]["ExperimentPlan-Input"];
+            generator: components["schemas"]["NativeGeneratorSpec"];
+            budget: components["schemas"]["CampaignBudget"];
+            instruction_edit?: components["schemas"]["LiteralInstructionEdit"] | null;
+            /** Conservative Savings Per Success Usd */
+            conservative_savings_per_success_usd?: number | string | null;
+            /** Forecast Successful Tasks */
+            forecast_successful_tasks?: number | null;
+            /**
+             * Max Fraction Of Opportunity
+             * @default 0.1
+             */
+            max_fraction_of_opportunity: number | string;
         };
         /** ImprovementEvidence */
         ImprovementEvidence: {
@@ -3911,7 +4498,7 @@ export interface components {
              * @default unknown
              * @enum {string}
              */
-            traffic_kind: "application" | "evaluation" | "judge" | "unknown";
+            traffic_kind: "application" | "evaluation" | "judge" | "optimization" | "simulation" | "unknown";
             /** Experiment Run Id */
             experiment_run_id?: string | null;
             /** Source Commit */
@@ -3993,6 +4580,37 @@ export interface components {
             /** Immutable Hash */
             immutable_hash: string;
         };
+        /** LiteralInstructionEdit */
+        LiteralInstructionEdit: {
+            /**
+             * Version
+             * @default literal-instruction-edit-v1
+             * @constant
+             */
+            version: "literal-instruction-edit-v1";
+            /** Source Profile Sha256 */
+            source_profile_sha256: string;
+            /** Source File */
+            source_file: string;
+            /** Source Sha256 */
+            source_sha256: string;
+            /**
+             * Keyword
+             * @enum {string}
+             */
+            keyword: "instructions" | "system";
+            /** Call Index */
+            call_index: number;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "replace" | "insert";
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+        };
         /** LoginExchange */
         LoginExchange: {
             /** State */
@@ -4064,7 +4682,7 @@ export interface components {
             numeric_tolerance: number;
         };
         /** ModelSpec */
-        ModelSpec: {
+        "ModelSpec-Input": {
             /** Key */
             key: string;
             /**
@@ -4094,10 +4712,97 @@ export interface components {
             /** Local Cost Upper Usd */
             local_cost_upper_usd?: number | string | null;
             /** Routes */
-            routes?: components["schemas"]["RouteSpec"][];
+            routes?: components["schemas"]["RouteSpec-Input"][];
             /** Prompt Cache */
             prompt_cache?: ("anthropic-5m" | "anthropic-1h") | null;
             request_contract?: components["schemas"]["RequestContract"] | null;
+        };
+        /** ModelSpec */
+        "ModelSpec-Output": {
+            /** Key */
+            key: string;
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "openai" | "anthropic" | "local" | "router";
+            /** Model */
+            model: string;
+            /**
+             * Instruction
+             * @default
+             */
+            instruction: string;
+            /**
+             * Max Output Tokens
+             * @default 256
+             */
+            max_output_tokens: number;
+            /**
+             * Max Input Tokens
+             * @default 8192
+             */
+            max_input_tokens: number;
+            /** Region */
+            region?: string | null;
+            /** Local Cost Upper Usd */
+            local_cost_upper_usd?: string | null;
+            /** Routes */
+            routes?: components["schemas"]["RouteSpec-Output"][];
+            /** Prompt Cache */
+            prompt_cache?: ("anthropic-5m" | "anthropic-1h") | null;
+            request_contract?: components["schemas"]["RequestContract"] | null;
+        };
+        /** NativeGeneratorSpec */
+        NativeGeneratorSpec: {
+            /**
+             * Version
+             * @default native-prompt-proposer-v1
+             * @constant
+             */
+            version: "native-prompt-proposer-v1";
+            /**
+             * Contract Sha256
+             * @default 0df05b24511a1ad72a2dbe210ff544ba4b704d7a6acd064649a3735ab0e8fe6d
+             */
+            contract_sha256: string;
+            model: components["schemas"]["ModelSpec-Input"];
+            /**
+             * Transport
+             * @default native_provider
+             * @enum {string}
+             */
+            transport: "native_provider" | "scripted_test_only";
+            /**
+             * Rounds
+             * @default 1
+             */
+            rounds: number;
+            /**
+             * Variants Per Round
+             * @default 2
+             */
+            variants_per_round: number;
+            /**
+             * Max Training Examples
+             * @default 8
+             */
+            max_training_examples: number;
+            /**
+             * Max Instruction Bytes
+             * @default 1024
+             */
+            max_instruction_bytes: number;
+            /**
+             * Min Output Tokens
+             * @default 16
+             */
+            min_output_tokens: number;
+            /**
+             * Max Output Tokens
+             * @default 256
+             */
+            max_output_tokens: number;
         };
         /** NativeObservation */
         NativeObservation: {
@@ -4314,7 +5019,7 @@ export interface components {
              * Format: uuid
              */
             dataset_id: string;
-            specification: components["schemas"]["ExperimentPlan"];
+            specification: components["schemas"]["ExperimentPlan-Input"];
         };
         /** ProjectInput */
         ProjectInput: {
@@ -4509,7 +5214,7 @@ export interface components {
              * Format: uuid
              */
             dataset_id: string;
-            specification: components["schemas"]["ExperimentPlan"];
+            specification: components["schemas"]["ExperimentPlan-Input"];
             /** Selections */
             selections: components["schemas"]["PromptSelection"][];
             /** Purpose */
@@ -5031,10 +5736,16 @@ export interface components {
             operator_ref: string;
         };
         /** RouteSpec */
-        RouteSpec: {
+        "RouteSpec-Input": {
             /** Max Input Bytes */
             max_input_bytes: number;
-            target: components["schemas"]["ModelSpec"];
+            target: components["schemas"]["ModelSpec-Input"];
+        };
+        /** RouteSpec */
+        "RouteSpec-Output": {
+            /** Max Input Bytes */
+            max_input_bytes: number;
+            target: components["schemas"]["ModelSpec-Output"];
         };
         /** RuleSwitch */
         RuleSwitch: {
@@ -6397,7 +7108,7 @@ export interface operations {
                 start?: string | null;
                 end?: string | null;
                 group_by?: "model" | "provider" | "workflow" | "environment" | "day" | "call_site" | "traffic";
-                traffic_kind?: ("application" | "evaluation" | "judge" | "unknown") | null;
+                traffic_kind?: ("application" | "evaluation" | "judge" | "optimization" | "simulation" | "unknown") | null;
                 call_site?: string | null;
             };
             header?: never;
@@ -7494,6 +8205,322 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    templates_v1_projects__project_id__campaign_templates_get: {
+        parameters: {
+            query?: {
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignTemplatePage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listing_v1_projects__project_id__campaigns_get: {
+        parameters: {
+            query?: {
+                environment_id?: string | null;
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    prepare_v1_projects__project_id__campaigns_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampaignInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignBrief"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    draft_v1_projects__project_id__campaigns_draft_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampaignDraft"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignBrief"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    detail_v1_projects__project_id__campaigns__campaign_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    selected_content_v1_projects__project_id__campaigns__campaign_id__selected_content_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentPurpose"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignSelectedContent"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    candidate_content_v1_projects__project_id__campaigns__campaign_id__candidates__candidate_id__content_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                campaign_id: string;
+                candidate_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentPurpose"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignCandidateContent"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_v1_projects__project_id__campaigns__campaign_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampaignApproval"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignBrief"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_v1_projects__project_id__campaigns__campaign_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampaignCancel"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignBrief"];
                 };
             };
             /** @description Validation Error */

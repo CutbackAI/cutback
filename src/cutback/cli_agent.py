@@ -32,6 +32,10 @@ def register_agent(app, output, fail):
 
         return call
 
+    from cutback.cli_campaign import register_campaign
+
+    register_campaign(app, output, guarded)
+
     @app.command("optimize")
     @guarded
     def optimize(

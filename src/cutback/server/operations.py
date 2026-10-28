@@ -156,6 +156,9 @@ def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False
             from cutback.server.task_economics import retain_task_outcomes
 
             retain_task_outcomes(session, cutoff, selected)
+            from cutback.server.campaign_retention import retain_campaigns
+
+            retain_campaigns(session, now - timedelta(days=aggregate_days), selected)
             from cutback.server.execution_db import ExecutionCall, ExecutionEpisode
             from cutback.server.quality_db import QualityEvaluation
 
@@ -574,7 +577,9 @@ def install_operations(app, sessions, authorize, scope, repository):
                 .order_by(ScanRun.created_at.desc())
                 .limit(1)
             )
-            labels = {}
+            from cutback.server.workflow_labels import workflow_labels
+
+            labels = workflow_labels(session, project_id)
             if latest:
                 for site in latest.inventory["call_sites"]:
                     for entry in site["entry_points"]:

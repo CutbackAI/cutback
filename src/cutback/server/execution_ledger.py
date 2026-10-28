@@ -14,12 +14,18 @@ from cutback.evals.datasets import digest
 from cutback.evals.experiments import provider_models, upper_cost
 from cutback.pricing import Catalog
 from cutback.server.dataset_lineage import lock_lineage
-from cutback.server.db import Environment, ExperimentPlanRecord, ExperimentRunRecord, JobRecord
+from cutback.server.db import (
+    AuditEvent,
+    Environment,
+    ExperimentPlanRecord,
+    ExperimentRunRecord,
+    JobRecord,
+)
 from cutback.server.execution_db import ExecutionCall, ExecutionEpisode
 from cutback.server.principals import principal_role
 
 MAX_EXECUTION_CALLS = 100000
-PURPOSES = {"evaluation", "judge"}
+PURPOSES = {"evaluation", "judge", "optimization"}
 
 
 def recover_execution_leases(sessions, *, only_run_id=None, now=None):
@@ -39,13 +45,34 @@ def recover_execution_leases(sessions, *, only_run_id=None, now=None):
                 ExecutionEpisode.run_id == only_run_id if only_run_id else true(),
             )
         )
-        runs = session.execute(calls.union(episodes).limit(100)).all()
+        jobs = select(JobRecord.run_id, JobRecord.project_id).where(
+            JobRecord.status == "RUNNING",
+            JobRecord.lease_until <= now,
+            JobRecord.run_id == only_run_id if only_run_id else true(),
+        )
+        runs = session.execute(calls.union(episodes, jobs).limit(100)).all()
     for run_id, project_id in runs:
         with sessions.begin() as session:
             lock_lineage(session, project_id)
             run = session.get(ExperimentRunRecord, run_id, with_for_update=True)
             if not run:
                 continue
+            job = session.scalar(
+                select(JobRecord).where(JobRecord.run_id == run_id).with_for_update()
+            )
+            if job and job.status == "RUNNING" and job.lease_until and job.lease_until <= now:
+                if run.status not in {"COMPLETED", "FAILED", "CANCELLED"}:
+                    run.status = "FAILED"
+                    run.results = {"code": "WORKER_LEASE_EXPIRED_BILLING_UNCERTAIN"}
+                job.status = run.status
+                session.add(
+                    AuditEvent(
+                        project_id=project_id,
+                        actor="retention_worker",
+                        action="execution_lease_expired",
+                        details={"run_id": str(run_id)},
+                    )
+                )
             for call in session.scalars(
                 select(ExecutionCall)
                 .where(
@@ -182,6 +209,9 @@ class ExecutionLedger:
         amount = money(amount)
         if purpose not in PURPOSES or self.plan.price_sha256 != Catalog().sha256:
             raise ValueError("EXECUTION_PURPOSE_OR_PRICE_CONTRACT_NOT_APPROVED")
+        proposal = getattr(self.plan, "operation", None) == "candidate-generation-v1"
+        if (purpose == "optimization") != proposal:
+            raise ValueError("EXECUTION_PURPOSE_OUTSIDE_APPROVED_OPERATION")
         targets = [
             target
             for candidate in [
@@ -264,6 +294,16 @@ class ExecutionLedger:
             )
             if count >= MAX_EXECUTION_CALLS:
                 raise ValueError("PROJECT_EXECUTION_CALL_QUOTA_EXHAUSTED")
+            from cutback.server.campaign_ledger import reserve_campaign_call
+
+            reserve_campaign_call(
+                session,
+                run,
+                self.environment_id,
+                digest(self.plan.model_dump(mode="json")),
+                purpose,
+                amount,
+            )
             if self.episode_id:
                 episode = session.get(ExecutionEpisode, self.episode_id, with_for_update=True)
                 if not episode or (
@@ -349,6 +389,9 @@ class ExecutionLedger:
             if row.spent_usd is None and spent is not None:
                 run.spent_usd += spent
                 run.known_cost_requests = (run.known_cost_requests or 0) + 1
+                from cutback.server.campaign_ledger import record_campaign_cost
+
+                record_campaign_cost(session, run, spent)
                 if row.episode_id:
                     episode = session.get(ExecutionEpisode, row.episode_id, with_for_update=True)
                     if episode:

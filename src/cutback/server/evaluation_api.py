@@ -437,7 +437,12 @@ def install_evaluation(app, sessions, authorize, scope):
                 }
                 for row in session.scalars(
                     select(ExperimentPlanRecord)
-                    .where(ExperimentPlanRecord.project_id == project_id)
+                    .where(
+                        ExperimentPlanRecord.project_id == project_id,
+                        ExperimentPlanRecord.specification["public_specification"]["operation"]
+                        .as_string()
+                        .is_distinct_from("candidate-generation-v1"),
+                    )
                     .order_by(ExperimentPlanRecord.id)
                     .limit(limit)
                     .offset(offset)
@@ -804,7 +809,12 @@ def install_evaluation(app, sessions, authorize, scope):
             rows = session.execute(
                 select(ExperimentRunRecord, ExperimentPlanRecord)
                 .join(ExperimentPlanRecord, ExperimentPlanRecord.id == ExperimentRunRecord.plan_id)
-                .where(ExperimentRunRecord.project_id == project_id)
+                .where(
+                    ExperimentRunRecord.project_id == project_id,
+                    ExperimentPlanRecord.specification["public_specification"]["operation"]
+                    .as_string()
+                    .is_distinct_from("candidate-generation-v1"),
+                )
                 .order_by(ExperimentRunRecord.created_at.desc())
                 .limit(limit)
                 .offset(offset)

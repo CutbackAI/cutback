@@ -202,6 +202,7 @@ class RateOverride(Base):
 
 class CapturePolicyRecord(Base):
     __tablename__ = "capture_policies"
+    __table_args__ = (UniqueConstraint("id", "project_id", name="uq_capture_policy_scope"),)
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
     project_id: Mapped[UUID] = mapped_column(
         ForeignKey("projects.id", ondelete="CASCADE"), index=True
@@ -216,6 +217,7 @@ class CapturePolicyRecord(Base):
 
 class PayloadSample(Base):
     __tablename__ = "payload_samples"
+    __table_args__ = (UniqueConstraint("id", "project_id", name="uq_payload_project_scope"),)
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
     project_id: Mapped[UUID] = mapped_column(
         ForeignKey("projects.id", ondelete="CASCADE"), index=True
@@ -229,6 +231,7 @@ class PayloadSample(Base):
 
 class DatasetRecord(Base):
     __tablename__ = "datasets"
+    __table_args__ = (UniqueConstraint("id", "project_id", name="uq_dataset_project_scope"),)
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
     project_id: Mapped[UUID] = mapped_column(
         ForeignKey("projects.id", ondelete="CASCADE"), index=True
@@ -297,13 +300,26 @@ class JobRecord(Base):
     )
     run_id: Mapped[UUID] = mapped_column(ForeignKey("experiment_runs.id"), unique=True)
     status: Mapped[str] = mapped_column(String(30), index=True)
+    execution_kind: Mapped[str] = mapped_column(
+        String(30), default="evaluation", server_default="evaluation"
+    )
     lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     attempts: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC), server_default=func.now()
     )
     available_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    __table_args__ = (Index("ix_jobs_eligibility", "status", "available_at", "created_at"),)
+    __table_args__ = (
+        Index("ix_jobs_eligibility", "status", "available_at", "created_at"),
+        Index(
+            "ix_jobs_kind_eligibility",
+            "execution_kind",
+            "status",
+            "available_at",
+            "created_at",
+            "id",
+        ),
+    )
 
 
 class RecommendationRecord(Base):
@@ -363,3 +379,4 @@ importlib.import_module("cutback.server.monitoring_db")
 importlib.import_module("cutback.server.quality_db")
 importlib.import_module("cutback.server.execution_db")
 importlib.import_module("cutback.server.economics_db")
+importlib.import_module("cutback.server.campaign_db")

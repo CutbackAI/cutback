@@ -20,6 +20,7 @@ import { PatchReview } from "./change-review";
 import { CaseEvidence } from "./case-evidence";
 import { ExecutionEvidence } from "./execution";
 import { TaskEconomics } from "./task-economics";
+import { Campaigns } from "./campaigns";
 import { AgentWorkflow } from "./agent-workflow";
 import { Traces } from "./traces";
 import { Imports } from "./imports";
@@ -66,6 +67,7 @@ const views = [
   "Inventory",
   "Costs",
   "Task economics",
+  "Campaigns",
   "Opportunities",
   "Experiments",
   "Review",
@@ -749,6 +751,20 @@ function App() {
                 key={project}
                 api={api}
                 project={project}
+                canWrite={[
+                  "admin",
+                  "project_admin",
+                  "analyst",
+                  "editor",
+                ].includes(identity.project_roles?.[project] || identity.role)}
+              />
+            )}
+            {view === "Campaigns" && project && (
+              <Campaigns
+                key={project}
+                api={api}
+                project={project}
+                canApprove={admin}
                 canWrite={[
                   "admin",
                   "project_admin",

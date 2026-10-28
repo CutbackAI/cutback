@@ -1,0 +1,136 @@
+{
+  "contract": "cutback.campaign-acceptance.v1",
+  "date": "2026-10-28",
+  "scope": "bounded_native_text_adaptive_campaign_with_literal_source_change_and_local_review",
+  "publication": "locally_accepted_hosted_and_public_source_gates_pending_no_new_pypi_upload",
+  "migration": "0015",
+  "released_migrations_preserved_through": "0014",
+  "broad_regression_before_final_patch_hook_and_ui_followups": {
+    "passed": 631,
+    "skipped": 5,
+    "seconds": 827.91,
+    "includes": [
+      "real_postgresql",
+      "authenticated_browser_mobile_axe",
+      "isolated_cpu_training",
+      "owned_docker_lifecycle"
+    ],
+    "skip_reasons": [
+      "four_legacy_sdk_cases_run_separately",
+      "windows_symlink_privilege_unavailable"
+    ]
+  },
+  "followups": {
+    "exact_instruction_patches_and_review_units_passed": 10,
+    "instruction_unit_seconds": 20.4,
+    "application_checks_and_git_hook_isolation_passed": 10,
+    "application_check_seconds": 33.05,
+    "final_source_native_http_pg_agent_review_and_authenticated_browser_passed": 4,
+    "final_source_seconds": 78.33
+  },
+  "installed_code_wheel": {
+    "origin_verified": true,
+    "passed": 38,
+    "seconds": 160.64,
+    "includes": [
+      "actual_pinned_sdk_synthetic_transport",
+      "postgresql_rbac_budget_lineage_recovery",
+      "migrations_export_delete_retention",
+      "agent_confirmed_diff_and_portable_checks",
+      "authenticated_browser_mobile_axe",
+      "exact_source_patch_rollback_and_git_hook_isolation"
+    ],
+    "note": "All 173 backend entries match the final publication wheel byte for byte. The final installed UI follow-up also passed."
+  },
+  "independent_installed_local_example": {
+    "status": "COMPLETED",
+    "actual_native_sdk_calls": 49,
+    "known_cost_requests": 49,
+    "provider_network_calls": 0,
+    "synthetic_project_deleted": true,
+    "owned_collector_stopped": true,
+    "persistent_owned_database_preserved": true
+  },
+  "sdk": {
+    "openai": "2.29.0",
+    "anthropic": "2.3.0",
+    "matrix_widened": false
+  },
+  "separate_legacy_sdk_scanner_passed": 21,
+  "frontend_units_passed": 7,
+  "native_node_sdk_tests_passed": 9,
+  "native_node_typescript": "passed",
+  "static": {
+    "ruff": "passed",
+    "format": "passed",
+    "mypy_modules": 173,
+    "lock": "passed",
+    "reviewed_uv_and_python": "passed",
+    "generated_openapi_types_and_react_build": "passed"
+  },
+  "audits": {
+    "python_runtime_known_vulnerabilities": 0,
+    "dashboard_known_vulnerabilities": 0,
+    "native_node_known_vulnerabilities": 0
+  },
+  "package_checkpoint": {
+    "wheel_sdist_twine_utf8": "passed",
+    "fresh_core_only_consumer": "passed",
+    "source_files": 564,
+    "archive_members": 747,
+    "boundary_findings": 0,
+    "private_marker_values_logged": false,
+    "backend_entries_identical_to_installed_qualified_wheel": 173,
+    "final_artifacts_pending": false
+  },
+  "financial_semantics": [
+    "cumulative_parent_child_pre_call_reservations",
+    "generation_and_failed_or_rejected_trials_included_once",
+    "uncertain_charges_never_automatically_replayed",
+    "late_usage_repairs_cost_without_reviving_cancelled_authority",
+    "missing_retained_campaign_context_remains_unknown",
+    "future_volume_and_payback_are_owner_assumptions"
+  ],
+  "change_semantics": [
+    "exact_source_profile_and_qualified_utf8_ast_binding",
+    "only_evaluated_literal_instruction_model_output_cap_fields",
+    "reversible_utf8_crlf_multiline_and_no_final_newline_patches",
+    "both_exact_current_git_trees_bound_to_local_check_receipt",
+    "all_detected_affected_consumers_need_declared_passing_commands",
+    "scanner_warnings_unresolved_consumers_or_extra_file_changes_block_local_review",
+    "local_review_ref_is_idempotent_and_never_overwrites_other_commit",
+    "git_hooks_and_ambient_credentials_disabled",
+    "local_receipts_not_independent_attestation"
+  ],
+  "failed_trials_retained": [
+    "proposal_only_plans_excluded_from_target_lineage_and_stage_parsing",
+    "self_confirmation_lineage_check_receives_actual_run_id",
+    "cancel_control_requires_json_body",
+    "synthetic_source_workflow_id_derived_from_actual_scan",
+    "application_observer_closes_before_internal_ledger_only_evaluation",
+    "historical_workflow_labels_survive_newer_scan",
+    "missing_cost_closure_uuid_and_string_count_mismatch_fixed",
+    "purpose_reference_fixture_uses_typed_identifier_contract"
+  ],
+  "remaining_roadmap": [
+    "dynamic_imported_and_specialty_source_adapters",
+    "other_optimizer_and_retrieval_compression_strategies",
+    "semantic_agent_judging_and_generative_simulation",
+    "gateway_platform_and_load_slo_qualification",
+    "remaining_market_baseline_rows_and_release_7",
+    "independent_first_use_and_task_matched_customer_comparison"
+  ],
+  "paid_provider_calls": 0,
+  "production_deployment": false,
+  "representative_customer_benefit_claim": false,
+  "final_installed_publication_ui": {
+    "passed": 1,
+    "seconds": 21.05,
+    "includes": [
+      "actual_native_sdk_owned_transport",
+      "postgresql",
+      "authenticated_browser_mobile_axe",
+      "readable_decision_and_cost_copy"
+    ]
+  }
+}

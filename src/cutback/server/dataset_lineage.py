@@ -190,6 +190,9 @@ def legacy_test_history(session, project):
                     .where(
                         DatasetRecord.project_id == project,
                         DatasetItem.lineage_group_id.is_(None),
+                        ExperimentPlanRecord.specification["public_specification"]["operation"]
+                        .as_string()
+                        .is_distinct_from("candidate-generation-v1"),
                         ExperimentPlanRecord.specification["public_specification"]["split"]
                         .as_string()
                         .is_distinct_from("validation"),
