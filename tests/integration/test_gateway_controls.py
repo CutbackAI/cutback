@@ -43,6 +43,10 @@ def app_for(context, provider, **options):
         "input_context",
         "tool_units",
         "surface",
+        "invalid_json",
+        "json_list",
+        "duplicate_json_key",
+        "nonfinite_json",
         "encoding",
         "oversized",
     ],
@@ -57,6 +61,13 @@ def test_unqualified_native_response_retains_reserve_and_unsafe_protocol_blocks_
     class TooLarge(httpx.AsyncByteStream):
         async def __aiter__(self):
             yield b"x" * (MAX_RESPONSE_BYTES + 1)
+
+    malformed = {
+        "invalid_json": b"{",
+        "json_list": b"[]",
+        "duplicate_json_key": b'{"model":"gpt-6-luna","model":"gpt-6-luna"}',
+        "nonfinite_json": b'{"usage":{"input_tokens":NaN}}',
+    }
 
     async def provider(request):
         upstream.append(1)
@@ -76,6 +87,10 @@ def test_unqualified_native_response_retains_reserve_and_unsafe_protocol_blocks_
             body["output"] = [{"type": "web_search_call", "id": "owned"}]
         if damage == "surface":
             return httpx.Response(200, text="owned non-JSON surface")
+        if damage in malformed:
+            return httpx.Response(
+                200, headers={"content-type": "application/json"}, content=malformed[damage]
+            )
         if damage == "encoding":
             # A stream response avoids eager client decompression before the gateway checks headers.
             return httpx.Response(200, headers={"content-encoding": "gzip"}, stream=TooLarge())
@@ -92,7 +107,7 @@ def test_unqualified_native_response_retains_reserve_and_unsafe_protocol_blocks_
             "/v1/responses", headers=headers, json=gateway_request().model_dump(mode="json")
         )
         assert response.status_code == (
-            502 if damage in {"surface", "encoding", "oversized"} else 200
+            502 if damage in {"surface", "encoding", "oversized", *malformed} else 200
         ), response.text
         assert response.headers["x-should-retry"] == "false"
         detail = (
@@ -113,6 +128,7 @@ def test_unqualified_native_response_retains_reserve_and_unsafe_protocol_blocks_
                 json={
                     "approval_hash": context["policy"]["approval_hash"],
                     "approval_ref": str(uuid4()),
+                    "expected_state_version": detail["policy"]["state_version"],
                 },
             )
             assert resumed.status_code == 200, resumed.text

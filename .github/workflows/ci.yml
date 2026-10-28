@@ -96,6 +96,7 @@ jobs:
           tests/integration/test_gateway_budget.py tests/integration/test_gateway_native.py
           tests/integration/test_gateway_controls.py tests/integration/test_gateway_lifecycle.py
           tests/integration/test_gateway_expiry.py
+          tests/integration/test_gateway_policy_replay.py
           tests/end_to_end/test_gateway_pipeline.py
   verify:
     runs-on: ubuntu-latest

@@ -154,6 +154,15 @@ test("finite application budgets preserve uncertain money and one-shot native op
     .getByRole("button", { name: "Disable policy for new calls" })
     .click();
   await expect(review).toContainText("DISABLED");
+  await page
+    .getByRole("button", { name: "Resume with retained limits", exact: true })
+    .click();
+  await expect(review).toContainText("APPROVED");
+  await expect(review).toContainText("1 uncertain");
+  await page
+    .getByRole("button", { name: "Disable policy for new calls" })
+    .click();
+  await expect(review).toContainText("DISABLED");
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await review.screenshot({ path: "../artifacts/gateway-budgets-desktop.png" });
   await page.setViewportSize({ width: 390, height: 844 });

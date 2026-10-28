@@ -284,7 +284,11 @@ def create_gateway(
             try:
                 body = strict_json(bytes(raw_response))
             except (ValueError, TypeError, RecursionError):
+                if status == 200:
+                    raise GatewayError("GATEWAY_UPSTREAM_SURFACE_UNQUALIFIED", 502) from None
                 body = None
+            if status == 200 and not isinstance(body, dict):
+                raise GatewayError("GATEWAY_UPSTREAM_SURFACE_UNQUALIFIED", 502)
             event, amount, code = response_event(
                 before,
                 reservation.model,

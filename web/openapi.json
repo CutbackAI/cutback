@@ -15093,13 +15093,20 @@
             "type": "string",
             "format": "uuid",
             "title": "Approval Ref"
+          },
+          "expected_state_version": {
+            "type": "integer",
+            "maximum": 9007199254740991.0,
+            "minimum": 0.0,
+            "title": "Expected State Version"
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
           "approval_hash",
-          "approval_ref"
+          "approval_ref",
+          "expected_state_version"
         ],
         "title": "GatewayApproval"
       },
@@ -15322,12 +15329,19 @@
             "type": "string",
             "pattern": "^[a-f0-9]{64}$",
             "title": "Approval Hash"
+          },
+          "expected_state_version": {
+            "type": "integer",
+            "maximum": 9007199254740991.0,
+            "minimum": 0.0,
+            "title": "Expected State Version"
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "approval_hash"
+          "approval_hash",
+          "expected_state_version"
         ],
         "title": "GatewayExactPolicy"
       },
@@ -15786,6 +15800,10 @@
             "type": "string",
             "title": "State"
           },
+          "state_version": {
+            "type": "integer",
+            "title": "State Version"
+          },
           "approved_at": {
             "anyOf": [
               {
@@ -15834,6 +15852,7 @@
           "specification",
           "approval_hash",
           "state",
+          "state_version",
           "approved_at",
           "created_at",
           "qualified_reservations_usd"

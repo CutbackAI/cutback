@@ -125,7 +125,40 @@ def create_policy(session, project, specification: GatewayPolicy, actor, *, now=
     return row
 
 
-def approve_policy(session, project, row_id, approval_hash, approval_ref, actor, *, now=None):
+def consume_activation_approval(row, approval_ref):
+    """Retain one-use activation identities for the entire policy lifetime."""
+    history = row.approval_refs
+    if (
+        not isinstance(history, list)
+        or row.approved_at is not None
+        and str(row.approval_ref) not in history
+    ):
+        raise GatewayError("GATEWAY_APPROVAL_HISTORY_INTEGRITY_FAILURE", 409)
+    reference = str(approval_ref)
+    if reference in history:
+        raise GatewayError("GATEWAY_ACTIVATION_APPROVAL_ALREADY_CONSUMED", 409)
+    if len(history) >= 1024:
+        raise GatewayError("GATEWAY_APPROVAL_HISTORY_CAPACITY_REACHED", 429)
+    # Assign a new JSON value so ORM change tracking persists the receipt.
+    row.approval_refs = [*history, reference]
+
+
+def require_state_version(row, expected_state_version):
+    if row.state_version != expected_state_version:
+        raise GatewayError("GATEWAY_STATE_VERSION_CONFLICT_REVIEW_CURRENT_POLICY", 409)
+
+
+def approve_policy(
+    session,
+    project,
+    row_id,
+    approval_hash,
+    approval_ref,
+    actor,
+    *,
+    expected_state_version,
+    now=None,
+):
     lock_project(session, project)
     now = now or datetime.now(UTC)
     current_admin(session, project, actor)
@@ -139,9 +172,11 @@ def approve_policy(session, project, row_id, approval_hash, approval_ref, actor,
         row.state == "APPROVED"
         and row.approved_by == actor
         and row.approval_ref == approval_ref
+        and row.state_version == expected_state_version + 1
         and row.expires_at > now
     ):
         return row
+    require_state_version(row, expected_state_version)
     if row.state != "PENDING" or not now < row.expires_at <= now + timedelta(days=31):
         raise GatewayError("GATEWAY_POLICY_NOT_APPROVABLE", 409)
     # Disabled policies still occupy their original window: replacing a policy
@@ -161,6 +196,8 @@ def approve_policy(session, project, row_id, approval_hash, approval_ref, actor,
         raise GatewayError("GATEWAY_APPROVED_WINDOWS_MUST_NOT_OVERLAP", 409)
     for model in specification.models:
         qualify_model(model)
+    consume_activation_approval(row, approval_ref)
+    row.state_version += 1
     row.state, row.approved_by, row.approval_ref, row.approved_at = (
         "APPROVED",
         actor,
@@ -179,7 +216,17 @@ def approve_policy(session, project, row_id, approval_hash, approval_ref, actor,
     return row
 
 
-def resume_policy(session, project, row_id, approval_hash, approval_ref, actor, *, now=None):
+def resume_policy(
+    session,
+    project,
+    row_id,
+    approval_hash,
+    approval_ref,
+    actor,
+    *,
+    expected_state_version,
+    now=None,
+):
     """Resume the original window without resetting money, request counts or operation IDs."""
     lock_project(session, project)
     now = now or datetime.now(UTC)
@@ -194,9 +241,11 @@ def resume_policy(session, project, row_id, approval_hash, approval_ref, actor, 
         row.state == "APPROVED"
         and row.approved_by == actor
         and row.approval_ref == approval_ref
+        and row.state_version == expected_state_version + 1
         and row.expires_at > now
     ):
         return row
+    require_state_version(row, expected_state_version)
     if (
         row.state not in {"DISABLED", "BLOCKED"}
         or row.approved_at is None
@@ -205,6 +254,8 @@ def resume_policy(session, project, row_id, approval_hash, approval_ref, actor, 
         raise GatewayError("GATEWAY_POLICY_NOT_RESUMABLE", 409)
     for model in specification.models:
         qualify_model(model)
+    consume_activation_approval(row, approval_ref)
+    row.state_version += 1
     prior_ref = row.approval_ref
     row.state, row.approved_by, row.approval_ref = "APPROVED", actor, approval_ref
     audit(
@@ -490,16 +541,6 @@ def finish(
             raise GatewayError("GATEWAY_RESERVATION_NOT_FOUND", 409)
         if only_expired and (call.state != "DISPATCHED" or call.lease_until > now):
             return False
-        if code in {
-            "GATEWAY_ACTUAL_RESPONSE_OUTSIDE_APPROVED_CONTRACT",
-            "GATEWAY_MALFORMED_USAGE_BILLING_UNCERTAIN",
-            "GATEWAY_UPSTREAM_ENCODING_UNQUALIFIED",
-            "GATEWAY_UPSTREAM_SURFACE_UNQUALIFIED",
-            "GATEWAY_RESPONSE_TOO_LARGE_BILLING_UNCERTAIN",
-        }:
-            policy = session.get(GatewayPolicyRow, call.policy_id)
-            if policy is not None:
-                policy.state = "BLOCKED"
         if amount is not None and (
             type(amount) is not Decimal
             or not amount.is_finite()
@@ -508,13 +549,22 @@ def finish(
             or amount != amount.quantize(Decimal("0.000000000001"))
         ):
             amount, code = None, "GATEWAY_COST_OUTSIDE_APPROVED_BOUNDS"
-            policy = session.get(GatewayPolicyRow, call.policy_id)
-            if policy is not None:
-                policy.state = "BLOCKED"
         if call.state == "SETTLED":
             if call.cost_usd != amount:
                 raise GatewayError("GATEWAY_SETTLEMENT_CONFLICT", 409)
             return
+        if code in {
+            "GATEWAY_ACTUAL_RESPONSE_OUTSIDE_APPROVED_CONTRACT",
+            "GATEWAY_MALFORMED_USAGE_BILLING_UNCERTAIN",
+            "GATEWAY_UPSTREAM_ENCODING_UNQUALIFIED",
+            "GATEWAY_UPSTREAM_SURFACE_UNQUALIFIED",
+            "GATEWAY_RESPONSE_TOO_LARGE_BILLING_UNCERTAIN",
+            "GATEWAY_COST_OUTSIDE_APPROVED_BOUNDS",
+        } and not (call.state == "UNCERTAIN" and call.code == code):
+            policy = session.get(GatewayPolicyRow, call.policy_id)
+            if policy is not None:
+                policy.state = "BLOCKED"
+                policy.state_version += 1
         rows = accounting_rows(session, call)
         for row in rows:
             if call.state == "DISPATCHED":

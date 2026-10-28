@@ -26,6 +26,7 @@ from cutback.server.gateway_service import (
     issue_key,
     lock_project,
     policy_spec,
+    require_state_version,
     resume_policy,
 )
 
@@ -33,10 +34,12 @@ from cutback.server.gateway_service import (
 class GatewayApproval(StrictModel):
     approval_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
     approval_ref: UUID
+    expected_state_version: int = Field(strict=True, ge=0, le=9007199254740991)
 
 
 class GatewayExactPolicy(StrictModel):
     approval_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+    expected_state_version: int = Field(strict=True, ge=0, le=9007199254740991)
 
 
 class GatewayPolicyReceipt(StrictModel):
@@ -44,6 +47,7 @@ class GatewayPolicyReceipt(StrictModel):
     specification: GatewayPolicy
     approval_hash: str
     state: str
+    state_version: int
     approved_at: datetime | None
     created_at: datetime
     qualified_reservations_usd: dict[str, Decimal | None]
@@ -134,6 +138,7 @@ def policy_receipt(row):
         qualified_reservations_usd=bounds,
         approval_hash=row.approval_hash,
         state=state,
+        state_version=row.state_version,
         approved_at=row.approved_at,
         created_at=row.created_at,
     )
@@ -285,6 +290,7 @@ def install_gateway_controls(app, sessions, authorize, scope):
                         body.approval_hash,
                         body.approval_ref,
                         auth["actor"],
+                        expected_state_version=body.expected_state_version,
                     )
                 )
         except ValueError:
@@ -302,15 +308,21 @@ def install_gateway_controls(app, sessions, authorize, scope):
             row = visible(session.get(GatewayPolicyRow, policy_id), project_id, auth)
             if body.approval_hash != row.approval_hash:
                 raise HTTPException(409, "GATEWAY_EXACT_APPROVAL_HASH_REQUIRED")
-            if row.state != "DISABLED":
-                row.state = "DISABLED"
-                audit(
-                    session,
-                    project_id,
-                    auth["actor"],
-                    "gateway_policy_disabled",
-                    policy_id=str(policy_id),
-                )
+            if row.state == "DISABLED" and row.state_version == body.expected_state_version + 1:
+                return policy_receipt(row)
+            require_state_version(row, body.expected_state_version)
+            # A new explicit stop while already disabled invalidates prepared
+            # activations too. A duplicate of that same stop remains idempotent.
+            row.state = "DISABLED"
+            row.state_version += 1
+            audit(
+                session,
+                project_id,
+                auth["actor"],
+                "gateway_policy_disabled",
+                policy_id=str(policy_id),
+                state_version=row.state_version,
+            )
             return policy_receipt(row)
 
     @app.post("/v1/projects/{project_id}/gateway/policies/{policy_id}/resume")
@@ -331,6 +343,7 @@ def install_gateway_controls(app, sessions, authorize, scope):
                         body.approval_hash,
                         body.approval_ref,
                         auth["actor"],
+                        expected_state_version=body.expected_state_version,
                     )
                 )
         except ValueError:

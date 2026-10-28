@@ -34,6 +34,14 @@ class GatewayPolicyRow(Base):
         UniqueConstraint("project_id", "policy_id", name="uq_gateway_policy_request"),
         CheckConstraint("expires_at > starts_at", name="ck_gateway_policy_window"),
         CheckConstraint(
+            "state_version >= 0 AND state_version <= 9007199254740991",
+            name="ck_gateway_policy_state_version",
+        ),
+        CheckConstraint(
+            "json_typeof(approval_refs) = 'array' AND json_array_length(approval_refs) <= 1024",
+            name="ck_gateway_policy_approval_history_bound",
+        ),
+        CheckConstraint(
             "state IN ('PENDING','APPROVED','DISABLED','BLOCKED')", name="ck_gateway_policy_state"
         ),
         Index("ix_gateway_policy_project_window", "project_id", "starts_at", "expires_at"),
@@ -44,10 +52,12 @@ class GatewayPolicyRow(Base):
     specification: Mapped[dict] = mapped_column(JSON)
     approval_hash: Mapped[str] = mapped_column(String(64))
     state: Mapped[str] = mapped_column(String(20), default="PENDING")
+    state_version: Mapped[int] = mapped_column(BigInteger, default=0)
     starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     approved_by: Mapped[str | None] = mapped_column(String(100))
     approval_ref: Mapped[UUID | None] = mapped_column(Uuid)
+    approval_refs: Mapped[list[str]] = mapped_column(JSON, default=list)
     approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 

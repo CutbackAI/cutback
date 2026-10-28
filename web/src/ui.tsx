@@ -39,6 +39,12 @@ export function explain(error: unknown) {
       "This key intent was already issued. Inspect the key records and revoke an inaccessible key before deliberately issuing a replacement.",
     GATEWAY_CURRENT_ADMIN_REQUIRED:
       "The approving or issuing principal no longer has project administration rights. A current administrator must review recovery and replacement keys.",
+    GATEWAY_ACTIVATION_APPROVAL_ALREADY_CONSUMED:
+      "That activation approval already ended. Review the current policy and explicitly choose Resume again to authorize a new activation; nothing has been resumed automatically.",
+    GATEWAY_APPROVAL_HISTORY_CAPACITY_REACHED:
+      "This finite policy has used its 1,024 activation approvals. Keep its existing accounting and prepare a later nonoverlapping window.",
+    GATEWAY_STATE_VERSION_CONFLICT_REVIEW_CURRENT_POLICY:
+      "The policy changed after this action was reviewed. Inspect its current state and explicitly choose the action again; no stale activation or stop was applied.",
     GATEWAY_KEY_LIMIT_EXCEEDS_POLICY:
       "The key limits must fit each approved project, team and model limit.",
     CONTRACT_RATE_PERIOD_START_CONFLICT:

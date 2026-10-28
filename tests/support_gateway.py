@@ -53,9 +53,11 @@ def prepare_gateway(api, tenant, *, cap="10", concurrency=8, actor=None):
         json={
             "approval_hash": policy["approval_hash"],
             "approval_ref": str(uuid4()),
+            "expected_state_version": policy["state_version"],
         },
     )
     assert approved.status_code == 200, approved.text
+    policy = approved.json()
     return {
         "path": path,
         "policy": policy,

@@ -183,7 +183,10 @@ def test_disabled_policy_cannot_reset_overlap_and_revoked_key_cannot_dispatch(ap
         client.post(
             context["path"] + f"/policies/{context['policy']['id']}/disable",
             headers=admin,
-            json={"approval_hash": "0" * 64},
+            json={
+                "approval_hash": "0" * 64,
+                "expected_state_version": context["policy"]["state_version"],
+            },
         ).status_code
         == 409
     )
@@ -197,7 +200,10 @@ def test_disabled_policy_cannot_reset_overlap_and_revoked_key_cannot_dispatch(ap
         client.post(
             context["path"] + f"/policies/{context['policy']['id']}/disable",
             headers=admin,
-            json={"approval_hash": context["policy"]["approval_hash"]},
+            json={
+                "approval_hash": context["policy"]["approval_hash"],
+                "expected_state_version": context["policy"]["state_version"],
+            },
         ).status_code
         == 200
     )
@@ -210,7 +216,11 @@ def test_disabled_policy_cannot_reset_overlap_and_revoked_key_cannot_dispatch(ap
     rejected = client.post(
         context["path"] + f"/policies/{created['id']}/approve",
         headers=admin,
-        json={"approval_hash": created["approval_hash"], "approval_ref": str(uuid4())},
+        json={
+            "approval_hash": created["approval_hash"],
+            "approval_ref": str(uuid4()),
+            "expected_state_version": created["state_version"],
+        },
     )
     assert rejected.status_code == 409 and "MUST_NOT_OVERLAP" in rejected.text
 

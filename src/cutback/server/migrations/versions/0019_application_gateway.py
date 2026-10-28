@@ -18,16 +18,26 @@ def upgrade():
         sa.Column("specification", sa.JSON(), nullable=False),
         sa.Column("approval_hash", sa.String(length=64), nullable=False),
         sa.Column("state", sa.String(length=20), nullable=False),
+        sa.Column("state_version", sa.BigInteger(), nullable=False),
         sa.Column("starts_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("approved_by", sa.String(length=100), nullable=True),
         sa.Column("approval_ref", sa.Uuid(), nullable=True),
+        sa.Column("approval_refs", sa.JSON(), nullable=False),
         sa.Column("approved_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.CheckConstraint(
             "state IN ('PENDING','APPROVED','DISABLED','BLOCKED')", name="ck_gateway_policy_state"
         ),
         sa.CheckConstraint("expires_at > starts_at", name="ck_gateway_policy_window"),
+        sa.CheckConstraint(
+            "state_version >= 0 AND state_version <= 9007199254740991",
+            name="ck_gateway_policy_state_version",
+        ),
+        sa.CheckConstraint(
+            "json_typeof(approval_refs) = 'array' AND json_array_length(approval_refs) <= 1024",
+            name="ck_gateway_policy_approval_history_bound",
+        ),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("id", "project_id", name="uq_gateway_policy_scope"),

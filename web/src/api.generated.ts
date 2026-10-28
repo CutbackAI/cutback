@@ -4368,6 +4368,8 @@ export interface components {
              * Format: uuid
              */
             approval_ref: string;
+            /** Expected State Version */
+            expected_state_version: number;
         };
         /** GatewayBudgetReceipt */
         GatewayBudgetReceipt: {
@@ -4456,6 +4458,8 @@ export interface components {
         GatewayExactPolicy: {
             /** Approval Hash */
             approval_hash: string;
+            /** Expected State Version */
+            expected_state_version: number;
         };
         /** GatewayIssuedKey */
         GatewayIssuedKey: {
@@ -4673,6 +4677,8 @@ export interface components {
             approval_hash: string;
             /** State */
             state: string;
+            /** State Version */
+            state_version: number;
             /** Approved At */
             approved_at: string | null;
             /**

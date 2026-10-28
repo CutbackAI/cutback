@@ -131,12 +131,13 @@ def run_sample(app, endpoint, admin, project, *, client=None):
         allow_insecure_http=True,
     )
     try:
-        control(
+        policy = control(
             "POST",
             base + f"/gateway/policies/{policy['id']}/approve",
             {
                 "approval_hash": policy["approval_hash"],
                 "approval_ref": str(uuid4()),
+                "expected_state_version": policy["state_version"],
             },
         )
         for _ in range(2):
@@ -222,6 +223,7 @@ def run_sample(app, endpoint, admin, project, *, client=None):
                 base + f"/gateway/policies/{policy['id']}/disable",
                 {
                     "approval_hash": policy["approval_hash"],
+                    "expected_state_version": policy["state_version"],
                 },
             )
         except ValueError:

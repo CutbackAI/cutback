@@ -111,7 +111,10 @@ export function GatewayBudgets({
   const detailGeneration = useRef(0);
   const prepared = useRef<PolicyInput | null>(null);
   const keyIntent = useRef<KeyInput | null>(null);
-  const approvalRefs = useRef(new Map<string, string>());
+  const approvalRefs = useRef(
+    new Map<string, { reference: string; version: number }>(),
+  );
+  const stopVersions = useRef(new Map<string, number>());
   const [frozenDraft, setFrozenDraft] = useState(false);
 
   const reload = useCallback(async () => {
@@ -270,15 +273,30 @@ export function GatewayBudgets({
     if (!detail) return;
     const policy = detail.policy;
     await act(async () => {
-      let reference = approvalRefs.current.get(policy.id);
-      if (!reference) {
-        reference = crypto.randomUUID();
-        approvalRefs.current.set(policy.id, reference);
+      let intent = approvalRefs.current.get(policy.id);
+      if (!intent) {
+        intent = {
+          reference: crypto.randomUUID(),
+          version: policy.state_version,
+        };
+        approvalRefs.current.set(policy.id, intent);
       }
-      await json(api, `${base}/policies/${policy.id}/approve`, {
-        approval_hash: policy.approval_hash,
-        approval_ref: reference,
-      });
+      try {
+        await json(api, `${base}/policies/${policy.id}/approve`, {
+          approval_hash: policy.approval_hash,
+          approval_ref: intent.reference,
+          expected_state_version: intent.version,
+        });
+      } catch (error) {
+        if (
+          (error as Error)?.message ===
+          "GATEWAY_STATE_VERSION_CONFLICT_REVIEW_CURRENT_POLICY"
+        ) {
+          approvalRefs.current.delete(policy.id);
+          await inspect(policy.id);
+        }
+        throw error;
+      }
       await reload();
       await inspect(policy.id);
       setNotice(
@@ -457,18 +475,36 @@ export function GatewayBudgets({
             </button>
           )}
           {canApprove &&
-            ["PENDING", "APPROVED"].includes(detail.policy.state) && (
+            ["PENDING", "APPROVED", "DISABLED", "BLOCKED"].includes(
+              detail.policy.state,
+            ) && (
               <button
                 disabled={busy}
                 onClick={() =>
                   act(async () => {
-                    await json(
-                      api,
-                      `${base}/policies/${detail.policy.id}/disable`,
-                      {
+                    const id = detail.policy.id;
+                    let version = stopVersions.current.get(id);
+                    if (version === undefined) {
+                      version = detail.policy.state_version;
+                      stopVersions.current.set(id, version);
+                    }
+                    try {
+                      await json(api, `${base}/policies/${id}/disable`, {
                         approval_hash: detail.policy.approval_hash,
-                      },
-                    );
+                        expected_state_version: version,
+                      });
+                    } catch (error) {
+                      if (
+                        (error as Error)?.message ===
+                        "GATEWAY_STATE_VERSION_CONFLICT_REVIEW_CURRENT_POLICY"
+                      ) {
+                        stopVersions.current.delete(id);
+                        await inspect(id);
+                      }
+                      throw error;
+                    }
+                    stopVersions.current.delete(id);
+                    approvalRefs.current.delete("resume:" + detail.policy.id);
                     await reload();
                     await inspect(detail.policy.id);
                   })
@@ -485,19 +521,37 @@ export function GatewayBudgets({
                 onClick={() =>
                   act(async () => {
                     const key = "resume:" + detail.policy.id;
-                    let reference = approvalRefs.current.get(key);
-                    if (!reference) {
-                      reference = crypto.randomUUID();
-                      approvalRefs.current.set(key, reference);
+                    let intent = approvalRefs.current.get(key);
+                    if (!intent) {
+                      intent = {
+                        reference: crypto.randomUUID(),
+                        version: detail.policy.state_version,
+                      };
+                      approvalRefs.current.set(key, intent);
                     }
-                    await json(
-                      api,
-                      `${base}/policies/${detail.policy.id}/resume`,
-                      {
-                        approval_hash: detail.policy.approval_hash,
-                        approval_ref: reference,
-                      },
-                    );
+                    try {
+                      await json(
+                        api,
+                        `${base}/policies/${detail.policy.id}/resume`,
+                        {
+                          approval_hash: detail.policy.approval_hash,
+                          approval_ref: intent.reference,
+                          expected_state_version: intent.version,
+                        },
+                      );
+                    } catch (error) {
+                      if (
+                        [
+                          "GATEWAY_ACTIVATION_APPROVAL_ALREADY_CONSUMED",
+                          "GATEWAY_STATE_VERSION_CONFLICT_REVIEW_CURRENT_POLICY",
+                        ].includes((error as Error)?.message)
+                      ) {
+                        approvalRefs.current.delete(key);
+                        await inspect(detail.policy.id);
+                      }
+                      throw error;
+                    }
+                    approvalRefs.current.delete(key);
                     await reload();
                     await inspect(detail.policy.id);
                     setNotice(
