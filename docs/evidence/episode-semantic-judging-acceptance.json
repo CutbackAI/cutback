@@ -1,0 +1,104 @@
+{
+  "contract": "cutback.episode-semantic-judging-acceptance.v1",
+  "date": "2026-10-28",
+  "publication": "locally_accepted_frozen_code_public_wheel_and_hosted_gates_pending",
+  "scope": [
+    "frozen_v5_observed_source_only_semantic_episode_proxies",
+    "independent_synthetic_agent_and_rag_demo",
+    "separate_atomic_native_and_judge_reservations",
+    "all_qualified_native_target_surfaces",
+    "encrypted_rubrics_and_judge_evidence",
+    "guided_authoring_and_scoped_results",
+    "lost_ledger_ack_stop_and_uncertain_plan_commit_preservation"
+  ],
+  "migration": "0017_additive_0001_through_0016_unchanged",
+  "full_installed": {
+    "passed": 712,
+    "skipped": 22,
+    "seconds": 987.55,
+    "features_enabled": [
+      "postgres",
+      "authenticated_browser_mobile_axe",
+      "isolated_cpu_training",
+      "owned_docker_stack"
+    ],
+    "skip_reasons": {
+      "legacy_sdk_in_separate_environment": 4,
+      "modern_sdk_in_separate_environment": 17,
+      "windows_symlink_privilege_unavailable": 1
+    }
+  },
+  "separately_locked_sdk3_installed": {
+    "passed": 507,
+    "skipped": 5,
+    "seconds": 313.89,
+    "openai": "3.35.1",
+    "skips": [
+      "four_legacy_sdk",
+      "one_windows_symlink"
+    ]
+  },
+  "focused": {
+    "three_native_surfaces_failure_and_acknowledgement_boundaries": {
+      "passed": 27,
+      "seconds": 72.0
+    },
+    "pg_control_lifecycle_ledger_regression": {
+      "passed": 29,
+      "seconds": 57.48
+    },
+    "guided_browser_and_accessibility": {
+      "passed": 1,
+      "seconds": 75.57
+    }
+  },
+  "code_wheel": {
+    "backend_modules": 182,
+    "byte_identical_installed_environments": 2,
+    "source_byte_identical": true,
+    "files": {
+      ".gitignore": "684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1",
+      "cutback-0.1.0.dev5-py3-none-any.whl": "4539d79b755bd418a94938b00adff08b73be1e65cf706a21b375b92bdd8d270c",
+      "cutback-0.1.0.dev5.tar.gz": "f47fe0196bf72701425f9939bb1769737927e395da33e2f4f0a21cba5f9b6977"
+    }
+  },
+  "static": {
+    "ruff": "passed",
+    "format_files": 379,
+    "mypy_modules": 182,
+    "main_lock": "unchanged_verified",
+    "openapi_types_and_react_build": "passed",
+    "frontend_units": 7,
+    "node_native_tests": 9,
+    "node_types": "passed",
+    "core_only_consumer_smoke": "passed_with_force_color",
+    "twine_and_release_payload": "passed"
+  },
+  "source_archive_boundary": {
+    "files": 600,
+    "archive_members": 792,
+    "findings": 0,
+    "private_marker_values_logged": false
+  },
+  "failed_trials": [
+    "demo_fixture_missing_shared_text_executor_fixed",
+    "duplicate_accessibility_landmark_fixed",
+    "exact_label_locator_for_nested_select_corrected",
+    "lost_reservation_ack_previously_allowed_later_calls_fixed"
+  ],
+  "pending": [
+    "exact_clean_public_wheel_byte_qualification",
+    "hosted_required_checks",
+    "public_source_merge"
+  ],
+  "paid_provider_calls": 0,
+  "production_deployment": false,
+  "pypi_upload": false,
+  "limits": [
+    "scripted_answers_usage_and_judgments_not_model_benchmarks",
+    "model_assessments_tier_3_not_independent_verification",
+    "declared_synthetic_fixtures_no_real_application_tools",
+    "no_generative_personas_or_new_models",
+    "remaining_market_baseline_and_real_user_comparative_acceptance_incomplete"
+  ]
+}

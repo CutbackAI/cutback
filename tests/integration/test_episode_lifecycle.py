@@ -6,6 +6,7 @@ import httpx
 import pytest
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
+from support_episode_judge import semantic_response
 from support_native_agent import native_executor, response_body
 from test_native_episodes import prepared_episode
 
@@ -17,14 +18,16 @@ from cutback.server.worker import run_one
 pytestmark = pytest.mark.postgres
 
 
-def complete_episode(api, tenant, tmp_path, monkeypatch):
-    base, store, run_id, _ = prepared_episode(api, tenant, tmp_path, monkeypatch)
+def complete_episode(api, tenant, tmp_path, monkeypatch, *, semantic=False):
+    base, store, run_id, _ = prepared_episode(api, tenant, tmp_path, monkeypatch, semantic=semantic)
     executor = native_executor(
         "responses.create",
         monkeypatch,
         lambda request: httpx.Response(
             200,
-            json=response_body(
+            json=semantic_response(response_body("responses.create"))
+            if b"cutback_episode_judgments" in request.content
+            else response_body(
                 "responses.create",
                 "final" if b"function_call_output" in request.content else "tool",
             ),
@@ -44,19 +47,24 @@ def complete_episode(api, tenant, tmp_path, monkeypatch):
     return base, run_id
 
 
+@pytest.mark.parametrize("semantic", [False, True])
 def test_receipt_pagination_rbac_export_retention_and_delete_preserve_unknown_semantics(
-    api, tenant, tmp_path, monkeypatch
+    api, tenant, tmp_path, monkeypatch, semantic
 ):
-    base, run_id = complete_episode(api, tenant, tmp_path, monkeypatch)
+    base, run_id = complete_episode(api, tenant, tmp_path, monkeypatch, semantic=semantic)
+    count = 6 if semantic else 4
     client, admin, app = api
     first = client.get(base + f"/experiments/{run_id}/calls?limit=2", headers=tenant[2])
     assert first.status_code == 200, first.text
     page = first.json()
-    assert len(page["items"]) == 2 and page["next_after"] == 2 and page["requests_reserved"] == 4
+    assert (
+        len(page["items"]) == 2 and page["next_after"] == 2 and page["requests_reserved"] == count
+    )
     second = client.get(
         base + f"/experiments/{run_id}/calls?limit=2&after=2", headers=tenant[2]
     ).json()
-    assert second["next_after"] is None and [r["sequence"] for r in second["items"]] == [3, 4]
+    assert [r["sequence"] for r in second["items"]] == [3, 4]
+    assert second["next_after"] == (4 if semantic else None)
     one = client.get(base + f"/experiments/{run_id}/episodes?limit=1", headers=tenant[2]).json()
     two = client.get(
         base + f"/experiments/{run_id}/episodes?limit=1&after={one['next_after']}",
@@ -90,7 +98,7 @@ def test_receipt_pagination_rbac_export_retention_and_delete_preserve_unknown_se
     after = client.get(base + f"/experiments/{run_id}/calls", headers=tenant[2]).json()
     assert (
         after["retained_receipts"] == 0
-        and after["requests_reserved"] == after["known_cost_requests"] == 4
+        and after["requests_reserved"] == after["known_cost_requests"] == count
     )
     assert (
         Decimal(after["known_cost_subtotal_usd"]) == known_subtotal and after["cost_coverage"] == 1

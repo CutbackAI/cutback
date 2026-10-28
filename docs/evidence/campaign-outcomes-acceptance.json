@@ -1,7 +1,7 @@
 {
   "contract": "cutback.campaign-outcomes-acceptance.v1",
   "date": "2026-10-28",
-  "publication": "working_source_broad_installed_and_hosted_gates_pending_no_new_pypi_upload",
+  "publication": "public_source_merged_no_new_pypi_upload",
   "scope": [
     "ordinary_agent_campaign_to_checked_encrypted_diff_and_later_declared_task_windows",
     "canonical_campaign_run_cost_closure",
@@ -42,11 +42,7 @@
     "findings": 0,
     "private_marker_values_logged": false
   },
-  "pending": [
-    "full_installed_regression",
-    "final_artifacts_and_backend_identity",
-    "exact_head_hosted_checks"
-  ],
+  "pending": [],
   "paid_provider_calls": 0,
   "production_deployment": false,
   "pypi_upload": false,
@@ -82,5 +78,72 @@
     "synthetic_project_absence_independently_confirmed": true,
     "owned_collector_stopped": true,
     "database_volume_preserved": true
+  },
+  "full_installed_code_wheel_regression": {
+    "passed": 663,
+    "skipped": 22,
+    "seconds": 902.48,
+    "includes": [
+      "real_postgresql",
+      "authenticated_browser_mobile_axe",
+      "isolated_cpu_training",
+      "owned_docker_lifecycle"
+    ],
+    "skip_reasons": [
+      "four_legacy_sdk_cases_exercised_separately",
+      "seventeen_sdk3_cases_exercised_in_separate_matrix",
+      "windows_symlink_privilege_unavailable"
+    ]
+  },
+  "exact_public_build_wheel": {
+    "line_endings": "git_normalized_lf",
+    "default_sdk_checks": {
+      "passed": 42,
+      "skipped": 1,
+      "seconds": 244.05,
+      "skip": "windows_symlink_privilege_unavailable"
+    },
+    "sdk3_checks": {
+      "passed": 22,
+      "seconds": 141.22
+    },
+    "backend_modules_identical_in_both_public_wheel_environments": 179,
+    "archive_boundary": {
+      "source_files": 590,
+      "history_objects": 2084,
+      "archive_members": 779,
+      "findings": 0
+    },
+    "twine_and_release_payload": "passed",
+    "broad_code_wheel_difference": "windows_checkout_newline_normalization_only",
+    "fresh_core_only_code_wheel_forced_ansi_smoke": "passed"
+  },
+  "public_merge": {
+    "pull_request": "https://github.com/CutbackAI/cutback/pull/27",
+    "reviewed_head": "7251e7b49215107e13a7a638fbf551597f8d6549",
+    "merge_commit": "08554125d14b4fdc43cc6ce439c6c0705bd1c2ba",
+    "tree": "6f1a6bd33bbfc45fc756f93808598553dbbb31ac",
+    "required_checks_passed": 10,
+    "hosted_default_311": {
+      "passed": 664,
+      "skipped": 21,
+      "seconds": 488.69
+    },
+    "hosted_default_313": {
+      "passed": 662,
+      "skipped": 23,
+      "seconds": 420.65
+    },
+    "hosted_sdk3_311": {
+      "passed": 450,
+      "skipped": 4,
+      "seconds": 49.04
+    },
+    "hosted_sdk3_313": {
+      "passed": 450,
+      "skipped": 4,
+      "seconds": 47.9
+    },
+    "pypi": "dev5_unchanged"
   }
 }

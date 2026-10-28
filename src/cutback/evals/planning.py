@@ -1,7 +1,9 @@
 """Automatic constrained candidate planning from metadata. Never executes inference."""
 
 from decimal import Decimal
+from uuid import uuid4
 
+from cutback.core.episode_judging import EpisodeJudgingSpec
 from cutback.evals.experiments import (
     Budget,
     EpisodeExecutionSpec,
@@ -33,6 +35,9 @@ def draft_plan(
     pilot_minimum=None,
     criteria=None,
     retain_case_outputs=False,
+    episode_judging: EpisodeJudgingSpec | None = None,
+    episode_judge: ModelSpec | None = None,
+    episode_max_turns=32,
 ):
     provenance = dataset["provenance"]
     catalog = Catalog()
@@ -57,6 +62,13 @@ def draft_plan(
         raise ValueError("NO_COMPATIBLE_CHEAPER_MODEL_SUBMIT_REVIEWED_PROMPT_VARIANT")
     inferred = provenance.get("task_inference", {}).get("suggested_metric", "nonempty")
     kind = metric_kind or inferred
+    if episode_judging is not None or episode_judge is not None:
+        if kind != "episode_contract" or episode_judging is None or episode_judge is None:
+            raise ValueError("EPISODE_JUDGING_REQUIRES_TYPED_EPISODES_CRITERIA_AND_JUDGE")
+        from cutback.evals.episode_judging import episode_judge_model
+
+        episode_judge = episode_judge_model(episode_judge)
+        assert episode_judge.provider == "openai"
     independent = provenance["independent_labels"] and minimum is not None
     semantic = kind in {
         "exact_label",
@@ -97,14 +109,26 @@ def draft_plan(
                 for target in provider_models(model)
                 if target.provider != "router"
             }
+            | ({"openai"} if episode_judge else set())
         ),
         repeats=repeats,
         pilot_samples=pilot_samples,
         pilot_minimum=pilot_minimum,
         criteria=criteria or [],
         retain_case_outputs=retain_case_outputs,
-        evaluator_version="deterministic-v4" if kind == "episode_contract" else "deterministic-v3",
-        episode_execution=EpisodeExecutionSpec(max_turns=32, max_tool_calls=100)
+        evaluator_version="deterministic-v5"
+        if episode_judging
+        else "deterministic-v4"
+        if kind == "episode_contract"
+        else "deterministic-v3",
+        content_nonce=uuid4() if episode_judging else None,
+        judge=episode_judge,
+        episode_execution=EpisodeExecutionSpec(
+            version="native-fixture-episode-v2" if episode_judging else "native-fixture-episode-v1",
+            max_turns=episode_max_turns,
+            max_tool_calls=100,
+            semantic_judging=episode_judging,
+        )
         if kind == "episode_contract"
         else None,
     )

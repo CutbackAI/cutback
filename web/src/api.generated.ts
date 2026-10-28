@@ -3551,6 +3551,13 @@ export interface components {
         };
         /** DraftInput */
         DraftInput: {
+            episode_judging?: components["schemas"]["EpisodeJudgingSpec"] | null;
+            episode_judge?: components["schemas"]["ModelSpec-Input"] | null;
+            /**
+             * Episode Max Turns
+             * @default 32
+             */
+            episode_max_turns: number;
             /** Name */
             name?: string | null;
             /** Criteria */
@@ -3647,9 +3654,9 @@ export interface components {
             /**
              * Version
              * @default native-fixture-episode-v1
-             * @constant
+             * @enum {string}
              */
-            version: "native-fixture-episode-v1";
+            version: "native-fixture-episode-v1" | "native-fixture-episode-v2";
             /**
              * Openai Surface
              * @default responses.create
@@ -3672,6 +3679,18 @@ export interface components {
              * @enum {string}
              */
             transport: "native_provider" | "scripted_test_only";
+            semantic_judging?: components["schemas"]["EpisodeJudgingSpec"] | null;
+        };
+        /** EpisodeJudgingSpec */
+        EpisodeJudgingSpec: {
+            /**
+             * Version
+             * @default episode-semantic-proxy-v1
+             * @constant
+             */
+            version: "episode-semantic-proxy-v1";
+            /** Criteria */
+            criteria: components["schemas"]["EpisodeSemanticCriterion"][];
         };
         /** EpisodePage */
         EpisodePage: {
@@ -3773,6 +3792,23 @@ export interface components {
              * @default 16
              */
             max_tool_calls: number;
+        };
+        /** EpisodeSemanticCriterion */
+        EpisodeSemanticCriterion: {
+            /** Key */
+            key: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "answer_correctness" | "retrieval_groundedness" | "conversation_constraints";
+            /** Judge Rubric */
+            judge_rubric: string;
+            /**
+             * Minimum
+             * @default 1
+             */
+            minimum: number;
         };
         /** EvaluationBatch */
         EvaluationBatch: {
@@ -3935,7 +3971,7 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
             source_binding?: components["schemas"]["SourceBinding"] | null;
             /** Prompt Bindings */
@@ -4031,7 +4067,7 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
             source_binding?: components["schemas"]["SourceBinding"] | null;
             /** Prompt Bindings */

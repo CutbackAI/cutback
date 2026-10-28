@@ -126,9 +126,10 @@ class ExecutionLedger:
     def start_episode(self, model, case_key, repeat, max_requests):
         if self.episode_id is not None or not self.plan.episode_execution:
             raise ValueError("EXECUTION_EPISODE_MODE_OR_LIFECYCLE_MISMATCH")
-        if (
-            type(max_requests) is not int
-            or not 1 <= max_requests <= self.plan.episode_execution.max_turns
+        if type(
+            max_requests
+        ) is not int or not 1 <= max_requests <= self.plan.episode_execution.max_turns + int(
+            self.plan.episode_execution.semantic_judging is not None
         ):
             raise ValueError("EXECUTION_EPISODE_REQUEST_BOUND_INVALID")
         identifier = uuid4()
@@ -246,6 +247,13 @@ class ExecutionLedger:
         )
         if not allowed:
             raise ValueError("EXECUTION_MODEL_OUTSIDE_FROZEN_SCOPE")
+        semantic = bool(
+            self.plan.episode_execution and self.plan.episode_execution.semantic_judging
+        )
+        if semantic and ((purpose == "judge") != (model.key == self.plan.judge.key)):
+            raise ValueError("EPISODE_JUDGE_PURPOSE_AND_MODEL_MUST_MATCH_APPROVAL")
+        if semantic and self.episode_id is None:
+            raise ValueError("EPISODE_JUDGE_REQUIRES_ACTIVE_TARGET_EPISODE")
         if allowed.model_dump(mode="json") != model.model_dump(mode="json"):
             raise ValueError("EXECUTION_MODEL_CONFIGURATION_OUTSIDE_FROZEN_SCOPE")
         if amount < upper_cost(model):
@@ -310,10 +318,30 @@ class ExecutionLedger:
                     episode.run_id,
                     episode.project_id,
                     episode.environment_id,
-                    episode.model_key,
                     episode.state,
-                ) != (run.id, run.project_id, self.environment_id, model.key, "running"):
+                ) != (run.id, run.project_id, self.environment_id, "running"):
                     raise ValueError("EXECUTION_EPISODE_SCOPE_OR_STATE_MISMATCH")
+                if episode.model_key != model.key and not (
+                    semantic
+                    and purpose == "judge"
+                    and episode.model_key
+                    in {m.key for m in [self.plan.baseline, *self.plan.candidates]}
+                ):
+                    raise ValueError("EXECUTION_EPISODE_SCOPE_OR_STATE_MISMATCH")
+                if semantic:
+                    used = session.scalar(
+                        select(func.count())
+                        .select_from(ExecutionCall)
+                        .where(
+                            ExecutionCall.project_id == run.project_id,
+                            ExecutionCall.run_id == run.id,
+                            ExecutionCall.episode_id == episode.id,
+                            ExecutionCall.purpose == purpose,
+                        )
+                    )
+                    cap = 1 if purpose == "judge" else episode.max_requests - 1
+                    if used >= cap:
+                        raise ValueError("EXECUTION_EPISODE_PURPOSE_REQUEST_BOUND_EXHAUSTED")
                 if episode.requests_used >= episode.max_requests:
                     raise ValueError("EXECUTION_EPISODE_REQUEST_BOUND_EXHAUSTED")
                 episode.requests_used += 1

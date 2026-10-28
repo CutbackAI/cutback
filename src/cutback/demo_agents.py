@@ -6,13 +6,13 @@ are fixtures, never measurements of a real model's quality or economic performan
 
 import json
 from importlib.metadata import version
-from types import SimpleNamespace
 from typing import Any
 
 import httpx
 
 from cutback.core.episodes import EpisodeScenario
 from cutback.evals.agent_executor import NativeAgentExecutor
+from cutback.evals.executors import OpenAIExecutor
 from cutback.evals.experiments import ExperimentPlan, plan_summary, run
 
 
@@ -133,14 +133,48 @@ def synthetic_executor():
         if str(request.url) != "https://api.openai.com/v1/responses":
             raise ValueError("SAMPLE_REQUEST_SURFACE_UNEXPECTED")
         body = json.loads(request.content)
-        messages = body["input"]
+        judgment = body.get("text", {}).get("format", {}).get("name") == "cutback_episode_judgments"
+        scope = json.loads(body["input"]) if judgment else None
+        messages = [] if judgment else body["input"]
         serialized = json.dumps(messages)
         wrong = "intentionally_wrong" in serialized
         tool_results = [m for m in messages if m.get("type") == "function_call_output"]
         functions = [m.get("name") for m in messages if m.get("type") == "function_call"]
         rag = any(t["name"] == "search_policy" for t in body.get("tools", []))
         output: list[dict[str, Any]]
-        if not tool_results:
+        if judgment:
+            assert scope is not None
+            # Deliberate fixtures illustrate accounting and UI, not model intelligence.
+            wrong = scope["final_answer"] in {
+                "Returns are accepted forever.",
+                "Ticket remains open.",
+            }
+            sources = {source["source_id"]: source["text"] for source in scope["sources"]}
+            checks = []
+            for criterion in scope["criteria"]:
+                source_id = criterion["permitted_source_ids"][0]
+                checks.append(
+                    {
+                        "key": criterion["key"],
+                        "score": 0 if wrong else 1,
+                        "citations": [{"source_id": source_id, "quote": sources[source_id][:4000]}],
+                    }
+                )
+            output = [
+                {
+                    "id": "msg_owned",
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "output_text",
+                            "text": json.dumps({"checks": checks}),
+                            "annotations": [],
+                        }
+                    ],
+                }
+            ]
+        elif not tool_results:
             name = "search_policy" if rag else "close_ticket"
             arguments = {"query": "returns"} if rag else {"ticket": "A"}
             output = [
@@ -205,16 +239,26 @@ def synthetic_executor():
         ),
     )
     client.organization = client.project = None
+
+    class FixtureTextExecutor(OpenAIExecutor):
+        def __init__(self, owned_client):
+            self.client = owned_client
+
     executor = NativeAgentExecutor()
     executor.synthetic_transport = True
-    executor.clients["openai"] = SimpleNamespace(client=client, close=client.close)
+    executor.clients["openai"] = FixtureTextExecutor(client)
     return executor
 
 
 def specification(
-    dataset_hash, *, name="Synthetic agent comparison", split="test", sample_limit=None
+    dataset_hash,
+    *,
+    name="Synthetic agent comparison",
+    split="test",
+    sample_limit=None,
+    semantic=False,
 ):
-    return ExperimentPlan.model_validate(
+    plan = ExperimentPlan.model_validate(
         {
             "name": name,
             "workflow": "synthetic.agent",
@@ -237,9 +281,46 @@ def specification(
             "sample_limit": sample_limit,
         }
     )
+    if semantic:
+        from uuid import uuid4
+
+        from cutback.evals.episode_judging import episode_judge_model
+        from cutback.evals.experiments import ModelSpec
+
+        raw = plan.model_dump(mode="json")
+        raw.update(
+            evaluator_version="deterministic-v5",
+            content_nonce=str(uuid4()),
+            judge=episode_judge_model(
+                ModelSpec(
+                    key="episode-judge",
+                    provider="openai",
+                    model="gpt-4.1-mini",
+                    max_input_tokens=64000,
+                    max_output_tokens=2048,
+                )
+            ).model_dump(mode="json"),
+        )
+        raw["episode_execution"].update(
+            version="native-fixture-episode-v2",
+            semantic_judging={
+                "criteria": [
+                    {
+                        "key": "answer-agreement",
+                        "kind": "answer_correctness",
+                        "judge_rubric": (
+                            "Assess whether the answer agrees with the declared reference."
+                        ),
+                        "minimum": 1.0,
+                    }
+                ]
+            },
+        )
+        plan = ExperimentPlan.model_validate(raw)
+    return plan
 
 
-def demonstrate():
+def demonstrate(*, semantic=False):
     dataset = {
         "immutable_hash": "a" * 64,
         "items": [
@@ -247,7 +328,7 @@ def demonstrate():
             for c in [support_case(), rag_case()]
         ],
     }
-    plan = specification(dataset["immutable_hash"])
+    plan = specification(dataset["immutable_hash"], semantic=semantic)
     executor = synthetic_executor()
     try:
         report = run(
@@ -313,7 +394,9 @@ def seed_agent_episodes(app, control, project_id):
             "cases": cases,
         },
     )
-    spec = specification(dataset["immutable_hash"]).model_copy(update={"retain_case_outputs": True})
+    spec = specification(dataset["immutable_hash"], semantic=True).model_copy(
+        update={"retain_case_outputs": True}
+    )
     plan = post(
         base + "/experiments/plans",
         {"dataset_id": dataset["id"], "specification": spec.model_dump(mode="json")},

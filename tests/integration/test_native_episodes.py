@@ -24,6 +24,8 @@ def prepared_episode(
     surface="responses.create",
     *,
     transport_contract="native_provider",
+    semantic=False,
+    max_turns=3,
 ):
     client, admin, app = api
     base, store, initial, _ = authorized_dataset(api, tenant, tmp_path, monkeypatch)
@@ -54,7 +56,7 @@ def prepared_episode(
                         ],
                     }
                 ],
-                "max_turns": 3,
+                "max_turns": max_turns,
                 "assertions": {"required_tools": ["lookup_ticket"], "accepted_answers": ["Urgent"]},
             },
         }
@@ -79,11 +81,15 @@ def prepared_episode(
         approved_providers=[provider],
         episode_execution={
             "openai_surface": "responses.create" if provider == "anthropic" else surface,
-            "max_turns": 3,
+            "max_turns": max_turns,
             "transport": transport_contract,
         },
         retain_case_outputs=True,
     )
+    if semantic:
+        from support_episode_judge import with_semantic_judge
+
+        spec = with_semantic_judge(spec)
     response = client.post(
         base + "/experiments/plans",
         headers=admin,
@@ -91,7 +97,7 @@ def prepared_episode(
     )
     assert response.status_code == 201, response.text
     plan = response.json()
-    assert plan["requests"] == 6
+    assert plan["requests"] == (2 * (max_turns + int(semantic)))
     response = client.post(
         base + "/experiments/plans/" + plan["id"] + "/approve",
         headers=admin,

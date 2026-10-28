@@ -449,7 +449,12 @@ export function PlanForm({
   const [dataset, setDataset] = useState(datasets[0]?.id || "");
   const [strategy, setStrategy] = useState("model_swap");
   const [criterionCount, setCriterionCount] = useState(0);
+  const [semanticEnabled, setSemanticEnabled] = useState(false);
+  const [semanticCount, setSemanticCount] = useState(1);
   const current = datasets.find((row) => row.id === dataset);
+  const episode =
+    current?.provenance?.task_inference?.suggested_metric ===
+    "episode_contract";
   return (
     <Editor title="Plan an experiment">
       <Form
@@ -524,24 +529,55 @@ export function PlanForm({
             dataset_id: data.dataset,
             baseline,
             ...(candidates ? { candidates } : {}),
-            minimum: data.minimum === "" ? null : Number(data.minimum) / 100,
+            minimum:
+              episode || data.minimum === ""
+                ? null
+                : Number(data.minimum) / 100,
             max_usd: String(data.max_usd),
             max_requests: Number(data.max_requests),
             repeats: Number(data.repeats),
             retain_case_outputs: !!data.retain_outputs,
-            criteria: Array.from({ length: criterionCount }, (_, i) => ({
-              key: String(data[`criterion_key_${i}`]),
-              metric: {
-                kind: String(data[`criterion_kind_${i}`]),
-                output_field: data[`criterion_field_${i}`] || null,
-                minimum: Number(data[`criterion_min_${i}`]) / 100,
-              },
-              required: !!data[`criterion_required_${i}`],
-              weight: 1,
-            })),
-            pilot_samples: Number(data.pilot_samples),
+            ...(episode
+              ? { episode_max_turns: Number(data.episode_turns) }
+              : {}),
+            ...(episode && semanticEnabled
+              ? {
+                  episode_judge: {
+                    key: "episode-judge",
+                    provider: "openai",
+                    model: String(data.judge_model),
+                    max_input_tokens: Number(data.judge_input),
+                    max_output_tokens: Number(data.judge_output),
+                  },
+                  episode_judging: {
+                    criteria: Array.from({ length: semanticCount }, (_, i) => ({
+                      key: String(data[`semantic_kind_${i}`]).replaceAll(
+                        "_",
+                        "-",
+                      ),
+                      kind: String(data[`semantic_kind_${i}`]),
+                      judge_rubric: String(data[`semantic_rubric_${i}`]),
+                      minimum: Number(data[`semantic_minimum_${i}`]) / 100,
+                    })),
+                  },
+                }
+              : {}),
+            criteria: Array.from(
+              { length: episode ? 0 : criterionCount },
+              (_, i) => ({
+                key: String(data[`criterion_key_${i}`]),
+                metric: {
+                  kind: String(data[`criterion_kind_${i}`]),
+                  output_field: data[`criterion_field_${i}`] || null,
+                  minimum: Number(data[`criterion_min_${i}`]) / 100,
+                },
+                required: !!data[`criterion_required_${i}`],
+                weight: 1,
+              }),
+            ),
+            pilot_samples: episode ? 0 : Number(data.pilot_samples),
             pilot_minimum:
-              data.pilot_minimum === ""
+              episode || data.pilot_minimum === ""
                 ? null
                 : Number(data.pilot_minimum) / 100,
           });
@@ -561,7 +597,10 @@ export function PlanForm({
           label="Frozen dataset"
           name="dataset"
           value={dataset}
-          onChange={(event) => setDataset(event.target.value)}
+          onChange={(event) => {
+            setDataset(event.target.value);
+            setStrategy("model_swap");
+          }}
           required
         >
           <option value="">Select dataset</option>
@@ -590,8 +629,12 @@ export function PlanForm({
         >
           <option value="model_swap">Cheaper supported model</option>
           <option value="prompt_variant">Reviewed prompt variant</option>
-          <option value="prompt_cache">Anthropic static-prefix caching</option>
-          <option value="routing">Bounded input-size routing</option>
+          <option value="prompt_cache" disabled={episode}>
+            Anthropic static-prefix caching
+          </option>
+          <option value="routing" disabled={episode}>
+            Bounded input-size routing
+          </option>
         </Select>
         <label className="field">
           Baseline static instruction (optional)
@@ -642,75 +685,202 @@ export function PlanForm({
             </p>
           </>
         )}
-        <Field
-          label="Minimum labeled metric percent"
-          name="minimum"
-          type="number"
-          min="0"
-          max="100"
-          step="0.1"
-          hint="Leave empty for technical checks only. Choose a meaningful threshold for your task."
-        />
-        <fieldset>
-          <legend>Additional quality criteria</legend>
-          <p>
-            Every required criterion must pass. A good average cannot hide a
-            required failure.
-          </p>
-          {Array.from({ length: criterionCount }, (_, i) => (
-            <fieldset key={i}>
-              <legend>Criterion {i + 1}</legend>
-              <Field
-                label={`Criterion ${i + 1} name`}
-                name={`criterion_key_${i}`}
-                required
-                pattern="[A-Za-z0-9_.:/-]+"
+        {!episode && (
+          <>
+            <Field
+              label="Minimum labeled metric percent"
+              name="minimum"
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              hint="Leave empty for technical checks only. Choose a meaningful threshold for your task."
+            />
+          </>
+        )}
+        {episode && (
+          <fieldset>
+            <legend>Agent and RAG episode evaluation</legend>
+            <p>
+              Every case runs its declared synthetic conversation and tool
+              fixtures. No real tool actions are performed.
+            </p>
+            <Field
+              label="Maximum native turns per case"
+              name="episode_turns"
+              type="number"
+              min="1"
+              max="32"
+              defaultValue="8"
+              required
+            />
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={semanticEnabled}
+                onChange={(event) => setSemanticEnabled(event.target.checked)}
               />
-              <Select
-                label={`Criterion ${i + 1} metric`}
-                name={`criterion_kind_${i}`}
+              Add a semantic model judge
+            </label>
+            {semanticEnabled && (
+              <>
+                <p className="hint">
+                  This adds one separately budgeted OpenAI request per completed
+                  case and model. The dataset policy must permit OpenAI. Scores
+                  are model proxies, never verified customer quality. Invalid
+                  citations and missing evidence remain unknown.
+                </p>
+                {Array.from({ length: semanticCount }, (_, i) => (
+                  <fieldset key={i}>
+                    <legend>Semantic criterion {i + 1}</legend>
+                    <Select
+                      label={`Semantic check ${i + 1}`}
+                      name={`semantic_kind_${i}`}
+                      defaultValue={
+                        [
+                          "answer_correctness",
+                          "retrieval_groundedness",
+                          "conversation_constraints",
+                        ][i]
+                      }
+                    >
+                      <option value="answer_correctness">
+                        Answer agreement with a declared reference
+                      </option>
+                      <option value="retrieval_groundedness">
+                        Answer grounded in actually returned documents
+                      </option>
+                      <option value="conversation_constraints">
+                        Compliance with observed conversation constraints
+                      </option>
+                    </Select>
+                    <label className="field">
+                      Semantic evaluation rubric {i + 1}
+                      <textarea
+                        name={`semantic_rubric_${i}`}
+                        rows={4}
+                        maxLength={8000}
+                        required
+                        placeholder="Describe the task-specific rule to assess. Stored encrypted with the frozen plan."
+                      />
+                    </label>
+                    <Field
+                      label={`Minimum semantic score percent ${i + 1}`}
+                      name={`semantic_minimum_${i}`}
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      defaultValue="100"
+                      required
+                    />
+                  </fieldset>
+                ))}
+                <button
+                  type="button"
+                  disabled={semanticCount >= 3}
+                  onClick={() => setSemanticCount(semanticCount + 1)}
+                >
+                  Add semantic criterion
+                </button>
+                {semanticCount > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setSemanticCount(semanticCount - 1)}
+                  >
+                    Remove last semantic criterion
+                  </button>
+                )}
+                <Select label="Episode judge model" name="judge_model">
+                  <option value="gpt-4.1-mini">OpenAI · GPT-4.1 mini</option>
+                  <option value="gpt-4.1">OpenAI · GPT-4.1</option>
+                </Select>
+                <Field
+                  label="Judge input token upper bound"
+                  name="judge_input"
+                  type="number"
+                  min="4097"
+                  max="100000"
+                  defaultValue="64000"
+                  required
+                />
+                <Field
+                  label="Judge output token upper bound"
+                  name="judge_output"
+                  type="number"
+                  min="16"
+                  max="16384"
+                  defaultValue="2048"
+                  required
+                />
+              </>
+            )}
+          </fieldset>
+        )}
+        {!episode && (
+          <>
+            <fieldset>
+              <legend>Additional quality criteria</legend>
+              <p>
+                Every required criterion must pass. A good average cannot hide a
+                required failure.
+              </p>
+              {Array.from({ length: criterionCount }, (_, i) => (
+                <fieldset key={i}>
+                  <legend>Criterion {i + 1}</legend>
+                  <Field
+                    label={`Criterion ${i + 1} name`}
+                    name={`criterion_key_${i}`}
+                    required
+                    pattern="[A-Za-z0-9_.:/-]+"
+                  />
+                  <Select
+                    label={`Criterion ${i + 1} metric`}
+                    name={`criterion_kind_${i}`}
+                  >
+                    <option value="exact_label">Exact expected label</option>
+                    <option value="nonempty">
+                      Nonempty response (technical only)
+                    </option>
+                  </Select>
+                  <Field
+                    label={`Criterion ${i + 1} JSON field (optional)`}
+                    name={`criterion_field_${i}`}
+                    pattern="[A-Za-z_][A-Za-z0-9_]*"
+                  />
+                  <Field
+                    label={`Criterion ${i + 1} minimum percent`}
+                    name={`criterion_min_${i}`}
+                    type="number"
+                    min="0"
+                    max="100"
+                    defaultValue="95"
+                    required
+                  />
+                  <Check
+                    label={`Criterion ${i + 1} is required`}
+                    name={`criterion_required_${i}`}
+                  />
+                </fieldset>
+              ))}
+              <button
+                type="button"
+                disabled={criterionCount >= 8}
+                onClick={() => setCriterionCount(criterionCount + 1)}
               >
-                <option value="exact_label">Exact expected label</option>
-                <option value="nonempty">
-                  Nonempty response (technical only)
-                </option>
-              </Select>
-              <Field
-                label={`Criterion ${i + 1} JSON field (optional)`}
-                name={`criterion_field_${i}`}
-                pattern="[A-Za-z_][A-Za-z0-9_]*"
-              />
-              <Field
-                label={`Criterion ${i + 1} minimum percent`}
-                name={`criterion_min_${i}`}
-                type="number"
-                min="0"
-                max="100"
-                defaultValue="95"
-                required
-              />
-              <Check
-                label={`Criterion ${i + 1} is required`}
-                name={`criterion_required_${i}`}
-              />
+                Add quality criterion
+              </button>
+              {criterionCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setCriterionCount(criterionCount - 1)}
+                >
+                  Remove last criterion
+                </button>
+              )}
             </fieldset>
-          ))}
-          <button
-            type="button"
-            disabled={criterionCount >= 8}
-            onClick={() => setCriterionCount(criterionCount + 1)}
-          >
-            Add quality criterion
-          </button>
-          {criterionCount > 0 && (
-            <button
-              type="button"
-              onClick={() => setCriterionCount(criterionCount - 1)}
-            >
-              Remove last criterion
-            </button>
-          )}
-        </fieldset>
+          </>
+        )}
         <Check
           name="retain_outputs"
           label="Retain encrypted case outputs under the dataset's active rights policy, quota and expiry."
@@ -761,25 +931,29 @@ export function PlanForm({
           defaultValue="256"
           required
         />
-        <Field
-          label="Optional validation pilot groups"
-          name="pilot_samples"
-          type="number"
-          min="0"
-          max="100"
-          defaultValue="0"
-          required
-          hint="Zero disables early elimination. Pilots use separate validation groups, then promoted candidates use untouched test groups."
-        />
-        <Field
-          label="Pilot minimum metric percent"
-          name="pilot_minimum"
-          type="number"
-          min="0"
-          max="100"
-          step="0.1"
-          hint="Required when a pilot is enabled; choose a defensible threshold. Pilot calls count against the same budget."
-        />
+        {!episode && (
+          <>
+            <Field
+              label="Optional validation pilot groups"
+              name="pilot_samples"
+              type="number"
+              min="0"
+              max="100"
+              defaultValue="0"
+              required
+              hint="Zero disables early elimination. Pilots use separate validation groups, then promoted candidates use untouched test groups."
+            />
+            <Field
+              label="Pilot minimum metric percent"
+              name="pilot_minimum"
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              hint="Required when a pilot is enabled; choose a defensible threshold. Pilot calls count against the same budget."
+            />
+          </>
+        )}
         {current && (
           <p className="hint">
             Task hint: {current.provenance?.task_inference?.kind || "unknown"}.{" "}

@@ -18,9 +18,11 @@ function payload(value: unknown) {
 export function EpisodeContent({
   value,
   assessment,
+  judgeOutput,
 }: {
   value: Data;
   assessment?: Data;
+  judgeOutput?: unknown;
 }) {
   const events: Data[] = Array.isArray(value.events) ? value.events : [];
   return (
@@ -144,6 +146,32 @@ export function EpisodeContent({
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+      {assessment?.semantic_judging && (
+        <div role="group" aria-label="Semantic episode proxy">
+          <h5>Semantic model assessment</h5>
+          <p>
+            Tier 3 · NOT VERIFIED. Source quotations were checked for exact
+            presence; a model score does not establish task success.
+          </p>
+          {assessment.semantic_judging.checks?.map((check: Data) => (
+            <p key={check.key}>
+              {check.key}: {check.status ?? "unknown"} · score{" "}
+              {check.score ?? "Unknown"} · minimum {check.minimum} ·{" "}
+              {check.verified_quote_count ?? 0} exact source quotes
+            </p>
+          ))}
+          {judgeOutput != null && (
+            <details>
+              <summary>Raw authorized judge response</summary>
+              <pre tabIndex={0}>
+                {typeof judgeOutput === "string"
+                  ? judgeOutput
+                  : payload(judgeOutput)}
+              </pre>
+            </details>
+          )}
         </div>
       )}
       <details>

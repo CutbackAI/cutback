@@ -11,6 +11,7 @@ from uuid import UUID, uuid4
 from pydantic import Field, JsonValue, PrivateAttr, model_serializer, model_validator
 
 from cutback.core.agent_turns import AgentTurnFrame
+from cutback.core.episode_judging import EpisodeJudgingSpec
 from cutback.core.episodes import EpisodeAssistant
 from cutback.core.models import Identifier, StrictModel
 from cutback.core.observation import observation_scope
@@ -170,11 +171,27 @@ class PromptModelBinding(StrictModel):
 
 
 class EpisodeExecutionSpec(StrictModel):
-    version: Literal["native-fixture-episode-v1"] = "native-fixture-episode-v1"
+    version: Literal["native-fixture-episode-v1", "native-fixture-episode-v2"] = (
+        "native-fixture-episode-v1"
+    )
     openai_surface: Literal["responses.create", "chat.completions.create"] = "responses.create"
     max_turns: int = Field(default=8, ge=1, le=32)
     max_tool_calls: int = Field(default=16, ge=0, le=100)
     transport: Literal["native_provider", "scripted_test_only"] = "native_provider"
+    semantic_judging: EpisodeJudgingSpec | None = None
+
+    @model_serializer(mode="wrap")
+    def preserve_existing_episode_hashes(self, handler):
+        result = handler(self)
+        if self.semantic_judging is None:
+            result.pop("semantic_judging", None)
+        return result
+
+    @model_validator(mode="after")
+    def judging_version(self):
+        if (self.version == "native-fixture-episode-v2") != (self.semantic_judging is not None):
+            raise ValueError("EPISODE_SEMANTIC_JUDGING_REQUIRES_EXPLICIT_V2_EXECUTION")
+        return self
 
 
 class ExperimentPlan(StrictModel):
@@ -210,7 +227,9 @@ class ExperimentPlan(StrictModel):
     price_sha256: Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")] = Field(
         default_factory=lambda: Catalog().sha256
     )
-    evaluator_version: Literal["deterministic-v3", "deterministic-v4"] = "deterministic-v3"
+    evaluator_version: Literal["deterministic-v3", "deterministic-v4", "deterministic-v5"] = (
+        "deterministic-v3"
+    )
     episode_execution: EpisodeExecutionSpec | None = None
     source_binding: SourceBinding | None = None
     prompt_bindings: list[PromptModelBinding] | None = Field(
@@ -232,16 +251,29 @@ class ExperimentPlan(StrictModel):
     @model_validator(mode="after")
     def eligibility(self):
         if self.episode_execution:
+            semantic = self.episode_execution.semantic_judging is not None
             if (
-                self.evaluator_version != "deterministic-v4"
+                self.evaluator_version != ("deterministic-v5" if semantic else "deterministic-v4")
                 or self.metric.kind != "episode_contract"
                 or self.criteria
-                or self.judge
+                or bool(self.judge) != semantic
                 or self.pilot_samples
                 or self.source_binding
                 or self.prompt_bindings
             ):
                 raise ValueError("EPISODE_MODE_REQUIRES_SEPARATE_V4_CONTRACT")
+            if semantic:
+                from cutback.evals.episode_judging import episode_judge_model
+
+                if (
+                    self.content_nonce is None
+                    or self.judge != episode_judge_model(self.judge)
+                    or self.judge_rubric is not None
+                    or self.judge_swap_orders
+                    or self.judge_require_evidence
+                    or self.judge_max_invalid_fraction != 0.2
+                ):
+                    raise ValueError("EPISODE_V5_REQUIRES_NONCE_AND_OWNED_FROZEN_JUDGE_CONTRACT")
             if any(
                 m.provider not in {"openai", "anthropic"} or m.request_contract or m.prompt_cache
                 for m in [self.baseline, *self.candidates]
@@ -323,7 +355,7 @@ class ExperimentPlan(StrictModel):
             if model.provider not in self.approved_providers:
                 raise ValueError("FORBIDDEN_PROVIDER")
             qualified_native_model(model, catalog)
-        if self.judge and not self.judge_rubric:
+        if self.judge and not self.judge_rubric and not self.episode_execution:
             raise ValueError("judge requires an explicit rubric")
         return self
 
@@ -507,6 +539,8 @@ class BudgetLedger:
     def call(
         self, executor: Executor, model: ModelSpec, text: str, *, traffic_kind="evaluation"
     ) -> Execution:
+        if self.receipt_uncertain:
+            raise ValueError("CALL_LEDGER_ACK_UNCERTAIN_NO_FURTHER_REQUESTS")
         if Catalog().sha256 != self.price_sha256:
             raise ValueError("PRICE_CONTRACT_CHANGED_REAPPROVAL_REQUIRED")
         # UTF-8 bytes plus generous message framing bounds supported text input tokens.
@@ -535,8 +569,15 @@ class BudgetLedger:
             raise ValueError("BUDGET_EXHAUSTED")
         call_id = None
         if self.reserve_call:
-            call_id = self.reserve_call(bound, target, traffic_kind)
+            try:
+                call_id = self.reserve_call(bound, target, traffic_kind)
+            except Exception:
+                # A durable reservation may have committed before its acknowledgement
+                # was lost. An in-memory zero increment cannot prove no charge slot.
+                self.receipt_uncertain = True
+                raise ValueError("CALL_RESERVATION_WRITE_UNCERTAIN_NO_REQUEST_RETRY") from None
             if not isinstance(call_id, UUID):
+                self.receipt_uncertain = True
                 raise ValueError("DURABLE_CALL_RESERVATION_ID_REQUIRED")
         elif self.persist_reservation:
             self.persist_reservation(bound)  # Durable commit before any network I/O.
