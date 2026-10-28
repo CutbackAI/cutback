@@ -235,6 +235,12 @@ def test_agent_campaign_proposes_confirmed_literal_edit_without_modifying_applic
         assert reviewed["status"] == "READY_FOR_PR_REVIEW"
         assert reviewed["evidence_scope"] == "sample_only" and not reviewed["remote_published"]
         assert len(requests) == calls and (root / "app.py").read_bytes() == original
+        from support_campaign_outcomes import assert_campaign_outcome_link
+
+        assert_campaign_outcome_link(
+            api, tenant, root, control, artifact, state["selected_workflow"]
+        )
+        assert len(requests) == calls and (root / "app.py").read_bytes() == original
         selected_url = f"/v1/projects/{tenant[0]}/campaigns/{row['id']}/selected/content"
         assert (
             api[0].post(selected_url, headers=tenant[2], json={"purpose": "denied"}).status_code

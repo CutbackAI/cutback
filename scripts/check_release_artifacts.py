@@ -97,6 +97,7 @@ def check(directory: Path):
             "docs/agent-evaluation.md",
             "docs/task-economics.md",
             "docs/improvement-campaigns.md",
+            "docs/campaign-outcomes.md",
             "docs/load-qualification.md",
             "examples/load-qualification/profile.json",
             "examples/load-qualification/compare.py",

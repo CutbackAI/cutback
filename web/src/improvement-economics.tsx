@@ -29,8 +29,36 @@ export function ImprovementEconomics({
   const [allRuns, setAllRuns] = useState(false);
   const [allOther, setAllOther] = useState(false);
   const [linkAttested, setLinkAttested] = useState(false);
+  const [history, setHistory] = useState<Receipt[]>([]);
+  const [historyCursor, setHistoryCursor] = useState<string | null>(null);
+  const [historyBusy, setHistoryBusy] = useState(false);
+  const [historyError, setHistoryError] = useState("");
+  const historyVersion = useRef(0);
   const version = useRef(0);
   const selectionVersion = useRef(0);
+  const scopedHistory = history.filter(
+    (item) => item.environment_id === environment,
+  );
+  async function loadHistory(afterId?: string) {
+    const current = ++historyVersion.current;
+    setHistoryBusy(true);
+    setHistoryError("");
+    try {
+      const value = await api(
+        `${base}/improvement-observations?environment_id=${environment}&limit=20${afterId ? `&after=${afterId}` : ""}`,
+      );
+      if (current === historyVersion.current) {
+        setHistory((previous) =>
+          afterId ? [...previous, ...value.items] : value.items,
+        );
+        setHistoryCursor(value.next_after);
+      }
+    } catch (e) {
+      if (current === historyVersion.current) setHistoryError(explain(e));
+    } finally {
+      if (current === historyVersion.current) setHistoryBusy(false);
+    }
+  }
   async function load(afterId?: string) {
     const current = ++version.current;
     setError("");
@@ -56,10 +84,14 @@ export function ImprovementEconomics({
     setAllRuns(false);
     setAllOther(false);
     setLinkAttested(false);
+    setHistory([]);
+    setHistoryCursor(null);
+    void loadHistory();
     void load();
     return () => {
       version.current++;
       selectionVersion.current++;
+      historyVersion.current++;
     };
   }, [api, base, environment, newSnapshot]);
   function invalidate() {
@@ -119,7 +151,10 @@ export function ImprovementEconomics({
           },
         }),
       });
-      if (current === selectionVersion.current) setResult(receipt);
+      if (current === selectionVersion.current) {
+        setResult(receipt);
+        void loadHistory();
+      }
     } catch (e) {
       if (current === selectionVersion.current) setError(explain(e));
     } finally {
@@ -134,6 +169,48 @@ export function ImprovementEconomics({
         is descriptive evidence; release linkage and future volume are owner
         assertions.
       </p>
+      <section aria-label="Saved economic comparisons">
+        <h3>Saved economic comparisons</h3>
+        <p>
+          Read frozen comparisons recorded here or by your coding agent. Opening
+          one makes no model call and changes no traffic.
+        </p>
+        <button disabled={historyBusy} onClick={() => loadHistory()}>
+          {historyBusy
+            ? "Loading saved comparisons…"
+            : "Refresh saved comparisons"}
+        </button>
+        {historyError && <p role="alert">{historyError}</p>}
+        {!scopedHistory.length && !historyBusy && !historyError && (
+          <p>No saved comparisons in this environment.</p>
+        )}
+        <ul>
+          {scopedHistory.map((item) => (
+            <li key={item.id}>
+              <button
+                onClick={() => {
+                  selectionVersion.current++;
+                  setBusy(false);
+                  setError("");
+                  setRequestId("");
+                  setResult(item);
+                }}
+              >
+                Open comparison {item.evidence.baseline_release} →{" "}
+                {item.evidence.candidate_release} · {item.id.slice(0, 8)}
+              </button>
+            </li>
+          ))}
+        </ul>
+        {historyCursor && (
+          <button
+            disabled={historyBusy}
+            onClick={() => loadHistory(historyCursor)}
+          >
+            Load more saved comparisons
+          </button>
+        )}
+      </section>
       {!snapshots.length && (
         <p>
           Freeze task cost evidence for two releases first. Each receipt must
@@ -281,14 +358,31 @@ export function ImprovementEconomics({
         <button onClick={() => load(cursor)}>Load more frozen windows</button>
       )}
       {error && <p role="alert">{error}</p>}
-      {result && (
+      {result && result.environment_id === environment && (
         <section aria-label="Improvement economic decision">
+          <p>
+            {result.evidence.baseline_release} →{" "}
+            {result.evidence.candidate_release}
+          </p>
           <h3>
             {result.evidence.report.decision ===
             "prepare_independent_confirmation"
               ? "Prepare independent confirmation"
               : "Abstain or reject"}
           </h3>
+          {result.evidence.report.descriptive_outcome_non_regression ===
+            false && (
+            <p>
+              Declared outcomes regressed. Review the change and rollback
+              evidence before deciding what to do. This receipt does not perform
+              a rollback.
+            </p>
+          )}
+          {result.evidence.change_id && (
+            <p>
+              Reviewed source change: <code>{result.evidence.change_id}</code>
+            </p>
+          )}
           {result.evidence.report.reasons.length > 0 && (
             <ul>
               {result.evidence.report.reasons.map((reason) => (

@@ -30,7 +30,9 @@ def write_private(path: Path, value, *, exclusive=False):
     raw = json.dumps(value, sort_keys=True, ensure_ascii=True, indent=2).encode() + b"\n"
     if len(raw) > 2097152:
         raise ValueError("WORKSPACE_METADATA_TOO_LARGE")
-    temporary = path.with_name("." + path.name + "." + uuid4().hex)
+    # A fixed-length temporary name avoids repeating a long destination name
+    # in deep Windows application workspaces. O_EXCL still prevents reuse.
+    temporary = path.with_name(".cutback-write-" + uuid4().hex)
     fd = os.open(temporary, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
     try:
         with os.fdopen(fd, "wb") as stream:

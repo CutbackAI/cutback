@@ -3493,6 +3493,23 @@
             }
           },
           {
+            "name": "environment_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Environment Id"
+            }
+          },
+          {
             "name": "after",
             "in": "query",
             "required": false,
@@ -16360,7 +16377,7 @@
           "artifact": {
             "additionalProperties": true,
             "type": "object",
-            "maxProperties": 30,
+            "maxProperties": 40,
             "title": "Artifact"
           }
         },

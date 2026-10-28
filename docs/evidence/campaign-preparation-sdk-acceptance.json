@@ -1,7 +1,7 @@
 {
   "contract": "cutback.campaign-preparation-sdk-compatibility-acceptance.v1",
   "date": "2026-10-28",
-  "publication": "locally_accepted_final_public_artifact_and_hosted_checks_pending_no_new_pypi_upload",
+  "publication": "public_source_merged_no_new_pypi_upload",
   "scope": [
     "campaign_basis_without_cheaper_static_model",
     "explicit_additional_generator_vendor_authorization",
@@ -84,8 +84,6 @@
   "production_deployment": false,
   "pypi_upload": false,
   "remaining": [
-    "final_public_artifact_identity",
-    "exact_head_hosted_checks",
     "remaining_market_baseline_and_roadmap_not_completed"
   ],
   "final_installed_default_sdk_followup": {
@@ -104,5 +102,38 @@
     "source_files": 583,
     "archive_members": 770,
     "boundary_findings": 0
+  },
+  "public_merge": {
+    "pull_request": "https://github.com/CutbackAI/cutback/pull/26",
+    "reviewed_head": "fc1d146ecc0c91c91da25fa90b2f18e72209094e",
+    "merge_commit": "4e544a229c3c1900c26be935c07043de7f3e1c09",
+    "required_checks_passed": 10,
+    "hosted_default_311": {
+      "passed": 654,
+      "skipped": 21,
+      "seconds": 455.95
+    },
+    "hosted_default_313": {
+      "passed": 652,
+      "skipped": 23,
+      "seconds": 400.86
+    },
+    "hosted_sdk3_311": {
+      "passed": 441,
+      "skipped": 4,
+      "seconds": 69.02
+    },
+    "hosted_sdk3_313": {
+      "passed": 441,
+      "skipped": 4,
+      "seconds": 75.28
+    },
+    "new_sdk3_checks_required_on_main": true,
+    "public_source_files": 583,
+    "reachable_public_history_objects_before_merge": 2022,
+    "archive_members": 770,
+    "boundary_findings": 0,
+    "all_177_backend_entries_match_locked_installed_wheel": true,
+    "pypi": "dev5_unchanged"
   }
 }
