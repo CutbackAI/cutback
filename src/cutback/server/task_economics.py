@@ -5,10 +5,11 @@ complete capture, billing accuracy, or a representative production population.
 """
 
 from collections import defaultdict
+from datetime import UTC, datetime
 from uuid import uuid4
 
 from fastapi import HTTPException
-from sqlalchemy import BigInteger, cast, delete, exists, func, or_, select
+from sqlalchemy import BigInteger, DateTime, String, cast, delete, exists, func, or_, select, update
 
 from cutback.core.task_outcomes import NativeTaskCostEvidence, TaskOutcomeInput, task_economics
 from cutback.server.dataset_lineage import lock_lineage
@@ -317,6 +318,34 @@ def calculate_rows(session, project, environment, rows):
 
 def retain_task_outcomes(session, cutoff, selected):
     """Task lifetime follows raw metadata retention; prune old revisions only."""
+    from cutback.server.outcome_watch_db import OutcomeWatch, OutcomeWatchWindow
+
+    now = datetime.now(UTC)
+    session.execute(
+        update(OutcomeWatch)
+        .where(
+            selected(OutcomeWatch.project_id),
+            OutcomeWatch.enabled.is_(True),
+            cast(
+                OutcomeWatch.specification["policy"]["expires_at"].as_string(),
+                DateTime(timezone=True),
+            )
+            <= now,
+        )
+        .values(enabled=False, status="EXPIRED", updated_at=now)
+    )
+    session.execute(
+        delete(OutcomeWatchWindow).where(
+            selected(OutcomeWatchWindow.project_id), OutcomeWatchWindow.created_at < cutoff
+        )
+    )
+    session.execute(
+        delete(OutcomeWatch).where(
+            selected(OutcomeWatch.project_id),
+            OutcomeWatch.enabled.is_(False),
+            OutcomeWatch.updated_at < cutoff,
+        )
+    )
     session.execute(
         delete(TaskRecord).where(TaskRecord.occurred_at < cutoff, selected(TaskRecord.project_id))
     )
@@ -334,11 +363,28 @@ def retain_task_outcomes(session, cutoff, selected):
             ),
         )
     )
+    watch_reference = exists(
+        select(OutcomeWatchWindow.id).where(
+            OutcomeWatchWindow.project_id == TaskCostSnapshot.project_id,
+            OutcomeWatchWindow.candidate_snapshot_id == TaskCostSnapshot.id,
+        )
+    )
+    approved_baseline = exists(
+        select(OutcomeWatch.id).where(
+            OutcomeWatch.project_id == TaskCostSnapshot.project_id,
+            OutcomeWatch.environment_id == TaskCostSnapshot.environment_id,
+            OutcomeWatch.enabled.is_(True),
+            OutcomeWatch.specification["policy"]["baseline_snapshot_id"].as_string()
+            == cast(TaskCostSnapshot.id, String),
+        )
+    )
     session.execute(
         delete(TaskCostSnapshot).where(
             TaskCostSnapshot.created_at < cutoff,
             selected(TaskCostSnapshot.project_id),
             ~referenced,
+            ~watch_reference,
+            ~approved_baseline,
         )
     )
     current = exists(

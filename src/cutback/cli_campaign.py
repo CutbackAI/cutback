@@ -12,6 +12,9 @@ def register_campaign(app, output, guarded):
         help="Generate, validate and confirm within one approved campaign budget.",
     )
     app.add_typer(group, name="campaign")
+    from cutback.cli_campaign_watch import register_campaign_watch
+
+    register_campaign_watch(group, output, guarded)
 
     @group.command("prepare")
     @guarded

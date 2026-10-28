@@ -7,6 +7,9 @@
 {{- if and .Values.execution.online (not .Values.worker.enabled) -}}
 {{- fail "Online evaluation requires an explicitly enabled worker" -}}
 {{- end -}}
+{{- if and .Values.execution.outcomeWatches (not .Values.worker.enabled) -}}
+{{- fail "Outcome observations require an explicitly enabled worker" -}}
+{{- end -}}
 {{- if .Values.notifications.enabled -}}
 {{- if or (not .Values.worker.enabled) (not .Values.notifications.registryKey) (not .Values.notifications.signingKeys) -}}
 {{- fail "Notifications require a worker, dedicated registry and signing key references" -}}
@@ -60,6 +63,7 @@ data:
   CUTBACK_EXPERIMENT_EXECUTION: {{ .Values.execution.experiments | quote }}
   CUTBACK_SCHEDULE_EXECUTION: {{ .Values.execution.schedules | quote }}
   CUTBACK_ONLINE_EXECUTION: {{ .Values.execution.online | quote }}
+  CUTBACK_OUTCOME_WATCH_EXECUTION: {{ .Values.execution.outcomeWatches | quote }}
   CUTBACK_QUALITY_EXECUTION: {{ .Values.execution.quality | quote }}
   CUTBACK_WEBHOOK_EXECUTION: {{ .Values.notifications.enabled | quote }}
   CUTBACK_TRAINING_EXECUTION: {{ .Values.training.enabled | quote }}

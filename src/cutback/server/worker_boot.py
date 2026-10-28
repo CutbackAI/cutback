@@ -60,6 +60,10 @@ def worker_cycle(sessions, store, *, maintenance_due=True):
             ),
         )
         attempt("experiments", lambda: run_one(sessions, store, execution_enabled=True))
+    if os.getenv("CUTBACK_OUTCOME_WATCH_EXECUTION", "false").lower() == "true":
+        from cutback.server.outcome_watches import run_outcome_watch_one
+
+        attempt("outcome_watches", lambda: run_outcome_watch_one(sessions, enabled=True))
     if os.getenv("CUTBACK_ONLINE_EXECUTION", "false").lower() == "true":
         from cutback.server.incidents import evaluate_alerts
         from cutback.server.monitoring import backfill_one, queue_online_intake, run_online_one

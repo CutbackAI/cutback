@@ -34,11 +34,23 @@ def dataset_version_hash(provenance, content_hash, assignment_hash):
     )
 
 
-def lock_lineage(session, project):
-    key = int.from_bytes(
+def lineage_lock_key(project):
+    return int.from_bytes(
         hashlib.sha256(b"cutback-lineage-v1:" + project.bytes).digest()[:8], "big", signed=True
     )
-    session.execute(text("SELECT pg_advisory_xact_lock(:key)"), {"key": key})
+
+
+def lock_lineage(session, project):
+    session.execute(text("SELECT pg_advisory_xact_lock(:key)"), {"key": lineage_lock_key(project)})
+
+
+def try_lock_lineage(session, project):
+    """Use the same mutation lock without letting a busy project starve another."""
+    return bool(
+        session.scalar(
+            text("SELECT pg_try_advisory_xact_lock(:key)"), {"key": lineage_lock_key(project)}
+        )
+    )
 
 
 def require_unreserved_groups(session, project, families):

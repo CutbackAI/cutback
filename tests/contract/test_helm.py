@@ -121,6 +121,7 @@ def test_chart_private_defaults_nonroot_secret_scoping_and_external_db():
         "CUTBACK_BILLING_ENABLED",
         "CUTBACK_TRAINING_EXECUTION",
         "CUTBACK_ONLINE_EXECUTION",
+        "CUTBACK_OUTCOME_WATCH_EXECUTION",
         "CUTBACK_QUALITY_EXECUTION",
         "CUTBACK_WEBHOOK_EXECUTION",
     ):
@@ -155,6 +156,7 @@ def test_chart_refuses_unsafe_or_incomplete_opt_ins_and_mounts_only_selected_wor
     render("--set", "ingress.enabled=true", expect_ok=False)
     render("--set", "retention.rawDays=400", expect_ok=False)
     render("--set", "execution.online=true,worker.enabled=false", expect_ok=False)
+    render("--set", "execution.outcomeWatches=true,worker.enabled=false", expect_ok=False)
     render("--set", "execution.quality=true", expect_ok=False)
     render("--set", "execution.quality=true,execution.online=true", expect_ok=False)
     render("--set", "notifications.enabled=true", expect_ok=False)

@@ -27,7 +27,9 @@ def test_runner_suppresses_fixture_arguments_and_redacts_dsn_credentials(monkeyp
 
     monkeypatch.setattr(subprocess, "Popen", start)
     with pytest.raises(SystemExit) as outcome:
-        runpy.run_path(str(Path(__file__).resolve().parents[2] / "scripts/check.py"))
+        runpy.run_path(
+            str(Path(__file__).resolve().parents[2] / "scripts/check.py"), run_name="__main__"
+        )
     assert outcome.value.code == 2
     output = capsys.readouterr().out
     assert "synthetic-password" not in output and "<credentials-omitted>" in output

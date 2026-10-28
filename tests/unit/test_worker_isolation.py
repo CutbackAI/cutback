@@ -1,6 +1,22 @@
 from cutback.server import worker_boot
 
 
+def test_outcome_observation_needs_no_content_or_model_execution(monkeypatch):
+    monkeypatch.setattr(worker_boot, "configured_execution_enabled", lambda: False)
+    monkeypatch.setenv("CUTBACK_ONLINE_EXECUTION", "false")
+    monkeypatch.setenv("CUTBACK_QUALITY_EXECUTION", "false")
+    monkeypatch.setenv("CUTBACK_OUTCOME_WATCH_EXECUTION", "false")
+    assert "outcome_watches" not in worker_boot.worker_cycle(None, None, maintenance_due=False)
+    calls = []
+    monkeypatch.setenv("CUTBACK_OUTCOME_WATCH_EXECUTION", "true")
+    monkeypatch.setattr(
+        "cutback.server.outcome_watches.run_outcome_watch_one",
+        lambda sessions, *, enabled: calls.append(enabled),
+    )
+    result = worker_boot.worker_cycle(None, None, maintenance_due=False)
+    assert calls == [True] and result["outcome_watches"]["status"] == "OK"
+
+
 def test_failed_retention_and_schedule_cannot_starve_experiments(monkeypatch, capsys):
     calls = []
 

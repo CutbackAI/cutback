@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import type { components } from "./api.generated";
 import { type API, explain, money } from "./ui";
 import { ImprovementEconomics } from "./improvement-economics";
+import { OutcomeWatches } from "./outcome-watches";
 
 type Window = components["schemas"]["TaskWindow"];
 type Snapshot = components["schemas"]["TaskSnapshotReceipt"];
@@ -10,10 +11,12 @@ export function TaskEconomics({
   api,
   project,
   canWrite,
+  canApprove,
 }: {
   api: API;
   project: string;
   canWrite: boolean;
+  canApprove: boolean;
 }) {
   const [environments, setEnvironments] = useState<
     { id: string; name: string }[]
@@ -25,6 +28,7 @@ export function TaskEconomics({
   const [error, setError] = useState("");
   const [days, setDays] = useState("7");
   const [workflow, setWorkflow] = useState("");
+  const [service, setService] = useState("");
   const [release, setRelease] = useState("");
   const [expected, setExpected] = useState("");
   const [query, setQuery] = useState<URLSearchParams | null>(null);
@@ -78,6 +82,7 @@ export function TaskEconomics({
       end: end.toISOString(),
     });
     if (workflow) params.set("workflow", workflow);
+    if (service) params.set("service", service);
     if (release) params.set("release", release);
     if (expected !== "") params.set("expected_tasks", expected);
     try {
@@ -109,6 +114,7 @@ export function TaskEconomics({
             start: query.get("start"),
             end: query.get("end"),
             workflow: query.get("workflow"),
+            service: query.get("service"),
             release: query.get("release"),
             expected_tasks: query.has("expected_tasks")
               ? Number(query.get("expected_tasks"))
@@ -177,6 +183,18 @@ export function TaskEconomics({
                 setWorkflow(e.target.value);
               }}
               placeholder="All workflows"
+              maxLength={200}
+            />
+          </label>
+          <label>
+            Task service
+            <input
+              value={service}
+              onChange={(event) => {
+                invalidate();
+                setService(event.target.value);
+              }}
+              placeholder="All services"
               maxLength={200}
             />
           </label>
@@ -357,6 +375,17 @@ export function TaskEconomics({
             </p>
           )}
         </>
+      )}
+      {environment && (
+        <OutcomeWatches
+          key={`watch:${environment}`}
+          api={api}
+          base={base}
+          environment={environment}
+          canWrite={canWrite}
+          canApprove={canApprove}
+          newSnapshot={snapshot?.id}
+        />
       )}
       {environment && (
         <ImprovementEconomics

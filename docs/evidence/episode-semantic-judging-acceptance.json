@@ -1,7 +1,7 @@
 {
   "contract": "cutback.episode-semantic-judging-acceptance.v1",
   "date": "2026-10-28",
-  "publication": "locally_accepted_frozen_code_public_wheel_and_hosted_gates_pending",
+  "publication": "public_source_merged_no_new_pypi_upload",
   "scope": [
     "frozen_v5_observed_source_only_semantic_episode_proxies",
     "independent_synthetic_agent_and_rag_demo",
@@ -86,11 +86,7 @@
     "exact_label_locator_for_nested_select_corrected",
     "lost_reservation_ack_previously_allowed_later_calls_fixed"
   ],
-  "pending": [
-    "exact_clean_public_wheel_byte_qualification",
-    "hosted_required_checks",
-    "public_source_merge"
-  ],
+  "pending": [],
   "paid_provider_calls": 0,
   "production_deployment": false,
   "pypi_upload": false,
@@ -100,5 +96,69 @@
     "declared_synthetic_fixtures_no_real_application_tools",
     "no_generative_personas_or_new_models",
     "remaining_market_baseline_and_real_user_comparative_acceptance_incomplete"
-  ]
+  ],
+  "legacy_installed": {
+    "passed": 21,
+    "seconds": 3.19,
+    "openai": "1.55.3",
+    "pydantic": "2.10.6"
+  },
+  "exact_clean_public_wheel": {
+    "default": {
+      "passed": 60,
+      "seconds": 229.21,
+      "includes": "authenticated_guided_browser_mobile_axe"
+    },
+    "sdk3": {
+      "passed": 59,
+      "seconds": 112.04
+    },
+    "backend_modules": 182,
+    "byte_identical_installed_environments": 2,
+    "clean_public_source_byte_identical": true,
+    "normalization": "public_LF_source_built_separately_from_Windows_code_checkpoint",
+    "archives": {
+      ".gitignore": "684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1",
+      "cutback-0.1.0.dev5-py3-none-any.whl": "4eb9c64b847baddda43caea3e02e0e26759ef10775eca73350d616e618d007c9",
+      "cutback-0.1.0.dev5.tar.gz": "48e66b142de6501c3ded799799a86981fdac50573c243e849cd7fabe9b4789b9"
+    }
+  },
+  "clean_public_boundary": {
+    "files": 601,
+    "reachable_history_objects": 2085,
+    "archive_members": 793,
+    "findings": 0
+  },
+  "hosted": {
+    "pull_request": 28,
+    "reviewed_head": "effbc6ffac082d4b87fb4309a89ef0df81bbd265",
+    "merge": "67d65a9480b02217b8e3402036e4e296b0195abd",
+    "tree": "4ad65fb0da8899e2e3f43861a6c6e62d8bdaaa3e",
+    "required_checks_passed": 10,
+    "ci_run": 40686596637,
+    "default_python_311": {
+      "passed": 713,
+      "skipped": 21,
+      "seconds": 365.07
+    },
+    "default_python_313": {
+      "passed": 711,
+      "skipped": 23,
+      "seconds": 306.07
+    },
+    "sdk3_python_311": {
+      "passed": 508,
+      "skipped": 4,
+      "seconds": 115.12
+    },
+    "sdk3_python_313": {
+      "passed": 508,
+      "skipped": 4,
+      "seconds": 103.3
+    },
+    "legacy_each_python": {
+      "passed": 21
+    },
+    "codeql_audits_infrastructure": "passed"
+  }
 }

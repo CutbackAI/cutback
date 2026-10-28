@@ -1,0 +1,29 @@
+{
+  "feature": "finite_approved_outcome_observation",
+  "status": "qualification_in_progress",
+  "migration": "0018",
+  "released_migrations_unchanged": "0001-0017",
+  "paid_provider_calls": 0,
+  "production_deployment": false,
+  "pypi_upload": false,
+  "focused_checks": 39,
+  "additional_control_history_checks": 13,
+  "legacy_checks": 21,
+  "authenticated_browser": "desktop_mobile_axe_passed",
+  "native_source_campaign_watch_sample": "passed_real_closed_window",
+  "backend_modules_byte_identical": 189,
+  "pending": [
+    "passing_full_installed_default_suite",
+    "passing_installed_sdk3_suite",
+    "exact_public_wheel_checks",
+    "all_required_hosted_checks",
+    "public_source_merge"
+  ],
+  "limits": [
+    "producer_declared_outcomes",
+    "owner_attested_release_linkage",
+    "no_automatic_rollback_or_deployment",
+    "no_real_customer_or_causal_savings_claim",
+    "broader_roadmap_incomplete"
+  ]
+}
