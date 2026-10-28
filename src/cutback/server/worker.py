@@ -17,6 +17,7 @@ from cutback.server.db import (
     CapturePolicyRecord,
     DatasetItem,
     DatasetRecord,
+    Environment,
     ExperimentPlanRecord,
     ExperimentRunRecord,
     JobRecord,
@@ -92,25 +93,6 @@ def load_dataset(session, dataset, store, *, now=None):
     }, policy
 
 
-def reserve_request(sessions, run_id, job_id, budget, amount):
-    with sessions.begin() as session:
-        record = session.get(ExperimentRunRecord, run_id, with_for_update=True)
-        job = session.get(JobRecord, job_id)
-        if (
-            record.status != "RUNNING"
-            or not job.lease_until
-            or job.lease_until <= datetime.now(UTC)
-        ):
-            raise ValueError("RUN_CANCELLED_OR_LEASE_EXPIRED")
-        if (
-            record.requests_used >= budget.max_requests
-            or record.reserved_usd + amount > budget.max_usd
-        ):
-            raise ValueError("BUDGET_EXHAUSTED")
-        record.reserved_usd += amount
-        record.requests_used += 1
-
-
 def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run_id=None):
     only_run_id = UUID(str(only_run_id)) if only_run_id is not None else None
     if not execution_enabled:
@@ -124,6 +106,9 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
         except (ValueError, ImportError):
             return {"status": "NO_EXPERIMENT_API_KEY_OR_SUPPORTED_EXTRA", "provider_calls": 0}
     try:
+        from cutback.server.execution_ledger import recover_execution_leases
+
+        recover_execution_leases(sessions, only_run_id=only_run_id)
         with sessions.begin() as session:
             now = datetime.now(UTC)
             # Expired leases become failed, never requeued: a lost HTTP response may be billable.
@@ -175,6 +160,18 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
                 record.results = {"code": "PLAN_ARTIFACT_EXPIRED_OR_UNAVAILABLE"}
                 return {"status": "FAILED", "provider_calls": 0}
             if owned_executor:
+                if (
+                    plan.episode_execution
+                    and plan.episode_execution.transport == "scripted_test_only"
+                ):
+                    record.status = job.status = "BLOCKED"
+                    job.available_at = None
+                    record.results = {
+                        "code": "SCRIPTED_EPISODE_REQUIRES_EXPLICIT_SYNTHETIC_EXECUTOR",
+                        "next_action": "use the supplied scripted test harness; "
+                        "provider-key workers cannot execute this plan",
+                    }
+                    return {"status": "BLOCKED", "run_id": str(record.id), "provider_calls": 0}
                 providers = {
                     target.provider
                     for model in [
@@ -205,6 +202,11 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
                         "code": "NO_EXPERIMENT_KEY_OR_LOCAL_ENDPOINT",
                         "provider_calls": 0,
                     }
+                if plan.episode_execution:
+                    from cutback.evals.agent_executor import NativeAgentExecutor
+
+                    executor.close()
+                    executor = NativeAgentExecutor()
             record.status, job.status = "RUNNING", "RUNNING"
             job.available_at = None
             job.attempts += 1
@@ -241,37 +243,77 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
 
                 recheck_bindings(session, store, project_id, plan_row, plan)
 
-            def reserve(amount):
+            def authorize_execution(session):
                 require_payloads_enabled()
+                from cutback.server.principals import principal_role
+
+                active_plan = session.get(ExperimentPlanRecord, plan_row.id, populate_existing=True)
+                if not active_plan or principal_role(
+                    session, project_id, active_plan.approved_by or ""
+                ) not in {"admin", "project_admin"}:
+                    raise ValueError("EXECUTION_APPROVING_PRINCIPAL_NO_LONGER_AUTHORIZED")
                 if datetime.now(UTC) >= min(
                     datetime.fromisoformat(dataset["expires_at"]),
                     datetime.fromisoformat(plan_row.specification["expires_at"]),
                 ):
                     raise ValueError("EXPERIMENT_DATA_OR_PLAN_EXPIRED")
                 # Recheck revocation/expiry between calls, not only at run startup.
-                with sessions() as session:
-                    from cutback.server.prompt_experiments import recheck_bindings
+                from cutback.server.prompt_experiments import recheck_bindings
 
-                    recheck_bindings(session, store, project_id, plan_row, plan)
-                    row = session.get(CapturePolicyRecord, provenance["policy_id"])
-                    current_policy = CapturePolicy.model_validate(row.policy) if row else None
-                    if (
-                        not row
-                        or current_policy is None
-                        or not row.enabled
-                        or row.project_id != project_id
-                        or not current_policy.permits(provenance["environment"], plan.workflow)
-                        or any(
-                            provider not in current_policy.allowed_providers
-                            for provider in plan.approved_providers
-                        )
-                        or set(current_policy.never_capture_fields)
-                        - set(policy.never_capture_fields)
-                    ):
-                        raise ValueError("CAPTURE_POLICY_REVOKED_OR_EXPIRED")
-                reserve_request(sessions, run_id, job_id, plan.budget, amount)
+                recheck_bindings(session, store, project_id, plan_row, plan)
+                row = session.get(CapturePolicyRecord, provenance["policy_id"])
+                current_policy = CapturePolicy.model_validate(row.policy) if row else None
+                if (
+                    not row
+                    or current_policy is None
+                    or not row.enabled
+                    or row.project_id != project_id
+                    or not current_policy.permits(provenance["environment"], plan.workflow)
+                    or any(
+                        provider not in current_policy.allowed_providers
+                        for provider in plan.approved_providers
+                    )
+                    or set(current_policy.never_capture_fields) - set(policy.never_capture_fields)
+                ):
+                    raise ValueError("CAPTURE_POLICY_REVOKED_OR_EXPIRED")
+
+            from cutback.server.execution_ledger import ExecutionLedger
+
+            with sessions() as session:
+                environment_id = session.scalar(
+                    select(Environment.id).where(
+                        Environment.project_id == project_id,
+                        Environment.name == provenance["environment"],
+                    )
+                )
+            if environment_id is None:
+                raise ValueError("EXECUTION_ENVIRONMENT_NOT_REGISTERED")
+            call_ledger = ExecutionLedger(
+                sessions,
+                run_id,
+                job_id,
+                plan,
+                environment_id,
+                authorize=authorize_execution,
+            )
 
             from cutback.server.case_evidence import recorder
+
+            def check_authority():
+                with sessions() as session:
+                    from cutback.server.dataset_lineage import lock_lineage
+
+                    lock_lineage(session, project_id)
+                    authorize_execution(session)
+                    active_run = session.get(ExperimentRunRecord, run_id)
+                    active_job = session.get(JobRecord, job_id)
+                    if (
+                        active_run.status != "RUNNING"
+                        or active_job.status != "RUNNING"
+                        or not active_job.lease_until
+                        or active_job.lease_until <= datetime.now(UTC)
+                    ):
+                        raise ValueError("EXECUTION_CANCELLED_OR_LEASE_EXPIRED")
 
             with observation_scope("evaluation", run_id=run_id):
                 results = run(
@@ -282,7 +324,10 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
                     independent_labels=provenance["independent_labels"],
                     representative=provenance["representative"]
                     and provenance["source_type"] != "synthetic_fixture",
-                    reserve=reserve,
+                    reserve_call=call_ledger.reserve,
+                    record_call=call_ledger.record,
+                    episode_lifecycle=call_ledger,
+                    check_authority=check_authority,
                     record_case=recorder(
                         sessions, store, project_id, run_id, provenance["policy_id"]
                     )
@@ -308,11 +353,46 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
             record = session.get(ExperimentRunRecord, run_id, with_for_update=True)
             job = session.get(JobRecord, job_id)
             results = public_config(results, redact_content_hashes=bool(plan.prompt_bindings))
+            if record.call_ledger_version == 1:
+                # The database may have committed a reservation whose acknowledgement
+                # was lost. In-memory callback counts cannot prove durable coverage.
+                results.update(
+                    requests=record.requests_used,
+                    known_cost_requests=record.known_cost_requests,
+                    known_spend_subtotal_usd=str(record.spent_usd),
+                    reserved_usd=str(record.reserved_usd),
+                )
+                results["billing_complete"] = bool(
+                    results.get("billing_complete")
+                    and record.known_cost_requests == record.requests_used
+                )
+                if not results["billing_complete"]:
+                    results["spent_modeled_usd"] = None
+                    for recommendation in results.get("recommendations", []):
+                        recommendation.update(
+                            status="NEEDS_VALIDATION",
+                            quality_gate_passed=False,
+                            statistical_gate_passed=False,
+                            decision_reason="durable_call_accounting_incomplete",
+                        )
+            if (
+                record.status != "RUNNING"
+                or job.status != "RUNNING"
+                or not job.lease_until
+                or job.lease_until <= datetime.now(UTC)
+            ):
+                # A late vendor response may repair call costs, never revive a task.
+                if record.status == "RUNNING":
+                    record.status = "FAILED"
+                    record.results = {"code": "WORKER_LEASE_EXPIRED_BILLING_UNCERTAIN"}
+                job.status = record.status
+                return {"status": record.status, "run_id": str(run_id), "results": record.results}
             if results.get("status") == "COMPLETED":
                 try:
                     from cutback.server.prompt_experiments import recheck_bindings
 
                     recheck_bindings(session, store, project_id, plan_row, plan)
+                    authorize_execution(session)
                 except Exception:
                     results.update(
                         status="FAILED",
@@ -338,7 +418,8 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
             if record.status == "RUNNING":
                 record.status = results["status"]
             job.status = record.status
-            record.spent_usd = Decimal(results.get("known_spend_subtotal_usd", "0"))
+            if record.call_ledger_version is None:
+                record.spent_usd = Decimal(results.get("known_spend_subtotal_usd", "0"))
             if record.status == "COMPLETED":
                 for recommendation in results["recommendations"]:
                     session.add(

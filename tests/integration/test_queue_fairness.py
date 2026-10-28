@@ -59,6 +59,12 @@ def test_missing_provider_does_not_starve_other_tenant_and_can_recheck(
             pass
 
     monkeypatch.setattr("cutback.evals.executors.ConfiguredExecutor", NativeFake)
+
+    def forbidden_native_client(*args, **kwargs):
+        pytest.fail("Queue fairness must use its synthetic executor, never a provider client")
+
+    monkeypatch.setattr("cutback.evals.executors.OpenAIExecutor", forbidden_native_client)
+    monkeypatch.setattr("cutback.evals.executors.LocalExecutor", forbidden_native_client)
     monkeypatch.delenv("CUTBACK_LOCAL_INFERENCE_ENDPOINT", raising=False)
     monkeypatch.setenv("CUTBACK_EXPERIMENT_OPENAI_KEY", "synthetic-no-paid-requests")
     assert run_one(app.state.sessions, store, execution_enabled=True)["status"] == "BLOCKED"

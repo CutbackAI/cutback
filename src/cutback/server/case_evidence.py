@@ -6,8 +6,10 @@ from uuid import UUID
 
 from cryptography.exceptions import InvalidTag
 from fastapi import Depends, HTTPException, Query
+from pydantic import model_validator
 from sqlalchemy import select, true
 
+from cutback.core.episodes import EpisodeScenario
 from cutback.core.models import Identifier, StrictModel
 from cutback.evals.datasets import digest
 from cutback.server.content_policy import policy_content
@@ -32,6 +34,10 @@ def recorder(sessions, store, project_id, run_id, policy_id):
                 if used >= policy.max_samples:
                     raise ValueError("CASE_EVIDENCE_POLICY_QUOTA_EXCEEDED")
                 clean, blob = policy_content(value, policy)
+                episode_unknown = value.get("episode_assessment", {}).get("status") in {
+                    "unknown",
+                    "error",
+                }
                 ref = store.put(project_id, blob, policy.retention_days)
                 session.add(
                     PayloadSample(
@@ -49,24 +55,43 @@ def recorder(sessions, store, project_id, run_id, policy_id):
                             "model_key": clean.get("model_key"),
                             "case_hash": digest(value["case"]["id"]),
                             "stratum_hash": digest(value["case"].get("stratum", "default")),
-                            "sample_failed": not value.get("complete", True)
-                            or value.get("metric_value", 1) < value.get("metric_minimum", 0)
-                            or any(
-                                item["value"] < item["minimum"]
-                                for item in value.get("criteria", [])
-                                if item.get("required", True)
+                            "sample_unknown": episode_unknown,
+                            "sample_failed": not episode_unknown
+                            and (
+                                not value.get("complete", True)
+                                or (
+                                    value.get("metric_value") is not None
+                                    and value["metric_value"] < value.get("metric_minimum", 0)
+                                )
+                                or any(
+                                    item["value"] is not None and item["value"] < item["minimum"]
+                                    for item in value.get("criteria", [])
+                                    if item.get("required", True)
+                                )
                             ),
                             "failed_criteria": [
                                 item["key"]
                                 for item in value.get("criteria", [])
-                                if item["value"] < item["minimum"]
+                                if item["value"] is not None and item["value"] < item["minimum"]
                             ],
                         },
                     )
                 )
         except BaseException:
             if ref:
-                store.delete(project_id, ref)
+                try:
+                    with sessions() as session:
+                        referenced = session.scalar(
+                            select(PayloadSample.id).where(
+                                PayloadSample.project_id == project_id,
+                                PayloadSample.object_ref == ref,
+                            )
+                        )
+                    if not referenced:
+                        store.delete(project_id, ref)
+                except Exception:
+                    # An uncertain COMMIT is not proof that the encrypted object is orphaned.
+                    pass
             raise
 
     return record
@@ -75,9 +100,18 @@ def recorder(sessions, store, project_id, run_id, policy_id):
 class CorrectionInput(StrictModel):
     purpose: Identifier
     case_id: Identifier
-    gold: str | list | dict
+    gold: str | list | dict | None = None
+    episode: EpisodeScenario | None = None
     correction_ref: Identifier
     all_labels_reviewed: bool = False
+
+    @model_validator(mode="after")
+    def exactly_one_correction(self):
+        if (self.gold is None) == (self.episode is None):
+            raise ValueError("ONE_LABEL_OR_EPISODE_CORRECTION_REQUIRED")
+        if self.episode is not None and self.all_labels_reviewed:
+            raise ValueError("EPISODE_REVISION_DOES_NOT_CREATE_INDEPENDENT_GOLD")
+        return self
 
 
 def install_case_evidence(app, sessions, authorize, scope, *, import_dataset):
@@ -212,7 +246,17 @@ def install_case_evidence(app, sessions, authorize, scope, *, import_dataset):
             matched = [case for case in cases if case["id"] == body.case_id]
             if len(matched) != 1:
                 raise HTTPException(404, "CASE_NOT_FOUND_IN_DATASET")
-            matched[0]["gold"] = body.gold
+            if body.episode is not None:
+                if (
+                    not matched[0].get("episode")
+                    or dataset.provenance["source_type"] != "synthetic_fixture"
+                ):
+                    raise HTTPException(409, "SYNTHETIC_EPISODE_SOURCE_REQUIRED")
+                matched[0]["episode"] = body.episode.model_dump(mode="json")
+            else:
+                if matched[0].get("episode"):
+                    raise HTTPException(409, "EPISODE_ASSERTION_REVISION_REQUIRED")
+                matched[0]["gold"] = body.gold
             fields = set(DatasetImport.model_fields) - {"cases"}
             provenance = {key: val for key, val in dataset.provenance.items() if key in fields}
             provenance.update(

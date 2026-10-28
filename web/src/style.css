@@ -723,6 +723,24 @@ fieldset {
   border-left: 3px solid #cdd8cf;
   padding-left: 1rem;
 }
+.episode-content {
+  overflow-wrap: anywhere;
+}
+.episode-turns {
+  padding-left: 1.25rem;
+}
+.episode-turns > li {
+  padding-block: 0.75rem;
+  border-bottom: 1px solid #d8ddd7;
+}
+.episode-content dd {
+  margin: 0.25rem 0 1rem;
+}
+.episode-content blockquote {
+  margin: 0.75rem 0;
+  padding-left: 1rem;
+  border-left: 3px solid #cdd8cf;
+}
 .paired-outputs pre,
 .patch-review pre {
   white-space: pre-wrap;

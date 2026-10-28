@@ -16,6 +16,7 @@ export function SampleGuide({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const selectedByUser = useRef(false);
+  const generation = useRef(0);
   const resultHeading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     if (detail && selectedByUser.current) {
@@ -25,36 +26,44 @@ export function SampleGuide({
   }, [detail]);
   useEffect(() => {
     let active = true;
+    const request = ++generation.current;
     setLoading(true);
     api(`/projects/${demo.project_id}/experiments/${demo.comparison_run_id}`)
       .then((value) => {
-        if (active) setDetail(value);
+        if (active && request === generation.current) setDetail(value);
       })
       .catch(() => {
-        if (active)
+        if (active && request === generation.current)
           setError(
             "Could not load the sample result. Check that the demo is still running.",
           );
       })
       .finally(() => {
-        if (active) setLoading(false);
+        if (active && request === generation.current) setLoading(false);
       });
     return () => {
       active = false;
+      generation.current++;
     };
   }, [api, demo.project_id, demo.comparison_run_id]);
   const inspect = async (id: string) => {
+    const request = ++generation.current;
     selectedByUser.current = true;
+    setDetail(null);
     setLoading(true);
     try {
-      setDetail(await api(`/projects/${demo.project_id}/experiments/${id}`));
-      setError("");
+      const value = await api(`/projects/${demo.project_id}/experiments/${id}`);
+      if (request === generation.current) {
+        setDetail(value);
+        setError("");
+      }
     } catch {
-      setError(
-        "Could not load the sample result. Check that the demo is still running.",
-      );
+      if (request === generation.current)
+        setError(
+          "Could not load the sample result. Check that the demo is still running.",
+        );
     } finally {
-      setLoading(false);
+      if (request === generation.current) setLoading(false);
     }
   };
   return (
@@ -79,6 +88,11 @@ export function SampleGuide({
         <button onClick={() => navigate("Traces")}>
           Investigate a failed session
         </button>
+        {demo.agent_episode_run_id && (
+          <button onClick={() => inspect(demo.agent_episode_run_id)}>
+            Inspect agent and retrieval tasks
+          </button>
+        )}
       </div>
       {error && <p role="alert">{error}</p>}
       {loading && <p role="status">Loading sample evidence…</p>}

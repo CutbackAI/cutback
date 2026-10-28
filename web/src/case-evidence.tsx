@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { type API, type Data, Form, Field, Check, explain } from "./ui";
+import { EpisodeContent } from "./episode-content";
 
 function Correction({
   api,
@@ -17,17 +18,28 @@ function Correction({
   const [created, setCreated] = useState<Data | null>(null);
   return (
     <details className="case-correction">
-      <summary>Review or correct this label</summary>
+      <summary>
+        {row.episode
+          ? "Review or revise this episode contract"
+          : "Review or correct this label"}
+      </summary>
       <p>
         This creates a new dataset version. The original run, outputs and
         approval remain frozen. New experiments require new approval.
       </p>
       <Form
-        title="Corrected dataset version"
+        title={
+          row.episode
+            ? "Revised episode dataset version"
+            : "Corrected dataset version"
+        }
         submit="Create corrected dataset"
         onSubmit={async (data) => {
-          const gold = JSON.parse(String(data.gold));
-          if (gold === null || !["string", "object"].includes(typeof gold))
+          const gold = row.episode ? null : JSON.parse(String(data.gold));
+          if (
+            !row.episode &&
+            (gold === null || !["string", "object"].includes(typeof gold))
+          )
             throw new Error(
               "Supply a JSON string, object or array as the label.",
             );
@@ -38,7 +50,9 @@ function Correction({
               body: JSON.stringify({
                 purpose,
                 case_id: row.id,
-                gold,
+                ...(row.episode
+                  ? { episode: JSON.parse(String(data.episode)) }
+                  : { gold }),
                 correction_ref: data.reference,
                 all_labels_reviewed: !!data.reviewed,
               }),
@@ -49,12 +63,18 @@ function Correction({
         }}
       >
         <label>
-          Correct label as JSON
+          {row.episode
+            ? "Revised episode contract as JSON"
+            : "Correct label as JSON"}
           <textarea
-            name="gold"
+            name={row.episode ? "episode" : "gold"}
             required
             maxLength={64000}
-            defaultValue={JSON.stringify(row.gold ?? "")}
+            defaultValue={JSON.stringify(
+              row.episode ?? row.gold ?? "",
+              null,
+              2,
+            )}
           />
         </label>
         <Field
@@ -64,10 +84,12 @@ function Correction({
           pattern="[A-Za-z0-9_.:/-]+"
           maxLength={200}
         />
-        <Check
-          name="reviewed"
-          label="I reviewed all labels in the new dataset as independent ground truth"
-        />
+        {!row.episode && (
+          <Check
+            name="reviewed"
+            label="I reviewed all labels in the new dataset as independent ground truth"
+          />
+        )}
       </Form>
       {created && (
         <p>
@@ -296,23 +318,41 @@ export function CaseEvidence({
                   {row.model_key ?? "Redacted configuration"} · repeat{" "}
                   {(row.repeat ?? 0) + 1}
                 </h4>
-                <pre tabIndex={0}>
-                  {"output" in row
-                    ? (row.output ?? "Incomplete response")
-                    : "Output not retained under policy"}
-                </pre>
+                {row.output?.schema_version ===
+                "cutback.episode-observation.v1" ? (
+                  <EpisodeContent
+                    value={row.output}
+                    assessment={row.episode_assessment}
+                  />
+                ) : (
+                  <pre tabIndex={0}>
+                    {"output" in row
+                      ? row.output == null
+                        ? "Incomplete response"
+                        : typeof row.output === "string"
+                          ? row.output
+                          : JSON.stringify(row.output, null, 2)
+                      : "Output not retained under policy"}
+                  </pre>
+                )}
                 {row.criteria?.map((criterion: Data) => (
                   <p
                     className={
-                      criterion.value < criterion.minimum
-                        ? "criterion-failed"
-                        : "criterion-passed"
+                      criterion.value == null
+                        ? ""
+                        : criterion.value < criterion.minimum
+                          ? "criterion-failed"
+                          : "criterion-passed"
                     }
                     key={criterion.key}
                   >
                     {criterion.key}:{" "}
-                    {criterion.value >= criterion.minimum ? "Pass" : "Fail"} (
-                    {criterion.value}; minimum {criterion.minimum})
+                    {criterion.value == null
+                      ? "Unknown"
+                      : criterion.value >= criterion.minimum
+                        ? "Pass"
+                        : "Fail"}{" "}
+                    ({criterion.value}; minimum {criterion.minimum})
                   </p>
                 ))}
               </section>

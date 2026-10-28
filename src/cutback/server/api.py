@@ -539,6 +539,9 @@ def create_app(
     from cutback.server.evaluation_api import install_evaluation
 
     import_dataset = install_evaluation(app, sessions, authorize, scope)
+    from cutback.server.execution_api import install_execution
+
+    install_execution(app, sessions, authorize, scope)
     from cutback.server.import_api import install_imports
 
     install_imports(app, sessions, authorize, scope)

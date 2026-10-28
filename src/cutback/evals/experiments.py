@@ -8,8 +8,10 @@ from decimal import Decimal
 from typing import Annotated, Literal, Protocol
 from uuid import UUID, uuid4
 
-from pydantic import Field, JsonValue, model_serializer, model_validator
+from pydantic import Field, JsonValue, PrivateAttr, model_serializer, model_validator
 
+from cutback.core.agent_turns import AgentTurnFrame
+from cutback.core.episodes import EpisodeAssistant
 from cutback.core.models import Identifier, StrictModel
 from cutback.core.observation import observation_scope
 from cutback.core.request_profiles import RequestContract, SourceBinding
@@ -38,9 +40,43 @@ class ModelSpec(StrictModel):
     routes: list["RouteSpec"] = Field(default_factory=list, max_length=8)
     prompt_cache: Literal["anthropic-5m", "anthropic-1h"] | None = None
     request_contract: RequestContract | None = None
+    _agent_turn: AgentTurnFrame | None = PrivateAttr(default=None)
+
+    @property
+    def agent_turn(self) -> AgentTurnFrame | None:
+        return self._agent_turn
+
+    def with_agent_turn(self, frame: AgentTurnFrame) -> "ModelSpec":
+        if (
+            self.request_contract
+            or self.provider not in {"openai", "anthropic"}
+            or self.prompt_cache is not None
+            or (self.instruction and not frame.system.startswith(self.instruction + "\n\n"))
+        ):
+            raise ValueError("AGENT_TURN_REQUIRES_SEPARATE_QUALIFIED_NATIVE_EXECUTION")
+        if (self.provider == "anthropic") != (frame.surface == "messages.create"):
+            raise ValueError("AGENT_TURN_PROVIDER_SURFACE_MISMATCH")
+        qualified_native_model(self)
+        value = self.model_copy(deep=True)
+        value._agent_turn = frame.model_copy(deep=True)
+        return value
 
     @model_validator(mode="after")
     def bound_prompt_instructions(self):
+        if self.agent_turn is not None:
+            if (
+                self.request_contract
+                or self.provider not in {"openai", "anthropic"}
+                or self.prompt_cache is not None
+                or (
+                    self.instruction
+                    and not self.agent_turn.system.startswith(self.instruction + "\n\n")
+                )
+            ):
+                raise ValueError("AGENT_TURN_REQUIRES_SEPARATE_QUALIFIED_NATIVE_EXECUTION")
+            if (self.provider == "anthropic") != (self.agent_turn.surface == "messages.create"):
+                raise ValueError("AGENT_TURN_PROVIDER_SURFACE_MISMATCH")
+            qualified_native_model(self)
         if (
             self.request_contract
             and self.request_contract.version == "native-prompt-v1"
@@ -133,6 +169,14 @@ class PromptModelBinding(StrictModel):
         return self
 
 
+class EpisodeExecutionSpec(StrictModel):
+    version: Literal["native-fixture-episode-v1"] = "native-fixture-episode-v1"
+    openai_surface: Literal["responses.create", "chat.completions.create"] = "responses.create"
+    max_turns: int = Field(default=8, ge=1, le=32)
+    max_tool_calls: int = Field(default=16, ge=0, le=100)
+    transport: Literal["native_provider", "scripted_test_only"] = "native_provider"
+
+
 class ExperimentPlan(StrictModel):
     schema_version: Literal["1.0"] = "1.0"
     name: str | None = Field(
@@ -166,7 +210,8 @@ class ExperimentPlan(StrictModel):
     price_sha256: Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")] = Field(
         default_factory=lambda: Catalog().sha256
     )
-    evaluator_version: Literal["deterministic-v3"] = "deterministic-v3"
+    evaluator_version: Literal["deterministic-v3", "deterministic-v4"] = "deterministic-v3"
+    episode_execution: EpisodeExecutionSpec | None = None
     source_binding: SourceBinding | None = None
     prompt_bindings: list[PromptModelBinding] | None = Field(
         default=None, min_length=1, max_length=6
@@ -177,10 +222,35 @@ class ExperimentPlan(StrictModel):
         result = handler(self)
         if self.prompt_bindings is None:
             result.pop("prompt_bindings", None)
+        if self.episode_execution is None:
+            result.pop("episode_execution", None)
         return result
 
     @model_validator(mode="after")
     def eligibility(self):
+        if self.episode_execution:
+            if (
+                self.evaluator_version != "deterministic-v4"
+                or self.metric.kind != "episode_contract"
+                or self.criteria
+                or self.judge
+                or self.pilot_samples
+                or self.source_binding
+                or self.prompt_bindings
+            ):
+                raise ValueError("EPISODE_MODE_REQUIRES_SEPARATE_V4_CONTRACT")
+            if any(
+                m.provider not in {"openai", "anthropic"} or m.request_contract or m.prompt_cache
+                for m in [self.baseline, *self.candidates]
+            ):
+                raise ValueError("EPISODE_NATIVE_TEXT_FUNCTION_PROFILE_REQUIRED")
+        elif self.evaluator_version != "deterministic-v3" or self.metric.kind == "episode_contract":
+            raise ValueError("EPISODE_METRIC_REQUIRES_EXPLICIT_EPISODE_EXECUTION")
+        if any(
+            model.agent_turn is not None
+            for model in [self.baseline, *self.candidates, *([self.judge] if self.judge else [])]
+        ):
+            raise ValueError("PER_TURN_CONTENT_CANNOT_BE_PERSISTED_IN_EXPERIMENT_PLAN")
         if self.source_binding:
             from cutback.core.request_profiles import fingerprint
 
@@ -311,6 +381,12 @@ def plan_summary(plan: ExperimentPlan, dataset: dict) -> dict:
         raise ValueError("PRICE_CONTRACT_CHANGED_REAPPROVAL_REQUIRED")
     if plan.dataset_hash != dataset["immutable_hash"]:
         raise ValueError("DATASET_HASH_MISMATCH")
+    if not plan.episode_execution and any(
+        item.get("episode_max_turns") is not None or item.get("case", {}).get("episode")
+        for item in dataset["items"]
+        if item["split"] == plan.split
+    ):
+        raise ValueError("EPISODE_DATASET_REQUIRES_EXPLICIT_EPISODE_MODE")
     n = sum(item["split"] == plan.split for item in dataset["items"])
     if plan.sample_limit:
         n = min(n, plan.sample_limit)
@@ -339,6 +415,10 @@ def plan_summary(plan: ExperimentPlan, dataset: dict) -> dict:
         )
     )
     cost += len(pilot) * sum((upper_cost(model) for model in plan.candidates), Decimal(0))
+    if plan.episode_execution:
+        from cutback.evals.episode_runner import episode_forecast
+
+        requests, cost = episode_forecast(plan, dataset)
     return {
         "pilot_validation_samples": len(pilot),
         "pilot_requests_upper": pilot_requests,
@@ -369,6 +449,8 @@ class Execution:
     output_tokens: int | None = None
     complete: bool = True
     actual_model: str | None = None
+    agent_turn: EpisodeAssistant | None = None
+    agent_citations: tuple = ()
 
 
 class Executor(Protocol):
@@ -376,17 +458,48 @@ class Executor(Protocol):
 
 
 class BudgetLedger:
-    def __init__(self, budget: Budget, reserve: Callable | None = None, price_sha256=None):
+    def __init__(
+        self,
+        budget: Budget,
+        reserve: Callable | None = None,
+        price_sha256=None,
+        *,
+        reserve_call: Callable | None = None,
+        record_call: Callable | None = None,
+    ):
+        if reserve is not None and reserve_call is not None:
+            raise ValueError("CHOOSE_ONE_ATOMIC_RESERVATION_INTERFACE")
+        if (reserve_call is None) != (record_call is None):
+            raise ValueError("CALL_RESERVATION_AND_RESULT_CALLBACKS_REQUIRED_TOGETHER")
         self.budget = budget
         self.reserved = Decimal(0)
         self.spent = Decimal(0)
         self.requests = 0
+        self.known_cost_requests = 0
+        self.receipt_uncertain = False
+        self.usage_invalid = False
         self.started = time.monotonic()
         self.persist_reservation = reserve
+        self.reserve_call = reserve_call
+        self.record_call = record_call
         self.price_sha256 = price_sha256 or Catalog().sha256
 
     def remaining_seconds(self):
         return self.budget.max_wall_seconds - (time.monotonic() - self.started)
+
+    @property
+    def billing_complete(self):
+        return self.known_cost_requests == self.requests and not (
+            self.receipt_uncertain or self.usage_invalid
+        )
+
+    def _record(self, call_id, result, status):
+        if self.record_call and call_id is not None:
+            try:
+                self.record_call(call_id, result, status)
+            except Exception:
+                self.receipt_uncertain = True
+                raise ValueError("CALL_RECEIPT_WRITE_UNCERTAIN_NO_REQUEST_RETRY") from None
 
     def call(
         self, executor: Executor, model: ModelSpec, text: str, *, traffic_kind="evaluation"
@@ -396,7 +509,12 @@ class BudgetLedger:
         # UTF-8 bytes plus generous message framing bounds supported text input tokens.
         # No tool schemas, images, arbitrary endpoints or hidden retries are accepted.
         target = route_target(model, text) if model.provider == "router" else model
-        rendered = target.request_contract.render(text) if target.request_contract else text
+        if target.agent_turn is not None:
+            if not getattr(executor, "supports_agent_turns", False):
+                raise ValueError("AGENT_TURN_REQUIRES_QUALIFIED_EXECUTOR")
+            rendered = target.agent_turn.native_payload()
+        else:
+            rendered = target.request_contract.render(text) if target.request_contract else text
         payload = (
             json.dumps(rendered, ensure_ascii=False) if not isinstance(rendered, str) else rendered
         )
@@ -412,15 +530,38 @@ class BudgetLedger:
             or self.reserved + bound > self.budget.max_usd
         ):
             raise ValueError("BUDGET_EXHAUSTED")
-        if self.persist_reservation:
+        call_id = None
+        if self.reserve_call:
+            call_id = self.reserve_call(bound, target, traffic_kind)
+            if not isinstance(call_id, UUID):
+                raise ValueError("DURABLE_CALL_RESERVATION_ID_REQUIRED")
+        elif self.persist_reservation:
             self.persist_reservation(bound)  # Durable commit before any network I/O.
         self.requests += 1
         self.reserved += bound  # Reservations never refunded after errors/unknown billing.
-        with observation_scope(traffic_kind):
-            result = executor.execute(model, text, min(30, self.remaining_seconds()))
-        if result.cost_usd is None or result.cost_usd < 0 or result.cost_usd > bound:
+        remaining = self.remaining_seconds()
+        if remaining <= 0:
+            self.known_cost_requests += 1
+            self._record(call_id, None, "not_started")
+            raise ValueError("BUDGET_WALL_EXPIRED_BEFORE_REQUEST")
+        try:
+            with observation_scope(traffic_kind):
+                result = executor.execute(model, text, min(30, remaining))
+        except Exception:
+            self._record(call_id, None, "uncertain")
+            raise
+        cost = result.cost_usd
+        if not isinstance(cost, Decimal) or not cost.is_finite() or cost < 0:
+            self.usage_invalid = True
+            self._record(call_id, result, "usage_invalid")
             raise ValueError("ACTUAL_USAGE_OUTSIDE_MODELED_BUDGET_BOUND")
-        self.spent += result.cost_usd
+        self.spent += cost
+        self.known_cost_requests += 1
+        if cost > bound:
+            self.usage_invalid = True
+            self._record(call_id, result, "usage_invalid")
+            raise ValueError("ACTUAL_USAGE_OUTSIDE_MODELED_BUDGET_BOUND")
+        self._record(call_id, result, "completed")
         return result
 
 
@@ -433,18 +574,42 @@ def run(
     independent_labels=False,
     representative=False,
     reserve=None,
+    reserve_call=None,
+    record_call=None,
     record_case=None,
+    episode_lifecycle=None,
+    check_authority=None,
 ) -> dict:
     summary = plan_summary(plan, dataset)
     if approval_hash != summary["plan_hash"]:
         raise ValueError("NO_API_BUDGET: frozen plan approval required")
     if not summary["fits_budget"]:
         raise ValueError("NO_DATA_OR_BUDGET_TOO_SMALL")
+    if plan.episode_execution:
+        from cutback.evals.episode_runner import run_episodes
+
+        return run_episodes(
+            plan,
+            dataset,
+            executor,
+            reserve_call=reserve_call,
+            record_call=record_call,
+            record_case=record_case,
+            reserve=reserve,
+            episode_lifecycle=episode_lifecycle,
+            check_authority=check_authority,
+        )
     cases = [item["case"] for item in dataset["items"] if item["split"] == plan.split]
     groups = [item["group_hash"] for item in dataset["items"] if item["split"] == plan.split]
     if plan.sample_limit:
         cases, groups = cases[: plan.sample_limit], groups[: plan.sample_limit]
-    ledger = BudgetLedger(plan.budget, reserve, plan.price_sha256)
+    ledger = BudgetLedger(
+        plan.budget,
+        reserve,
+        plan.price_sha256,
+        reserve_call=reserve_call,
+        record_call=record_call,
+    )
     model_results = []
     outputs: dict[str, list[list[str | None]]] = {}
     models = [plan.baseline, *plan.candidates]

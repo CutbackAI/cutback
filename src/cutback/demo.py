@@ -334,6 +334,9 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
             )
             if not observer.flush(5):
                 raise ValueError("SAMPLE_OBSERVATION_FLUSH_FAILED")
+            from cutback.demo_agents import seed_agent_episodes
+
+            agent_sample = seed_agent_episodes(app, control, project["id"])
             manifest = {
                 "available": True,
                 "title": "Support-desk triage",
@@ -351,6 +354,7 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
                 "source_diff": patch,
                 "paid_provider_calls": 0,
                 "execution_samples": execution_samples,
+                "agent_episode_run_id": agent_sample["run_id"],
             }
             workspace.mkdir(parents=True, exist_ok=True)
             (workspace / "sample-report.json").write_text(

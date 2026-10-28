@@ -4,6 +4,8 @@ Find where an AI application spends money. Test cheaper alternatives against its
 
 Cutback is an Apache-2.0 Python tool with an offline scanner and a self-hosted collector, PostgreSQL worker and dashboard. **Pre-alpha: synthetic tests demonstrate the workflow; production behavior and real customer savings are not validated.**
 
+Source checkouts also include [agent and RAG evaluation](https://github.com/CutbackAI/cutback/blob/main/docs/agent-evaluation.md): native tool-call conversations, declared final-state checks, retrieval/citation evidence and individual durable request receipts. Try the [independent applications](https://github.com/CutbackAI/cutback/blob/main/examples/agent-evaluation/README.md), then inspect them in the guided demo. PyPI dev5 remains the earlier package.
+
 ## Start with a working application
 
 The support-desk sample routes tickets by category and priority. Two workflows, ticket triage and escalation, share one native SDK call. It shows why a cheaper configuration that mishandles urgent tickets must be rejected.

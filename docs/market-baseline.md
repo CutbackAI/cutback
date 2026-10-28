@@ -123,16 +123,16 @@ Evidence: [Ragas](https://docs.ragas.io/en/latest/concepts/metrics/available_met
 
 | ID | Acceptance requirement | Cutback state | Current anchor / remaining work |
 |---|---|---|---|
-| A01 | Represent conversation turns, tool calls/results, retrieval context and final outcome separately | Missing | Native single-call text/structured replay cannot represent the full execution |
-| A02 | Score retrieval precision/recall/ranking with declared relevance judgments | Partial | `evals/metrics_extra.py` has recall/nDCG/rank agreement on declared IDs; retrieval precision and a connected RAG execution/review workflow remain missing |
-| A03 | Score groundedness/citations separately from answer correctness | Partial | `span_support` checks literal quotations against input at technical tier 1; semantic groundedness/citation correctness are not implemented |
-| A04 | Check required/forbidden tools, arguments, ordering and duplicate side effects | Missing | Requires trajectory contract and safe tool-event representation |
-| A05 | Permit multiple valid tool paths while asserting final environment state | Missing | String/sequence equality cannot prove final task success |
-| A06 | Test multi-turn memory, constraints, clarification, handoff and task completion | Missing | No native conversation executor/simulator |
-| A07 | Handle maximum steps, loops, timeout, cancellation and uncertain side effects safely | Partial | Billable experiment safety exists; general agent/tool executor absent |
-| A08 | Replay declared synthetic/read-only tool fixtures without running arbitrary production tools | Missing | Must add explicit isolated adapters; scanner remains parse-only |
-| A09 | Generate task-aware scenarios from permitted data with human-reviewable coverage | Missing | Synthetic sample apps exist; automated scenario/test generation does not |
-| A10 | Evaluate security and benign task utility in the same scenario | Missing | Product security tests do not equal an application adversarial-evaluation product |
+| A01 | Represent conversation turns, tool calls/results, retrieval context and final outcome separately | Bounded | Typed events, native sync text/function turns and separate outcomes in `core/episodes.py`, `core/agent_turns.py`, `evals/episode_runner.py`; [scope](agent-evaluation.md). |
+| A02 | Score retrieval precision/recall/ranking with declared relevance judgments | Bounded | Connected synthetic RAG execution/review with declared precision, recall and nDCG in `evals/episode_metrics.py`; unjudged documents preserve unknown coverage. General corpus/production retrieval adapters remain unqualified. |
+| A03 | Score groundedness/citations separately from answer correctness | Partial | Literal citations are checked against actually retrieved fixture text separately from exact answer references. Semantic groundedness and semantic citation correctness remain unimplemented in this episode workflow. |
+| A04 | Check required/forbidden tools, arguments, ordering and duplicate side effects | Bounded | Declared synthetic tools: required/forbidden actions, exact arguments, paths and duplicate effects are replay-checked; atomic fixture updates and native loop/denial tests. Real application tools are not executed. |
+| A05 | Permit multiple valid tool paths while asserting final environment state | Bounded | Alternative permitted tool paths plus separately asserted final synthetic state. Does not verify a real external environment. |
+| A06 | Test multi-turn memory, constraints, clarification, handoff and task completion | Partial | Native multi-turn ordering, scripted follow-ups and exact per-user-turn constraints are implemented. Generative user/persona simulation and real handoff integrations remain missing. |
+| A07 | Handle maximum steps, loops, timeout, cancellation and uncertain side effects safely | Bounded | Per-turn PostgreSQL reservations, turn/tool/request/USD caps, cancellation/revocation checks, expired-call uncertainty and late-cost handling. Already dispatched vendor work cannot be recalled by a local timeout. |
+| A08 | Replay declared synthetic/read-only tool fixtures without running arbitrary production tools | Bounded | Exact declared read-only/state fixture runner performs no network, files, shell or application execution; scanner remains parse-only. Real tool sandboxes need separate qualification. |
+| A09 | Generate task-aware scenarios from permitted data with human-reviewable coverage | Partial | Versioned offline expansion of owned synthetic episode cases with anchors, follow-up/injection variants, coverage mapping and review requirements. Generated variants share source lineage; generative/real-data scenario building remains missing. |
+| A10 | Evaluate security and benign task utility in the same scenario | Partial | Declared utility assertions run with unauthorized-tool and retrieved-instruction injections in the same synthetic workflow. External evaluation import is qualified separately; this is not a general red-team or guardrail integration. |
 
 ## 8. Optimization and change automation — core product outcome
 

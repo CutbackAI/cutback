@@ -25,6 +25,7 @@ class MetricSpec(StrictModel):
         "ndcg",
         "rank_agreement",
         "numeric_match",
+        "episode_contract",
     ]
     minimum: float = Field(ge=0, le=1)
     max_regression: float = Field(default=0, ge=0, le=1)

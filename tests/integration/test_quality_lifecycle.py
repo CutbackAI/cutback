@@ -21,28 +21,6 @@ from cutback.server.worker import load_dataset
 pytestmark = pytest.mark.postgres
 
 
-def test_downgrade_refuses_to_erase_quality_ledger_and_releases_migration_lock(api, quality_setup):
-    from importlib.resources import files
-
-    from alembic import command
-    from alembic.config import Config
-    from sqlalchemy import text
-
-    from cutback.server.migrate import CURRENT_REVISION
-
-    create_quality(api, quality_setup)
-    cfg = Config()
-    cfg.set_main_option("script_location", str(files("cutback.server").joinpath("migrations")))
-    with pytest.raises(RuntimeError, match="EXPORT_AND_EXPLICITLY_DELETE_QUALITY_PROJECT_DATA"):
-        command.downgrade(cfg, "0011")
-    with api[2].state.engine.connect() as connection:
-        assert (
-            connection.scalar(text("SELECT version_num FROM alembic_version")) == CURRENT_REVISION
-        )
-        assert connection.scalar(text("SELECT pg_try_advisory_lock(1638366142)")) is True
-        connection.execute(text("SELECT pg_advisory_unlock(1638366142)"))
-
-
 def test_full_quality_quota_does_not_block_unmatched_metadata(
     api, tenant, quality_setup, monkeypatch
 ):

@@ -1,0 +1,115 @@
+{
+  "contract": "cutback.agent-acceptance.v1",
+  "date": "2026-10-28",
+  "scope": "bounded_native_function_conversations_synthetic_state_retrieval_and_per_call_accounting",
+  "publication": "locally_accepted_hosted_gates_pending_no_new_pypi_upload",
+  "migration": "0013",
+  "released_migrations_preserved_through": "0012",
+  "native_profiles": {
+    "openai": "2.29.0",
+    "anthropic": "2.3.0",
+    "surfaces": [
+      "responses.create",
+      "chat.completions.create",
+      "messages.create"
+    ],
+    "execution": "sync_nonstreaming_text_one_function_call_per_turn"
+  },
+  "local_broad_regression": {
+    "passed": 524,
+    "skipped": 5,
+    "seconds": 354.32,
+    "postgres": true,
+    "browser_axe_mobile": true,
+    "cpu_training": true,
+    "owned_docker_lifecycle": true,
+    "subsequent_metadata_and_ui_followups_reported_separately": true
+  },
+  "final_duration_followup": {
+    "passed": 10,
+    "scope": "native_response_samples_and_unknown_coverage_not_task_duration"
+  },
+  "installed_wheel": {
+    "passed": 75,
+    "seconds": 119.3,
+    "origin_verified": true,
+    "published": false
+  },
+  "final_readable_ui_followup": {
+    "passed": 2,
+    "seconds": 77.45,
+    "authenticated_real_postgres": true,
+    "delayed_initial_response_guard": true,
+    "mobile_axe": true
+  },
+  "separate_checks": {
+    "legacy_sdk_scanner": 21,
+    "native_node": 9,
+    "typescript": true,
+    "frontend_unit": 7,
+    "mypy_modules": 146,
+    "ruff_format": true,
+    "lock": true,
+    "generated_api": true,
+    "react_build": true,
+    "core_only_independent_consumer": true
+  },
+  "audit": {
+    "python_runtime_known_vulnerabilities": 0,
+    "dashboard_known_vulnerabilities": 0,
+    "node_sdk_known_vulnerabilities": 0
+  },
+  "prior_incomplete_runs": [
+    {
+      "passed": 513,
+      "failed": 2,
+      "skipped": 5,
+      "seconds": 398.39,
+      "cause": "migration_test_database_isolation_and_outdated_executor_test_injection",
+      "resolution": "isolated_migration_database_and_explicit_executor_selection_with_forbidden_native_client_guard",
+      "possible_native_http": "invalid_synthetic_key_only_no_real_key_or_customer_data"
+    },
+    {
+      "passed": 522,
+      "failed": 2,
+      "skipped": 5,
+      "seconds": 371.02,
+      "cause": "scripted_test_job_left_eligible_in_shared_queue",
+      "resolution": "cancel_test_work_and_permanently_block_scripted_only_jobs_in_ordinary_workers"
+    },
+    {
+      "passed": 74,
+      "failed": 1,
+      "seconds": 116.37,
+      "cause": "stale_demo_selection_race",
+      "resolution": "clear_selection_and_reject_stale_responses_with_delayed_real_api_browser_test"
+    }
+  ],
+  "privacy": {
+    "metadata_default": true,
+    "raw_cases_encrypted_opt_in_current_purpose": true,
+    "sdk_payload_logs_suppressed_within_owned_requests": true,
+    "private_application_material_published": false
+  },
+  "limits": [
+    "declared_synthetic_state_not_real_application_tools",
+    "literal_not_semantic_groundedness",
+    "scripted_not_generative_user_simulation",
+    "specialty_voice_multimodal_browser_and_cloud_adapters_unqualified",
+    "release6_and_release7_not_complete"
+  ],
+  "paid_vendor_calls_authorized": false,
+  "production_deployment": false,
+  "pypi": "unchanged_0.1.0.dev5",
+  "public_source_pr": null,
+  "hosted_checks": "pending",
+  "publication_archive": {
+    "backend_entries_identical_to_installed_qualified_wheel": 148,
+    "source_files_checked": 503,
+    "archive_members_checked": 659,
+    "private_boundary_findings": 0,
+    "utf8_text_validation": true,
+    "release_identity_and_twine": true,
+    "not_uploaded_to_pypi": true
+  }
+}

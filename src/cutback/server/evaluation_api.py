@@ -128,12 +128,21 @@ def active_policy(session, project, policy_id):
 
 
 def dataset_manifest(session, dataset):
-    rows = session.scalars(
-        select(DatasetItem).where(DatasetItem.dataset_id == dataset.id).order_by(DatasetItem.id)
+    rows = session.execute(
+        select(DatasetItem, PayloadSample)
+        .join(PayloadSample, DatasetItem.payload_id == PayloadSample.id)
+        .where(DatasetItem.dataset_id == dataset.id)
+        .order_by(PayloadSample.metadata_safe["ordinal"].as_integer(), DatasetItem.id)
     ).all()
     return {
         "immutable_hash": dataset.immutable_hash,
-        "items": [{"split": row.split} for row in rows],
+        "items": [
+            {
+                "split": row.split,
+                "episode_max_turns": payload.metadata_safe.get("episode_max_turns"),
+            }
+            for row, payload in rows
+        ],
     }
 
 
@@ -217,7 +226,15 @@ def persist_dataset(session, store, project_id, body, actor, stored, *, provenan
             expires_at=min(
                 policy.expires_at, datetime.now(UTC) + timedelta(days=policy.retention_days)
             ),
-            metadata_safe={"redaction": policy.redaction_version, "ordinal": ordinal},
+            metadata_safe={
+                "redaction": policy.redaction_version,
+                "ordinal": ordinal,
+                **(
+                    {"episode_max_turns": item["case"]["episode"]["max_turns"]}
+                    if item["case"].get("episode")
+                    else {}
+                ),
+            },
         )
         session.add(payload)
         session.flush()
@@ -608,8 +625,17 @@ def install_evaluation(app, sessions, authorize, scope):
                 raise HTTPException(403, "DATASET_OR_VENDOR_SCOPE_DENIED")
             try:
                 summary = plan_summary(body.specification, dataset_manifest(session, dataset))
-            except ValueError:
-                raise HTTPException(422, "DATASET_HASH_MISMATCH") from None
+            except ValueError as exc:
+                code = str(exc)
+                raise HTTPException(
+                    422,
+                    code
+                    if len(code) < 120
+                    and code.isascii()
+                    and code.isupper()
+                    and code.replace("_", "").isalpha()
+                    else "INVALID_DATASET_PLAN_CONTRACT",
+                ) from None
             if (
                 session.scalar(
                     select(func.count())

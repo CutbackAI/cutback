@@ -626,6 +626,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/experiments/{run_id}/calls": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Calls */
+        get: operations["calls_v1_projects__project_id__experiments__run_id__calls_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/experiments/{run_id}/episodes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Episodes */
+        get: operations["episodes_v1_projects__project_id__experiments__run_id__episodes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/imports/preview": {
         parameters: {
             query?: never;
@@ -2590,6 +2624,78 @@ export interface components {
              */
             immutable_or_safely_invalidated: true;
         };
+        /** CallPage */
+        CallPage: {
+            /** Items */
+            items: components["schemas"]["CallReceipt"][];
+            /** Next After */
+            next_after: number | null;
+            /** Requests Reserved */
+            requests_reserved: number;
+            /** Known Cost Requests */
+            known_cost_requests: number | null;
+            /** Known Cost Subtotal Usd */
+            known_cost_subtotal_usd: string;
+            /** Cost Coverage */
+            cost_coverage: number | null;
+            /** Retained Receipts */
+            retained_receipts: number;
+            /** Ledger Version */
+            ledger_version: number | null;
+            /**
+             * Coverage Scope
+             * @default cumulative_run_totals_receipts_may_be_pruned
+             */
+            coverage_scope: string;
+        };
+        /** CallReceipt */
+        CallReceipt: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            /** Episode Id */
+            episode_id: string | null;
+            /** Sequence */
+            sequence: number;
+            /** Model Key */
+            model_key: string;
+            /** Provider */
+            provider: string;
+            /** Model */
+            model: string;
+            /** Purpose */
+            purpose: string;
+            /** State */
+            state: string;
+            /** Price Sha256 */
+            price_sha256: string;
+            /** Reserved Usd */
+            reserved_usd: string;
+            /** Known Spent Usd */
+            known_spent_usd: string | null;
+            /** Input Tokens */
+            input_tokens: number | null;
+            /** Output Tokens */
+            output_tokens: number | null;
+            /** Duration Ms */
+            duration_ms: number | null;
+            /** Complete */
+            complete: boolean | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Completed At */
+            completed_at: string | null;
+        };
         /** CallSite */
         CallSite: {
             /**
@@ -2771,6 +2877,7 @@ export interface components {
              * @default default
              */
             stratum: string;
+            episode?: components["schemas"]["EpisodeScenario"] | null;
         };
         /** CheckoutInput */
         CheckoutInput: {
@@ -2787,6 +2894,13 @@ export interface components {
             /** Purpose */
             purpose: string;
         };
+        /** ConversationCheck */
+        ConversationCheck: {
+            /** User Turn */
+            user_turn: number;
+            /** Accepted Answers */
+            accepted_answers: string[];
+        };
         /** CorrectionInput */
         CorrectionInput: {
             /** Purpose */
@@ -2794,9 +2908,10 @@ export interface components {
             /** Case Id */
             case_id: string;
             /** Gold */
-            gold: string | unknown[] | {
+            gold?: string | unknown[] | {
                 [key: string]: unknown;
-            };
+            } | null;
+            episode?: components["schemas"]["EpisodeScenario"] | null;
             /** Correction Ref */
             correction_ref: string;
             /**
@@ -2910,6 +3025,177 @@ export interface components {
         EnvironmentInput: {
             /** Name */
             name: string;
+        };
+        /** EpisodeAssertions */
+        EpisodeAssertions: {
+            /** Required Tools */
+            required_tools?: string[];
+            /** Forbidden Tools */
+            forbidden_tools?: string[];
+            /** Allowed Paths */
+            allowed_paths?: string[][];
+            /** Arguments */
+            arguments?: components["schemas"]["ToolArgumentCheck"][];
+            /** Final State */
+            final_state?: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Accepted Answers */
+            accepted_answers?: string[];
+            /**
+             * Forbid Duplicate Effects
+             * @default true
+             */
+            forbid_duplicate_effects: boolean;
+            /** Conversation */
+            conversation?: components["schemas"]["ConversationCheck"][];
+            /**
+             * Accepted Outcomes
+             * @default [
+             *       "completed"
+             *     ]
+             */
+            accepted_outcomes: ("completed" | "refused")[];
+            /** Min Retrieval Precision */
+            min_retrieval_precision?: number | string | null;
+            /** Min Retrieval Recall */
+            min_retrieval_recall?: number | string | null;
+            /** Min Ndcg */
+            min_ndcg?: number | string | null;
+            /** Min Citation Support */
+            min_citation_support?: number | string | null;
+        };
+        /** EpisodeExecutionSpec */
+        EpisodeExecutionSpec: {
+            /**
+             * Version
+             * @default native-fixture-episode-v1
+             * @constant
+             */
+            version: "native-fixture-episode-v1";
+            /**
+             * Openai Surface
+             * @default responses.create
+             * @enum {string}
+             */
+            openai_surface: "responses.create" | "chat.completions.create";
+            /**
+             * Max Turns
+             * @default 8
+             */
+            max_turns: number;
+            /**
+             * Max Tool Calls
+             * @default 16
+             */
+            max_tool_calls: number;
+            /**
+             * Transport
+             * @default native_provider
+             * @enum {string}
+             */
+            transport: "native_provider" | "scripted_test_only";
+        };
+        /** EpisodePage */
+        EpisodePage: {
+            /** Items */
+            items: components["schemas"]["EpisodeReceipt"][];
+            /** Next After */
+            next_after: string | null;
+            /** Retained Episodes */
+            retained_episodes: number;
+            /**
+             * Evidence Scope
+             * @default declared_synthetic_contract_not_production_state
+             */
+            evidence_scope: string;
+        };
+        /** EpisodeReceipt */
+        EpisodeReceipt: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            /** Model Key */
+            model_key: string;
+            /** Repeat Index */
+            repeat_index: number;
+            /** Execution Version */
+            execution_version: string;
+            /** Max Requests */
+            max_requests: number;
+            /** State */
+            state: string;
+            /** Outcome */
+            outcome: string | null;
+            /** Requests Used */
+            requests_used: number;
+            /** Known Cost Requests */
+            known_cost_requests: number;
+            /** Reserved Usd */
+            reserved_usd: string;
+            /** Known Spent Usd */
+            known_spent_usd: string;
+            /** Summary */
+            summary: {
+                [key: string]: unknown;
+            };
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Completed At */
+            completed_at: string | null;
+        };
+        /** EpisodeScenario */
+        EpisodeScenario: {
+            /**
+             * Schema Version
+             * @default cutback.episode.v1
+             * @constant
+             */
+            schema_version: "cutback.episode.v1";
+            /**
+             * Execution
+             * @default synthetic_fixtures_only
+             * @constant
+             */
+            execution: "synthetic_fixtures_only";
+            /**
+             * System
+             * @default
+             */
+            system: string;
+            /** User Followups */
+            user_followups?: string[];
+            /** Initial State */
+            initial_state?: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Tools */
+            tools?: components["schemas"]["FixtureTool"][];
+            assertions?: components["schemas"]["EpisodeAssertions"];
+            /** Relevance */
+            relevance?: {
+                [key: string]: number;
+            };
+            /**
+             * Max Turns
+             * @default 8
+             */
+            max_turns: number;
+            /**
+             * Max Tool Calls
+             * @default 16
+             */
+            max_tool_calls: number;
         };
         /** EvaluationBatch */
         EvaluationBatch: {
@@ -3070,12 +3356,38 @@ export interface components {
             /**
              * Evaluator Version
              * @default deterministic-v3
-             * @constant
+             * @enum {string}
              */
-            evaluator_version: "deterministic-v3";
+            evaluator_version: "deterministic-v3" | "deterministic-v4";
+            episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
             source_binding?: components["schemas"]["SourceBinding"] | null;
             /** Prompt Bindings */
             prompt_bindings?: components["schemas"]["PromptModelBinding"][] | null;
+        };
+        /** FixtureTool */
+        FixtureTool: {
+            /** Key */
+            key: string;
+            /** Description */
+            description: string;
+            /** Parameters */
+            parameters: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /**
+             * Kind
+             * @default tool
+             * @enum {string}
+             */
+            kind: "tool" | "retrieval";
+            /**
+             * Effect
+             * @default read_only
+             * @enum {string}
+             */
+            effect: "read_only" | "synthetic_state_change";
+            /** Fixtures */
+            fixtures: components["schemas"]["ToolFixture"][];
         };
         /** GrantInput */
         GrantInput: {
@@ -3398,7 +3710,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "exact_label" | "field_f1" | "json_schema" | "nonempty" | "reference_match" | "allowed_label" | "span_support" | "retrieval_recall" | "ndcg" | "rank_agreement" | "numeric_match";
+            kind: "exact_label" | "field_f1" | "json_schema" | "nonempty" | "reference_match" | "allowed_label" | "span_support" | "retrieval_recall" | "ndcg" | "rank_agreement" | "numeric_match" | "episode_contract";
             /** Minimum */
             minimum: number;
             /**
@@ -4586,6 +4898,38 @@ export interface components {
             release?: string | null;
             /** Kind */
             kind?: ("agent" | "chain" | "llm" | "tool" | "retriever" | "reranker" | "embedding" | "guardrail" | "evaluator" | "prompt" | "unknown") | null;
+        };
+        /** ToolArgumentCheck */
+        ToolArgumentCheck: {
+            /** Tool */
+            tool: string;
+            /** Arguments */
+            arguments: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /**
+             * Minimum Occurrences
+             * @default 1
+             */
+            minimum_occurrences: number;
+        };
+        /** ToolFixture */
+        ToolFixture: {
+            /** Arguments */
+            arguments: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            result: components["schemas"]["JsonValue"];
+            /** State Before */
+            state_before?: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** State Updates */
+            state_updates?: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Effect Id */
+            effect_id?: string | null;
         };
         /** TraceAlignment */
         TraceAlignment: {
@@ -6325,6 +6669,76 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    calls_v1_projects__project_id__experiments__run_id__calls_get: {
+        parameters: {
+            query?: {
+                after?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    episodes_v1_projects__project_id__experiments__run_id__episodes_get: {
+        parameters: {
+            query?: {
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EpisodePage"];
                 };
             };
             /** @description Validation Error */

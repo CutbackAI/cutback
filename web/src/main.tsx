@@ -18,6 +18,7 @@ import "./style.css";
 import { SampleGuide } from "./demo";
 import { PatchReview } from "./change-review";
 import { CaseEvidence } from "./case-evidence";
+import { ExecutionEvidence } from "./execution";
 import { AgentWorkflow } from "./agent-workflow";
 import { Traces } from "./traces";
 import { Imports } from "./imports";
@@ -759,6 +760,12 @@ function App() {
                 evidence={(detail) => (
                   <>
                     <RunEvidence detail={detail} />
+                    <ExecutionEvidence
+                      key={`${base}:${detail.id}`}
+                      api={api}
+                      base={base}
+                      runId={detail.id}
+                    />
                     {detail.results?.case_outputs_retained && admin && (
                       <CaseEvidence
                         key={detail.id}
@@ -1603,6 +1610,12 @@ function Experiments({
         <>
           <h2>Experiment decision</h2>
           <RunEvidence detail={detail} />
+          <ExecutionEvidence
+            key={`${base}:${detail.id}`}
+            api={api}
+            base={base}
+            runId={detail.id}
+          />
           {detail.results?.case_outputs_retained && admin && (
             <CaseEvidence
               key={`${base}:${detail.id}`}
@@ -1781,8 +1794,13 @@ function RunEvidence({ detail }: { detail: RecordData }) {
                     : "Unknown"}
                 </td>
                 <td>
-                  {Number(row.metric_min).toFixed(4)} –{" "}
-                  {Number(row.metric_max).toFixed(4)}
+                  {row.metric_min == null
+                    ? "Unknown"
+                    : Number(row.metric_min).toFixed(4)}{" "}
+                  –{" "}
+                  {row.metric_max == null
+                    ? "Unknown"
+                    : Number(row.metric_max).toFixed(4)}
                 </td>
                 <td>{money(row.known_cost_subtotal_usd)}</td>
                 <td>
