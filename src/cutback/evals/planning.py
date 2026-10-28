@@ -2,7 +2,13 @@
 
 from decimal import Decimal
 
-from cutback.evals.experiments import Budget, ExperimentPlan, ModelSpec, provider_models
+from cutback.evals.experiments import (
+    Budget,
+    EpisodeExecutionSpec,
+    ExperimentPlan,
+    ModelSpec,
+    provider_models,
+)
 from cutback.evals.metrics import MetricSpec
 from cutback.pricing import Catalog
 
@@ -62,7 +68,7 @@ def draft_plan(
     }
     if semantic and not independent:
         kind = "nonempty"
-    if minimum is None:
+    if minimum is None and kind != "episode_contract":
         kind = "nonempty"
     maximum_bytes = provenance.get("max_input_bytes", 0)
     for model in [baseline, *candidates]:
@@ -97,4 +103,8 @@ def draft_plan(
         pilot_minimum=pilot_minimum,
         criteria=criteria or [],
         retain_case_outputs=retain_case_outputs,
+        evaluator_version="deterministic-v4" if kind == "episode_contract" else "deterministic-v3",
+        episode_execution=EpisodeExecutionSpec(max_turns=32, max_tool_calls=100)
+        if kind == "episode_contract"
+        else None,
     )

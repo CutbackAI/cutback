@@ -52,7 +52,7 @@ Add explicit local application-check contracts: exact command/working directory,
 
 ## Release 4 â€” production quality and incident workflow
 
-In progress: the metadata/incident foundation is publicly merged. The working source additionally implements explicitly authorized captured-output contracts, pinned native model judging through the durable pre-call ledger, separate internal/external score provenance, encrypted opt-in judge responses and bounded observed cohort comparisons. See [monitoring](online-monitoring.md), [content quality and limits](online-quality.md), and both independent samples. Local full regression, installed-wheel and browser qualification passed for the content extension; hosted/publication gates remain pending in [progress](progress.md). Cohort comparisons are descriptive; semantic drift, statistical significance, causation and population coverage are not inferred.
+Implementation: the metadata/incident foundation and authorized content-quality extension are publicly merged. They include pinned native judging through the pre-call ledger, separate internal/external score provenance, encrypted opt-in judge responses and bounded observed cohort comparisons. See [monitoring](online-monitoring.md), [content quality and limits](online-quality.md) and [acceptance/publication evidence](progress.md). Cohorts remain descriptive; semantic drift, statistical significance, causation and population coverage are not inferred.
 
 **Baseline:** O04â€“O10, R07, C10. **User outcome:** find a quality regression, triage it, and make it a regression case.
 
@@ -63,6 +63,8 @@ Add alert-rule and incident records with minimum samples, threshold/window, cool
 **Acceptance:** window boundaries/late scores, no-data versus healthy, evaluator outage, rule-version change, concurrent evaluators, budget exhaustion/uncertain calls, duplicate incidents, recovery, retention truncation, notification failure, tenant quotas and mobile/accessibility incident flow. No automatic production rollback unless separately authorized.
 
 ## Release 5 â€” evaluate agents, retrieval and state
+
+Implementation: the bounded native fixture journey is locally accepted, including durable per-turn receipts, typed task/retrieval/state checks, encrypted episode revision, scenario drafts and independent support-agent/RAG dashboard samples. [Contracts and limits](agent-evaluation.md), [actual acceptance/publication state](progress.md). Semantic groundedness, generative personas, real tools and specialty execution remain explicit gaps; this increment does not close the entire market baseline or Releases 6–7.
 
 **Baseline:** A01â€“A10, X01â€“X04 as qualified specialties. **User outcome:** test the complete task, including alternative tool paths and final state.
 

@@ -4,6 +4,8 @@
 
 The examples below are supplementary compatibility and integration references.
 
+For native function conversations, final synthetic state and cited retrieval, use the [support-agent and RAG applications](agent-evaluation/README.md). `uv run cutback demo` includes their PostgreSQL/worker/dashboard journey under **Inspect agent and retrieval tasks**; the standalone script needs no Docker or provider key. This source feature is separate from PyPI dev5.
+
 Source checkouts also include [whole-workflow investigation](workflow-tracing/README.md): four synthetic agent/retrieval/tool/LLM steps, a failed tool and a delayed external score, viewed through real PostgreSQL and the Traces dashboard. This is separate from PyPI dev5's native single-call demo.
 
 The [import and blind-review walkthrough](review-workflow/README.md) uses a real pinned Promptfoo producer fixture, encrypted preview, separate reviewer sessions, disagreement/adjudication and promotion to a new frozen dataset. It runs no inference. Captured trace steps can also start this workflow from **Traces → Prepare review of this step**. These features require a source checkout.

@@ -2149,6 +2149,159 @@
         }
       }
     },
+    "/v1/projects/{project_id}/experiments/{run_id}/calls": {
+      "get": {
+        "summary": "Calls",
+        "operationId": "calls_v1_projects__project_id__experiments__run_id__calls_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10000,
+              "minimum": 0,
+              "default": 0,
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CallPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/experiments/{run_id}/episodes": {
+      "get": {
+        "summary": "Episodes",
+        "operationId": "episodes_v1_projects__project_id__experiments__run_id__episodes_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EpisodePage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{project_id}/imports/preview": {
       "post": {
         "summary": "Preview",
@@ -9336,6 +9489,244 @@
         ],
         "title": "CachePut"
       },
+      "CallPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CallReceipt"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          },
+          "requests_reserved": {
+            "type": "integer",
+            "title": "Requests Reserved"
+          },
+          "known_cost_requests": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Known Cost Requests"
+          },
+          "known_cost_subtotal_usd": {
+            "type": "string",
+            "title": "Known Cost Subtotal Usd"
+          },
+          "cost_coverage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Coverage"
+          },
+          "retained_receipts": {
+            "type": "integer",
+            "title": "Retained Receipts"
+          },
+          "ledger_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ledger Version"
+          },
+          "coverage_scope": {
+            "type": "string",
+            "title": "Coverage Scope",
+            "default": "cumulative_run_totals_receipts_may_be_pruned"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_after",
+          "requests_reserved",
+          "known_cost_requests",
+          "known_cost_subtotal_usd",
+          "cost_coverage",
+          "retained_receipts",
+          "ledger_version"
+        ],
+        "title": "CallPage"
+      },
+      "CallReceipt": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Environment Id"
+          },
+          "episode_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Episode Id"
+          },
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence"
+          },
+          "model_key": {
+            "type": "string",
+            "title": "Model Key"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "purpose": {
+            "type": "string",
+            "title": "Purpose"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "price_sha256": {
+            "type": "string",
+            "title": "Price Sha256"
+          },
+          "reserved_usd": {
+            "type": "string",
+            "title": "Reserved Usd"
+          },
+          "known_spent_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Known Spent Usd"
+          },
+          "input_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Tokens"
+          },
+          "output_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Tokens"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "complete": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Complete"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "environment_id",
+          "episode_id",
+          "sequence",
+          "model_key",
+          "provider",
+          "model",
+          "purpose",
+          "state",
+          "price_sha256",
+          "reserved_usd",
+          "known_spent_usd",
+          "input_tokens",
+          "output_tokens",
+          "duration_ms",
+          "complete",
+          "created_at",
+          "completed_at"
+        ],
+        "title": "CallReceipt"
+      },
       "CallSite": {
         "properties": {
           "language": {
@@ -9770,6 +10161,16 @@
             "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
             "title": "Stratum",
             "default": "default"
+          },
+          "episode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EpisodeScenario"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -9817,6 +10218,34 @@
         ],
         "title": "ContentPurpose"
       },
+      "ConversationCheck": {
+        "properties": {
+          "user_turn": {
+            "type": "integer",
+            "maximum": 17.0,
+            "minimum": 1.0,
+            "title": "User Turn"
+          },
+          "accepted_answers": {
+            "items": {
+              "type": "string",
+              "maxLength": 16000,
+              "minLength": 1
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Accepted Answers"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "user_turn",
+          "accepted_answers"
+        ],
+        "title": "ConversationCheck"
+      },
       "CorrectionInput": {
         "properties": {
           "purpose": {
@@ -9841,9 +10270,22 @@
               {
                 "additionalProperties": true,
                 "type": "object"
+              },
+              {
+                "type": "null"
               }
             ],
             "title": "Gold"
+          },
+          "episode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EpisodeScenario"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "correction_ref": {
             "type": "string",
@@ -9861,7 +10303,6 @@
         "required": [
           "purpose",
           "case_id",
-          "gold",
           "correction_ref"
         ],
         "title": "CorrectionInput"
@@ -10103,6 +10544,427 @@
           "name"
         ],
         "title": "EnvironmentInput"
+      },
+      "EpisodeAssertions": {
+        "properties": {
+          "required_tools": {
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+            },
+            "type": "array",
+            "maxItems": 32,
+            "title": "Required Tools"
+          },
+          "forbidden_tools": {
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+            },
+            "type": "array",
+            "maxItems": 32,
+            "title": "Forbidden Tools"
+          },
+          "allowed_paths": {
+            "items": {
+              "items": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Allowed Paths"
+          },
+          "arguments": {
+            "items": {
+              "$ref": "#/components/schemas/ToolArgumentCheck"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Arguments"
+          },
+          "final_state": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "maxProperties": 100,
+            "title": "Final State"
+          },
+          "accepted_answers": {
+            "items": {
+              "type": "string",
+              "maxLength": 16000,
+              "minLength": 1
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Accepted Answers"
+          },
+          "forbid_duplicate_effects": {
+            "type": "boolean",
+            "title": "Forbid Duplicate Effects",
+            "default": true
+          },
+          "conversation": {
+            "items": {
+              "$ref": "#/components/schemas/ConversationCheck"
+            },
+            "type": "array",
+            "maxItems": 17,
+            "title": "Conversation"
+          },
+          "accepted_outcomes": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "completed",
+                "refused"
+              ]
+            },
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 1,
+            "title": "Accepted Outcomes",
+            "default": [
+              "completed"
+            ]
+          },
+          "min_retrieval_precision": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Retrieval Precision"
+          },
+          "min_retrieval_recall": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Retrieval Recall"
+          },
+          "min_ndcg": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Ndcg"
+          },
+          "min_citation_support": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Citation Support"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "EpisodeAssertions"
+      },
+      "EpisodeExecutionSpec": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "native-fixture-episode-v1",
+            "title": "Version",
+            "default": "native-fixture-episode-v1"
+          },
+          "openai_surface": {
+            "type": "string",
+            "enum": [
+              "responses.create",
+              "chat.completions.create"
+            ],
+            "title": "Openai Surface",
+            "default": "responses.create"
+          },
+          "max_turns": {
+            "type": "integer",
+            "maximum": 32.0,
+            "minimum": 1.0,
+            "title": "Max Turns",
+            "default": 8
+          },
+          "max_tool_calls": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Max Tool Calls",
+            "default": 16
+          },
+          "transport": {
+            "type": "string",
+            "enum": [
+              "native_provider",
+              "scripted_test_only"
+            ],
+            "title": "Transport",
+            "default": "native_provider"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "EpisodeExecutionSpec"
+      },
+      "EpisodePage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/EpisodeReceipt"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          },
+          "retained_episodes": {
+            "type": "integer",
+            "title": "Retained Episodes"
+          },
+          "evidence_scope": {
+            "type": "string",
+            "title": "Evidence Scope",
+            "default": "declared_synthetic_contract_not_production_state"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_after",
+          "retained_episodes"
+        ],
+        "title": "EpisodePage"
+      },
+      "EpisodeReceipt": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Environment Id"
+          },
+          "model_key": {
+            "type": "string",
+            "title": "Model Key"
+          },
+          "repeat_index": {
+            "type": "integer",
+            "title": "Repeat Index"
+          },
+          "execution_version": {
+            "type": "string",
+            "title": "Execution Version"
+          },
+          "max_requests": {
+            "type": "integer",
+            "title": "Max Requests"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          },
+          "requests_used": {
+            "type": "integer",
+            "title": "Requests Used"
+          },
+          "known_cost_requests": {
+            "type": "integer",
+            "title": "Known Cost Requests"
+          },
+          "reserved_usd": {
+            "type": "string",
+            "title": "Reserved Usd"
+          },
+          "known_spent_usd": {
+            "type": "string",
+            "title": "Known Spent Usd"
+          },
+          "summary": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Summary"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "environment_id",
+          "model_key",
+          "repeat_index",
+          "execution_version",
+          "max_requests",
+          "state",
+          "outcome",
+          "requests_used",
+          "known_cost_requests",
+          "reserved_usd",
+          "known_spent_usd",
+          "summary",
+          "created_at",
+          "completed_at"
+        ],
+        "title": "EpisodeReceipt"
+      },
+      "EpisodeScenario": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "cutback.episode.v1",
+            "title": "Schema Version",
+            "default": "cutback.episode.v1"
+          },
+          "execution": {
+            "type": "string",
+            "const": "synthetic_fixtures_only",
+            "title": "Execution",
+            "default": "synthetic_fixtures_only"
+          },
+          "system": {
+            "type": "string",
+            "maxLength": 16000,
+            "title": "System",
+            "default": ""
+          },
+          "user_followups": {
+            "items": {
+              "type": "string",
+              "maxLength": 16000,
+              "minLength": 1
+            },
+            "type": "array",
+            "maxItems": 16,
+            "title": "User Followups"
+          },
+          "initial_state": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Initial State"
+          },
+          "tools": {
+            "items": {
+              "$ref": "#/components/schemas/FixtureTool"
+            },
+            "type": "array",
+            "maxItems": 16,
+            "title": "Tools"
+          },
+          "assertions": {
+            "$ref": "#/components/schemas/EpisodeAssertions"
+          },
+          "relevance": {
+            "additionalProperties": {
+              "type": "integer",
+              "maximum": 10.0,
+              "minimum": 0.0
+            },
+            "type": "object",
+            "maxProperties": 1000,
+            "title": "Relevance"
+          },
+          "max_turns": {
+            "type": "integer",
+            "maximum": 32.0,
+            "minimum": 1.0,
+            "title": "Max Turns",
+            "default": 8
+          },
+          "max_tool_calls": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Max Tool Calls",
+            "default": 16
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "EpisodeScenario"
       },
       "EvaluationBatch": {
         "properties": {
@@ -10523,9 +11385,22 @@
           },
           "evaluator_version": {
             "type": "string",
-            "const": "deterministic-v3",
+            "enum": [
+              "deterministic-v3",
+              "deterministic-v4"
+            ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
+          },
+          "episode_execution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EpisodeExecutionSpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "source_binding": {
             "anyOf": [
@@ -10566,6 +11441,64 @@
           "approved_providers"
         ],
         "title": "ExperimentPlan"
+      },
+      "FixtureTool": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]{0,63}$",
+            "title": "Key"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Description"
+          },
+          "parameters": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Parameters"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "tool",
+              "retrieval"
+            ],
+            "title": "Kind",
+            "default": "tool"
+          },
+          "effect": {
+            "type": "string",
+            "enum": [
+              "read_only",
+              "synthetic_state_change"
+            ],
+            "title": "Effect",
+            "default": "read_only"
+          },
+          "fixtures": {
+            "items": {
+              "$ref": "#/components/schemas/ToolFixture"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Fixtures"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "description",
+          "parameters",
+          "fixtures"
+        ],
+        "title": "FixtureTool"
       },
       "GrantInput": {
         "properties": {
@@ -11431,7 +12364,8 @@
               "retrieval_recall",
               "ndcg",
               "rank_agreement",
-              "numeric_match"
+              "numeric_match",
+              "episode_contract"
             ],
             "title": "Kind"
           },
@@ -14542,6 +15476,85 @@
         "additionalProperties": false,
         "type": "object",
         "title": "SpanFilter"
+      },
+      "ToolArgumentCheck": {
+        "properties": {
+          "tool": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Tool"
+          },
+          "arguments": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Arguments"
+          },
+          "minimum_occurrences": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Minimum Occurrences",
+            "default": 1
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "tool",
+          "arguments"
+        ],
+        "title": "ToolArgumentCheck"
+      },
+      "ToolFixture": {
+        "properties": {
+          "arguments": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Arguments"
+          },
+          "result": {
+            "$ref": "#/components/schemas/JsonValue"
+          },
+          "state_before": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "maxProperties": 100,
+            "title": "State Before"
+          },
+          "state_updates": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "maxProperties": 100,
+            "title": "State Updates"
+          },
+          "effect_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effect Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "arguments",
+          "result"
+        ],
+        "title": "ToolFixture"
       },
       "TraceAlignment": {
         "properties": {

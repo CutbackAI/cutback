@@ -40,6 +40,33 @@ def check(directory: Path):
     with tarfile.open(sources[0]) as source:
         source_names = source.getnames()
         names += source_names
+        for member in source.getmembers():
+            if member.isfile() and Path(member.name).suffix in {
+                ".md",
+                ".py",
+                ".toml",
+                ".json",
+                ".jsonl",
+                ".ts",
+                ".tsx",
+                ".js",
+                ".mjs",
+                ".yml",
+                ".yaml",
+                ".txt",
+                ".css",
+                ".html",
+                ".svg",
+            }:
+                stream = source.extractfile(member)
+                if stream is None:
+                    raise ValueError("source archive text member is unreadable")
+                try:
+                    stream.read().decode("utf-8")
+                except UnicodeError:
+                    raise ValueError(
+                        "source archive contains non-UTF8 text: " + member.name
+                    ) from None
         for required in (
             ".github/workflows/publish.yml",
             "scripts/check_toolchain.py",
@@ -64,6 +91,9 @@ def check(directory: Path):
             "docs/online-monitoring.md",
             "examples/online-monitoring/sample.py",
             "docs/online-quality.md",
+            "docs/agent-evaluation.md",
+            "examples/agent-evaluation/sample.py",
+            "src/cutback/server/migrations/versions/0013_execution_episode_and_per_call_ledger.py",
             "examples/online-quality/sample.py",
             "src/cutback/server/migrations/versions/0011_online_quality.py",
             "examples/prompt-releases/sample.py",

@@ -6,6 +6,7 @@ from dataclasses import replace
 from datetime import UTC, datetime
 
 from cutback.core.models import LLMEvent
+from cutback.evals._logging import owned_sdk_request
 from cutback.evals.experiments import Execution, route_target
 from cutback.pricing import Catalog
 
@@ -26,6 +27,11 @@ def chat_text_result(response):
         and not unsupported
     )
     return message.content or "", bool(complete), unsupported
+
+
+def require_single_call_model(model):
+    if getattr(model, "agent_turn", None) is not None:
+        raise ValueError("AGENT_TURN_REQUIRES_QUALIFIED_TURN_EXECUTOR")
 
 
 class OpenAIExecutor:
@@ -49,9 +55,11 @@ class OpenAIExecutor:
         self.client.organization = None
         self.client.project = None
 
+    @owned_sdk_request
     def execute(self, model, text, timeout_seconds):
         if model.provider != "openai":
             raise ValueError("EXECUTOR_PROVIDER_UNSUPPORTED")
+        require_single_call_model(model)
         started = time.perf_counter()
         contract = model.request_contract
         payload = contract.render(text) if contract else text
@@ -153,9 +161,11 @@ class LocalExecutor:
         self.client.organization = None
         self.client.project = None
 
+    @owned_sdk_request
     def execute(self, model, text, timeout_seconds):
         if model.provider != "local":
             raise ValueError("EXECUTOR_PROVIDER_UNSUPPORTED")
+        require_single_call_model(model)
         started = time.perf_counter()
         from openai.types.chat import ChatCompletionMessageParam
 
@@ -209,6 +219,7 @@ class ConfiguredExecutor:
             self.clients[provider] = constructor()
 
     def execute(self, model, text, timeout_seconds):
+        require_single_call_model(model)
         if model.provider == "router":
             target = route_target(model, text)
             return replace(
@@ -250,9 +261,11 @@ class AnthropicExecutor:
         # pinned worker client accepts no ambient application headers or billing context.
         self.client._custom_headers = {}
 
+    @owned_sdk_request
     def execute(self, model, text, timeout_seconds):
         if model.provider != "anthropic":
             raise ValueError("EXECUTOR_PROVIDER_UNSUPPORTED")
+        require_single_call_model(model)
         started = time.perf_counter()
         params = {
             "model": model.model,

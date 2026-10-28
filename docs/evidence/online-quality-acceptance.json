@@ -2,7 +2,7 @@
   "contract": "cutback.online-quality-acceptance.v1",
   "date": "2026-10-28",
   "scope": "bounded_authorized_online_content_contracts_native_judging_and_observed_cohorts",
-  "publication": "locally_accepted_source_hosted_gates_pending_no_pypi_upload",
+  "publication": "public_source_merged_no_new_pypi_upload",
   "migration": "0012",
   "released_migrations_preserved_through": "0011",
   "local_full_regression": {
@@ -90,5 +90,26 @@
     "population_coverage_unknown",
     "worker_execution_state_not_observed_by_collector",
     "releases_5_through_7_unfinished"
-  ]
+  ],
+  "hosted": {
+    "pull_request": 21,
+    "tested_head": "7050f73d017302c72dc96fabd527c4c402fd506c",
+    "merge": "191f62bebf212e8fad7a031fd3681444b961ee58",
+    "identical_tree": "1b043a8f8e0e98e2fff1a72d6c22b073e70643fb",
+    "required_checks_passed": 8,
+    "python_311": {
+      "passed": 430,
+      "skipped": 4
+    },
+    "python_313": {
+      "passed": 428,
+      "skipped": 6
+    }
+  },
+  "final_archive_privacy_guard": {
+    "source_files": 466,
+    "archive_members": 607,
+    "findings": 0,
+    "private_marker_values_logged": false
+  }
 }

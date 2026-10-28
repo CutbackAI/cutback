@@ -13,6 +13,7 @@ import typer
 from cutback import __version__
 from cutback.cli_agent import register_agent
 from cutback.cli_checks import register_checks
+from cutback.cli_episodes import register_episodes
 from cutback.cli_workflows import register
 
 app = typer.Typer(
@@ -497,6 +498,7 @@ register(app, output, request, fail)
 
 register_agent(app, output, fail)
 register_checks(app, output, fail)
+register_episodes(app, output, fail)
 
 if __name__ == "__main__":
     app()

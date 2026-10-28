@@ -49,7 +49,10 @@ class Project(Base):
 
 class Environment(Base):
     __tablename__ = "environments"
-    __table_args__ = (UniqueConstraint("project_id", "name"),)
+    __table_args__ = (
+        UniqueConstraint("project_id", "name"),
+        UniqueConstraint("id", "project_id", name="uq_environment_project_identity"),
+    )
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
     project_id: Mapped[UUID] = mapped_column(
         ForeignKey("projects.id", ondelete="CASCADE"), index=True
@@ -266,6 +269,9 @@ class ExperimentPlanRecord(Base):
 
 class ExperimentRunRecord(Base):
     __tablename__ = "experiment_runs"
+    __table_args__ = (
+        UniqueConstraint("id", "project_id", name="uq_experiment_run_project_identity"),
+    )
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
     project_id: Mapped[UUID] = mapped_column(
         ForeignKey("projects.id", ondelete="CASCADE"), index=True
@@ -275,6 +281,8 @@ class ExperimentRunRecord(Base):
     reserved_usd: Mapped[Decimal] = mapped_column(Numeric(24, 12), default=Decimal(0))
     spent_usd: Mapped[Decimal] = mapped_column(Numeric(24, 12), default=Decimal(0))
     requests_used: Mapped[int] = mapped_column(Integer, default=0)
+    call_ledger_version: Mapped[int | None] = mapped_column(Integer)
+    known_cost_requests: Mapped[int | None] = mapped_column(Integer)
     results: Mapped[dict] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
@@ -352,3 +360,4 @@ importlib.import_module("cutback.server.review_db")
 importlib.import_module("cutback.server.prompt_db")
 importlib.import_module("cutback.server.monitoring_db")
 importlib.import_module("cutback.server.quality_db")
+importlib.import_module("cutback.server.execution_db")

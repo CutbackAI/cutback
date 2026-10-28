@@ -28,6 +28,7 @@ from cutback.server.enterprise_db import (
     RolloutRecord,
     TrainingJob,
 )
+from cutback.server.execution_db import ExecutionCall, ExecutionEpisode
 from cutback.server.lineage_db import DatasetAlias, DatasetExposure, DatasetFamily
 from cutback.server.monitoring_db import (
     AlertRule,
@@ -86,6 +87,8 @@ def install_privacy(app, sessions, authorize, scope):
         def records():
             with sessions() as session:
                 for cls in (
+                    ExecutionCall,
+                    ExecutionEpisode,
                     NotificationConfig,
                     NotificationDelivery,
                     QualityRule,
@@ -180,6 +183,16 @@ def install_privacy(app, sessions, authorize, scope):
             ):
                 raise HTTPException(409, "FINISH_IN_FLIGHT_NOTIFICATION_FIRST")
             if session.scalar(
+                select(ExecutionCall.id)
+                .where(
+                    ExecutionCall.project_id == project_id,
+                    ExecutionCall.state == "reserved",
+                    ExecutionCall.lease_until > datetime.now(UTC),
+                )
+                .limit(1)
+            ):
+                raise HTTPException(409, "FINISH_IN_FLIGHT_EXECUTION_CALL_FIRST")
+            if session.scalar(
                 select(QualityEvaluation.id)
                 .where(
                     QualityEvaluation.project_id == project_id,
@@ -247,6 +260,8 @@ def install_privacy(app, sessions, authorize, scope):
             from cutback.server.db import ChangeProposal, DatasetItem, RecommendationRecord
 
             for cls in (
+                ExecutionCall,
+                ExecutionEpisode,
                 QualityEvaluation,
                 QualityPromptUse,
                 QualityRule,

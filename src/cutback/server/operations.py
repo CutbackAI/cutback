@@ -153,7 +153,28 @@ def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False
             from cutback.server.traces import prune_traces
 
             prune_traces(session, cutoff, selected)
+            from cutback.server.execution_db import ExecutionCall, ExecutionEpisode
             from cutback.server.quality_db import QualityEvaluation
+
+            # Aggregate counters survive receipt pruning; never reconstruct old usage
+            # coverage or task latency distributions from the remaining page.
+            session.execute(
+                delete(ExecutionCall).where(
+                    ExecutionCall.completed_at < cutoff,
+                    ExecutionCall.state != "reserved",
+                    selected(ExecutionCall.project_id),
+                )
+            )
+            session.execute(
+                delete(ExecutionEpisode).where(
+                    ExecutionEpisode.completed_at < cutoff,
+                    ExecutionEpisode.state != "running",
+                    selected(ExecutionEpisode.project_id),
+                    ~select(ExecutionCall.id)
+                    .where(ExecutionCall.episode_id == ExecutionEpisode.id)
+                    .exists(),
+                )
+            )
 
             # Keep durable rule totals after receipt retention. Never prune queued or
             # leased work: a charged interrupted lease still needs an uncertainty receipt.

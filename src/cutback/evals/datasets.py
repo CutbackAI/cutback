@@ -9,8 +9,9 @@ from datetime import UTC, datetime
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import Field, model_validator
+from pydantic import Field, model_serializer, model_validator
 
+from cutback.core.episodes import EpisodeScenario
 from cutback.core.models import Identifier, StrictModel
 
 
@@ -90,6 +91,14 @@ class Case(StrictModel):
     reference: str | None = Field(default=None, max_length=64000)
     group: Identifier | None = None
     stratum: Identifier = "default"
+    episode: EpisodeScenario | None = None
+
+    @model_serializer(mode="wrap")
+    def preserve_existing_case_hashes(self, handler):
+        result = handler(self)
+        if self.episode is None:
+            result.pop("episode", None)
+        return result
 
 
 class DatasetImport(StrictModel):
@@ -103,12 +112,24 @@ class DatasetImport(StrictModel):
     cases: Annotated[list[Case], Field(min_length=1, max_length=10000)]
     split_seed: int = Field(default=17, ge=0, le=2**31 - 1)
 
+    @model_validator(mode="after")
+    def synthetic_episode_boundary(self):
+        if any(case.episode for case in self.cases) and self.source_type != "synthetic_fixture":
+            raise ValueError("EPISODE_FIXTURES_REQUIRE_DECLARED_SYNTHETIC_SOURCE")
+        return self
+
 
 def infer_task(body: DatasetImport) -> dict:
     """Conservative local shape inference; no labels or customer text in metadata."""
     labels = [case.gold for case in body.cases]
     independent = body.independent_labels and all(label is not None for label in labels)
-    if independent and all(isinstance(label, (dict, list)) for label in labels):
+    if all(case.episode is not None for case in body.cases):
+        kind, metric, basis = (
+            "synthetic_agent_episode",
+            "episode_contract",
+            "declared_fixture_state_and_conversation_assertions",
+        )
+    elif independent and all(isinstance(label, (dict, list)) for label in labels):
         kind, metric, basis = "structured_extraction", "field_f1", "independent_structured_gold"
     elif independent and all(isinstance(label, str) for label in labels):
         # Short repeated labels are evidence for classification; arbitrary prose is not.
@@ -205,7 +226,11 @@ def prepare_dataset(body: DatasetImport, *, lineage_groups: dict[str, str] | Non
             for i in members:
                 assignments[i] = (group_hash, split)
     items = [
-        {"case": case.model_dump(), "group_hash": assignments[i][0], "split": assignments[i][1]}
+        {
+            "case": case.model_dump(mode="json"),
+            "group_hash": assignments[i][0],
+            "split": assignments[i][1],
+        }
         for i, case in enumerate(body.cases)
     ]
     counts = Counter(item["split"] for item in items)
