@@ -71,6 +71,7 @@ The commands above target the published dev5 package. For the newer source-check
 | Prepare instruction search from a cheapest-model application | [`workflow prepare --for-campaign` and vendor scope](https://github.com/CutbackAI/cutback/blob/main/docs/improvement-campaigns.md) |
 | Keep an existing OpenAI 3.35.1 application pin | [Separate locked SDK qualification and limits](https://github.com/CutbackAI/cutback/blob/main/infra/sdk-compat/README.md) |
 | Understand modern cache usage and private contract rates | [Independent arithmetic and readable pricing tables](https://github.com/CutbackAI/cutback/blob/main/docs/modern-model-accounting.md) |
+| Preserve a modern application's request during instruction search | [Explicit native text contracts and independent application](https://github.com/CutbackAI/cutback/blob/main/docs/native-modern-text.md) |
 | Measure an owned local ingest/query envelope | [Load profile and diagnostic limits, source checkout](https://github.com/CutbackAI/cutback/blob/main/docs/load-qualification.md) |
 | Review failures and build a versioned regression dataset | [Import and review](https://github.com/CutbackAI/cutback/blob/main/docs/imports-and-review.md) |
 | Version a prompt, compare it and roll back an alias | [Prompt sample](https://github.com/CutbackAI/cutback/blob/main/examples/prompt-releases/README.md) and [application checks](https://github.com/CutbackAI/cutback/blob/main/examples/application-checks/README.md) |

@@ -111,7 +111,18 @@ def frozen_tasks(control, project, writer, workflow, release, outcomes, amount):
     )
 
 
-def run_sample(app, client, endpoint, admin, project, ingest_token, workspace, *, watch=False):
+def run_sample(
+    app,
+    client,
+    endpoint,
+    admin,
+    project,
+    ingest_token,
+    workspace,
+    *,
+    watch=False,
+    modern_model=False,
+):
     from sqlalchemy import select
 
     from cutback.agent import analyze, prepare
@@ -132,8 +143,21 @@ def run_sample(app, client, endpoint, admin, project, ingest_token, workspace, *
     owned = private_directory(workspace, "outcome-" + uuid4().hex)
     application = private_directory(owned, "application")
     shutil.copyfile(Path(__file__).parent / "sample_app/campaign.py", application / "app.py")
+    if modern_model:
+        application_source = application / "app.py"
+        application_source.write_text(
+            application_source.read_text(encoding="utf-8").replace(
+                'model="gpt-4.1"', 'model="gpt-6-luna"'
+            ),
+            encoding="utf-8",
+        )
     (application / ".gitignore").write_text(".cutback/\n__pycache__/\n", encoding="utf-8")
-    (application / "check_application.py").write_text(APPLICATION_CHECK, encoding="utf-8")
+    application_check = (
+        APPLICATION_CHECK.replace('{"gpt-4.1", "gpt-4.1-mini"}', '{"gpt-6-luna"}')
+        if modern_model
+        else APPLICATION_CHECK
+    )
+    (application / "check_application.py").write_text(application_check, encoding="utf-8")
     (application / "cases.jsonl").write_text(
         "\n".join(
             json.dumps(
@@ -193,6 +217,7 @@ def run_sample(app, client, endpoint, admin, project, ingest_token, workspace, *
         max_requests=1000,
         savings_per_success="0.01",
         forecast_successful_tasks=10000,
+        generator_model="gpt-6-luna" if modern_model else "gpt-4.1-mini",
     )
     advance(
         application,
@@ -228,13 +253,14 @@ def run_sample(app, client, endpoint, admin, project, ingest_token, workspace, *
                     .limit(1)
                 )
             worker = run_proposal_one if phase == "proposal" else run_one
-            if (
-                worker(
-                    sessions, store, executor=executor, execution_enabled=True, only_run_id=run_id
-                )["status"]
-                != "COMPLETED"
-            ):
-                raise ValueError("OWNED_CAMPAIGN_CHILD_STOPPED")
+            completed_child = worker(
+                sessions, store, executor=executor, execution_enabled=True, only_run_id=run_id
+            )
+            if completed_child["status"] != "COMPLETED":
+                # Fixed phase/status codes only; no native errors, payloads or keys.
+                raise ValueError(
+                    "OWNED_CAMPAIGN_CHILD_STOPPED:" + phase + ":" + completed_child["status"]
+                )
         else:
             raise ValueError("OWNED_CAMPAIGN_STEP_BOUND")
         artifact = proposal(
@@ -382,6 +408,7 @@ def run_sample(app, client, endpoint, admin, project, ingest_token, workspace, *
                 "coverage": discovered["coverage"],
             },
             "paid_provider_calls": 0,
+            "baseline_model": "gpt-6-luna" if modern_model else "gpt-4.1",
             "review": checked,
             "outcome_review": observed,
             **({"automatic_observation": watched} if watched else {}),

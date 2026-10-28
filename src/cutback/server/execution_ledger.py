@@ -256,6 +256,15 @@ class ExecutionLedger:
             raise ValueError("EPISODE_JUDGE_REQUIRES_ACTIVE_TARGET_EPISODE")
         if allowed.model_dump(mode="json") != model.model_dump(mode="json"):
             raise ValueError("EXECUTION_MODEL_CONFIGURATION_OUTSIDE_FROZEN_SCOPE")
+        if allowed.native_contract is not None:
+            from cutback.core.native_models import validate_luna_text_contract
+
+            validate_luna_text_contract(allowed, Catalog())
+        price_sha256 = (
+            allowed.native_contract.price_sha256
+            if allowed.native_contract is not None
+            else self.plan.price_sha256
+        )
         if amount < upper_cost(model):
             raise ValueError("EXECUTION_CALL_RESERVATION_BELOW_UPPER_BOUND")
         if model.agent_turn is not None and not getattr(self.plan, "episode_execution", None):
@@ -361,7 +370,7 @@ class ExecutionLedger:
                     provider=model.provider,
                     model=model.model,
                     purpose=purpose,
-                    price_sha256=self.plan.price_sha256,
+                    price_sha256=price_sha256,
                     reserved_usd=amount,
                     lease_until=job.lease_until,
                 )

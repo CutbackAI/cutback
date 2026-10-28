@@ -164,4 +164,26 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
     assert (
         json.loads(discovery_file.read_text(encoding="utf-8"))["application_commands_executed"] == 0
     )
-    print("Core-only wheel, independent consumer scan and discovered application checks passed.")
+    modern = consumer / "modern.py"
+    modern.write_text(original.replace('model="gpt-4.1"', 'model="gpt-6-luna"'), encoding="utf-8")
+    subprocess.run(
+        [
+            str(executable),
+            "-c",
+            "import sys; from pathlib import Path; from cutback.scanner import scan; "
+            "from cutback.core.request_profiles import prepare_profile; "
+            "root=Path('.'); inventory=scan(root); "
+            "site=next(row for row in inventory['call_sites'] "
+            "if row['requested_model']=='gpt-6-luna'); "
+            "baseline=prepare_profile(root,site).baseline(); "
+            "assert baseline['native_contract']['reasoning_effort']=='medium'; "
+            "assert baseline['native_contract']['service_tier']=='auto'; "
+            "assert not any(name in sys.modules for name in ('openai','fastapi','sqlalchemy')); "
+            "print('Modern source preparation stayed core-only and parse-only')",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+        cwd=consumer,
+    )
+    print("Core-only wheel, source/native preparation and discovered application checks passed.")

@@ -1,25 +1,42 @@
 {
   "feature": "versioned_modern_text_observation_and_private_contract_rates",
-  "status": "locally_qualified_exact_public_hosted_gates_pending",
+  "status": "publicly_merged",
   "event_schema": "1.1 optional OpenAI cache-write durations; released 1.0 bytes preserved",
   "released_migrations_unchanged": "0001-0018",
   "primary_execution_snapshot_sha256": "57acf5108329471b4280a09c65714aeb235542effa7bcf93fa16434f301e897d",
   "observation_snapshot": "openai-text-2026-10-28-v1",
-  "installed_exact_public_default": {"passed": 118, "seconds": 18.75},
-  "installed_exact_public_sdk3": {"passed": 127, "seconds": 18.30},
-  "pre_final_guards_installed_default": {"passed": 818, "skipped": 23, "seconds": 763.90},
+  "installed_exact_public_default": {
+    "passed": 118,
+    "seconds": 18.75
+  },
+  "installed_exact_public_sdk3": {
+    "passed": 127,
+    "seconds": 18.3
+  },
+  "pre_final_guards_installed_default": {
+    "passed": 818,
+    "skipped": 23,
+    "seconds": 763.9
+  },
   "pre_final_guards_default_skip_reasons": [
     "two Windows symlink privilege skips",
     "four separately qualified legacy SDK cases",
     "seventeen separately qualified SDK 3 cases"
   ],
   "broad_artifact_scope": "code-dist before final zero-aggregate and served-tier guards; final focused artifacts include both",
-  "pre_final_guard_installed_sdk3": {"passed": 609, "skipped": 6, "seconds": 276.70},
+  "pre_final_guard_installed_sdk3": {
+    "passed": 609,
+    "skipped": 6,
+    "seconds": 276.7
+  },
   "pre_final_guard_sdk3_skip_reasons": [
     "two Windows symlink privilege skips",
     "four legacy SDK cases covered by the separate legacy environment"
   ],
-  "legacy_sdk_and_offline_scanner": {"passed": 21, "seconds": 3.03},
+  "legacy_sdk_and_offline_scanner": {
+    "passed": 21,
+    "seconds": 3.03
+  },
   "native_node_tests": 13,
   "native_node_strict_types": "pass",
   "frontend_units": 7,
@@ -29,7 +46,13 @@
   "authenticated_pricing_browser": {
     "passed": 1,
     "seconds": 11.09,
-    "coverage": ["quote authoring", "cursor pagination", "desktop", "mobile", "axe"]
+    "coverage": [
+      "quote authoring",
+      "cursor pagination",
+      "desktop",
+      "mobile",
+      "axe"
+    ]
   },
   "earlier_failed_runs": [
     "Two new PG assertions incorrectly assumed the unsanitized error envelope; corrected 12-case run passed.",
@@ -45,5 +68,28 @@
     "synthetic arithmetic and transports are not live model or customer validation",
     "broader roadmap incomplete"
   ],
-  "pending": ["hosted exact-head checks", "public merge", "broader roadmap engineering"]
+  "pending": [
+    "native modern paid target qualification",
+    "broader roadmap engineering",
+    "independent customer/comparative acceptance"
+  ],
+  "public_pr": "https://github.com/CutbackAI/cutback/pull/31",
+  "public_head": "775c75a6ba61917d492f845412d18e60c0e591a4",
+  "public_merge": "38d357b896b6d22d558f917f80a2c34e4c97cf0c",
+  "accepted_tree": "34c3c289694df865e2c4a90dbd6e2bc9e2b15cd3",
+  "required_hosted_checks": 10,
+  "hosted_default_311": {
+    "passed": 837,
+    "skipped": 21,
+    "seconds": 493.41
+  },
+  "hosted_default_313": {
+    "passed": 835,
+    "skipped": 23,
+    "seconds": 584.11
+  },
+  "hosted_sdk3": {
+    "passed_each": 628,
+    "legacy_skipped_each": 4
+  }
 }

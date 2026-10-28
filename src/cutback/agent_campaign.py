@@ -61,6 +61,12 @@ def prepare(
             "variants_per_round": variants_per_round,
         }
         path = directory / "campaign.json"
+        if generator_model == "gpt-6-luna":
+            from cutback.core.native_models import NativeModelContract
+
+            body["generator_model"]["native_contract"] = (
+                NativeModelContract.current_luna_text().model_dump(mode="json")
+            )
         if path.exists():
             saved = read_private(path)
             if saved["request"] != body:

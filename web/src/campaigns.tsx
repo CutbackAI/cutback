@@ -1,12 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { components } from "./api.generated";
-import { type API, explain, json, money } from "./ui";
+import { type API, type Data, explain, json, money } from "./ui";
+import { NativeContracts } from "./native-contracts";
 
 type Brief = components["schemas"]["CampaignBrief"];
 type Detail = components["schemas"]["CampaignDetail"];
 type Template = components["schemas"]["CampaignTemplate"];
 type Snapshot = components["schemas"]["TaskSnapshotBrief"];
 type CandidateContent = components["schemas"]["CampaignCandidateContent"];
+function nativeCampaignPlan(value: Detail["specification"]): Data {
+  const specification = value as Data;
+  return { ...specification.template, candidates: [
+    ...(specification.template?.candidates || []), specification.generator?.model,
+  ].filter(Boolean) };
+}
 const active = new Set([
   "READY_FOR_APPROVAL",
   "QUEUED",
@@ -552,6 +559,7 @@ export function Campaigns({
             limited to {detail.max_instruction_bytes} UTF-8 bytes; request
             schemas, tools and destinations stay frozen.
           </p>
+          <NativeContracts plan={nativeCampaignPlan(detail.specification)} planId={detail.id} context="campaign" />
           <p>
             Content authority expires{" "}
             {new Date(detail.expires_at).toLocaleString()}.{" "}
