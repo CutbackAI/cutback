@@ -8,6 +8,27 @@ Start with the [independent runnable classifier](../examples/improvement-campaig
 
 ## Prepare without inference
 
+New v2 campaigns follow this fixed stopping rule. Each box uses the same frozen source/data authority and cumulative parent budget; arrows do not authorize paid calls or application deployment.
+
+```mermaid
+flowchart TD
+    A[Complete task costs and permitted examples] --> B[Freeze and review one cumulative budget]
+    B --> C[Owner approves exact budget]
+    C --> D{Static alternative available?}
+    D -- yes --> E[Validate model or output-cap alternative]
+    D -- unchanged control only --> H[Reserved instruction search]
+    E -- quality and cheaper cost pass --> J[Freeze validation winner]
+    E -- fail --> F{Generation fits frozen budget?}
+    F -- yes --> H
+    F -- no --> R[Reject change]
+    H --> I{Eligible validation candidate?}
+    I -- yes --> J
+    I -- no --> R
+    J --> K[Untouched confirmation]
+    K -- fail --> R
+    K -- pass --> L[Exact diff, rollback and both-tree application checks]
+```
+
 Run `cutback optimize . --json`, then [prepare the selected source-bound workflow and permitted examples](agent-workflow.md) with `workflow prepare --for-campaign`. Inspect the installed help first: published dev5 lacks this flag and the campaign commands. Preparation preserves the native request, imports only authorized examples and creates a validation basis without running inference. It chooses a simple model downgrade when one exists; an application already on the cheapest qualified model can use an output-bound alternative, or an explicitly labelled unchanged control at the minimum cap. An unchanged control is not a claimed optimization. Use `campaign prepare` next; `workflow continue` refuses to execute this basis as a static experiment.
 
 For an Anthropic target, `--campaign-generator-provider openai` explicitly includes OpenAI in the capture policy's permitted vendors for the proposer. Supply it only within actual data/vendor authorization. Missing permission fails before reading examples or creating an upload policy. The permission persists for resuming that same frozen preparation and rights reference; changing vendors/rights requires a new preparation and paid campaign approval. OpenAI targets already include that vendor. Preparation does not authorize paid inference.
@@ -24,6 +45,14 @@ cutback campaign status
 ```
 
 These illustrative amounts are not paid authorization. Preparation freezes the dataset, source/request contract, literal instruction edit when qualified, generator version, eligible providers/models, allowed instruction/output bounds and cumulative request/dollar/wall-time ceilings. The compiler includes generation, reference/static/generated validation, judging and worst-case confirmation. It narrows effort to fit the conservative opportunity and request caps. It also budgets proposer input capacity for all permitted prior candidate versions and aggregate feedback; it never silently widens the approved input contract. Unknown or insufficient opportunity abstains.
+
+New CLI and dashboard preparations explicitly use `cutback.improvement-campaign.v2`: validate the prepared static model/output-cap alternative **before** calling the instruction proposer. A cheaper alternative passing the declared validation criteria goes straight to independent confirmation. A failed alternative advances into the prompt-search rounds already reserved in that same envelope. If only static validation plus confirmation fit, the compiler freezes zero generation rounds; failed static validation then rejects the change without a proposer call. It never shrinks held-out samples to buy more search. Failed confirmation ends the campaign; it cannot reopen search on the consumed test groups.
+
+The metadata receipt explains the selected search order, initial request reservation, generation eligibility and subsequent decision. Cumulative costs include initial static trials, generated trials, judging and confirmation. These bounds cover native provider calls, not unmeasured local planning, review, infrastructure or other overhead; they are not a complete payback claim. A static pass avoids proposer API calls, not every optimization cost.
+
+When preparation can offer only an unchanged control, v2 skips the duplicate static comparison and proceeds to the reserved instruction search. It also avoids repeating a failed static alternative in each generated round: each round compares the unchanged reference against its new generated candidates. Prior static validation remains in the encrypted history and cumulative accounting. The proposer receives only typed aggregate feedback; skipping generation does not expose training content. Later outcome receipts retain the whole versioned run family, including the two-run static-success path or up to eight runs for static validation plus three generated rounds and confirmation.
+
+Previously saved campaigns retain their exact version, hash and execution order on resume. Direct API requests omitting a version retain v1 generation-first behavior. `campaign prepare --generate-first` explicitly selects that legacy order for a new CLI campaign; changing an existing frozen campaign requires a new preparation and approval. API clients select v2 explicitly through the `version` field in `/campaigns/draft` or the full campaign specification.
 
 Current generation supports pinned native OpenAI Responses structured output. Targets support the qualified OpenAI Responses and Anthropic Messages text profiles. Dynamic tools, streams, arbitrary optimizer callbacks, cross-provider target migrations and unqualified request transformations are not included. Exact same-file literal instruction replacement/insertion is the first source-edit adapter. Imported model configuration, dynamic instructions and other source/registry layouts need separate qualification; evaluation evidence alone cannot authorize a guessed edit.
 

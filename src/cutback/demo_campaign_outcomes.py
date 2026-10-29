@@ -249,7 +249,11 @@ def run_sample(
                     .where(
                         CampaignRun.campaign_id == UUID(campaign["id"]), CampaignRun.phase == phase
                     )
-                    .order_by(CampaignRun.round_index.desc())
+                    .order_by(
+                        CampaignRun.round_index.desc(),
+                        CampaignRun.created_at.desc(),
+                        CampaignRun.id.desc(),
+                    )
                     .limit(1)
                 )
             worker = run_proposal_one if phase == "proposal" else run_one

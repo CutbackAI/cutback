@@ -1,6 +1,6 @@
 # What works and what remains
 
-Updated 28 October 2026. Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business. [Executed acceptance](progress.md) records the exact artifacts, checks, failures and limits; [the baseline](market-baseline.md) records remaining requirements.
+Updated 29 October 2026. Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business. [Executed acceptance](progress.md) records the exact artifacts, checks, failures and limits; [the baseline](market-baseline.md) records remaining requirements.
 
 ## Choose the right installation
 
@@ -15,6 +15,8 @@ A source merge does not update the PyPI wheel. New source commands require a sou
 ## What the automatic workflow does
 
 For qualified source and permitted examples, the agent can prepare source/data contracts, a frozen bounded search, candidate generation, validation and separately approved untouched confirmation. It can discover supported application checks, prepare independent base/proposed workspaces and an exact instruction/model/output-cap diff with rollback. An approved finite observation policy can compare later declared outcome windows and prepare a rollback review when they regress.
+
+New source campaign preparations first validate a distinct static model/output-cap alternative. A passing alternative skips instruction generation; a failed one uses only already reserved prompt-search effort. An unchanged control skips the duplicate trial, and a static-only budget rejects failure rather than shrinking confirmation samples. Previously saved campaigns keep their version and approval. The dashboard and independent example show this stopping rule; [contract and acceptance](improvement-campaigns.md).
 
 The independent [campaign application](../examples/improvement-campaign/README.md) exercises that path with synthetic native responses. Model support, source shapes, check commands and evidence coverage are explicit contracts. Unsupported dynamic source, unapproved content or unknown costs cause abstention; they do not become successful improvements. The workflow does not deploy changes.
 

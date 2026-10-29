@@ -36,6 +36,10 @@ test("inspect canonical campaign evidence, approve exact bounds and cancel witho
   );
   await expect(selected).toContainText("generated-r1-2");
   await expect(selected).toContainText("confirmation");
+  await expect(selected).toContainText("Initial model/output-cap validation");
+  await expect(selected).toContainText(
+    "selected its reserved instruction-search stage",
+  );
   await selected
     .getByText("Decision and evidence limits", { exact: true })
     .click();
@@ -76,6 +80,10 @@ test("inspect canonical campaign evidence, approve exact bounds and cancel witho
     .click();
   await expect(selected.getByRole("status")).toContainText(
     "READY_FOR_APPROVAL",
+  );
+  await expect(selected).toContainText("Search order: static alternative");
+  await expect(selected).toContainText(
+    "other optimization overhead is unmeasured",
   );
   const approve = page.getByRole("button", {
     name: "Approve and queue this campaign",

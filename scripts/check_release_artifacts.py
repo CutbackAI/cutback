@@ -149,6 +149,8 @@ def check(directory: Path):
             "docs/agent-evaluation.md",
             "docs/task-economics.md",
             "docs/improvement-campaigns.md",
+            "docs/evidence/simple-first-campaign-acceptance.json",
+            "tests/integration/test_campaign_simple_first.py",
             "docs/campaign-outcomes.md",
             "docs/load-qualification.md",
             "docs/modern-model-accounting.md",

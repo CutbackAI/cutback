@@ -19,6 +19,7 @@ def prepare(
     generator_model="gpt-4.1-mini",
     rounds=1,
     variants_per_round=2,
+    simple_first=None,
 ):
     root, directory = workspace(root)
     with workspace_lock(directory):
@@ -43,7 +44,17 @@ def prepare(
             }:
                 raise
             edit = None
+        path = directory / "campaign.json"
+        saved = read_private(path) if path.exists() else None
+        version = (
+            saved["request"].get("version", "cutback.improvement-campaign.v1")
+            if simple_first is None and saved
+            else "cutback.improvement-campaign.v1"
+            if simple_first is False
+            else "cutback.improvement-campaign.v2"
+        )
         body = {
+            "version": version,
             "template_plan_id": state["plan"]["id"],
             "instruction_edit": edit.model_dump(mode="json") if edit else None,
             "baseline_snapshot_id": str(UUID(str(baseline_snapshot_id))),
@@ -60,16 +71,15 @@ def prepare(
             "rounds": rounds,
             "variants_per_round": variants_per_round,
         }
-        path = directory / "campaign.json"
         if generator_model == "gpt-6-luna":
             from cutback.core.native_models import NativeModelContract
 
             body["generator_model"]["native_contract"] = (
                 NativeModelContract.current_luna_text().model_dump(mode="json")
             )
-        if path.exists():
-            saved = read_private(path)
-            if saved["request"] != body:
+        if saved:
+            previous = {"version": "cutback.improvement-campaign.v1", **saved["request"]}
+            if previous != body:
                 raise ValueError("SAVED_CAMPAIGN_SCOPE_CHANGED_NEW_WORKFLOW_REQUIRED")
         else:
             saved = {
@@ -83,7 +93,7 @@ def prepare(
         receipt = control(
             "POST",
             f"/v1/projects/{saved['project_id']}/campaigns/draft",
-            {**body, "request_id": saved["request_id"]},
+            {**saved["request"], "request_id": saved["request_id"]},
         )
         saved["campaign_id"] = receipt["id"]
         write_private(path, saved)

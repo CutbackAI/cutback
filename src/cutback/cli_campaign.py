@@ -28,6 +28,11 @@ def register_campaign(app, output, guarded):
         generator_model: str = "gpt-4.1-mini",
         rounds: int = 1,
         variants_per_round: int = 2,
+        generate_first: bool = typer.Option(
+            False,
+            "--generate-first",
+            help="Use the legacy generation-first search for a new campaign.",
+        ),
     ):
         """Derive a frozen search from workflow prepare and observed task costs. No inference."""
         from cutback.agent_campaign import prepare as run
@@ -46,6 +51,7 @@ def register_campaign(app, output, guarded):
                 generator_model=generator_model,
                 rounds=rounds,
                 variants_per_round=variants_per_round,
+                simple_first=False if generate_first else None,
             )
         )
 

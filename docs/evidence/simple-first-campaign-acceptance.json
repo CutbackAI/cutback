@@ -1,0 +1,69 @@
+{
+  "contract": "cutback.simple-first-campaign-acceptance.v1",
+  "date": "2026-10-29",
+  "campaign_version": "cutback.improvement-campaign.v2",
+  "status": "installed_qualified_final_public_archives_and_hosted_gates_tracked_in_containing_pull_request",
+  "installed_final_default": {
+    "passed": 9,
+    "seconds": 107.61,
+    "openai": "2.29.0",
+    "anthropic": "2.3.0",
+    "includes_authenticated_desktop_mobile_axe_and_modern_contract_browser": true
+  },
+  "installed_final_sdk3": {
+    "passed": 8,
+    "seconds": 85.12,
+    "openai": "3.35.1",
+    "anthropic": "2.3.0"
+  },
+  "broader_installed_trials_before_stale_assertion_correction": {
+    "default": {"passed": 671, "failed": 1, "skipped": 23, "seconds": 564.15},
+    "sdk3": {"passed": 677, "failed": 1, "skipped": 6, "seconds": 558.69},
+    "accepted_as_all_green": false,
+    "failure": "old_modern_sample_assertion_required_a_proposer_despite_successful_static_validation",
+    "resolution": "rerun_corrected_modern_static_success_and_add_separate_modern_proposer_fallback_test_in_both_matrices",
+    "python_modules_byte_identical_to_final_ui_wheel": 212
+  },
+  "qualification": [
+    "real_postgresql_and_released_migration_resources",
+    "native_sdk_synthetic_transports_not_fake_experiment_results",
+    "static_success_skips_generation_and_training_exposure",
+    "failed_static_trial_advances_only_into_reserved_instruction_search",
+    "static_only_envelope_confirms_or_rejects_without_generation",
+    "unchanged_control_skips_redundant_static_comparison",
+    "failed_static_candidate_not_repeated_in_generated_rounds",
+    "future_proposer_input_bounds_include_static_aggregate_feedback",
+    "hostile_decimal_context_cannot_weaken_cost_compilation",
+    "one_cumulative_parent_and_child_reservation_ledger",
+    "outage_or_unknown_billing_stops_without_replay",
+    "failed_confirmation_does_not_reopen_search",
+    "old_saved_request_resumes_same_identity_hash_and_execution_version",
+    "two_round_fallback_preserves_training_and_aggregate_feedback_boundaries",
+    "modern_static_success_has_zero_optimization_calls",
+    "modern_proposer_fallback_preserves_exact_reasoning_tier_price_contract",
+    "source_diff_rollback_both_tree_application_checks_and_later_outcome_family",
+    "independent_runnable_sample_and_authenticated_campaign_dashboard"
+  ],
+  "earlier_failed_trials_not_accepted": [
+    "static_only_test_budget_assumed_three_groups_per_split_instead_of_eight",
+    "later_outcome_linker_rejected_valid_two_run_static_success_family",
+    "old_outcome_tests_assumed_every_campaign_contains_three_runs"
+  ],
+  "static_checks": {
+    "openapi_and_types": "regenerated",
+    "react_build": "passed",
+    "frontend_units": 9,
+    "typing_modules": 212,
+    "ruff_and_format": "passed",
+    "core_only_wheel_smoke": "passed"
+  },
+  "migration_unchanged": "0019",
+  "economic_scope": "native_provider_cost_bounds_other_optimization_overhead_unmeasured",
+  "full_strategy_selection_complete": false,
+  "full_market_baseline_or_product_complete": false,
+  "paid_provider_calls": 0,
+  "pypi_upload": false,
+  "pypi_version_unchanged": "0.1.0.dev5",
+  "production_deployment": false,
+  "customer_roi_claim": false
+}

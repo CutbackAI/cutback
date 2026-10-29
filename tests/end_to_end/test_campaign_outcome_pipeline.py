@@ -84,7 +84,7 @@ def test_ordinary_campaign_checks_uploaded_diff_and_later_rollback_review(
                         and contract["service_tier"] == "auto"
                     )
             assert modern_plans >= 3
-            assert modern_proposers >= 1
+            assert modern_proposers == 0  # Static cap reduction passed; no generation is needed.
             calls = session.scalars(
                 select(ExecutionCall).where(
                     ExecutionCall.project_id == UUID(tenant[0]), ExecutionCall.model == "gpt-6-luna"
@@ -94,12 +94,13 @@ def test_ordinary_campaign_checks_uploaded_diff_and_later_rollback_review(
                 call.price_sha256 == NativeModelContract.current_luna_text().price_sha256
                 for call in calls
             )
+            assert not any(call.purpose == "optimization" for call in calls)
     assert result["application_check_discovery"]["executed_during_discovery"] == 0
     assert len(result["application_check_discovery"]["commands"]) == 1
     assert result["review"]["status"] == "READY_FOR_PR_REVIEW"
     assert result["outcome_review"]["next_action"] == "REVIEW_ROLLBACK"
     evidence = result["outcome_review"]["receipt"]["evidence"]
-    assert len(evidence["run_costs"]) == 3 and evidence["change_id"]
+    assert len(evidence["run_costs"]) == (2 if modern_model else 4) and evidence["change_id"]
     assert evidence["report"]["declared_optimization_total_usd"] is not None
     assert evidence["report"]["production_savings_usd"] is None
     assert api[1]["Authorization"][7:] not in json.dumps(result)

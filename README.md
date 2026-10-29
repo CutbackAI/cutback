@@ -68,7 +68,7 @@ The commands above target the published dev5 package. For the newer source-check
 |---|---|
 | Investigate a whole workflow or session | [Tracing walkthrough](https://github.com/CutbackAI/cutback/blob/main/docs/workflow-tracing.md) |
 | Account for failed tasks and optimization overhead | [Task-economics sample, source checkout](https://github.com/CutbackAI/cutback/blob/main/examples/task-economics/README.md) |
-| Generate and confirm bounded instruction improvements | [Campaign sample and limits, source checkout](https://github.com/CutbackAI/cutback/blob/main/examples/improvement-campaign/README.md) |
+| Try a cheaper model/cap first, then generate instructions only if needed | [Runnable campaign, confirmation and rollback, source checkout](https://github.com/CutbackAI/cutback/blob/main/examples/improvement-campaign/README.md) |
 | Optimize actual corpus chunking and retrieval context | [Independent RAG application and confirmation workflow](https://github.com/CutbackAI/cutback/blob/main/examples/retrieval-optimization/README.md) |
 | Connect a reviewed change to later task outcomes | [`--outcomes` sample and agent follow-up](https://github.com/CutbackAI/cutback/blob/main/docs/campaign-outcomes.md) |
 | Prepare instruction search from a cheapest-model application | [`workflow prepare --for-campaign` and vendor scope](https://github.com/CutbackAI/cutback/blob/main/docs/improvement-campaigns.md) |

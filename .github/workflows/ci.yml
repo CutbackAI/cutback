@@ -97,6 +97,7 @@ jobs:
           tests/integration/test_native_episodes.py tests/integration/test_semantic_episodes.py
           tests/integration/test_semantic_episode_controls.py tests/integration/test_episode_lifecycle.py
           tests/integration/test_execution_ledger.py tests/integration/test_campaign_workflow.py
+          tests/integration/test_campaign_simple_first.py
           tests/integration/test_campaign_preparation_basis.py
           tests/integration/test_outcome_watches.py tests/integration/test_outcome_watch_controls.py
           tests/integration/test_outcome_watch_draft.py tests/integration/test_outcome_watch_migration.py

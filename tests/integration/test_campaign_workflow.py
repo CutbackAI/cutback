@@ -128,7 +128,9 @@ def child(api, row, phase):
         return session.scalar(
             select(CampaignRun.run_id)
             .where(CampaignRun.campaign_id == UUID(row["id"]), CampaignRun.phase == phase)
-            .order_by(CampaignRun.round_index.desc())
+            .order_by(
+                CampaignRun.round_index.desc(), CampaignRun.created_at.desc(), CampaignRun.id.desc()
+            )
             .limit(1)
         )
 
@@ -142,6 +144,7 @@ def native(
     cancel=None,
     repeat=False,
     dynamic_seeds=False,
+    static_worse=False,
 ):
     monkeypatch.setenv("CUTBACK_EXPERIMENT_OPENAI_KEY", "synthetic-unused-key")
     requests = []
@@ -188,7 +191,16 @@ def native(
                     }
                 )
         else:
-            output = "B" if cheaper_worse and body["model"] != "gpt-4.1" else "A"
+            output = (
+                "B"
+                if body["model"] != "gpt-4.1"
+                and (
+                    cheaper_worse
+                    or static_worse
+                    and not body.get("instructions", "").startswith("Return A only.")
+                )
+                else "A"
+            )
         if cancel:
             cancel()
         output_tokens = (
@@ -485,20 +497,41 @@ def test_cheap_but_worse_campaign_does_not_consume_confirmation(api, tenant, tmp
         executor.close()
 
 
+@pytest.mark.parametrize("simple_first", [False, True])
 def test_two_rounds_send_only_training_and_bounded_validation_feedback(
-    api, tenant, tmp_path, monkeypatch
+    api,
+    tenant,
+    tmp_path,
+    monkeypatch,
+    simple_first,
 ):
     base, store, _, request = prepare(api, tenant, tmp_path, monkeypatch)
     request["request_id"] = str(uuid4())
     request["specification"]["generator"]["rounds"] = 2
+    if simple_first:
+        request["specification"]["version"] = "cutback.improvement-campaign.v2"
     response = api[0].post(base + "/campaigns", headers=api[1], json=request)
     assert response.status_code == 201, response.text
     row = response.json()
     assert row["economic_envelope"]["rounds"] == 2
     approve(api, base, row)
-    executor, requests = native(monkeypatch)
+    executor, requests = native(monkeypatch, static_worse=simple_first)
     try:
-        assert advance(api, store, row)["status"] == "WAITING_PROPOSAL"
+        assert advance(api, store, row)["status"] == (
+            "WAITING_VALIDATION" if simple_first else "WAITING_PROPOSAL"
+        )
+        if simple_first:
+            assert (
+                run_one(
+                    api[2].state.sessions,
+                    store,
+                    executor=executor,
+                    execution_enabled=True,
+                    only_run_id=child(api, row, "validation"),
+                )["status"]
+                == "COMPLETED"
+            )
+            assert advance(api, store, row)["status"] == "WAITING_PROPOSAL"
         for index in range(2):
             assert (
                 run_proposal_one(
@@ -512,7 +545,7 @@ def test_two_rounds_send_only_training_and_bounded_validation_feedback(
             )
             training = json.loads(next(r for r in reversed(requests) if "text" in r)["input"])
             feedback = training["validation_aggregate_feedback"]
-            assert bool(feedback) == bool(index)
+            assert len(feedback) == (1 + index if simple_first else 2 * index)
             prior = training["previous_candidate_versions"]
             assert len(prior) == index
             if index:
@@ -556,7 +589,7 @@ def test_two_rounds_send_only_training_and_bounded_validation_feedback(
         )
         assert advance(api, store, row)["status"] == "COMPLETED"
         detail = api[0].get(base + f"/campaigns/{row['id']}", headers=api[1]).json()
-        assert len(detail["runs"]) == 5 and len(detail["candidates"]) == 3
+        assert len(detail["runs"]) == 5 + int(simple_first) and len(detail["candidates"]) == 3
         assert detail["requests"] == detail["known_cost_requests"] == len(requests)
     finally:
         executor.close()
