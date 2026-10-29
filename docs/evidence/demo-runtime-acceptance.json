@@ -1,0 +1,81 @@
+{
+  "feature": "source_demo_runtime_prerequisites_and_nonroot_image_recovery",
+  "status": "local_installed_and_linux_image_qualified_final_hosted_acceptance_tracked_in_pull_request",
+  "git_debian_package": "1:2.47.3-0+deb13u1",
+  "git_provenance": "https://packages.debian.org/trixie/git",
+  "image_acceptance": {
+    "image": "cutback-acceptance:demo-git-candidate",
+    "image_id": "sha256:9e43f21bb819e491012b26fb1327cb9bbd96f1b49d4869e0758f3663742c352d",
+    "uid": 10001,
+    "python": "3.11.18",
+    "migration": "0019",
+    "sample_application_calls": 19,
+    "source_linked_support_desk_calls": 12,
+    "source_workflows": 2,
+    "application_workflows": 3,
+    "paid_provider_calls": 0,
+    "restored_tables": 85,
+    "row_counts_match": true,
+    "restored_and_rekeyed_objects": 653,
+    "restored_and_rekeyed_plans": 12,
+    "database_pointers_preserved": true,
+    "production_changed": false,
+    "secret_delivery": "anonymous_stdin_pipes",
+    "independent_otel_producer_and_replay": "passed",
+    "concurrent_load": {
+      "tenants": 2,
+      "accepted": 2000,
+      "duplicates": 2000,
+      "seconds": 1.906,
+      "production_sla": false
+    }
+  },
+  "image_architecture": "linux_amd64",
+  "prerequisite_failure_contract": "DEMO_GIT_REQUIRED before workspace/database/HTTP setup",
+  "prerequisite_and_release_control_tests": {
+    "passed": 5,
+    "seconds": 0.27
+  },
+  "installed_default": {
+    "passed": 626,
+    "skipped": 23,
+    "seconds": 300.37,
+    "scope": "all_units_release_archive_controls_real_migrations_full_support_desk_and_retrieval_native_pg_source_browser_mobile_axe"
+  },
+  "installed_sdk3": {
+    "passed": 642,
+    "skipped": 6,
+    "seconds": 221.95,
+    "scope": "all_units_release_archive_controls_real_migrations_and_retrieval_native_pg_source_browser_mobile_axe"
+  },
+  "skip_reasons": {
+    "windows_symlink_privilege": 2,
+    "separate_legacy_sdk": 4,
+    "separate_sdk3_default_only": 17
+  },
+  "typing_modules": 212,
+  "ruff_formatted_files": 541,
+  "core_only_installed_smoke": "passed",
+  "application_payload_files": 227,
+  "python_payload_modules": 212,
+  "failed_trials": [
+    {
+      "failure": "missing_git_in_shipped_image",
+      "accepted": false,
+      "diagnosis": "new retrieval demo reaches Git initialization; executable absent"
+    },
+    {
+      "failure": "stale_image_drill_expected_12_calls_only",
+      "accepted": false,
+      "diagnosis": "current native task-economics fixture adds seven intercepted SDK calls in a third application workflow"
+    }
+  ],
+  "new_required_ci_gate": "infrastructure builds the nonroot image, runs the owned PostgreSQL/demo/object-and-plan recovery/replay drill, and cleans its job-owned database",
+  "final_public_artifact_and_hosted_gates": "required before merge; tracked in containing pull request",
+  "migration_unchanged": "0019",
+  "paid_provider_calls": 0,
+  "pypi_upload": false,
+  "pypi_version_unchanged": "0.1.0.dev5",
+  "production_deployment": false,
+  "full_market_baseline_or_product_complete": false
+}

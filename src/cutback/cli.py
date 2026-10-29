@@ -95,7 +95,7 @@ def main(
 
 @app.command()
 def demo(port: int = typer.Option(8766, min=1024, max=65535), open_browser: bool = True):
-    """Explore a complete support-desk sample. Requires Docker; no API key or paid calls."""
+    """Explore the complete sample. Requires Docker and Git; no API key or paid calls."""
     try:
         from cutback.demo import launch_demo
 
@@ -108,7 +108,12 @@ def demo(port: int = typer.Option(8766, min=1024, max=65535), open_browser: bool
                 "extras --dev in the repository."
             ),
         )
-    except (ValueError, OSError, subprocess.SubprocessError):
+    except (ValueError, OSError, subprocess.SubprocessError) as exc:
+        if isinstance(exc, ValueError) and str(exc) == "DEMO_GIT_REQUIRED":
+            fail(
+                "DEMO_GIT_REQUIRED",
+                "Install Git and make git available on PATH, then retry the source-bound demo.",
+            )
         fail(
             "DEMO_SETUP_FAILED",
             (

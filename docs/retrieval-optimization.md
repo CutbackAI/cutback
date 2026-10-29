@@ -1,6 +1,6 @@
 # Optimize a real local text corpus
 
-Source-checkout capability, not part of the published dev5 package. [Executed acceptance](progress.md) is separate from this contract. This adds actual corpus retrieval to the existing experiment worker. It does not reinterpret the earlier declared RAG/tool fixtures as corpus search.
+Source-checkout capability, not part of the published dev5 package. Git must be available on PATH for the source-bound demo and configuration/check workflows. [Executed acceptance](progress.md) is separate from this contract. This adds actual corpus retrieval to the existing experiment worker. It does not reinterpret the earlier declared RAG/tool fixtures as corpus search.
 
 ## The user journey
 

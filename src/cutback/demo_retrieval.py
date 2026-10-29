@@ -70,6 +70,10 @@ def synthetic_executor():
 
 
 def seed_retrieval(app, control, project_id, workspace, *, execute=True):
+    from cutback.demo import require_demo_git
+
+    require_demo_git()
+
     from cutback.core.retrieval import RetrievalCorpus, RetrievalSettings
     from cutback.core.workspace import private_directory
     from cutback.retrieval_changes import RetrievalProposal, inspect_configuration, prepare_patch
