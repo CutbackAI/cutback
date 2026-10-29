@@ -68,16 +68,20 @@ def test_fresh_app_agent_plan_native_worker_bound_patch_without_demo(
         proposal(root, control, purpose="stale-review")
 
 
+@pytest.mark.parametrize("unrelated_runs", [0, 1001])
 def test_lost_queue_response_reconciles_same_run_and_never_posts_twice(
-    api, tenant, tmp_path, monkeypatch
+    api, tenant, tmp_path, monkeypatch, unrelated_runs
 ):
     root, control, state, _ = prepare_fresh(api, tenant, tmp_path, monkeypatch)
 
     class LostResponse:
         endpoint = control.endpoint
         queues = 0
+        lookups = 0
 
         def __call__(self, method, path, body=None):
+            if method == "GET" and path.endswith("/execution"):
+                self.lookups += 1
             result = control(method, path, body)
             if method == "POST" and path.endswith("/experiments"):
                 self.queues += 1
@@ -88,10 +92,96 @@ def test_lost_queue_response_reconciles_same_run_and_never_posts_twice(
     with pytest.raises(ConnectionError):
         advance(root, lost, plan_hash=state["plan"]["plan_hash"], approval_ref="synthetic-only")
     assert load_session(root)["phase"] == "QUEUEING"
+    if unrelated_runs:
+        from uuid import UUID, uuid4
+
+        from cutback.server.db import ExperimentPlanRecord, ExperimentRunRecord
+
+        # Newer unrelated history must not hide this exact lost-acknowledgement run.
+        with api[2].state.sessions.begin() as session:
+            source = session.get(ExperimentPlanRecord, UUID(state["plan"]["id"]))
+            plans = [
+                ExperimentPlanRecord(
+                    id=uuid4(),
+                    project_id=UUID(tenant[0]),
+                    dataset_id=source.dataset_id,
+                    specification={"public_specification": {}},
+                )
+                for _ in range(unrelated_runs)
+            ]
+            session.add_all(plans)
+            session.flush()
+            session.add_all(
+                ExperimentRunRecord(
+                    project_id=UUID(tenant[0]),
+                    plan_id=plan.id,
+                    status="CANCELLED",
+                    results={},
+                )
+                for plan in plans
+            )
     recovered = advance(root, lost)
-    assert recovered["phase"] == "QUEUED" and lost.queues == 1
+    assert recovered["phase"] == "QUEUED" and lost.queues == 1 and lost.lookups == 1
     assert advance(root, lost)["run_id"] == recovered["run_id"] and lost.queues == 1
     control("POST", f"/v1/projects/{tenant[0]}/experiments/{recovered['run_id']}/cancel", {})
+
+
+@pytest.mark.parametrize("failure", ["before_approval", "after_approval", "before_queue"])
+def test_unknown_approval_or_queue_never_replays_when_exact_run_is_absent(
+    api, tenant, tmp_path, monkeypatch, failure
+):
+    root, control, state, _ = prepare_fresh(api, tenant, tmp_path, monkeypatch)
+
+    class Interrupted:
+        endpoint = control.endpoint
+
+        def __init__(self):
+            self.calls = []
+
+        def __call__(self, method, path, body=None):
+            self.calls.append((method, path))
+            if method == "POST":
+                if path.endswith("/approve"):
+                    if failure == "before_approval":
+                        raise ConnectionError("synthetic interruption")
+                    result = control(method, path, body)
+                    if failure == "after_approval":
+                        raise ConnectionError("synthetic lost approval reply")
+                    return result
+                if path.endswith("/experiments"):
+                    raise ConnectionError("synthetic interruption before queue commit")
+            return control(method, path, body)
+
+    interrupted = Interrupted()
+    with pytest.raises(ConnectionError):
+        advance(
+            root,
+            interrupted,
+            plan_hash=state["plan"]["plan_hash"],
+            approval_ref="synthetic-interruption-only",
+        )
+    before = len(interrupted.calls)
+    for _ in range(2):
+        result = advance(root, interrupted)
+        assert result["stop_code"] == "UNCERTAIN_APPROVAL_OR_QUEUE_RECONCILE_WITH_OPERATOR"
+        assert "run_id" not in result
+    assert all(
+        method == "GET" and path.endswith("/execution")
+        for method, path in interrupted.calls[before:]
+    )
+    if failure != "before_approval":
+        # Simulate the original request committing after the first reconciliation.
+        # This direct call stands in for the delayed server handler, not a CLI retry.
+        queued = control(
+            "POST",
+            f"/v1/projects/{tenant[0]}/experiments",
+            {"plan_id": state["plan"]["id"]},
+        )
+        resumed = advance(root, interrupted)
+        assert resumed["run_id"] == queued["id"] and resumed["phase"] == "QUEUED"
+        assert "stop_code" not in resumed
+        assert all(method == "GET" for method, _ in interrupted.calls[before:])
+        control("POST", f"/v1/projects/{tenant[0]}/experiments/{queued['id']}/cancel", {})
 
 
 def test_source_plan_requires_registered_profile_and_viewer_cannot_read_prompt(
