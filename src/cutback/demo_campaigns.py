@@ -9,7 +9,7 @@ import shutil
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from unittest.mock import patch
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 
 def synthetic_executor(*, seeds_from_scope=False):
@@ -104,17 +104,12 @@ def synthetic_executor(*, seeds_from_scope=False):
 
 
 def seed_campaign(app, control, project_id, writer, workspace):
-    from sqlalchemy import select
-
+    from cutback.campaign_operator import CampaignOperator
     from cutback.core.instruction_edits import qualify_instruction_edit
     from cutback.core.request_profiles import prepare_profile
     from cutback.core.workspace import private_directory
     from cutback.evals.experiments import ExperimentPlan, ModelSpec
     from cutback.scanner import scan
-    from cutback.server.campaign_db import CampaignRecord, CampaignRun
-    from cutback.server.campaign_worker import advance_one
-    from cutback.server.proposal_worker import run_proposal_one
-    from cutback.server.worker import run_one
 
     base = f"/v1/projects/{project_id}"
 
@@ -308,43 +303,34 @@ def seed_campaign(app, control, project_id, writer, workspace):
     executor, requests = synthetic_executor()
     sessions, store = app.state.sessions, app.state.artifact_store
     try:
-        for _ in range(8):
-            with sessions.begin() as session:
-                parent = session.get(CampaignRecord, UUID(campaign["id"]))
-                parent.available_at = None  # Owned synchronous fixture driver, no competing worker.
-            result = advance_one(
-                sessions,
-                store,
-                execution_enabled=True,
-                only_campaign_id=campaign["id"],
-                synthetic_transport=True,
+
+        def source_scope():
+            current = scan(application)
+            selected = next(
+                (s for s in current["call_sites"] if s["call_site_id"] == site["call_site_id"]),
+                None,
             )
-            if result["status"] == "COMPLETED":
-                break
-            if result["status"] == "FAILED":
-                raise ValueError("SYNTHETIC_CAMPAIGN_TRANSITION_FAILED")
-            phase = result["status"].removeprefix("WAITING_").lower()
-            with sessions() as session:
-                run_id = session.scalar(
-                    select(CampaignRun.run_id)
-                    .where(
-                        CampaignRun.campaign_id == UUID(campaign["id"]), CampaignRun.phase == phase
-                    )
-                    .order_by(
-                        CampaignRun.round_index.desc(),
-                        CampaignRun.created_at.desc(),
-                        CampaignRun.id.desc(),
-                    )
-                    .limit(1)
-                )
-            worker = run_proposal_one if phase == "proposal" else run_one
-            result = worker(
-                sessions, store, executor=executor, execution_enabled=True, only_run_id=run_id
-            )
-            if result["status"] != "COMPLETED":
-                raise ValueError("SYNTHETIC_CAMPAIGN_CHILD_FAILED")
-        else:
-            raise ValueError("SYNTHETIC_CAMPAIGN_STEP_BOUND")
+            if (
+                selected is None
+                or prepare_profile(
+                    application, selected, commit=current["project"].get("commit")
+                ).binding
+                != profile.binding
+            ):
+                raise ValueError("SYNTHETIC_CAMPAIGN_SOURCE_CHANGED")
+
+        driver = CampaignOperator(
+            sessions,
+            store,
+            project_id=project_id,
+            campaign_id=campaign["id"],
+            campaign_hash=campaign["campaign_hash"],
+            preflight=source_scope,
+            executor=executor,
+        )
+        driven = driver.run()
+        if driven["status"] != "COMPLETED":
+            raise ValueError("SYNTHETIC_CAMPAIGN_DRIVER_STOPPED")
         report = control.get(base + f"/campaigns/{campaign['id']}").json()
         selected = post(
             base + f"/campaigns/{campaign['id']}/selected/content",
@@ -370,6 +356,7 @@ def seed_campaign(app, control, project_id, writer, workspace):
         )
         return {
             "campaign_id": campaign["id"],
+            "operator": driven,
             "template_plan_id": template["id"],
             "baseline_snapshot_id": snapshot["id"],
             "source_file": "cutback/sample_app/campaign.py",
