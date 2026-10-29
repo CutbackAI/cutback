@@ -1,5 +1,5 @@
 {
-  "status": "source_qualified_final_installed_and_exact_public_gates_pending",
+  "status": "bounded_increment_merged_and_accepted",
   "date": "2026-10-29",
   "scope": [
     "explicit v2 Luna Responses HTTP SSE with shared JSON/SSE allowances",
@@ -104,5 +104,49 @@
     "skipped": 8,
     "seconds": 560.25,
     "not_final_wall_fix_acceptance": true
-  }
+  },
+  "public_merge": "ee985e30100f2b087564ab71ba5c139778e9402b",
+  "reviewed_public_head": "39e1ae5a01d6f07d39336d01acd44e83a9543b9d",
+  "reviewed_and_merged_tree": "b31c4ed88ce62a7f42f11d0bf72a2c42ba77e511",
+  "final_installed_default": {
+    "passed": 1158,
+    "skipped": 32,
+    "seconds": 1527.43,
+    "browser_desktop_mobile_axe": true,
+    "owned_docker": true,
+    "isolated_cpu_training": true
+  },
+  "final_installed_sdk3": {
+    "passed": 947,
+    "skipped": 8,
+    "seconds": 558.25
+  },
+  "final_hosted": {
+    "required_checks_passed": 10,
+    "default_311": {
+      "passed": 1160,
+      "skipped": 30,
+      "seconds": 985.85
+    },
+    "default_313": {
+      "passed": 1159,
+      "skipped": 31,
+      "seconds": 776.95
+    },
+    "sdk3_311": {
+      "passed": 949,
+      "skipped": 6,
+      "seconds": 224.84
+    },
+    "sdk3_313": {
+      "passed": 950,
+      "skipped": 5,
+      "seconds": 291.06
+    },
+    "legacy_each": 21
+  },
+  "qualified_application_files": 231,
+  "qualified_python_modules": 216,
+  "final_wheel_sha256": "45ddfd42f5d5313686b5cea770a0f05eea0c9937aa919ba0871457038bab96a9",
+  "final_sdist_sha256": "baccf913bd4c92f3c1354a4c664b34e611f67ad64d6343fe807ab81ad30d81c6"
 }

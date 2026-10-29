@@ -176,7 +176,8 @@ def test_actual_request_profile_preserves_contract_and_blocks_cross_workflow_pat
         )
 
 
-def test_config_backed_model_and_prompt_dependencies_are_bound(tmp_path):
+@pytest.mark.parametrize("namespace", [False, True])
+def test_config_backed_model_and_prompt_dependencies_are_bound(tmp_path, namespace):
     (tmp_path / "config.py").write_text('MODEL="gpt-4.1"\n')
     (tmp_path / "task.md").write_text("Owned task instruction")
     source = """from pathlib import Path
@@ -188,6 +189,10 @@ def classify(text):
     return client.responses.create(model=MODEL,input=text,
         instructions=SYSTEM,max_output_tokens=64)
 """
+    if namespace:
+        source = source.replace("from config import MODEL", "import config as cfg").replace(
+            "model=MODEL", "model=cfg.MODEL"
+        )
     inventory, site, profile = inspect(tmp_path, source)
     assert set(profile.binding.dependencies) == {"app.py", "config.py", "task.md"}
     rec = recommendation(profile)

@@ -85,7 +85,9 @@ class Module:
                 self.functions.add(key)
                 self.definitions[key] = node
                 if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                    for arg in (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs):
+                    parameters = [*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs]
+                    parameters += [arg for arg in (node.args.vararg, node.args.kwarg) if arg]
+                    for arg in parameters:
                         bind(f"{key}.{arg.arg}", None)
                 for child in node.body:
                     visit(child, key)
@@ -446,6 +448,8 @@ def scan(root: str | Path, *, languages: list[str] | None = None) -> dict[str, A
         return None
 
     def model_value(module, node, scope, seen=frozenset()):
+        if time.monotonic() > deadline or len(seen) > 100:
+            return None, "runtime_unresolved"
         if isinstance(node, ast.Constant):
             return safe_model(node.value), "literal"
         if isinstance(node, ast.Name):
@@ -461,6 +465,26 @@ def scan(root: str | Path, *, languages: list[str] | None = None) -> dict[str, A
                 other, key = local_target(value[1])
                 if other and marker not in seen:
                     return model_value(other, ast.Name(id=key), "", seen | {marker})
+        if (
+            isinstance(node, ast.Attribute)
+            and isinstance(node.value, ast.Name)
+            and node.value.id not in {"self", "cls"}
+        ):
+            target = symbol(module, node, scope, seen)
+            namespace_module, namespace_key = local_target(target) if target else (None, None)
+            marker = (module.name, "model_namespace:" + node.value.id + "." + node.attr)
+            # A known local module constant is distinct from instance/class
+            # attributes, descriptors, environment settings and external imports.
+            if (
+                namespace_module
+                and namespace_key
+                and "." not in namespace_key
+                and marker not in seen
+            ):
+                value, _ = model_value(
+                    namespace_module, ast.Name(id=namespace_key), "", seen | {marker}
+                )
+                return value, "config_symbol" if value is not None else "runtime_unresolved"
         return None, "runtime_unresolved"
 
     def configured_output_limit(kwargs):
