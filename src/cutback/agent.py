@@ -137,14 +137,28 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
     with workspace_lock(directory):
         inventory = scan(root)
         profiles, unresolved, entrypoints = [], [], {}
-        for site in inventory["call_sites"][:200]:
+        matching = []
+        for site in inventory["call_sites"]:
             entries = site["entry_points"] or [
                 {"file": site["source_file"], "symbol": site["source_symbol"]}
             ]
+            selected = []
             for entry in entries:
                 identity, _ = workflow_identity(entry["file"], entry["symbol"])
-                if workflow and identity != workflow:
-                    continue
+                if not workflow or identity == workflow:
+                    selected.append((entry, identity))
+            if selected:
+                matching.append((site, selected))
+        profile_analysis = {
+            "detected_call_sites": len(inventory["call_sites"]),
+            "matching_call_sites": len(matching),
+            "inspected_call_sites": min(len(matching), 200),
+            "omitted_call_sites": max(0, len(matching) - 200),
+            "call_site_limit": 200,
+            "scope": "detected_static_candidates_not_runtime_or_exhaustive_source_coverage",
+        }
+        for site, entries in matching[:200]:
+            for entry, identity in entries:
                 try:
                     profile = prepare_profile(
                         root, site, workflow_id=identity, commit=inventory["project"].get("commit")
@@ -170,6 +184,7 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
                 "unresolved": unresolved,
                 "fixtures": fixtures,
                 "inventory": inventory,
+                "profile_analysis": profile_analysis,
             }
         )
         prior = (
@@ -204,6 +219,7 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
             "phase": "ANALYZED",
             "checkpoints": prior["checkpoints"] if prior else [],
             "profiles": profiles,
+            "profile_analysis": profile_analysis,
             "unresolved": unresolved,
             "fixtures": fixtures,
             "entrypoints": list(entrypoints.values()),
@@ -218,6 +234,8 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
             state["decisions_required"].append("request_contract_qualification")
         if not fixtures:
             state["decisions_required"].append("permitted_examples_or_observation_scope")
+        if profile_analysis["omitted_call_sites"]:
+            state["decisions_required"].append("select_workflow_to_inspect_remaining_call_sites")
         inventory["request_profiles"] = [p["binding"] for p in profiles]
         write_private(directory / "inventory.json", inventory)
         prepare_instrumentation(root, directory, state)
@@ -246,6 +264,9 @@ def prepare_instrumentation(root, directory, state):
             changes.append({"source_file": entry["file"], "status": "INSPECT_EXISTING_STARTUP"})
     state["instrumentation"] = {
         "proposals": changes,
+        "entrypoint_file_limit": 30,
+        "processed_entrypoint_files": len(changes),
+        "omitted_entrypoint_files": max(0, len(state["entrypoints"]) - 30),
         "applied": False,
         "next_tool": "cutback instrument --plan --entrypoint SOURCE --json",
     }
@@ -611,17 +632,15 @@ def advance(root, control, *, plan_hash=None, approval_ref=None):
             save_session(directory, state, "QUEUED")
         if state["phase"] in {"APPROVING", "QUEUEING"}:
             # Reconcile only by existing immutable plan/run. Never send another POST.
-            matches: list[dict] = []
-            for offset in range(0, 1000, 100):
-                page = control("GET", base + f"/experiments?limit=100&offset={offset}")
-                matches.extend(r for r in page if r["plan_id"] == state["plan"]["id"])
-                if len(page) < 100:
-                    break
-            if len(matches) != 1:
+            execution = control("GET", base + f"/experiments/plans/{state['plan']['id']}/execution")
+            if execution["plan_id"] != state["plan"]["id"]:
+                raise ValueError("PLAN_EXECUTION_IDENTITY_MISMATCH")
+            if not execution["run_id"]:
                 state["stop_code"] = "UNCERTAIN_APPROVAL_OR_QUEUE_RECONCILE_WITH_OPERATOR"
                 save_session(directory, state)
                 return public_session(state)
-            state["run_id"] = matches[0]["id"]
+            state["run_id"] = str(UUID(execution["run_id"]))
+            state.pop("stop_code", None)
             save_session(directory, state, "QUEUED")
         if state["phase"] in {"QUEUED", "RUNNING", "COMPLETED", "PROPOSAL_READY"}:
             report = control("GET", base + f"/experiments/{state['run_id']}")

@@ -1,6 +1,6 @@
 {
   "feature": "actual_local_corpus_retrieval_optimization",
-  "status": "application_accepted_final_release_guard_followup_tracked_in_pr_34",
+  "status": "public_source_merged_no_new_pypi_upload",
   "contract": "cutback.retrieval-execution.v1",
   "evaluator": "deterministic-v6",
   "scope": "finite encrypted text corpus; BM25/chunk/overlap/top-k/lexical reranking; native answer comparison; untouched confirmation; source settings diff/rollback and checked local review ref",
@@ -36,10 +36,7 @@
   "application_payload_files": 227,
   "python_payload_modules": 212,
   "current_source_wheel_sdk3_payload_identity": "passed",
-  "pending_final_gates": [
-    "ten exact-head hosted checks for release-only follow-up",
-    "merge with reviewed-head precondition"
-  ],
+  "pending_final_gates": [],
   "synthetic_provider_replies_and_usage": true,
   "real_model_quality_or_customer_savings_established": false,
   "full_product_or_market_baseline_complete": false,
@@ -135,6 +132,26 @@
       "passed": 997,
       "skipped": 31,
       "seconds": 719.6
+    },
+    "sdk3_both": {
+      "passed_each": 795,
+      "skipped_each": 5
+    }
+  },
+  "final_public_head": "ec278381263475189da6d0edd9ee6fac9f205e7f",
+  "public_merge": "5f3e2cf464c9ad2daed19d83dc62979a01d82199",
+  "final_tree": "d16992f944c550bd9bbc61f7cfe0b84edb6f9c79",
+  "final_required_checks_passed": 10,
+  "final_hosted": {
+    "python_3_11": {
+      "passed": 1009,
+      "skipped": 29,
+      "seconds": 637.87
+    },
+    "python_3_13": {
+      "passed": 1007,
+      "skipped": 31,
+      "seconds": 770.58
     },
     "sdk3_both": {
       "passed_each": 795,

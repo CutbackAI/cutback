@@ -115,3 +115,58 @@ def test_campaign_basis_prefers_pure_downgrade_and_preserves_request_contract():
     unknown = baseline.model_copy(update={"model": "synthetic-unpriced"})
     with pytest.raises(ValueError, match="BASELINE_PRICE_UNKNOWN"):
         campaign_basis_candidates(unknown)
+
+
+@pytest.mark.parametrize("select_workflow", [False, True])
+def test_large_source_profile_limits_preserve_explicit_workflow_and_report_omissions(
+    tmp_path, select_workflow
+):
+    from cutback.core.inventory import workflow_identity
+    from cutback.scanner import scan
+
+    source = "from openai import OpenAI\nclient = OpenAI()\n"
+    source += "\n".join(
+        f"def task_{i:03d}(text):\n"
+        '    return client.responses.create(model="gpt-4.1", input=text, max_output_tokens=64)\n'
+        for i in range(201)
+    )
+    source += '\nraise RuntimeError("APPLICATION_MUST_NOT_EXECUTE")\n'
+    (tmp_path / "app.py").write_text(source, encoding="utf-8")
+    inventory = scan(tmp_path)
+    assert len(inventory["call_sites"]) == 201
+    site = inventory["call_sites"][-1]
+    entry = site["entry_points"][0]
+    identity, _ = workflow_identity(entry["file"], entry["symbol"])
+    selected = analyze(tmp_path, workflow=identity if select_workflow else None)
+    coverage = selected["profile_analysis"]
+    assert coverage["detected_call_sites"] == 201
+    assert coverage["call_site_limit"] == 200
+    if select_workflow:
+        assert len(selected["profiles"]) == 1
+        assert selected["profiles"][0]["binding"]["workflow_id"] == identity
+        assert coverage["matching_call_sites"] == coverage["inspected_call_sites"] == 1
+        assert coverage["omitted_call_sites"] == 0
+    else:
+        assert len(selected["profiles"]) == coverage["inspected_call_sites"] == 200
+        assert coverage["matching_call_sites"] == 201 and coverage["omitted_call_sites"] == 1
+        assert "select_workflow_to_inspect_remaining_call_sites" in selected["decisions_required"]
+    assert analyze(tmp_path, workflow=identity if select_workflow else None)["id"] == selected["id"]
+
+
+def test_instrumentation_limit_reports_startup_files_without_executing_them(tmp_path):
+    for i in range(32):
+        (tmp_path / f"app_{i:03d}.py").write_text(
+            "from openai import OpenAI\nclient = OpenAI()\n"
+            "def task(text):\n"
+            '    return client.responses.create(model="gpt-4.1", input=text, '
+            "max_output_tokens=64)\n"
+            'raise RuntimeError("APPLICATION_MUST_NOT_EXECUTE")\n',
+            encoding="utf-8",
+        )
+    state = analyze(tmp_path)
+    assert state["profile_analysis"]["omitted_call_sites"] == 0
+    instrumentation = state["instrumentation"]
+    assert instrumentation["entrypoint_file_limit"] == 30
+    assert len(instrumentation["proposals"]) == instrumentation["processed_entrypoint_files"] == 30
+    assert instrumentation["omitted_entrypoint_files"] == 2
+    assert instrumentation["applied"] is False

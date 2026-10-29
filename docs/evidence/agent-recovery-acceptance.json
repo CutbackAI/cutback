@@ -1,0 +1,83 @@
+{
+  "feature": "bounded_agent_recovery_and_large_source_discovery",
+  "status": "installed_qualified_exact_public_hosted_acceptance_tracked_in_pull_request",
+  "scope": [
+    "exact_plan_lost_queue_lookup_without_replay",
+    "no_post_when_approval_or_queue_is_uncertain_and_run_absent",
+    "late_original_queue_commit_recovery_and_stop_reason_clear",
+    "workflow_selection_before_200_call_site_qualification_limit",
+    "explicit_static_profile_and_30_startup_file_omissions"
+  ],
+  "reproduced_failures": [
+    {
+      "case": "1001_newer_runs_hide_original_lost_reply",
+      "fixed": true,
+      "failed_seconds": 7.75
+    },
+    {
+      "case": "selected_workflow_at_call_site_201_not_profiled",
+      "fixed": true,
+      "failed_seconds": 0.62
+    }
+  ],
+  "installed_default_scoped": {
+    "passed": 633,
+    "skipped": 23,
+    "seconds": 317.04
+  },
+  "installed_sdk3_scoped": {
+    "passed": 650,
+    "skipped": 6,
+    "seconds": 313.97
+  },
+  "installed_scope": "all_units_archive_release_controls_real_pg_migrations_agent_workflow_campaign_and_source_bound_search",
+  "skip_reasons": {
+    "windows_symlink_privilege": 2,
+    "legacy_sdk_in_separate_matrix": 4,
+    "sdk3_in_separate_matrix_default_only": 17
+  },
+  "late_commit_followup_before_final_source_filter": {
+    "default": {
+      "passed": 3,
+      "seconds": 15.77
+    },
+    "sdk3": {
+      "passed": 3,
+      "seconds": 15.63
+    }
+  },
+  "large_source_offline": {
+    "passed": 7,
+    "skipped": 1,
+    "seconds": 15.37,
+    "application_not_executed": true
+  },
+  "source_typing_modules": 212,
+  "core_only_installed_smoke": "passed",
+  "application_payload_identity": {
+    "files": 227,
+    "python_modules": 212,
+    "source_wheel_both_installed_environments_identical": true
+  },
+  "earlier_installed_checkpoint_before_workflow_filter": {
+    "default": {
+      "passed": 630,
+      "skipped": 23,
+      "seconds": 297.09
+    },
+    "sdk3": {
+      "passed": 647,
+      "skipped": 6,
+      "seconds": 297.1
+    },
+    "final_artifact_claim": false
+  },
+  "backend_migrations_or_sdk_support_widened": false,
+  "dashboard_or_api_contract_changed": false,
+  "paid_provider_calls": 0,
+  "pypi_upload": false,
+  "pypi_version_unchanged": "0.1.0.dev5",
+  "production_deployment": false,
+  "full_product_or_market_baseline_complete": false,
+  "final_release_gates": "sanitized source/history/archive identity and all ten exact-head hosted checks before merge"
+}
