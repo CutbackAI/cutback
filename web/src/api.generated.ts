@@ -472,6 +472,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/retrieval/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retrieval Draft */
+        post: operations["retrieval_draft_v1_projects__project_id__retrieval_draft_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/retrieval/confirmation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retrieval Confirmation */
+        post: operations["retrieval_confirmation_v1_projects__project_id__retrieval_confirmation_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/retrieval/{run_id}/proposal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retrieval Proposal */
+        post: operations["retrieval_proposal_v1_projects__project_id__retrieval__run_id__proposal_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/experiments/plans/{plan_id}/content": {
         parameters: {
             query?: never;
@@ -483,6 +534,26 @@ export interface paths {
         put?: never;
         /** Read Plan Content */
         post: operations["read_plan_content_v1_projects__project_id__experiments_plans__plan_id__content_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/experiments/plans/{plan_id}/execution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Plan Execution
+         * @description Reconcile a lost queue acknowledgement without replaying an approved run.
+         */
+        get: operations["plan_execution_v1_projects__project_id__experiments_plans__plan_id__execution_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3737,6 +3808,16 @@ export interface components {
             /** Accepted Answers */
             accepted_answers: string[];
         };
+        /** CorpusDocument */
+        CorpusDocument: {
+            /**
+             * Document Id
+             * Format: uuid
+             */
+            document_id: string;
+            /** Text */
+            text: string;
+        };
         /** CorrectionInput */
         CorrectionInput: {
             /** Purpose */
@@ -4230,8 +4311,9 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
+            retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Input"] | null;
             source_binding?: components["schemas"]["SourceBinding"] | null;
             /** Prompt Bindings */
             prompt_bindings?: components["schemas"]["PromptModelBinding"][] | null;
@@ -4326,8 +4408,9 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
+            retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Output"] | null;
             source_binding?: components["schemas"]["SourceBinding"] | null;
             /** Prompt Bindings */
             prompt_bindings?: components["schemas"]["PromptModelBinding"][] | null;
@@ -6520,6 +6603,270 @@ export interface components {
             raw_days: number;
             /** Aggregate Days */
             aggregate_days: number;
+        };
+        /**
+         * RetrievalConfigurationBinding
+         * @description An explicitly selected settings-only JSON file; not inferred application coverage.
+         */
+        "RetrievalConfigurationBinding-Input": {
+            /** File */
+            file: string;
+            /** Sha256 */
+            sha256: string;
+            /** Source Tree Hash */
+            source_tree_hash: string;
+            /** Commit */
+            commit: string;
+            settings: components["schemas"]["RetrievalSettings-Input"];
+            /** Retrieval Contract Sha256 */
+            retrieval_contract_sha256: string;
+        };
+        /**
+         * RetrievalConfigurationBinding
+         * @description An explicitly selected settings-only JSON file; not inferred application coverage.
+         */
+        "RetrievalConfigurationBinding-Output": {
+            /** File */
+            file: string;
+            /** Sha256 */
+            sha256: string;
+            /** Source Tree Hash */
+            source_tree_hash: string;
+            /** Commit */
+            commit: string;
+            settings: components["schemas"]["RetrievalSettings-Output"];
+            /** Retrieval Contract Sha256 */
+            retrieval_contract_sha256: string;
+        };
+        /** RetrievalConfirmationInput */
+        RetrievalConfirmationInput: {
+            /**
+             * Validation Run Id
+             * Format: uuid
+             */
+            validation_run_id: string;
+            budget: components["schemas"]["Budget-Input"];
+        };
+        /** RetrievalCorpus */
+        RetrievalCorpus: {
+            /**
+             * Version
+             * @default cutback.retrieval-corpus.v1
+             * @constant
+             */
+            version: "cutback.retrieval-corpus.v1";
+            /** Documents */
+            documents: components["schemas"]["CorpusDocument"][];
+        };
+        /** RetrievalDraftInput */
+        RetrievalDraftInput: {
+            /**
+             * Dataset Id
+             * Format: uuid
+             */
+            dataset_id: string;
+            baseline: components["schemas"]["ModelSpec-Input"];
+            corpus: components["schemas"]["RetrievalCorpus"];
+            settings: components["schemas"]["RetrievalSettings-Input"];
+            metric: components["schemas"]["MetricSpec"];
+            budget: components["schemas"]["Budget-Input"];
+            /** Candidates */
+            candidates?: components["schemas"]["RetrievalSettings-Input"][] | null;
+            /** Assumed Usd Per Cpu Hour */
+            assumed_usd_per_cpu_hour?: (number | string) | null;
+            /**
+             * Max Query Bytes
+             * @default 1024
+             */
+            max_query_bytes: number;
+            /**
+             * Retain Case Outputs
+             * @default false
+             */
+            retain_case_outputs: boolean;
+            configuration_binding?: components["schemas"]["RetrievalConfigurationBinding-Input"] | null;
+        };
+        /** RetrievalExecutionSpec */
+        "RetrievalExecutionSpec-Input": {
+            /**
+             * Version
+             * @default cutback.retrieval-execution.v1
+             * @constant
+             */
+            version: "cutback.retrieval-execution.v1";
+            /**
+             * Contract Sha256
+             * @default 05e5f5852cfb3d64bd0d4f56443424cc2685610975579ec18aac634cb9a6164c
+             */
+            contract_sha256: string;
+            corpus: components["schemas"]["RetrievalCorpus"];
+            /** Variants */
+            variants: components["schemas"]["RetrievalVariant-Input"][];
+            /**
+             * Max Query Bytes
+             * @default 1024
+             */
+            max_query_bytes: number;
+            /** Assumed Usd Per Cpu Hour */
+            assumed_usd_per_cpu_hour?: (number | string) | null;
+            /**
+             * Cpu Charge Quantum Ms
+             * @default 1
+             */
+            cpu_charge_quantum_ms: number;
+            configuration_binding?: components["schemas"]["RetrievalConfigurationBinding-Input"] | null;
+        };
+        /** RetrievalExecutionSpec */
+        "RetrievalExecutionSpec-Output": {
+            /**
+             * Version
+             * @default cutback.retrieval-execution.v1
+             * @constant
+             */
+            version: "cutback.retrieval-execution.v1";
+            /**
+             * Contract Sha256
+             * @default 05e5f5852cfb3d64bd0d4f56443424cc2685610975579ec18aac634cb9a6164c
+             */
+            contract_sha256: string;
+            corpus: components["schemas"]["RetrievalCorpus"];
+            /** Variants */
+            variants: components["schemas"]["RetrievalVariant-Output"][];
+            /**
+             * Max Query Bytes
+             * @default 1024
+             */
+            max_query_bytes: number;
+            /** Assumed Usd Per Cpu Hour */
+            assumed_usd_per_cpu_hour?: string | null;
+            /**
+             * Cpu Charge Quantum Ms
+             * @default 1
+             */
+            cpu_charge_quantum_ms: number;
+            configuration_binding?: components["schemas"]["RetrievalConfigurationBinding-Output"] | null;
+        };
+        /** RetrievalProposal */
+        RetrievalProposal: {
+            /**
+             * Version
+             * @default cutback.retrieval-proposal.v1
+             * @constant
+             */
+            version: "cutback.retrieval-proposal.v1";
+            /**
+             * Run Id
+             * Format: uuid
+             */
+            run_id: string;
+            /** Plan Hash */
+            plan_hash: string;
+            /** Dataset Hash */
+            dataset_hash: string;
+            binding: components["schemas"]["RetrievalConfigurationBinding-Output"];
+            baseline: components["schemas"]["RetrievalSettings-Output"];
+            proposed: components["schemas"]["RetrievalSettings-Output"];
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "synthetic_local_review_only" | "sample_review_required" | "heldout_review_required";
+            /**
+             * Production Approval Required
+             * @default true
+             * @constant
+             */
+            production_approval_required: true;
+        };
+        /** RetrievalSettings */
+        "RetrievalSettings-Input": {
+            /**
+             * Chunk Chars
+             * @default 1024
+             */
+            chunk_chars: number;
+            /**
+             * Overlap Chars
+             * @default 128
+             */
+            overlap_chars: number;
+            /**
+             * Top K
+             * @default 3
+             */
+            top_k: number;
+            /**
+             * Max Context Bytes
+             * @default 12000
+             */
+            max_context_bytes: number;
+            /**
+             * K1
+             * @default 1.2
+             */
+            k1: number | string;
+            /**
+             * B
+             * @default 0.75
+             */
+            b: number | string;
+            /**
+             * Rerank
+             * @default none
+             * @enum {string}
+             */
+            rerank: "none" | "query_term_coverage";
+        };
+        /** RetrievalSettings */
+        "RetrievalSettings-Output": {
+            /**
+             * Chunk Chars
+             * @default 1024
+             */
+            chunk_chars: number;
+            /**
+             * Overlap Chars
+             * @default 128
+             */
+            overlap_chars: number;
+            /**
+             * Top K
+             * @default 3
+             */
+            top_k: number;
+            /**
+             * Max Context Bytes
+             * @default 12000
+             */
+            max_context_bytes: number;
+            /**
+             * K1
+             * @default 1.2
+             */
+            k1: string;
+            /**
+             * B
+             * @default 0.75
+             */
+            b: string;
+            /**
+             * Rerank
+             * @default none
+             * @enum {string}
+             */
+            rerank: "none" | "query_term_coverage";
+        };
+        /** RetrievalVariant */
+        "RetrievalVariant-Input": {
+            /** Model Key */
+            model_key: string;
+            settings: components["schemas"]["RetrievalSettings-Input"];
+        };
+        /** RetrievalVariant */
+        "RetrievalVariant-Output": {
+            /** Model Key */
+            model_key: string;
+            settings: components["schemas"]["RetrievalSettings-Output"];
         };
         /** ReviewAdjudication */
         ReviewAdjudication: {
@@ -9073,6 +9420,112 @@ export interface operations {
             };
         };
     };
+    retrieval_draft_v1_projects__project_id__retrieval_draft_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RetrievalDraftInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retrieval_confirmation_v1_projects__project_id__retrieval_confirmation_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RetrievalConfirmationInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retrieval_proposal_v1_projects__project_id__retrieval__run_id__proposal_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentPurpose"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RetrievalProposal"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     read_plan_content_v1_projects__project_id__experiments_plans__plan_id__content_post: {
         parameters: {
             query?: never;
@@ -9088,6 +9541,38 @@ export interface operations {
                 "application/json": components["schemas"]["ContentPurpose"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    plan_execution_v1_projects__project_id__experiments_plans__plan_id__execution_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

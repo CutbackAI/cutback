@@ -336,6 +336,30 @@ export function CaseEvidence({
                       : "Output not retained under policy"}
                   </pre>
                 )}
+                {row.retrieval && (
+                  <details>
+                    <summary>
+                      Retrieved passages for this native request
+                    </summary>
+                    <p>
+                      {row.retrieval.context_bytes} context bytes ·{" "}
+                      {row.retrieval.scored_chunks} scored chunks. These
+                      retained input passages do not establish independent
+                      groundedness.
+                    </p>
+                    {row.retrieval.documents?.map(
+                      (document: Data, index: number) => (
+                        <section key={document.document_id + ":" + index}>
+                          <h5>Document {index + 1}</h5>
+                          <p>
+                            <code>{document.document_id}</code>
+                          </p>
+                          <pre tabIndex={0}>{document.text}</pre>
+                        </section>
+                      ),
+                    )}
+                  </details>
+                )}
                 {row.criteria?.map((criterion: Data) => (
                   <p
                     className={

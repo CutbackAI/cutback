@@ -19,6 +19,7 @@ from cutback.core.observation import observation_scope
 from cutback.core.request_profiles import RequestContract, SourceBinding
 from cutback.evals.datasets import digest
 from cutback.evals.metrics import MetricSpec, evaluate, grouped_confidence
+from cutback.evals.retrieval import RetrievalExecutionSpec
 from cutback.pricing import Catalog
 
 
@@ -251,10 +252,11 @@ class ExperimentPlan(StrictModel):
     price_sha256: Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")] = Field(
         default_factory=lambda: Catalog().sha256
     )
-    evaluator_version: Literal["deterministic-v3", "deterministic-v4", "deterministic-v5"] = (
-        "deterministic-v3"
-    )
+    evaluator_version: Literal[
+        "deterministic-v3", "deterministic-v4", "deterministic-v5", "deterministic-v6"
+    ] = "deterministic-v3"
     episode_execution: EpisodeExecutionSpec | None = None
+    retrieval_execution: RetrievalExecutionSpec | None = None
     source_binding: SourceBinding | None = None
     prompt_bindings: list[PromptModelBinding] | None = Field(
         default=None, min_length=1, max_length=6
@@ -268,12 +270,59 @@ class ExperimentPlan(StrictModel):
             result.pop("prompt_bindings", None)
         if self.episode_execution is None:
             result.pop("episode_execution", None)
+        if self.retrieval_execution is None:
+            result.pop("retrieval_execution", None)
         if self.content_nonce is None:
             result.pop("content_nonce", None)
         return result
 
     @model_validator(mode="after")
     def eligibility(self):
+        if self.retrieval_execution:
+            retrieval = self.retrieval_execution
+            if (
+                self.evaluator_version != "deterministic-v6"
+                or self.episode_execution
+                or self.source_binding
+                or self.prompt_bindings
+                or self.judge
+                or self.staged
+                or self.pilot_samples
+                or self.metric.kind not in {"exact_label", "field_f1", "numeric_match"}
+                or self.content_nonce is None
+                or self.content_nonce.int == 0
+            ):
+                raise ValueError("RETRIEVAL_REQUIRES_NONCE_AND_EXPLICIT_V6_CONTRACT")
+            models = [self.baseline, *self.candidates]
+            if [v.model_key for v in retrieval.variants] != [m.key for m in models]:
+                raise ValueError("RETRIEVAL_VARIANTS_MUST_MATCH_ALL_MODEL_KEYS_IN_ORDER")
+            original = self.baseline.model_dump(mode="json", exclude={"key"})
+            for model in models:
+                if (
+                    model.provider not in {"openai", "anthropic"}
+                    or model.routes
+                    or model.prompt_cache
+                    or model.agent_turn is not None
+                    or model.model_dump(mode="json", exclude={"key"}) != original
+                ):
+                    raise ValueError("RETRIEVAL_SEARCH_MUST_PRESERVE_NATIVE_MODEL_CONFIGURATION")
+                contract = model.request_contract
+                if contract is not None and (
+                    model.provider != "openai"
+                    or contract.sdk_surface != "responses.create"
+                    or contract.version != "native-text-v1"
+                    or len(contract.parameters) != 1
+                    or contract.payload != {"op": "parameter", "name": contract.parameters[0]}
+                ):
+                    raise ValueError("RETRIEVAL_REQUIRES_ONE_NATIVE_TEXT_INPUT")
+                options = json.dumps(contract.options) if contract else ""
+                if (
+                    retrieval.input_byte_bound()
+                    + len((model.instruction + options).encode())
+                    + 4096
+                    > model.max_input_tokens
+                ):
+                    raise ValueError("RETRIEVAL_FRAME_EXCEEDS_NATIVE_INPUT_BOUND")
         if self.episode_execution:
             semantic = self.episode_execution.semantic_judging is not None
             if (
@@ -303,7 +352,11 @@ class ExperimentPlan(StrictModel):
                 for m in [self.baseline, *self.candidates]
             ):
                 raise ValueError("EPISODE_NATIVE_TEXT_FUNCTION_PROFILE_REQUIRED")
-        elif self.evaluator_version != "deterministic-v3" or self.metric.kind == "episode_contract":
+        elif (
+            self.evaluator_version
+            != ("deterministic-v6" if self.retrieval_execution else "deterministic-v3")
+            or self.metric.kind == "episode_contract"
+        ):
             raise ValueError("EPISODE_METRIC_REQUIRES_EXPLICIT_EPISODE_EXECUTION")
         if any(
             model.agent_turn is not None
@@ -531,6 +584,8 @@ def plan_summary(plan: ExperimentPlan, dataset: dict) -> dict:
         "price_sha256": plan.price_sha256,
         "evaluator_version": plan.evaluator_version,
     }
+    if plan.retrieval_execution:
+        summary["retrieval"] = plan.retrieval_execution.public_summary()
     references = [
         {
             "model_key": model.key,
@@ -574,6 +629,7 @@ class BudgetLedger:
         *,
         reserve_call: Callable | None = None,
         record_call: Callable | None = None,
+        prepare_input: Callable | None = None,
     ):
         if reserve is not None and reserve_call is not None:
             raise ValueError("CHOOSE_ONE_ATOMIC_RESERVATION_INTERFACE")
@@ -590,6 +646,7 @@ class BudgetLedger:
         self.persist_reservation = reserve
         self.reserve_call = reserve_call
         self.record_call = record_call
+        self.prepare_input = prepare_input
         self.price_sha256 = price_sha256 or Catalog().sha256
 
     def remaining_seconds(self):
@@ -616,6 +673,10 @@ class BudgetLedger:
             raise ValueError("CALL_LEDGER_ACK_UNCERTAIN_NO_FURTHER_REQUESTS")
         if Catalog().sha256 != self.price_sha256:
             raise ValueError("PRICE_CONTRACT_CHANGED_REAPPROVAL_REQUIRED")
+        if self.prepare_input is not None:
+            if self.requests >= self.budget.max_requests or self.remaining_seconds() <= 0:
+                raise ValueError("BUDGET_EXHAUSTED")
+            text = self.prepare_input(model, text)
         # UTF-8 bytes plus generous message framing bounds supported text input tokens.
         # No tool schemas, images, arbitrary endpoints or hidden retries are accepted.
         target = route_target(model, text) if model.provider == "router" else model
@@ -727,6 +788,19 @@ def run(
         reserve_call=reserve_call,
         record_call=record_call,
     )
+    processor = None
+    if plan.retrieval_execution:
+        from cutback.evals.retrieval import RetrievalProcessor
+
+        processor = RetrievalProcessor(plan.retrieval_execution, check=check_authority)
+        ledger.prepare_input = processor.prepare
+        if record_case is not None:
+            original_recorder = record_case
+
+            def record_retrieval_case(value):
+                original_recorder({**value, "retrieval": processor.last})
+
+            record_case = record_retrieval_case
     model_results = []
     outputs: dict[str, list[list[str | None]]] = {}
     models = [plan.baseline, *plan.candidates]
@@ -1060,7 +1134,7 @@ def run(
                     decision_reason="judge_health_gate_failed",
                     next_action="calibrate_judge_and_review_invalid_votes",
                 )
-        return {
+        report = {
             "schema_version": "1.0",
             "status": "COMPLETED",
             "sample_n": len(cases),
@@ -1081,12 +1155,13 @@ def run(
             "requests": ledger.requests,
             "production_deployed": False,
         }
+        return processor.finalize(report) if processor else report
     except Exception as exc:
         # Safe failure codes only: provider exception text can contain request content/secrets.
         code = str(exc) if type(exc) is ValueError else "EXECUTOR_FAILED"
         if len(code) > 100 or not code.replace("_", "").replace(":", "").isalpha():
             code = "EXECUTOR_FAILED"
-        return {
+        report = {
             "status": "FAILED",
             "code": code,
             "plan": summary,
@@ -1099,6 +1174,7 @@ def run(
             "requests": ledger.requests,
             "production_deployed": False,
         }
+        return processor.finalize(report) if processor else report
 
 
 def rank_results(plan, results, representative):

@@ -5,7 +5,56 @@ import re
 import tarfile
 import tomllib
 import zipfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+
+
+def check_application_payload(wheel_path: Path, source_path: Path, root: Path):
+    """Require exact application bytes in source, wheel and sdist; never extract archives."""
+    package = root / "src/cutback"
+    expected = {}
+    for path in package.rglob("*"):
+        if "__pycache__" in path.parts or path.suffix in {".pyc", ".pyo"}:
+            continue
+        if path.is_symlink():
+            raise ValueError("application source must not contain symlinks")
+        if path.is_file():
+            expected[path.relative_to(package.parent).as_posix()] = path.read_bytes()
+    if not expected:
+        raise ValueError("application source is empty")
+    with zipfile.ZipFile(wheel_path) as wheel:
+        if len(wheel.namelist()) != len(set(wheel.namelist())):
+            raise ValueError("wheel contains duplicate members")
+        actual = {
+            name: wheel.read(name)
+            for name in wheel.namelist()
+            if name.startswith("cutback/") and not name.endswith("/")
+        }
+    with tarfile.open(source_path) as source:
+        members = source.getmembers()
+        if len(members) != len({member.name for member in members}):
+            raise ValueError("source distribution contains duplicate members")
+        archived = {}
+        for member in members:
+            parts = PurePosixPath(member.name).parts
+            if len(parts) < 4 or parts[1:3] != ("src", "cutback"):
+                continue
+            if member.isdir():
+                continue
+            if not member.isfile():
+                raise ValueError("source application member must be a regular file")
+            stream = source.extractfile(member)
+            if stream is None:
+                raise ValueError("source application member is unreadable")
+            name = "/".join(parts[2:])
+            if name in archived:
+                raise ValueError("source distribution contains ambiguous application roots")
+            archived[name] = stream.read()
+    if actual != expected or archived != expected:
+        # Do not include file contents, names or potentially private checkout paths.
+        raise ValueError(
+            "application payload differs between source, wheel and source distribution"
+        )
+    return len(expected)
 
 
 def check(directory: Path):
@@ -102,6 +151,12 @@ def check(directory: Path):
             "docs/modern-model-accounting.md",
             "docs/native-modern-text.md",
             "docs/gateway-budgets.md",
+            "docs/retrieval-optimization.md",
+            "examples/retrieval-optimization/README.md",
+            "examples/retrieval-optimization/check_application.py",
+            "examples/retrieval-optimization/corpus.json",
+            "src/cutback/core/retrieval.py",
+            "tests/end_to_end/test_retrieval_pipeline.py",
             "examples/gateway/README.md",
             "examples/gateway/sample.py",
             "src/cutback/sample_app/gateway.py",
@@ -142,7 +197,11 @@ def check(directory: Path):
         marker.lower() in name.lower().replace("\\", "/") for name in names for marker in banned
     ):
         raise ValueError("internal or secret file included in archive")
-    print("Release identity, pre-alpha metadata, licenses and archive exclusions passed.")
+    count = check_application_payload(wheels[0], sources[0], Path(__file__).resolve().parents[1])
+    print(
+        "Release identity, pre-alpha metadata, licenses, archive exclusions "
+        f"and exact application payload ({count} files) passed."
+    )
 
 
 if __name__ == "__main__":

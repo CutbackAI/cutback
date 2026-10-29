@@ -2,6 +2,8 @@
 
 Tiers: 0 opportunity; 1 technical contract; 2 historical-reference alignment; 3 judge proxy; 4 independent held-out labels/tests; 5 controlled production evidence. A judge preference never verifies semantic correctness. No tier-5 result is fabricated.
 
+Actual local corpus retrieval uses a separate [v6 execution contract](retrieval-optimization.md): frozen encrypted corpus, native answer-quality comparison, measured CPU/context components and separately approved untouched confirmation. Earlier declared retrieval fixtures keep their existing meaning. Missing infrastructure cost is never reconstructed from token usage.
+
 ## Evidence
 
 `cutback datasets discover --target .` indexes fixture paths without reading/uploading content. Imports require a project-admin policy with approval reference, rights basis, environment/workflow/provider allowlists, expiry, sampling, byte/sample limits and retention. The server capture switch and encrypted store must also be configured. Redaction is defense in depth, not deidentification proof.

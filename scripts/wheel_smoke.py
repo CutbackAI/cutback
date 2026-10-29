@@ -30,6 +30,12 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
             "import importlib.util; from cutback.pricing import Catalog; "
             f"import cutback; assert cutback.__version__=={version!r}; "
             "from cutback.gateway.client import operation_headers; from uuid import UUID; "
+            "from cutback.core.retrieval import "
+            "RetrievalCorpus, RetrievalSettings, LocalRetrievalIndex; "
+            "corpus=RetrievalCorpus.model_validate({'documents':[{'document_id':str(UUID(int=1)),"
+            "'text':'synthetic refund deadline fourteen-days'}]}); "
+            "result=LocalRetrievalIndex(corpus,RetrievalSettings()).query('refund'); "
+            "assert len(result.passages)==1; "
             "assert UUID(operation_headers()['X-Cutback-Operation-ID']).int != 0; "
             'assert importlib.util.find_spec("openai") is None; '
             'assert importlib.util.find_spec("fastapi") is None; print(Catalog().snapshot_id)',

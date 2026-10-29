@@ -15,6 +15,7 @@ from cutback.cli_agent import register_agent
 from cutback.cli_checks import register_checks
 from cutback.cli_episodes import register_episodes
 from cutback.cli_qualification import register_qualification
+from cutback.cli_retrieval import register_retrieval
 from cutback.cli_workflows import register
 
 app = typer.Typer(
@@ -501,6 +502,7 @@ register_agent(app, output, fail)
 register_checks(app, output, fail)
 register_qualification(app, output, fail)
 register_episodes(app, output, fail)
+register_retrieval(app, output, request, fail)
 
 if __name__ == "__main__":
     app()

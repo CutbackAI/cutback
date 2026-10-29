@@ -82,6 +82,8 @@ Implementation: task outcomes, complete declared task-cost windows and cumulativ
 
 **Baseline:** C03â€“C10, G05/G06/G08/G09, X07/X08. **User outcome:** the agent prepares a useful change with less engineer effort and defensible total economics.
 
+The additional [actual local corpus workflow](retrieval-optimization.md) prepares bounded chunk/overlap/top-k/lexical-reranking alternatives, native answer evaluation, untouched confirmation and source-bound settings diffs with application-check review. Its acceptance/publication is tracked separately in progress.md. Remote/vector retrieval, tool selection, learned routing and other strategies remain unfinished.
+
 Add pluggable candidate generators/optimizers with a strict adapter boundary. Start with qualified prompt and parameter search, then workload-eligible caching/routing/retrieval/compression/training. Every proposer/evaluator/target/simulator call uses the canonical ledger; no optimizer may make hidden out-of-band calls. Translate external optimizer budgets into this envelope rather than treating an in-process callback count as durable dollar control. Log exact candidate versions and rejection reasons without leaking permitted examples.
 
 Choose search effort from the workload and expected break-even opportunity; abstain when evidence/volume/cost is unknown or benefit is too small. Adaptively select on validation, freeze a selected candidate, then separately confirm on untouched groups. Prepare application checks, exact diffs, affected-consumer tests and a reviewable branch/PR. Never deploy from the optimizer.
