@@ -777,10 +777,10 @@ def run(
             episode_lifecycle=episode_lifecycle,
             check_authority=check_authority,
         )
-    cases = [item["case"] for item in dataset["items"] if item["split"] == plan.split]
-    groups = [item["group_hash"] for item in dataset["items"] if item["split"] == plan.split]
-    if plan.sample_limit:
-        cases, groups = cases[: plan.sample_limit], groups[: plan.sample_limit]
+    from cutback.evals.input_groups import InputGroupingViolation, effective_input_groups
+
+    # Preparation is part of the same approved wall envelope. Constructing the
+    # ledger starts its clock; it neither reserves money nor dispatches a call.
     ledger = BudgetLedger(
         plan.budget,
         reserve,
@@ -788,6 +788,18 @@ def run(
         reserve_call=reserve_call,
         record_call=record_call,
     )
+    dataset, input_grouping = effective_input_groups(
+        plan,
+        dataset,
+        check=check_authority,
+        deadline=ledger.started + plan.budget.max_wall_seconds,
+    )
+    if ledger.remaining_seconds() <= 0:
+        raise InputGroupingViolation("NATIVE_INPUT_GROUPING_WALL_LIMIT")
+    cases = [item["case"] for item in dataset["items"] if item["split"] == plan.split]
+    groups = [item["group_hash"] for item in dataset["items"] if item["split"] == plan.split]
+    if plan.sample_limit:
+        cases, groups = cases[: plan.sample_limit], groups[: plan.sample_limit]
     processor = None
     if plan.retrieval_execution:
         from cutback.evals.retrieval import RetrievalProcessor
@@ -1155,6 +1167,10 @@ def run(
             "requests": ledger.requests,
             "production_deployed": False,
         }
+        if input_grouping is not None:
+            report["input_grouping"] = input_grouping
+            for recommendation in report["recommendations"]:
+                recommendation["input_grouping"] = input_grouping
         return processor.finalize(report) if processor else report
     except Exception as exc:
         # Safe failure codes only: provider exception text can contain request content/secrets.

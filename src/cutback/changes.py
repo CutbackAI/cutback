@@ -241,6 +241,34 @@ def _request_patch(
         changed = changed[:begin] + replacement + changed[finish:]
     after = changed.decode()
     ast.parse(after)
+    # A shared model constant can also feed an instruction, payload or option.
+    # Recompile the proposed request through an in-memory source overlay: an
+    # AST-only literal diff does not prove those evaluated semantics survived.
+    try:
+        proposed = prepare_profile(
+            root,
+            {**matching[0], "requested_model": candidate["model"]},
+            workflow_id=binding.workflow_id,
+            commit=commit,
+            source_overrides={path.relative_to(root).as_posix(): changed},
+        )
+    except (ValueError, OSError, SyntaxError, TypeError, RecursionError):
+        raise ValueError("PATCH_CHANGED_UNEVALUATED_REQUEST_CONTRACT") from None
+    if (
+        proposed.model != candidate["model"]
+        or proposed.provider != candidate["provider"]
+        or proposed.max_output_tokens != candidate.get("max_output_tokens")
+        or fingerprint(proposed.request.model_dump(mode="json")) != contract_hash(candidate)
+        or fingerprint(proposed.instruction)
+        != (candidate.get("instruction_sha256") or fingerprint(candidate.get("instruction", "")))
+    ):
+        raise ValueError("PATCH_CHANGED_UNEVALUATED_REQUEST_CONTRACT")
+    expected_dependencies = {
+        **binding.dependencies,
+        path.relative_to(root).as_posix(): hashlib.sha256(changed).hexdigest(),
+    }
+    if proposed.binding.dependencies != expected_dependencies:
+        raise ValueError("PATCH_SOURCE_DEPENDENCIES_CHANGED_DURING_REVIEW")
     if instruction_edit:
         before_shape = _instruction_request_shape(
             source, site, binding.model_binding, instruction_edit, baseline

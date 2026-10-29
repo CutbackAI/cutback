@@ -22,6 +22,10 @@ def test_independent_native_application_gateway_shared_budgets_and_report(api, t
     assert report["provider_fixture_requests"] == 2 and report["paid_provider_calls"] == 0
     assert report["duplicate_blocked"] and report["rotated_key_shared_limit_blocked"]
     assert len(report["receipts"]) == 2
+    stream = next(r for r in report["receipts"] if r["streaming"] is True)
+    assert 0 <= stream["first_text_delta_us"] < 120000000
+    ordinary = next(r for r in report["receipts"] if r["streaming"] is False)
+    assert ordinary["first_text_delta_us"] is None
     rows = {row["scope_kind"]: row for row in report["budgets"] if row["scope_kind"] != "key"}
     assert set(rows) == {"project", "team", "model"}
     assert all(

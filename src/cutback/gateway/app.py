@@ -14,7 +14,7 @@ from fastapi.responses import JSONResponse, Response
 from pydantic import SecretStr, ValidationError
 
 from cutback.evals._logging import owned_async_sdk_request
-from cutback.gateway.contracts import ResponsesText
+from cutback.gateway.contracts import ResponsesStream, ResponsesText
 from cutback.server.gateway_service import GatewayError
 
 MAX_REQUEST_BYTES = 1_048_576
@@ -205,7 +205,13 @@ def create_gateway(
                     if len(raw) + len(chunk) > MAX_REQUEST_BYTES:
                         raise GatewayError("GATEWAY_REQUEST_TOO_LARGE", 413)
                     raw.extend(chunk)
-            specification = ResponsesText.model_validate(strict_json(bytes(raw)))
+            body = strict_json(bytes(raw))
+            contract = (
+                ResponsesStream
+                if isinstance(body, dict) and body.get("stream") is True
+                else ResponsesText
+            )
+            specification = contract.model_validate(body)
         except (ValidationError, ValueError, TypeError, RecursionError):
             raise GatewayError("GATEWAY_TEXT_REQUEST_CONTRACT_UNQUALIFIED", 422) from None
         except TimeoutError:
@@ -246,6 +252,19 @@ def create_gateway(
         try:
             before = await asyncio.to_thread(event_before)
             started = time.perf_counter()
+            if specification.stream:
+                from cutback.gateway.streaming import open_stream
+
+                return await open_stream(
+                    client,
+                    provider_key,
+                    bytes(raw),
+                    sessions,
+                    reservation,
+                    before,
+                    specification.max_output_tokens,
+                    strict_json,
+                )
             raw_response = bytearray()
             assert reservation.model is not None
             async with asyncio.timeout(reservation.model.timeout_seconds):

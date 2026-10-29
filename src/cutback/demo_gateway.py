@@ -4,6 +4,7 @@ The inference transport is always synthetic. This example never reads a provider
 key from the environment, contacts an inference service or deploys an application.
 """
 
+import json
 import socket
 import threading
 import time
@@ -82,7 +83,7 @@ def run_sample(app, endpoint, admin, project, *, client=None):
     from cutback.core.sdk_compat import OPENAI_TEXT_SDKS
     from cutback.gateway.app import create_gateway
     from cutback.gateway.contracts import GatewayPolicy, ModelLimit, SpendLimit, TeamLimit
-    from cutback.sample_app.gateway import classify
+    from cutback.sample_app.gateway import classify, classify_stream
 
     if version("openai") not in OPENAI_TEXT_SDKS:
         raise ValueError("SYNTHETIC_GATEWAY_REQUIRES_QUALIFIED_RESPONSES_SDK")
@@ -95,6 +96,7 @@ def run_sample(app, endpoint, admin, project, *, client=None):
     shared_limit = SpendLimit(modeled_usd=Decimal("1.1"), requests=10, concurrent_requests=4)
     team = uuid4()
     specification = GatewayPolicy(
+        version="cutback.gateway-policy.v2",
         policy_id=uuid4(),
         environment_ids=[UUID(environment)],
         starts_at=now - timedelta(seconds=1),
@@ -103,6 +105,7 @@ def run_sample(app, endpoint, admin, project, *, client=None):
         teams=[TeamLimit(team_id=team, limit=shared_limit)],
         models=[
             ModelLimit(
+                key="openai-luna-responses-text-stream-v1",
                 price_contract=NativeModelContract.current_luna_text(reasoning_effort="medium"),
                 limit=shared_limit,
             )
@@ -119,6 +122,19 @@ def run_sample(app, endpoint, admin, project, *, client=None):
         result = native_fixture()
         if len(calls) == 2:
             result.pop("usage")
+        if json.loads(request.content).get("stream") is True:
+            frames = (
+                'data: {"type":"response.output_text.delta","delta":"A",'
+                '"item_id":"msg_owned","content_index":0,"output_index":0,"sequence_number":1}\n\n'
+                + "data: "
+                + json.dumps(
+                    {"type": "response.completed", "response": result, "sequence_number": 2}
+                )
+                + "\n\ndata: [DONE]\n\n"
+            )
+            return httpx.Response(
+                200, content=frames.encode(), headers={"content-type": "text/event-stream"}
+            )
         return httpx.Response(200, json=result)
 
     gateway = create_gateway(
@@ -164,10 +180,13 @@ def run_sample(app, endpoint, admin, project, *, client=None):
                 timeout=5,
             ) as native:
                 operation = uuid4()
-                if classify(native, "owned independent classifier fixture", operation) != "A":
+                if (
+                    classify_stream(native, "owned independent classifier fixture", operation)
+                    != "A"
+                ):
                     raise ValueError("SYNTHETIC_GATEWAY_NATIVE_OUTPUT_MISMATCH")
                 try:
-                    classify(native, "owned independent classifier fixture", operation)
+                    classify_stream(native, "owned independent classifier fixture", operation)
                 except APIStatusError as exc:
                     if exc.status_code != 409:
                         raise ValueError("SYNTHETIC_GATEWAY_DUPLICATE_NOT_BLOCKED") from None

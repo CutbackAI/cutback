@@ -99,6 +99,7 @@ export function GatewayBudgets({
   const [effort, setEffort] = useState("medium");
   const [output, setOutput] = useState("1024");
   const [timeout, setTimeout] = useState("60");
+  const [streaming, setStreaming] = useState("disabled");
   const [keyLimit, setKeyLimit] = useState(initialAllowance);
   const [keyTeam, setKeyTeam] = useState("");
   const [keyEnvironment, setKeyEnvironment] = useState("");
@@ -215,7 +216,10 @@ export function GatewayBudgets({
       if (!prepared.current) {
         const starts = new Date();
         prepared.current = {
-          version: "cutback.gateway-policy.v1",
+          version:
+            streaming === "enabled"
+              ? "cutback.gateway-policy.v2"
+              : "cutback.gateway-policy.v1",
           policy_id: crypto.randomUUID(),
           environment_ids: selectedEnvironments,
           starts_at: starts.toISOString(),
@@ -229,7 +233,10 @@ export function GatewayBudgets({
           })),
           models: [
             {
-              key: "openai-luna-responses-text-v1",
+              key:
+                streaming === "enabled"
+                  ? "openai-luna-responses-text-stream-v1"
+                  : "openai-luna-responses-text-v1",
               provider: "openai",
               model: "gpt-6-luna",
               sdk_surface: "responses.create",
@@ -360,10 +367,11 @@ export function GatewayBudgets({
         process and never enter this dashboard.
       </p>
       <p>
-        The first contract supports native synchronous and asynchronous
-        nonstreaming Responses text. It reserves the complete supported context
-        and output ceiling before dispatch. Unknown usage keeps its reservation.
-        Reusing an operation ID cannot repeat a billable call.
+        Native synchronous and asynchronous Responses text supports optional
+        HTTP SSE under a separately reviewed policy. It reserves the complete
+        supported context and output ceiling before dispatch. Unknown usage
+        keeps its reservation. Reusing an operation ID cannot repeat a billable
+        call.
       </p>
       {error && <p role="alert">{error}</p>}
       {notice && <p role="status">{notice}</p>}
@@ -452,9 +460,13 @@ export function GatewayBudgets({
           </p>
           {detail.policy.specification.models.map((model) => (
             <p key={model.key}>
-              {model.model} · reasoning {model.price_contract.reasoning_effort}{" "}
-              · requested tier default · output ceiling{" "}
-              {model.max_output_tokens} tokens · timeout {model.timeout_seconds}
+              {model.key === "openai-luna-responses-text-stream-v1"
+                ? "HTTP SSE and nonstreaming text"
+                : "Nonstreaming text only"}{" "}
+              · {model.model} · reasoning{" "}
+              {model.price_contract.reasoning_effort} · requested tier default ·
+              output ceiling {model.max_output_tokens} tokens · timeout{" "}
+              {model.timeout_seconds}
               s.
               <br />
               Price SHA-256: <code>{model.price_contract.price_sha256}</code>
@@ -809,6 +821,22 @@ export function GatewayBudgets({
                 option.
               </p>
               <Select
+                label="Native text streaming"
+                name="model-streaming"
+                value={streaming}
+                onChange={(e) => setStreaming(e.target.value)}
+              >
+                <option value="disabled">Disabled · nonstreaming only</option>
+                <option value="enabled">
+                  Allow HTTP SSE and nonstreaming text
+                </option>
+              </Select>
+              <p>
+                Interrupted streams keep their budget hold when final usage is
+                unknown. Streaming and nonstreaming calls share the same model
+                allowance.
+              </p>
+              <Select
                 label="Model reasoning effort"
                 name="model-reasoning"
                 value={effort}
@@ -949,7 +977,9 @@ export function GatewayBudgets({
         <h3>Dispatch and accounting receipts</h3>
         <p>
           Receipts contain metadata only. Request and response payloads are not
-          saved for replay.
+          saved for replay. First-text timing measures the gateway's wait for
+          its first nonempty text delta, excluding the customer's network.
+          Unknown timing stays unknown.
         </p>
         {!calls.length ? (
           <p className="empty">
@@ -963,6 +993,8 @@ export function GatewayBudgets({
                   <th>Operation</th>
                   <th>State</th>
                   <th>Traffic purpose</th>
+                  <th>Transport</th>
+                  <th>Gateway first text (ms)</th>
                   <th>Original reservation</th>
                   <th>Known modeled cost</th>
                   <th>Code</th>
@@ -976,6 +1008,18 @@ export function GatewayBudgets({
                     </th>
                     <td>{call.state}</td>
                     <td>{call.traffic_kind}</td>
+                    <td>
+                      {call.streaming === null
+                        ? "Unknown"
+                        : call.streaming
+                          ? "HTTP SSE"
+                          : "JSON"}
+                    </td>
+                    <td>
+                      {call.first_text_delta_us === null
+                        ? "Unknown"
+                        : (call.first_text_delta_us / 1000).toFixed(3)}
+                    </td>
                     <td>{modeled(call.reserved_usd)}</td>
                     <td>{modeled(call.cost_usd)}</td>
                     <td>{call.code || "Recorded"}</td>

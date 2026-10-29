@@ -25,7 +25,7 @@ def delegated(resource, kwargs):
     client = resource._client
     if (
         type(client).__name__ not in {"OpenAI", "AsyncOpenAI"}
-        or kwargs.get("stream") is True
+        or type(kwargs.get("stream", False)) is not bool
         or kwargs.get("model") != "gpt-6-luna"
         or kwargs.get("store") is not False
         or kwargs.get("service_tier") != "default"

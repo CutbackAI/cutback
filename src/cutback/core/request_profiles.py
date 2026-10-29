@@ -265,10 +265,17 @@ class PreparedProfile:
 
 
 class Resolver:
-    def __init__(self, root: Path, relative: str):
+    def __init__(self, root: Path, relative: str, source_overrides=None):
         self.root, self.relative = root, relative
         self.dependencies: dict[str, str] = {}
         self.modules: dict[str, ast.Module] = {}
+        self.source_overrides = source_overrides or {}
+        if len(self.source_overrides) > 64:
+            raise ValueError("PROFILE_RESOLUTION_LIMIT")
+        for name, raw in self.source_overrides.items():
+            safe_relative(name)
+            if type(raw) is not bytes or len(raw) > 1048576:
+                raise ValueError("UNSAFE_PROFILE_DEPENDENCY")
 
     def module(self, relative):
         safe_relative(relative)
@@ -282,22 +289,145 @@ class Resolver:
         ):
             raise ValueError("UNSAFE_PROFILE_DEPENDENCY")
         if relative not in self.modules:
-            raw = path.read_bytes()
+            raw = (
+                self.source_overrides[relative]
+                if relative in self.source_overrides
+                else path.read_bytes()
+            )
             self.dependencies[relative] = hashlib.sha256(raw).hexdigest()
             self.modules[relative] = ast.parse(raw)
         return self.modules[relative]
 
-    def assignment(self, node, relative, before):
-        tree = self.module(relative)
-        name = node.id if isinstance(node, ast.Name) else None
-        if name:
-            functions = [
+    @staticmethod
+    def scope_nodes(statements):
+        pending = list(statements)
+        while pending:
+            node = pending.pop()
+            yield node
+            if not isinstance(
+                node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)
+            ):
+                pending.extend(ast.iter_child_nodes(node))
+
+    @classmethod
+    def binds(cls, statements, name):
+        for node in cls.scope_nodes(statements):
+            if (
+                isinstance(node, ast.Name)
+                and isinstance(node.ctx, (ast.Store, ast.Del))
+                and node.id == name
+            ):
+                return True
+            if isinstance(node, (ast.Import, ast.ImportFrom)) and any(
+                (alias.asname or alias.name.split(".")[0]) == name for alias in node.names
+            ):
+                return True
+            if (
+                isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+                and node.name == name
+            ):
+                return True
+            if (
+                isinstance(node, (ast.ExceptHandler, ast.MatchAs, ast.MatchStar))
+                and node.name == name
+            ):
+                return True
+            if isinstance(node, ast.MatchMapping) and node.rest == name:
+                return True
+        return False
+
+    def qualified_scope(self, tree, name, before):
+        functions = sorted(
+            (
                 n
                 for n in ast.walk(tree)
                 if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
                 and n.lineno <= before <= (n.end_lineno or n.lineno)
+            ),
+            key=lambda n: n.lineno,
+        )
+        for fn in functions:
+            arguments = [*fn.args.posonlyargs, *fn.args.args, *fn.args.kwonlyargs]
+            arguments += [arg for arg in (fn.args.vararg, fn.args.kwarg) if arg is not None]
+            if (
+                any(arg.arg == name for arg in arguments)
+                or any(
+                    getattr(parameter, "name", None) == name
+                    for parameter in getattr(fn, "type_params", [])
+                )
+                or any(
+                    isinstance(n, (ast.Global, ast.Nonlocal)) and name in n.names
+                    for n in self.scope_nodes(fn.body)
+                )
+            ):
+                raise ValueError("DYNAMIC_REQUEST_SCOPE_REQUIRES_REVIEW")
+            if fn is not functions[-1] and self.binds(fn.body, name):
+                raise ValueError("CLOSURE_REQUEST_SCOPE_REQUIRES_REVIEW")
+        if any(
+            isinstance(n, ast.ClassDef)
+            and n.lineno <= before <= (n.end_lineno or n.lineno)
+            and any(getattr(p, "name", None) == name for p in getattr(n, "type_params", []))
+            for n in ast.walk(tree)
+        ):
+            raise ValueError("DYNAMIC_REQUEST_TYPE_SCOPE_REQUIRES_REVIEW")
+        scope = functions[-1].body if functions else []
+        if self.binds(scope, name):
+            assignments = [
+                n
+                for n in scope
+                if isinstance(n, (ast.Assign, ast.AnnAssign))
+                and n.lineno < before
+                and any(
+                    isinstance(t, ast.Name) and t.id == name
+                    for t in (n.targets if isinstance(n, ast.Assign) else [n.target])
+                )
             ]
-            scope = max(functions, key=lambda n: n.lineno).body if functions else []
+            if not assignments or any(
+                n.lineno < before
+                and not isinstance(n, (ast.Assign, ast.AnnAssign))
+                and self.binds([n], name)
+                for n in scope
+            ):
+                raise ValueError("DYNAMIC_LOCAL_REQUEST_VALUE_REQUIRES_REVIEW")
+        else:
+            bindings = [statement for statement in tree.body if self.binds([statement], name)]
+            if (
+                len(bindings) != 1
+                or bindings[0].lineno >= before
+                or not isinstance(
+                    bindings[0], (ast.Assign, ast.AnnAssign, ast.Import, ast.ImportFrom)
+                )
+                or any(
+                    isinstance(n, ast.ImportFrom) and any(a.name == "*" for a in n.names)
+                    for n in tree.body
+                )
+            ):
+                raise ValueError("DYNAMIC_REQUEST_VALUE_REQUIRES_REVIEW")
+            if (
+                isinstance(bindings[0], (ast.Import, ast.ImportFrom))
+                and sum(
+                    (alias.asname or alias.name.split(".")[0]) == name
+                    for alias in bindings[0].names
+                )
+                != 1
+            ):
+                raise ValueError("DYNAMIC_REQUEST_IMPORT_ALIAS_REQUIRES_REVIEW")
+        return scope
+
+    def assignment(self, node, relative, before, depth=0):
+        if depth > 16:
+            raise ValueError("PROFILE_RESOLUTION_LIMIT")
+        tree = self.module(relative)
+        name = node.id if isinstance(node, ast.Name) else None
+        symbol = name or (
+            node.value.id
+            if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name)
+            else None
+        )
+        scope = self.qualified_scope(tree, symbol, before) if symbol else []
+        if symbol and isinstance(node, ast.Attribute) and self.binds(scope, symbol):
+            raise ValueError("DYNAMIC_MODULE_ALIAS_REQUIRES_REVIEW")
+        if name:
             # Conditional writes and mutations cannot be reconstructed by selecting a literal.
             direct = {id(n) for n in [*tree.body, *scope]}
             for parent in [*tree.body, *scope]:
@@ -348,22 +478,40 @@ class Resolver:
                         if (alias.asname or alias.name) == name:
                             module = item.module.replace(".", "/") + ".py"
                             if item.level:
-                                module = str(Path(relative).parent / module).replace("\\", "/")
-                            for candidate in (module, "src/" + module):
-                                if (self.root / candidate).is_file():
-                                    return self.assignment(
-                                        ast.Name(id=alias.name), candidate, 10**9
-                                    )
+                                package = Path(relative).parent
+                                for _ in range(item.level - 1):
+                                    if package == Path("."):
+                                        raise ValueError(
+                                            "RELATIVE_IMPORT_OUTSIDE_PACKAGE_REQUIRES_REVIEW"
+                                        )
+                                    package = package.parent
+                                if not (self.root / package / "__init__.py").is_file():
+                                    raise ValueError("RELATIVE_IMPORT_PACKAGE_REQUIRES_REVIEW")
+                                module = (package / module).as_posix()
+                            candidates = (module,) if item.level else (module, "src/" + module)
+                            candidate = self.imported_module(candidates)
+                            if candidate is not None:
+                                return self.assignment(
+                                    ast.Name(id=alias.name), candidate, 10**9, depth + 1
+                                )
         if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
             for item in tree.body:
                 if isinstance(item, ast.Import):
                     for alias in item.names:
                         if (alias.asname or alias.name) == node.value.id:
                             module = alias.name.replace(".", "/") + ".py"
-                            for candidate in (module, "src/" + module):
-                                if (self.root / candidate).is_file():
-                                    return self.assignment(ast.Name(id=node.attr), candidate, 10**9)
+                            candidate = self.imported_module((module, "src/" + module))
+                            if candidate is not None:
+                                return self.assignment(
+                                    ast.Name(id=node.attr), candidate, 10**9, depth + 1
+                                )
         raise ValueError("DYNAMIC_REQUEST_VALUE_REQUIRES_REVIEW")
+
+    def imported_module(self, candidates):
+        found = [name for name in candidates if (self.root / name).is_file()]
+        if len(found) > 1:
+            raise ValueError("AMBIGUOUS_REQUEST_IMPORT_ROOT_REQUIRES_REVIEW")
+        return found[0] if found else None
 
     def literal(self, node, relative, before, depth=0):
         if depth > 16:
@@ -378,6 +526,9 @@ class Resolver:
             and len(node.func.value.args) == 1
             and not node.args
         ):
+            scope = self.qualified_scope(self.module(relative), "Path", before)
+            if self.binds(scope, "Path"):
+                raise ValueError("PROMPT_PATH_BINDING_REQUIRES_REVIEW")
             if node.func.value.keywords or any(k.arg != "encoding" for k in node.keywords):
                 raise ValueError("PROMPT_FILE_OPTIONS_REQUIRE_REVIEW")
             if node.keywords and ast.literal_eval(node.keywords[0].value) not in {"utf-8", "utf8"}:
@@ -498,13 +649,18 @@ class Resolver:
 
 
 def prepare_profile(
-    root: Path, site: dict, *, workflow_id: str | None = None, commit: str | None = None
+    root: Path,
+    site: dict,
+    *,
+    workflow_id: str | None = None,
+    commit: str | None = None,
+    source_overrides: dict[str, bytes] | None = None,
 ) -> PreparedProfile:
     from cutback.core.inventory import workflow_identity
 
     root = root.resolve(strict=True)
     relative = site["source_file"]
-    resolver = Resolver(root, relative)
+    resolver = Resolver(root, relative, source_overrides)
     tree = resolver.module(relative)
     calls = [
         n
@@ -517,8 +673,21 @@ def prepare_profile(
     if len(calls) != 1:
         raise ValueError("REQUEST_CALL_NOT_UNIQUE")
     call = calls[0]
+    scopes = [
+        n
+        for n in ast.walk(tree)
+        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda))
+        and n.lineno <= call.lineno <= (n.end_lineno or n.lineno)
+        and any(child is call for child in ast.walk(n))
+    ]
+    if scopes and isinstance(
+        max(scopes, key=lambda n: (n.lineno, n.col_offset)), (ast.ClassDef, ast.Lambda)
+    ):
+        raise ValueError("NONFUNCTION_REQUEST_SCOPE_REQUIRES_REVIEW")
     if call.args or any(k.arg is None for k in call.keywords):
         raise ValueError("EXPANDED_REQUEST_ARGUMENTS_REQUIRE_REVIEW")
+    if len(call.keywords) != len({keyword.arg for keyword in call.keywords}):
+        raise ValueError("DUPLICATE_REQUEST_ARGUMENTS_REQUIRE_REVIEW")
     values = {k.arg: k.value for k in call.keywords if k.arg is not None}
     payload_key = "input" if site["sdk_surface"] == "responses.create" else "messages"
     output_key = "max_output_tokens" if site["sdk_surface"] == "responses.create" else "max_tokens"

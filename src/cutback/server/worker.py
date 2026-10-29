@@ -11,6 +11,7 @@ from sqlalchemy import and_, or_, select, true
 from cutback.core.observation import observation_scope
 from cutback.evals.datasets import CapturePolicy, DatasetImport, digest
 from cutback.evals.experiments import provider_models, run
+from cutback.evals.input_groups import InputGroupingViolation
 from cutback.server.content_policy import require_payloads_enabled
 from cutback.server.db import (
     AuditEvent,
@@ -355,6 +356,13 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
                     else None,
                 )
             results["case_outputs_retained"] = plan.retain_case_outputs
+        except InputGroupingViolation as exc:
+            results = {
+                "status": "FAILED",
+                "code": str(exc),
+                "recommendations": [],
+                "requests": 0,
+            }
         except Exception:
             results = {
                 "status": "FAILED",

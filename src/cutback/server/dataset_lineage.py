@@ -345,6 +345,19 @@ def require_current_test_evidence(session, store, recommendation):
     if not row or row.project_id != project or run.status != "COMPLETED":
         raise LineageViolation("COMPLETED_TEST_EVIDENCE_REQUIRED")
     plan = load_plan(store, project, row.specification)
+    from cutback.evals.input_groups import effective_input_groups, requires_projection
+
+    if requires_projection(plan):
+        from cutback.server.worker import load_dataset
+
+        dataset_row = session.get(DatasetRecord, row.dataset_id)
+        try:
+            loaded, _ = load_dataset(session, dataset_row, store)
+            _, grouping = effective_input_groups(plan, loaded)
+        except ValueError:
+            raise LineageViolation("NATIVE_INPUT_GROUPING_RECONFIRMATION_REQUIRED") from None
+        if recommendation.evidence.get("input_grouping") != grouping:
+            raise LineageViolation("NATIVE_INPUT_GROUPING_RECONFIRMATION_REQUIRED")
     if (
         plan.split != "test"
         or recommendation.evidence.get("lineage", {}).get("fresh_test_claim") is not True

@@ -15508,6 +15508,28 @@
             "type": "integer",
             "title": "Max Output Tokens"
           },
+          "streaming": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Streaming"
+          },
+          "first_text_delta_us": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Text Delta Us"
+          },
           "state": {
             "type": "string",
             "title": "State"
@@ -15571,6 +15593,8 @@
           "model_key",
           "traffic_kind",
           "max_output_tokens",
+          "streaming",
+          "first_text_delta_us",
           "state",
           "price_sha256",
           "reserved_usd",
@@ -15673,7 +15697,10 @@
           "model_keys": {
             "items": {
               "type": "string",
-              "const": "openai-luna-responses-text-v1"
+              "enum": [
+                "openai-luna-responses-text-v1",
+                "openai-luna-responses-text-stream-v1"
+              ]
             },
             "type": "array",
             "maxItems": 5,
@@ -15740,7 +15767,10 @@
           "model_keys": {
             "items": {
               "type": "string",
-              "const": "openai-luna-responses-text-v1"
+              "enum": [
+                "openai-luna-responses-text-v1",
+                "openai-luna-responses-text-stream-v1"
+              ]
             },
             "type": "array",
             "maxItems": 5,
@@ -15857,7 +15887,10 @@
         "properties": {
           "version": {
             "type": "string",
-            "const": "cutback.gateway-policy.v1",
+            "enum": [
+              "cutback.gateway-policy.v1",
+              "cutback.gateway-policy.v2"
+            ],
             "title": "Version",
             "default": "cutback.gateway-policy.v1"
           },
@@ -15925,7 +15958,10 @@
         "properties": {
           "version": {
             "type": "string",
-            "const": "cutback.gateway-policy.v1",
+            "enum": [
+              "cutback.gateway-policy.v1",
+              "cutback.gateway-policy.v2"
+            ],
             "title": "Version",
             "default": "cutback.gateway-policy.v1"
           },
@@ -17787,7 +17823,10 @@
         "properties": {
           "key": {
             "type": "string",
-            "const": "openai-luna-responses-text-v1",
+            "enum": [
+              "openai-luna-responses-text-v1",
+              "openai-luna-responses-text-stream-v1"
+            ],
             "title": "Key",
             "default": "openai-luna-responses-text-v1"
           },
@@ -17854,7 +17893,10 @@
         "properties": {
           "key": {
             "type": "string",
-            "const": "openai-luna-responses-text-v1",
+            "enum": [
+              "openai-luna-responses-text-v1",
+              "openai-luna-responses-text-stream-v1"
+            ],
             "title": "Key",
             "default": "openai-luna-responses-text-v1"
           },
