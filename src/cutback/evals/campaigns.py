@@ -94,7 +94,9 @@ class CampaignBudget(Budget):
 
 
 class ImprovementCampaign(StrictModel):
-    version: Literal["cutback.improvement-campaign.v1"] = "cutback.improvement-campaign.v1"
+    version: Literal["cutback.improvement-campaign.v1", "cutback.improvement-campaign.v2"] = (
+        "cutback.improvement-campaign.v1"
+    )
     dataset_id: UUID
     baseline_snapshot_id: UUID
     environment: Identifier
@@ -169,6 +171,12 @@ class ImprovementCampaign(StrictModel):
         if self.budget.max_requests < 1:
             raise ValueError("CAMPAIGN_REQUEST_BOUND_REQUIRED")
         return self
+
+
+def static_alternative_available(campaign: ImprovementCampaign) -> bool:
+    """An unchanged control is a reference, not a reason to bill another trial."""
+    baseline = campaign.template.baseline.model_dump(mode="json", exclude={"key"})
+    return campaign.template.candidates[0].model_dump(mode="json", exclude={"key"}) != baseline
 
 
 class ProposalOnlyPlan(StrictModel):
@@ -430,6 +438,8 @@ def generation_input_upper_bytes(campaign, items, *, rounds, variants):
     )
     previous = (rounds - 1) * variants
     feedback = (rounds - 1) * (1 + variants)
+    if campaign.version == "cutback.improvement-campaign.v2":
+        feedback += 1  # The initial static alternative's aggregate validation receipt.
     return (
         generation_request_bytes(campaign, template)
         + training

@@ -3560,6 +3560,12 @@ export interface components {
         /** CampaignDraft */
         CampaignDraft: {
             /**
+             * Version
+             * @default cutback.improvement-campaign.v1
+             * @enum {string}
+             */
+            version: "cutback.improvement-campaign.v1" | "cutback.improvement-campaign.v2";
+            /**
              * Request Id
              * Format: uuid
              */
@@ -4922,9 +4928,9 @@ export interface components {
             /**
              * Version
              * @default cutback.improvement-campaign.v1
-             * @constant
+             * @enum {string}
              */
-            version: "cutback.improvement-campaign.v1";
+            version: "cutback.improvement-campaign.v1" | "cutback.improvement-campaign.v2";
             /**
              * Dataset Id
              * Format: uuid

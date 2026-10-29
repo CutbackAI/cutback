@@ -10,9 +10,13 @@ type Snapshot = components["schemas"]["TaskSnapshotBrief"];
 type CandidateContent = components["schemas"]["CampaignCandidateContent"];
 function nativeCampaignPlan(value: Detail["specification"]): Data {
   const specification = value as Data;
-  return { ...specification.template, candidates: [
-    ...(specification.template?.candidates || []), specification.generator?.model,
-  ].filter(Boolean) };
+  return {
+    ...specification.template,
+    candidates: [
+      ...(specification.template?.candidates || []),
+      specification.generator?.model,
+    ].filter(Boolean),
+  };
 }
 const active = new Set([
   "READY_FOR_APPROVAL",
@@ -31,6 +35,18 @@ const decisions: Record<string, string> = {
     "No evaluated alternative preserved the required quality at a lower known modeled cost. Keep the current application unchanged.",
   confirmation_requires_review_or_rejected:
     "Confirmation did not establish a usable improvement. Review the retained quality, cost and evidence limits before proposing an application change.",
+};
+const searchDecisions: Record<string, string> = {
+  validate_static_alternative_before_instruction_generation:
+    "Validate the prepared model or output-cap alternative before generating instructions.",
+  static_alternative_passed_skip_instruction_generation:
+    "The static alternative passed validation. Instruction generation was skipped.",
+  static_alternative_failed_use_reserved_instruction_search:
+    "The static alternative failed validation, so this campaign selected its reserved instruction-search stage.",
+  static_alternative_failed_no_generation_budget:
+    "The static alternative failed validation and no instruction-search round fits this budget. Keep the current application unchanged.",
+  unchanged_control_skip_static_trial:
+    "No distinct static alternative was available. This campaign skips the duplicate reference trial.",
 };
 
 export function Campaigns({
@@ -222,6 +238,7 @@ export function Campaigns({
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const body = {
+      version: "cutback.improvement-campaign.v2",
       template_plan_id: template,
       baseline_snapshot_id: snapshot,
       generator_model: {
@@ -315,6 +332,13 @@ export function Campaigns({
             economics. Preparation makes no provider calls.
           </p>
           <form onSubmit={prepare} className="grid">
+            <p>
+              Test the prepared model or output-cap alternative first. If it
+              passes validation, skip instruction generation and confirm on
+              untouched test groups. Otherwise use only the prompt-search effort
+              that fits the same frozen budget. If no generation round fits,
+              reject the failed alternative.
+            </p>
             <label>
               Prepared application plan
               <select
@@ -539,6 +563,22 @@ export function Campaigns({
             Refresh campaign evidence
           </button>
           <h3>Frozen economic bounds</h3>
+          {detail.specification.version ===
+            "cutback.improvement-campaign.v2" && (
+            <p>
+              Search order:{" "}
+              {detail.economic_envelope.static_alternative_available
+                ? "static alternative, instruction generation only if needed, then independent confirmation."
+                : "instruction generation, then independent confirmation. An unchanged control skips the duplicate static trial."}{" "}
+              Initial validation reserves{" "}
+              {String(detail.economic_envelope.initial_validation_requests)}{" "}
+              requests.
+              {detail.economic_envelope.instruction_search_enabled === false &&
+                " No instruction-generation round fits this envelope."}
+              Native API costs are bounded; other optimization overhead is
+              unmeasured.
+            </p>
+          )}
           <p>
             USD{" "}
             {String(
@@ -559,7 +599,11 @@ export function Campaigns({
             limited to {detail.max_instruction_bytes} UTF-8 bytes; request
             schemas, tools and destinations stay frozen.
           </p>
-          <NativeContracts plan={nativeCampaignPlan(detail.specification)} planId={detail.id} context="campaign" />
+          <NativeContracts
+            plan={nativeCampaignPlan(detail.specification)}
+            planId={detail.id}
+            context="campaign"
+          />
           <p>
             Content authority expires{" "}
             {new Date(detail.expires_at).toLocaleString()}.{" "}
@@ -623,12 +667,20 @@ export function Campaigns({
             </button>
           )}
           <h3>Execution stages</h3>
+          {searchDecisions[String(detail.summary.search_decision)] && (
+            <p>{searchDecisions[String(detail.summary.search_decision)]}</p>
+          )}
           {!detail.runs.length && <p>No child operation has started.</p>}
           <ol>
-            {detail.runs.map((r) => (
+            {detail.runs.map((r, index) => (
               <li key={String(r.run_id)}>
-                Round {String(r.round)} · {String(r.phase)} · {String(r.status)}{" "}
-                · {String(r.requests)} requests ·{" "}
+                {index === 0 &&
+                detail.specification.version ===
+                  "cutback.improvement-campaign.v2" &&
+                detail.economic_envelope.static_alternative_available
+                  ? "Initial model/output-cap validation"
+                  : `Round ${String(r.round)} · ${String(r.phase)}`}{" "}
+                · {String(r.status)} · {String(r.requests)} requests ·{" "}
                 {money(r.known_spend_subtotal_usd)}
               </li>
             ))}

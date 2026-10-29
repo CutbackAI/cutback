@@ -89,8 +89,13 @@ def test_campaign_extra_generator_vendor_is_required_before_reading_examples_or_
         )
 
 
+@pytest.mark.parametrize("simple_first", [False, True])
 def test_cheapest_minimum_cap_application_completes_instruction_only_native_campaign(
-    api, tenant, tmp_path, monkeypatch
+    api,
+    tenant,
+    tmp_path,
+    monkeypatch,
+    simple_first,
 ):
     from support_agent import native_response
     from test_campaign_workflow import advance as tick
@@ -120,6 +125,7 @@ def test_cheapest_minimum_cap_application_completes_instruction_only_native_camp
         max_requests=1000,
         savings_per_success="0.01",
         forecast_successful_tasks=10000,
+        simple_first=simple_first,
     )
     assert row["instruction_edit_qualified"]
     advance(root, control, campaign_hash=row["campaign_hash"], approval_ref="synthetic-only")

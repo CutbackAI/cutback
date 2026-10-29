@@ -88,6 +88,21 @@ def test_change_lookup_follows_fixed_metadata_pages_and_never_reads_payloads():
         declared_change(lambda *args: [], "/v1/projects/owned", desired)
 
 
+def test_simple_first_outcome_family_includes_static_success_and_three_round_fallback():
+    saved, row = reviewed()
+    row["specification"] = {"version": "cutback.improvement-campaign.v2"}
+    row["runs"].pop(0)
+    row["requests"] = 2
+    assert len(reviewed_campaign(saved, row)[1]) == 2
+    for phase in ("validation", "proposal", "validation", "proposal", "validation", "proposal"):
+        row["runs"].append({**row["runs"][0], "run_id": str(uuid4()), "phase": phase})
+    row["requests"] = 8
+    assert len(reviewed_campaign(saved, row)[1]) == 8
+    row["runs"][0]["known_cost_requests"] = 0
+    with pytest.raises(ValueError, match="COST_FAMILY_CHANGED"):
+        reviewed_campaign(saved, row)
+
+
 def test_unbounded_metadata_pages_abstain():
     with pytest.raises(ValueError, match="PAGE_CONTRACT_CHANGED"):
         declared_change(lambda *args: [{}] * 101, "/v1/projects/owned", str(uuid4()))

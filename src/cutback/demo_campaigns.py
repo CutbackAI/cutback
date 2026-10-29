@@ -272,6 +272,7 @@ def seed_campaign(app, control, project_id, writer, workspace):
         {
             "request_id": str(uuid4()),
             "specification": {
+                "version": "cutback.improvement-campaign.v2",
                 "dataset_id": dataset["id"],
                 "baseline_snapshot_id": snapshot["id"],
                 "environment": "staging",
@@ -329,7 +330,11 @@ def seed_campaign(app, control, project_id, writer, workspace):
                     .where(
                         CampaignRun.campaign_id == UUID(campaign["id"]), CampaignRun.phase == phase
                     )
-                    .order_by(CampaignRun.round_index.desc())
+                    .order_by(
+                        CampaignRun.round_index.desc(),
+                        CampaignRun.created_at.desc(),
+                        CampaignRun.id.desc(),
+                    )
                     .limit(1)
                 )
             worker = run_proposal_one if phase == "proposal" else run_one

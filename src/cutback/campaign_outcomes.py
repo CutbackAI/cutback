@@ -21,7 +21,9 @@ def reviewed_campaign(saved, row):
     if row["status"] != "COMPLETED" or row.get("billing_complete") is not True:
         raise ValueError("COMPLETED_CAMPAIGN_WITH_KNOWN_OVERHEAD_REQUIRED")
     runs = row["runs"]
-    if not 3 <= len(runs) <= 7 or len({r["run_id"] for r in runs}) != len(runs):
+    version = row.get("specification", {}).get("version", "cutback.improvement-campaign.v1")
+    minimum, maximum = (2, 8) if version == "cutback.improvement-campaign.v2" else (3, 7)
+    if not minimum <= len(runs) <= maximum or len({r["run_id"] for r in runs}) != len(runs):
         raise ValueError("RETAINED_CAMPAIGN_RUN_FAMILY_REQUIRED")
     confirmations = [r for r in runs if r["phase"] == "confirmation"]
     if len(confirmations) != 1 or (

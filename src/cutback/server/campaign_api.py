@@ -2,6 +2,7 @@
 
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
+from typing import Literal
 from uuid import UUID, uuid4
 
 from fastapi import Depends, HTTPException, Query
@@ -86,6 +87,9 @@ class CampaignSelectedContent(StrictModel):
 
 
 class CampaignDraft(StrictModel):
+    version: Literal["cutback.improvement-campaign.v1", "cutback.improvement-campaign.v2"] = (
+        "cutback.improvement-campaign.v1"
+    )
     request_id: UUID
     template_plan_id: UUID
     baseline_snapshot_id: UUID
@@ -345,7 +349,7 @@ def install_campaigns(app, sessions, authorize, scope):
                 cost = snapshot_cost(snapshot, project_id, env.id, campaign.template.workflow)
                 envelope = compile_campaign(campaign, loaded, cost)
                 envelope["baseline_snapshot_sha256"] = snapshot.evidence_sha256
-                if envelope["eligible"]:
+                if envelope["eligible"] and envelope["rounds"]:
                     raw = campaign.model_dump(mode="json")
                     raw["generator"].update(
                         rounds=envelope["rounds"], variants_per_round=envelope["variants_per_round"]
@@ -481,6 +485,7 @@ def install_campaigns(app, sessions, authorize, scope):
                     ).get(plan.source_binding.profile_sha256)
                 specification = ImprovementCampaign.model_validate(
                     {
+                        "version": body.version,
                         "dataset_id": str(template.dataset_id),
                         "baseline_snapshot_id": str(body.baseline_snapshot_id),
                         "environment": dataset.provenance["environment"],

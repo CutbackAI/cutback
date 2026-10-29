@@ -78,6 +78,7 @@ def test_agent_campaign_reconciles_lost_prepare_and_approval_without_new_identit
     assert advance(root, intermittent)["status"] == "QUEUED"
     current = status(root, control)
     assert current["id"] == row["id"] and current["requests"] == 0
+    assert current["specification"]["version"] == "cutback.improvement-campaign.v2"
     saved = (root / ".cutback/agent/campaign.json").read_text(encoding="utf-8")
     assert (
         "Owned synthetic classification task" not in saved
@@ -88,6 +89,38 @@ def test_agent_campaign_reconciles_lost_prepare_and_approval_without_new_identit
         stream.write("\n# changed after approval\n")
     with pytest.raises(ValueError, match="SOURCE_CHANGED"):
         advance(root, control)
+
+
+def test_old_saved_campaign_without_version_resumes_exact_original_request(
+    api,
+    tenant,
+    tmp_path,
+    monkeypatch,
+):
+    from cutback.core.workspace import read_private, write_private
+
+    root, control, state, _ = prepare_fresh(
+        api, tenant, tmp_path, monkeypatch, "classifier", search=True
+    )
+    arguments = dict(
+        baseline_snapshot_id=baseline(api, tenant, state["selected_workflow"]),
+        max_usd="10",
+        max_requests=1000,
+        savings_per_success="0.01",
+        forecast_successful_tasks=10000,
+    )
+    original = prepare(root, control, **arguments, simple_first=False)
+    path = root / ".cutback/agent/campaign.json"
+    saved = read_private(path)
+    saved["request"].pop("version")
+    write_private(path, saved)
+    resumed = prepare(root, control, **arguments)
+    assert resumed["id"] == original["id"]
+    assert resumed["campaign_hash"] == original["campaign_hash"]
+    assert status(root, control)["specification"]["version"] == "cutback.improvement-campaign.v1"
+    assert "version" not in read_private(path)["request"]
+    with pytest.raises(ValueError, match="SAVED_CAMPAIGN_SCOPE_CHANGED"):
+        prepare(root, control, **arguments, simple_first=True)
 
 
 def test_agent_campaign_proposes_confirmed_literal_edit_without_modifying_application(
@@ -112,6 +145,7 @@ def test_agent_campaign_proposes_confirmed_literal_edit_without_modifying_applic
         max_requests=1000,
         savings_per_success="0.01",
         forecast_successful_tasks=10000,
+        simple_first=False,
     )
     assert row["instruction_edit_qualified"]
     advance(root, control, campaign_hash=row["campaign_hash"], approval_ref="synthetic-fixtures")

@@ -12,6 +12,7 @@ from cutback.evals.campaigns import (
     decode_proposals,
     generation_input,
     proposal_model,
+    static_alternative_available,
 )
 from cutback.evals.datasets import digest
 from cutback.evals.experiments import Budget, ExperimentPlan, plan_summary, upper_cost
@@ -78,8 +79,8 @@ def freeze_raw(session, store, parent, plan, policy, refs):
     return row
 
 
-def child_run(session, store, parent, plan, phase, policy, refs, *, derivation=None):
-    step = f"{phase}-r{parent.current_round}"
+def child_run(session, store, parent, plan, phase, policy, refs, *, derivation=None, static=False):
+    step = f"{phase}-{'static-' if static else ''}r{parent.current_round}"
     if session.scalar(
         select(CampaignRun.id).where(
             CampaignRun.campaign_id == parent.id, CampaignRun.step_key == step
@@ -193,7 +194,7 @@ def prior_feedback(session, parent):
         .join(CampaignRun, CampaignRun.run_id == ExperimentRunRecord.id)
         .where(CampaignRun.campaign_id == parent.id, CampaignRun.phase == "validation")
         .order_by(CampaignRun.round_index)
-        .limit(3)
+        .limit(4)
     ).all()
     feedback = []
     for run in runs:
@@ -215,6 +216,8 @@ def prior_feedback(session, parent):
 def queue_proposal(session, store, parent, campaign, policy, refs, dataset):
     from cutback.server.lineage_db import DatasetExposure
 
+    if not 1 <= parent.current_round <= parent.economic_envelope["rounds"]:
+        raise ValueError("CAMPAIGN_GENERATION_OUTSIDE_COMPILED_EFFORT")
     training_lineage(session, parent.project_id, dataset)
     previous = session.scalars(
         select(CampaignCandidate)
@@ -311,7 +314,8 @@ def select_confirmation(session, store, parent, policy, refs, dataset):
         select(ExperimentRunRecord)
         .join(CampaignRun, CampaignRun.run_id == ExperimentRunRecord.id)
         .where(CampaignRun.campaign_id == parent.id, CampaignRun.phase == "validation")
-        .limit(3)
+        .order_by(CampaignRun.round_index, CampaignRun.created_at, CampaignRun.id)
+        .limit(4)
     ).all()
     for run in runs:
         for item in run.results.get("search_frontier", {}).get("candidates", []):
@@ -443,13 +447,49 @@ def advance_one(
             if parent.status == "RUNNING":
                 for ordinal, seed in enumerate(campaign.template.candidates, 1):
                     freeze_candidate(session, store, parent, seed, "seed", policy, refs, ordinal)
-                queue_proposal(session, store, parent, campaign, policy, refs, dataset)
+                if (
+                    campaign.version == "cutback.improvement-campaign.v2"
+                    and static_alternative_available(campaign)
+                ):
+                    parent.summary = {
+                        **parent.summary,
+                        "static_stage": "waiting",
+                        "search_decision": (
+                            "validate_static_alternative_before_instruction_generation"
+                        ),
+                    }
+                    plan = target_plan(parent, campaign, dataset, campaign.template.candidates)
+                    child_run(
+                        session,
+                        store,
+                        parent,
+                        plan,
+                        "validation",
+                        policy,
+                        refs,
+                        static=True,
+                        derivation={"strategy": "static_native_alternative", "proposer_calls": 0},
+                    )
+                else:
+                    if campaign.version == "cutback.improvement-campaign.v2":
+                        parent.summary = {
+                            **parent.summary,
+                            "static_stage": "not_available",
+                            "search_decision": "unchanged_control_skip_static_trial",
+                        }
+                    queue_proposal(session, store, parent, campaign, policy, refs, dataset)
             else:
                 phase = parent.status.removeprefix("WAITING_").lower()
+                static_stage = (
+                    campaign.version == "cutback.improvement-campaign.v2"
+                    and phase == "validation"
+                    and parent.summary.get("static_stage") == "waiting"
+                )
+                step = f"{phase}-{'static-' if static_stage else ''}r{parent.current_round}"
                 link = session.scalar(
                     select(CampaignRun).where(
                         CampaignRun.campaign_id == parent.id,
-                        CampaignRun.step_key == f"{phase}-r{parent.current_round}",
+                        CampaignRun.step_key == step,
                     )
                 )
                 if link is None:
@@ -478,7 +518,31 @@ def advance_one(
                     and child.results.get("plan", {}).get("plan_hash") != link.plan_sha256
                 ):
                     raise ValueError("CAMPAIGN_CHILD_FROZEN_RECEIPT_CHANGED")
-                if phase == "proposal":
+                if static_stage:
+                    eligible = any(
+                        not item.get("baseline")
+                        and item.get("eligible") is True
+                        and item.get("cost_per_request_usd") is not None
+                        for item in child.results.get("search_frontier", {}).get("candidates", [])
+                    )
+                    fallback = parent.economic_envelope["rounds"] > 0
+                    parent.summary = {
+                        **parent.summary,
+                        "static_stage": "completed",
+                        "static_validation_run_id": str(child.id),
+                        "search_decision": (
+                            "static_alternative_passed_skip_instruction_generation"
+                            if eligible
+                            else "static_alternative_failed_use_reserved_instruction_search"
+                            if fallback
+                            else "static_alternative_failed_no_generation_budget"
+                        ),
+                    }
+                    if eligible or not fallback:
+                        select_confirmation(session, store, parent, policy, refs, dataset)
+                    else:
+                        queue_proposal(session, store, parent, campaign, policy, refs, dataset)
+                elif phase == "proposal":
                     raw, sha = read_payload(
                         session, store, parent, UUID(child.results["output_payload_id"]), policy
                     )
@@ -534,9 +598,12 @@ def advance_one(
                             known[identity] = str(version.id)
                     link.derivation = {**link.derivation, "candidate_dispositions": dispositions}
                     if fresh:
-                        plan = target_plan(
-                            parent, campaign, dataset, [*campaign.template.candidates, *fresh]
+                        controls = (
+                            campaign.template.candidates
+                            if campaign.version == "cutback.improvement-campaign.v1"
+                            else []
                         )
+                        plan = target_plan(parent, campaign, dataset, [*controls, *fresh])
                         child_run(
                             session,
                             store,
@@ -552,6 +619,7 @@ def advance_one(
                         )
                     else:
                         parent.summary = {
+                            **parent.summary,
                             "stopping_reason": "duplicate_proposals",
                             "deployment_authorized": False,
                         }

@@ -38,7 +38,9 @@ def test_source_bound_native_campaign_and_authenticated_browser(
         report = result["report"]
         assert report["status"] == "COMPLETED" and result["paid_provider_calls"] == 0
         assert report["requests"] == report["known_cost_requests"] == result["native_calls"]
-        assert len(report["candidates"]) == 3 and len(report["runs"]) == 3
+        assert len(report["candidates"]) == 3 and len(report["runs"]) == 4
+        assert report["specification"]["version"] == "cutback.improvement-campaign.v2"
+        assert report["summary"]["static_stage"] == "completed"
         assert report["source_profile_sha256"]
         assert report["summary"]["decision"] == "synthetic_confirmation_passed_real_data_required"
         assert not report["summary"]["deployment_authorized"]

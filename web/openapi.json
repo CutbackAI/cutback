@@ -13026,6 +13026,15 @@
       },
       "CampaignDraft": {
         "properties": {
+          "version": {
+            "type": "string",
+            "enum": [
+              "cutback.improvement-campaign.v1",
+              "cutback.improvement-campaign.v2"
+            ],
+            "title": "Version",
+            "default": "cutback.improvement-campaign.v1"
+          },
           "request_id": {
             "type": "string",
             "format": "uuid",
@@ -16413,7 +16422,10 @@
         "properties": {
           "version": {
             "type": "string",
-            "const": "cutback.improvement-campaign.v1",
+            "enum": [
+              "cutback.improvement-campaign.v1",
+              "cutback.improvement-campaign.v2"
+            ],
             "title": "Version",
             "default": "cutback.improvement-campaign.v1"
           },

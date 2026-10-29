@@ -30,6 +30,75 @@ def test_compilation_includes_proposer_simple_baseline_all_targets_and_confirmat
     assert not receipt["paid_calls_authorized"] and receipt["provider_calls"] == 0
 
 
+def test_simple_first_reserves_initial_stage_fallback_and_untouched_confirmation():
+    value = campaign(
+        version="cutback.improvement-campaign.v2",
+        conservative_savings_per_success_usd="0.1",
+        forecast_successful_tasks=1000,
+    )
+    receipt = compile_campaign(value, dataset(), Decimal("1"))
+    assert receipt["contract"] == "cutback.campaign-budget.v2"
+    assert receipt["max_requests"] == 6 + 1 + 3 * 3 + 6
+    assert receipt["initial_validation_requests"] == 6
+    assert receipt["instruction_search_enabled"]
+    assert receipt["split_samples"] == {"train": 3, "validation": 3, "test": 3}
+
+
+def test_simple_only_budget_preserves_confirmation_and_does_not_reserve_generation():
+    value = campaign(
+        version="cutback.improvement-campaign.v2",
+        conservative_savings_per_success_usd="0.1",
+        forecast_successful_tasks=1000,
+    )
+    raw = value.model_dump(mode="json")
+    raw["budget"]["max_requests"] = 12
+    receipt = compile_campaign(type(value).model_validate(raw), dataset(), Decimal("1"))
+    assert receipt["eligible"] and receipt["max_requests"] == 12
+    assert receipt["rounds"] == receipt["variants_per_round"] == 0
+    assert not receipt["instruction_search_enabled"]
+    assert receipt["generator_input_upper_bytes"] is None
+    raw["budget"]["max_requests"] = 11
+    assert not compile_campaign(type(value).model_validate(raw), dataset(), Decimal("1"))[
+        "eligible"
+    ]
+
+
+def test_unchanged_control_goes_directly_to_generation_without_duplicate_static_trials():
+    value = campaign(
+        version="cutback.improvement-campaign.v2",
+        conservative_savings_per_success_usd="0.1",
+        forecast_successful_tasks=1000,
+    )
+    raw = value.model_dump(mode="json")
+    raw["template"]["candidates"] = [{**raw["template"]["baseline"], "key": "unchanged"}]
+    receipt = compile_campaign(type(value).model_validate(raw), dataset(), Decimal("1"))
+    assert receipt["eligible"] and not receipt["static_alternative_available"]
+    assert receipt["initial_validation_requests"] == 0
+    assert receipt["max_requests"] == 1 + 3 * 3 + 6
+    assert receipt["static_baseline_kind"] == "unchanged_control_no_cheaper_static_variant"
+    raw["budget"]["max_requests"] = 12
+    assert not compile_campaign(type(value).model_validate(raw), dataset(), Decimal("1"))[
+        "eligible"
+    ]
+
+
+def test_campaign_cost_bounds_are_independent_of_host_decimal_context():
+    from decimal import ROUND_CEILING, Inexact, Rounded, localcontext
+
+    for version in ("cutback.improvement-campaign.v1", "cutback.improvement-campaign.v2"):
+        value = campaign(
+            version=version,
+            conservative_savings_per_success_usd="0.100000000001",
+            forecast_successful_tasks=1001,
+        )
+        expected = compile_campaign(value, dataset(), Decimal("1"))
+        with localcontext() as context:
+            context.prec = 3
+            context.rounding = ROUND_CEILING
+            context.traps[Inexact] = context.traps[Rounded] = True
+            assert compile_campaign(value, dataset(), Decimal("1")) == expected
+
+
 def test_compile_scales_effort_down_without_reducing_heldout_samples():
     value = campaign(conservative_savings_per_success_usd="0.1", forecast_successful_tasks=1000)
     raw = value.model_dump(mode="json")
