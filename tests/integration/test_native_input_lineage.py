@@ -185,3 +185,53 @@ def test_actual_native_inputs_and_receipt_are_rechecked_before_source_review(
         with pytest.raises(LineageViolation, match="NATIVE_INPUT_GROUPING_RECONFIRMATION_REQUIRED"):
             require_current_test_evidence(session, store, recommendation)
     assert "Classify synthetic" not in json.dumps(result)
+
+
+def test_input_preparation_expiry_never_dispatches_or_holds_a_native_call(
+    api, tenant, tmp_path, monkeypatch
+):
+    from cutback.core.request_profiles import RequestContract
+    from cutback.evals import experiments
+
+    client, admin, app = api
+    base, store, dataset, _ = authorized_dataset(api, tenant, tmp_path, monkeypatch)
+    spec = native_plan(dataset)
+    created = client.post(
+        base + "/experiments/plans",
+        headers=admin,
+        json={"dataset_id": dataset["id"], "specification": spec.model_dump(mode="json")},
+    )
+    assert created.status_code == 201, created.text
+    run_id = approve_and_queue(client, admin, base, created.json())
+    calls = []
+    native = executor(monkeypatch, calls)
+    original = RequestContract.render
+    started = experiments.time.monotonic()
+    clock = [started]
+
+    def render(self, text):
+        clock[0] = started + spec.budget.max_wall_seconds + 1
+        return original(self, text)
+
+    monkeypatch.setattr(experiments.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(RequestContract, "render", render)
+    try:
+        result = run_one(
+            app.state.sessions, store, executor=native, execution_enabled=True, only_run_id=run_id
+        )
+    finally:
+        native.close()
+    assert result["status"] == "FAILED"
+    assert result["results"]["code"] == "NATIVE_INPUT_GROUPING_WALL_LIMIT"
+    assert calls == []
+    with app.state.sessions() as session:
+        run = session.get(ExperimentRunRecord, UUID(run_id))
+        assert run.requests_used == 0 and run.reserved_usd == 0
+        assert (
+            session.scalar(
+                select(func.count())
+                .select_from(ExecutionCall)
+                .where(ExecutionCall.run_id == UUID(run_id))
+            )
+            == 0
+        )

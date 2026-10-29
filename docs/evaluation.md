@@ -20,6 +20,8 @@ For frozen text request templates, source qualification also checks the actual r
 
 This bounded check allows at most 32 MiB of rendered projection work. Rendering and input signatures remain in memory; public receipts contain only counts, the check version and its scope. Malformed templates or excess work fail before billing. Recommendation review repeats the check, so older template-based results without a matching receipt need new confirmation. `cross_dataset_rendered_input_history` stays `unknown`: the existing persistent lineage tracks normalized raw records and declared customer families, not every historical rendering under different templates. Episode/tool execution and retrieval keep their separate evidence contracts. This check neither supplies semantic deduplication nor establishes otherwise unknown population coverage.
 
+During execution, input projection consumes the same approved wall-clock envelope as native calls. The timer starts before projection and is checked during preparation and again before dispatch. `NATIVE_INPUT_GROUPING_WALL_LIMIT` stops an expired preparation without a native request or billable reservation; finishing preprocessing never starts a fresh budget.
+
 ## Plan, approve and run
 
 ```sh

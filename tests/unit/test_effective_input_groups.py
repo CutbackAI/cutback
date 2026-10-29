@@ -81,6 +81,7 @@ def test_native_collision_across_splits_fails_before_any_call_or_reservation():
             executor,
             approval_hash=plan_summary(plan, dataset)["plan_hash"],
             reserve_call=lambda *args, **kwargs: reservations.append(args),
+            record_call=lambda *args, **kwargs: None,
         )
     assert executor.calls == reservations == []
 
@@ -205,3 +206,34 @@ def test_authority_is_rechecked_during_bounded_preparation():
     checks = []
     effective_input_groups(plan, dataset, check=lambda: checks.append(True))
     assert len(checks) == 4
+
+
+@pytest.mark.parametrize("case_limit", [1, 200])
+def test_input_preparation_cannot_reset_the_approved_wall_clock(monkeypatch, case_limit):
+    from cutback.core.request_profiles import RequestContract
+    from cutback.evals import experiments
+
+    plan, dataset = fixture()
+    dataset["items"] = dataset["items"][:case_limit]
+    plan.budget.max_wall_seconds = 1
+    clock = [0.0]
+    original = RequestContract.render
+
+    def render(self, text):
+        if clock[0] == 0:
+            clock[0] = 2
+        return original(self, text)
+
+    monkeypatch.setattr(experiments.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(RequestContract, "render", render)
+    executor = SyntheticExecutor()
+    reservations = []
+    with pytest.raises(ValueError, match="NATIVE_INPUT_GROUPING_WALL_LIMIT"):
+        run(
+            plan,
+            dataset,
+            executor,
+            approval_hash=plan_summary(plan, dataset)["plan_hash"],
+            reserve=lambda *args: reservations.append(args),
+        )
+    assert executor.calls == reservations == []

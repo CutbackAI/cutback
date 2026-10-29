@@ -81,5 +81,28 @@
   "paid_provider_calls": 0,
   "pypi_upload": false,
   "production_deployed": false,
-  "whole_product_complete": false
+  "whole_product_complete": false,
+  "execution_wall_follow_up": {
+    "before_fix_installed_regressions_failed": 2,
+    "default_source": {
+      "passed": 41,
+      "seconds": 16.62
+    },
+    "sdk3_source": {
+      "passed": 41,
+      "seconds": 15.5
+    },
+    "real_pg_native_expiry": {
+      "requests": 0,
+      "held_charge_usd": "0",
+      "canonical_call_rows": 0
+    },
+    "semantics": "Input projection consumes the same execution clock; no fresh wall allowance after preprocessing."
+  },
+  "pre_wall_installed_sdk3": {
+    "passed": 944,
+    "skipped": 8,
+    "seconds": 560.25,
+    "not_final_wall_fix_acceptance": true
+  }
 }

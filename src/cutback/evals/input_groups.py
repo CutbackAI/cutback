@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import time
 
 from cutback.evals.datasets import normalized_input
 
@@ -32,7 +33,7 @@ def _normalized(value):
     return value
 
 
-def effective_input_groups(plan, dataset, *, check=None):
+def effective_input_groups(plan, dataset, *, check=None, deadline=None):
     """Merge existing families when any frozen model sends equal normalized inputs.
 
     This checks the whole frozen corpus, before sampling or billing. It does not
@@ -64,6 +65,8 @@ def effective_input_groups(plan, dataset, *, check=None):
     for model in models:
         seen: dict[str, str] = {}
         for index, item in enumerate(items):
+            if deadline is not None and time.monotonic() >= deadline:
+                raise InputGroupingViolation("NATIVE_INPUT_GROUPING_WALL_LIMIT")
             if check and index % 128 == 0:
                 check()
             text = item["case"]["input"]
