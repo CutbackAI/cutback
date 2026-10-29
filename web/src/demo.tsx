@@ -103,6 +103,11 @@ export function SampleGuide({
             Inspect agent and retrieval tasks
           </button>
         )}
+        {demo.retrieval_sample && (
+          <button onClick={() => navigate("Retrieval")}>
+            Compare real corpus retrieval configurations
+          </button>
+        )}
       </div>
       {error && <p role="alert">{error}</p>}
       {loading && <p role="status">Loading sample evidence…</p>}

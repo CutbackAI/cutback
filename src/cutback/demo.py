@@ -346,6 +346,9 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
 
             task_sample = seed_task_economics(control, endpoint, project["id"], ingest)
             campaign_sample = seed_campaign(app, control, project["id"], ingest, workspace)
+            from cutback.demo_retrieval import seed_retrieval
+
+            retrieval_sample = seed_retrieval(app, control, project["id"], workspace)
             manifest = {
                 "available": True,
                 "title": "Support-desk triage",
@@ -366,6 +369,17 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
                 "agent_episode_run_id": agent_sample["run_id"],
                 "task_economics_sample": task_sample,
                 "improvement_campaign_sample": campaign_sample,
+                "retrieval_sample": {
+                    key: retrieval_sample[key]
+                    for key in (
+                        "dataset_id",
+                        "validation_run_id",
+                        "confirmation_run_id",
+                        "native_sdk_calls",
+                        "source_change",
+                        "paid_provider_calls",
+                    )
+                },
             }
             workspace.mkdir(parents=True, exist_ok=True)
             (workspace / "sample-report.json").write_text(

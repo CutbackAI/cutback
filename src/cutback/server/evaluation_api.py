@@ -12,6 +12,7 @@ from sqlalchemy import func, select
 
 from cutback.core.episode_judging import EpisodeJudgingSpec
 from cutback.core.models import Identifier, StrictModel
+from cutback.core.retrieval import RetrievalConfigurationBinding, RetrievalCorpus, RetrievalSettings
 from cutback.evals.artifacts import configured_store
 from cutback.evals.datasets import (
     CapturePolicy,
@@ -22,7 +23,10 @@ from cutback.evals.datasets import (
     prepare_dataset,
     redact,
 )
-from cutback.evals.experiments import CriterionSpec, ExperimentPlan, ModelSpec, plan_summary
+from cutback.evals.experiments import Budget, CriterionSpec, ExperimentPlan, ModelSpec, plan_summary
+from cutback.evals.metrics import MetricSpec
+from cutback.evals.retrieval import AssumedCPURate
+from cutback.retrieval_changes import RetrievalProposal
 from cutback.server.db import (
     AuditEvent,
     CapturePolicyRecord,
@@ -75,6 +79,25 @@ class ApproveInput(StrictModel):
 
 class QueueInput(StrictModel):
     plan_id: UUID
+
+
+class RetrievalDraftInput(StrictModel):
+    dataset_id: UUID
+    baseline: ModelSpec
+    corpus: RetrievalCorpus
+    settings: RetrievalSettings
+    metric: MetricSpec
+    budget: Budget
+    candidates: list[RetrievalSettings] | None = Field(default=None, min_length=1, max_length=5)
+    assumed_usd_per_cpu_hour: AssumedCPURate | None = None
+    max_query_bytes: int = Field(default=1024, strict=True, ge=1, le=8192)
+    retain_case_outputs: bool = False
+    configuration_binding: RetrievalConfigurationBinding | None = None
+
+
+class RetrievalConfirmationInput(StrictModel):
+    validation_run_id: UUID
+    budget: Budget
 
 
 class DraftInput(StrictModel):
@@ -596,6 +619,137 @@ def install_evaluation(app, sessions, authorize, scope):
             project_id, PlanInput(dataset_id=body.dataset_id, specification=spec), auth
         )
 
+    @app.post("/v1/projects/{project_id}/retrieval/draft", status_code=201)
+    def retrieval_draft(project_id: UUID, body: RetrievalDraftInput, auth=Depends(authorize)):
+        from cutback.evals.retrieval_planning import draft_retrieval_plan
+
+        scope(auth, project_id, ("analyst",))
+        require_store(app)
+        with sessions() as session:
+            dataset = session.get(DatasetRecord, body.dataset_id)
+            if not dataset or dataset.project_id != project_id:
+                raise HTTPException(404, "DATASET_NOT_FOUND")
+            metadata = {
+                "hash": dataset.immutable_hash,
+                "workflow": dataset.workflow_id,
+                "provenance": dataset.provenance,
+            }
+        try:
+            plan = draft_retrieval_plan(
+                metadata,
+                body.baseline,
+                body.corpus,
+                body.settings,
+                **body.model_dump(
+                    exclude={
+                        "dataset_id",
+                        "baseline",
+                        "corpus",
+                        "settings",
+                        "metric",
+                        "budget",
+                        "candidates",
+                    }
+                ),
+                metric=body.metric,
+                budget=body.budget,
+                candidates=body.candidates,
+            )
+        except ValueError:
+            raise HTTPException(422, "RETRIEVAL_DRAFT_CONTRACT_INVALID") from None
+        return create_plan(
+            project_id, PlanInput(dataset_id=body.dataset_id, specification=plan), auth
+        )
+
+    @app.post("/v1/projects/{project_id}/retrieval/confirmation", status_code=201)
+    def retrieval_confirmation(
+        project_id: UUID, body: RetrievalConfirmationInput, auth=Depends(authorize)
+    ):
+        from cutback.evals.retrieval_planning import confirmation_plan
+
+        scope(auth, project_id, ("analyst",))
+        store = require_store(app)
+        with sessions() as session:
+            run = session.get(ExperimentRunRecord, body.validation_run_id)
+            if not run or run.project_id != project_id or run.status != "COMPLETED":
+                raise HTTPException(404, "COMPLETED_VALIDATION_NOT_FOUND")
+            row = session.get(ExperimentPlanRecord, run.plan_id)
+            active_policy(session, project_id, UUID(row.specification["policy_id"]))
+            try:
+                prior = load_plan(store, project_id, row.specification)
+                plan = confirmation_plan(prior, run.results, str(run.id), body.budget)
+            except ValueError:
+                raise HTTPException(409, "RETRIEVAL_CONFIRMATION_GATES_NOT_PASSED") from None
+            dataset_id = row.dataset_id
+        return create_plan(project_id, PlanInput(dataset_id=dataset_id, specification=plan), auth)
+
+    @app.post(
+        "/v1/projects/{project_id}/retrieval/{run_id}/proposal", response_model=RetrievalProposal
+    )
+    def retrieval_proposal(
+        project_id: UUID, run_id: UUID, body: ContentPurpose, auth=Depends(authorize)
+    ):
+        from cutback.server.dataset_lineage import lock_lineage
+        from cutback.server.stages import validate_confirmation
+
+        scope(auth, project_id, ("admin",))
+        store = require_store(app)
+        with sessions.begin() as session:
+            lock_lineage(session, project_id)
+            run = session.get(ExperimentRunRecord, run_id)
+            if not run or run.project_id != project_id or run.status != "COMPLETED":
+                raise HTTPException(404, "COMPLETED_CONFIRMATION_NOT_FOUND")
+            row = session.get(ExperimentPlanRecord, run.plan_id)
+            active_policy(session, project_id, UUID(row.specification["policy_id"]))
+            try:
+                plan = load_plan(store, project_id, row.specification)
+                if not plan.retrieval_execution or not plan.predecessor_run_id:
+                    raise ValueError("CONFIRMATION_REQUIRED")
+                validate_confirmation(session, store, project_id, plan, run_id=run.id)
+            except ValueError:
+                raise HTTPException(409, "RETRIEVAL_CONFIRMATION_REQUIRED") from None
+            decision: dict = next(iter(run.results.get("recommendations", [])), {})
+            if (
+                not run.results.get("billing_complete")
+                or not decision.get("quality_gate_passed")
+                or not decision.get("retrieval_automation_eligible")
+                or run.results.get("lineage", {}).get("fresh_test_claim") is not True
+            ):
+                raise HTTPException(409, "RETRIEVAL_CONFIRMATION_GATES_NOT_PASSED")
+            retrieval = plan.retrieval_execution
+            if not retrieval.configuration_binding:
+                raise HTTPException(409, "RETRIEVAL_SOURCE_CONFIGURATION_BINDING_REQUIRED")
+            dataset = session.get(DatasetRecord, row.dataset_id)
+            state: Literal[
+                "synthetic_local_review_only", "heldout_review_required", "sample_review_required"
+            ] = (
+                "synthetic_local_review_only"
+                if dataset.provenance["source_type"] == "synthetic_fixture"
+                else (
+                    "heldout_review_required"
+                    if decision["status"] == "VERIFIED_ON_HELDOUT_DATASET"
+                    else "sample_review_required"
+                )
+            )
+            result = RetrievalProposal(
+                run_id=run.id,
+                plan_hash=row.specification["plan_hash"],
+                dataset_hash=plan.dataset_hash,
+                binding=retrieval.configuration_binding,
+                baseline=retrieval.variants[0].settings,
+                proposed=retrieval.variants[1].settings,
+                decision=state,
+            )
+            session.add(
+                AuditEvent(
+                    project_id=project_id,
+                    actor=auth["actor"],
+                    action="retrieval_configuration_proposal_read",
+                    details={"run_id": str(run.id), "purpose": body.purpose},
+                )
+            )
+            return result
+
     @app.post("/v1/projects/{project_id}/experiments/plans", status_code=201)
     def create_plan(project_id: UUID, body: PlanInput, auth=Depends(authorize)):
         scope(auth, project_id, ("analyst",))
@@ -720,6 +874,33 @@ def install_evaluation(app, sessions, authorize, scope):
             "specification": plan.model_dump(mode="json"),
             "plan_hash": row.specification["plan_hash"],
         }
+
+    @app.get("/v1/projects/{project_id}/experiments/plans/{plan_id}/execution")
+    def plan_execution(project_id: UUID, plan_id: UUID, auth=Depends(authorize)):
+        """Reconcile a lost queue acknowledgement without replaying an approved run."""
+        scope(auth, project_id)
+        with sessions() as session:
+            plan = session.get(ExperimentPlanRecord, plan_id)
+            if not plan or plan.project_id != project_id:
+                raise HTTPException(404, "PLAN_NOT_FOUND")
+            runs = list(
+                session.scalars(
+                    select(ExperimentRunRecord)
+                    .where(
+                        ExperimentRunRecord.project_id == project_id,
+                        ExperimentRunRecord.plan_id == plan_id,
+                    )
+                    .limit(2)
+                )
+            )
+            if len(runs) > 1:
+                raise HTTPException(409, "PLAN_EXECUTION_IDENTITY_AMBIGUOUS")
+            return {
+                "plan_id": str(plan.id),
+                "approval_status": plan.approval_status,
+                "run_id": str(runs[0].id) if runs else None,
+                "run_status": runs[0].status if runs else None,
+            }
 
     @app.post("/v1/projects/{project_id}/experiments/plans/{plan_id}/approve")
     def approve_plan(project_id: UUID, plan_id: UUID, body: ApproveInput, auth=Depends(authorize)):

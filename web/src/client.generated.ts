@@ -125,9 +125,21 @@ export function createSDK(request:Request) {return {
   create_draft_v1_projects__project_id__experiments_draft_post: (args:{project_id:string;body:components["schemas"]["DraftInput"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/experiments/draft`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  retrieval_draft_v1_projects__project_id__retrieval_draft_post: (args:{project_id:string;body:components["schemas"]["RetrievalDraftInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/retrieval/draft`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  retrieval_confirmation_v1_projects__project_id__retrieval_confirmation_post: (args:{project_id:string;body:components["schemas"]["RetrievalConfirmationInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/retrieval/confirmation`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  retrieval_proposal_v1_projects__project_id__retrieval__run_id__proposal_post: (args:{project_id:string;run_id:string;body:components["schemas"]["ContentPurpose"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/retrieval/${encodeURIComponent(String(args.run_id))}/proposal`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   read_plan_content_v1_projects__project_id__experiments_plans__plan_id__content_post: (args:{project_id:string;plan_id:string;body:components["schemas"]["ContentPurpose"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/experiments/plans/${encodeURIComponent(String(args.plan_id))}/content`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  plan_execution_v1_projects__project_id__experiments_plans__plan_id__execution_get: (args:{project_id:string;plan_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/experiments/plans/${encodeURIComponent(String(args.plan_id))}/execution`+(query.size?"?"+query.toString():""),{method:"GET"});},
   approve_plan_v1_projects__project_id__experiments_plans__plan_id__approve_post: (args:{project_id:string;plan_id:string;body:components["schemas"]["ApproveInput"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/experiments/plans/${encodeURIComponent(String(args.plan_id))}/approve`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},

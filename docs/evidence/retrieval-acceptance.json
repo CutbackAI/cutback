@@ -1,0 +1,92 @@
+{
+  "feature": "actual_local_corpus_retrieval_optimization",
+  "status": "bounded_implementation_final_public_acceptance_tracked_in_pull_request",
+  "contract": "cutback.retrieval-execution.v1",
+  "evaluator": "deterministic-v6",
+  "scope": "finite encrypted text corpus; BM25/chunk/overlap/top-k/lexical reranking; native answer comparison; untouched confirmation; source settings diff/rollback and checked local review ref",
+  "released_migrations_unchanged": "0001-0019",
+  "new_migration": null,
+  "earlier_source_checkpoint": {
+    "passed": 594,
+    "skipped": 23,
+    "seconds": 131.93,
+    "final_artifact_claim": false
+  },
+  "default_skip_reasons": {
+    "windows_symlink_privilege": 2,
+    "separate_legacy_sdk_environment": 4,
+    "separate_openai3_environment": 17
+  },
+  "earlier_installed_sdk3_broad_checkpoint": {
+    "passed": 665,
+    "skipped": 6,
+    "seconds": 342.02,
+    "predates_final_demo_and_frontend_followup": true
+  },
+  "legacy_sdk_minimum_pydantic_scanner_and_core_retrieval": {
+    "passed": 32,
+    "seconds": 2.45
+  },
+  "core_only_installed_wheel_smoke": "passed_without_sdk_or_server_dependencies",
+  "native_node_tests": 13,
+  "native_node_strict_types": "passed",
+  "frontend_units": 9,
+  "generated_api_and_react_build": "passed",
+  "source_typing_modules": 212,
+  "application_payload_files": 227,
+  "python_payload_modules": 212,
+  "current_source_wheel_sdk3_payload_identity": "passed",
+  "pending_final_gates": [
+    "runtime-bound exact installed default full regression and SDK3 focused acceptance",
+    "sanitized public source/archive/history and exact application payload identity",
+    "all ten exact-head hosted checks"
+  ],
+  "synthetic_provider_replies_and_usage": true,
+  "real_model_quality_or_customer_savings_established": false,
+  "full_product_or_market_baseline_complete": false,
+  "paid_provider_calls": 0,
+  "production_deployment": false,
+  "pypi_upload": false,
+  "pypi_version_unchanged": "0.1.0.dev5",
+  "earlier_default_scoped_checkpoint": {
+    "passed": 613,
+    "skipped": 23,
+    "seconds": 208.09,
+    "scope": "all units, every retrieval PostgreSQL case, real migration contract and full native/HTTP/PG/both-tree/rollback plus authenticated browser journeys",
+    "later_frontend_history_followup_tracked_separately": true,
+    "predates_final_unicode_and_decimal_runtime_guard": true
+  },
+  "earlier_sdk3_retrieval_complete_journey": {
+    "passed": 34,
+    "seconds": 79.01,
+    "covers": [
+      "forty_explicit_fictional_policy_families_with_14_21_28_day_labels",
+      "actual_native_openai_and_anthropic_transports",
+      "postgresql_reservations_before_dispatch",
+      "missing_usage_and_outage_stop_without_replay",
+      "revocation_before_and_between_calls",
+      "metadata_export_project_deletion_and_tenant_scope",
+      "validation_selection_and_fresh_test_group_confirmation",
+      "changed_corpus_and_source_rejection",
+      "exact_lf_crlf_and_missing_final_newline_forward_rollback_diffs",
+      "both_application_tree_checks_and_nonoverwriting_local_ref",
+      "browser_lost_queue_acknowledgement_reconciliation",
+      "purpose_bound_encrypted_passages_and_script_text_escaping",
+      "desktop_mobile_axe_and_viewer_denial"
+    ],
+    "later_frontend_history_followup_tracked_separately": true,
+    "predates_final_unicode_and_decimal_runtime_guard": true
+  },
+  "runtime_guard": "Unicode database and exact Decimal arithmetic are recipe-bound; mismatched source inspection is refused; full local Decimal contexts ignore ambient precision, exponent limits and rounding.",
+  "earlier_full_windows_trial": {
+    "passed": 982,
+    "failed": 3,
+    "skipped": 36,
+    "seconds": 1403.46,
+    "accepted": false,
+    "reasons": [
+      "Two new privacy tests incorrectly searched only the first bounded project-list page; fixture now reads its exact owned project identity.",
+      "One sample-source identity check compared an obsolete earlier installed candidate after the independent sample evolved."
+    ]
+  }
+}

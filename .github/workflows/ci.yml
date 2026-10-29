@@ -98,6 +98,8 @@ jobs:
           tests/integration/test_gateway_expiry.py
           tests/integration/test_gateway_policy_replay.py
           tests/end_to_end/test_gateway_pipeline.py
+          tests/integration/test_retrieval_workflow.py
+          tests/end_to_end/test_retrieval_pipeline.py
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 30

@@ -22,6 +22,14 @@ def public_config(value, *, redact_content_hashes=False):
     )
     result: dict[str, Any] = {}
     for key, item in value.items():
+        if key == "retrieval_execution":
+            if item is None:
+                result[key] = None
+            else:
+                from cutback.evals.retrieval import RetrievalExecutionSpec
+
+                result[key] = RetrievalExecutionSpec.model_validate(item).public_summary()
+            continue
         if key in {"prompt_variables", "sampling_options", "content_nonce"} or (
             key == "request_contract"
             and isinstance(item, dict)

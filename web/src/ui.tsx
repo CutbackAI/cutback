@@ -22,6 +22,12 @@ export const money = (value: unknown) =>
 export function explain(error: unknown) {
   const code = (error as Error)?.message || "REQUEST_FAILED";
   const messages: Record<string, string> = {
+    RETRIEVAL_DRAFT_CONTRACT_INVALID:
+      "Check independent answer labels, corpus limits, bound baseline settings, native model and input ceiling. No provider call was made.",
+    RETRIEVAL_CONFIRMATION_GATES_NOT_PASSED:
+      "Confirmation requires a completed validation with sufficient independent answer evidence, complete usage, a declared CPU basis and a lower-cost passing candidate.",
+    RETRIEVAL_SOURCE_CONFIGURATION_BINDING_REQUIRED:
+      "This run has no source settings binding. Inspect the clean application's configuration and prepare a new plan before requesting a source diff.",
     PAYLOAD_STORAGE_DISABLED:
       "Encrypted content storage is disabled. An operator must authorize and configure it before importing examples.",
     PAYLOAD_STORAGE_NOT_CONFIGURED:

@@ -1,0 +1,9 @@
+{
+  "chunk_chars": 512,
+  "overlap_chars": 0,
+  "top_k": 1,
+  "max_context_bytes": 12000,
+  "k1": "1.2",
+  "b": "0.75",
+  "rerank": "none"
+}

@@ -1639,6 +1639,162 @@
         }
       }
     },
+    "/v1/projects/{project_id}/retrieval/draft": {
+      "post": {
+        "summary": "Retrieval Draft",
+        "operationId": "retrieval_draft_v1_projects__project_id__retrieval_draft_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetrievalDraftInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/retrieval/confirmation": {
+      "post": {
+        "summary": "Retrieval Confirmation",
+        "operationId": "retrieval_confirmation_v1_projects__project_id__retrieval_confirmation_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetrievalConfirmationInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/retrieval/{run_id}/proposal": {
+      "post": {
+        "summary": "Retrieval Proposal",
+        "operationId": "retrieval_proposal_v1_projects__project_id__retrieval__run_id__proposal_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentPurpose"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetrievalProposal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{project_id}/experiments/plans/{plan_id}/content": {
       "post": {
         "summary": "Read Plan Content",
@@ -1675,6 +1831,55 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/experiments/plans/{plan_id}/execution": {
+      "get": {
+        "summary": "Plan Execution",
+        "description": "Reconcile a lost queue acknowledgement without replaying an approved run.",
+        "operationId": "plan_execution_v1_projects__project_id__experiments_plans__plan_id__execution_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "plan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Plan Id"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -13438,6 +13643,28 @@
         ],
         "title": "ConversationCheck"
       },
+      "CorpusDocument": {
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Document Id"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 32768,
+            "minLength": 1,
+            "title": "Text"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "document_id",
+          "text"
+        ],
+        "title": "CorpusDocument"
+      },
       "CorrectionInput": {
         "properties": {
           "purpose": {
@@ -14684,7 +14911,8 @@
             "enum": [
               "deterministic-v3",
               "deterministic-v4",
-              "deterministic-v5"
+              "deterministic-v5",
+              "deterministic-v6"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -14693,6 +14921,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/EpisodeExecutionSpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "retrieval_execution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RetrievalExecutionSpec-Input"
               },
               {
                 "type": "null"
@@ -14957,7 +15195,8 @@
             "enum": [
               "deterministic-v3",
               "deterministic-v4",
-              "deterministic-v5"
+              "deterministic-v5",
+              "deterministic-v6"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -14966,6 +15205,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/EpisodeExecutionSpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "retrieval_execution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RetrievalExecutionSpec-Output"
               },
               {
                 "type": "null"
@@ -20452,6 +20701,614 @@
           "aggregate_days"
         ],
         "title": "RetentionInput"
+      },
+      "RetrievalConfigurationBinding-Input": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "maxLength": 240,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_./-]+$",
+            "title": "File"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Sha256"
+          },
+          "source_tree_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Source Tree Hash"
+          },
+          "commit": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{40,64}$",
+            "title": "Commit"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/RetrievalSettings-Input"
+          },
+          "retrieval_contract_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Retrieval Contract Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "file",
+          "sha256",
+          "source_tree_hash",
+          "commit",
+          "settings",
+          "retrieval_contract_sha256"
+        ],
+        "title": "RetrievalConfigurationBinding",
+        "description": "An explicitly selected settings-only JSON file; not inferred application coverage."
+      },
+      "RetrievalConfigurationBinding-Output": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "maxLength": 240,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_./-]+$",
+            "title": "File"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Sha256"
+          },
+          "source_tree_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Source Tree Hash"
+          },
+          "commit": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{40,64}$",
+            "title": "Commit"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/RetrievalSettings-Output"
+          },
+          "retrieval_contract_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Retrieval Contract Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "file",
+          "sha256",
+          "source_tree_hash",
+          "commit",
+          "settings",
+          "retrieval_contract_sha256"
+        ],
+        "title": "RetrievalConfigurationBinding",
+        "description": "An explicitly selected settings-only JSON file; not inferred application coverage."
+      },
+      "RetrievalConfirmationInput": {
+        "properties": {
+          "validation_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Validation Run Id"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/Budget-Input"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "validation_run_id",
+          "budget"
+        ],
+        "title": "RetrievalConfirmationInput"
+      },
+      "RetrievalCorpus": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.retrieval-corpus.v1",
+            "title": "Version",
+            "default": "cutback.retrieval-corpus.v1"
+          },
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/CorpusDocument"
+            },
+            "type": "array",
+            "maxItems": 512,
+            "minItems": 1,
+            "title": "Documents"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "documents"
+        ],
+        "title": "RetrievalCorpus"
+      },
+      "RetrievalDraftInput": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Dataset Id"
+          },
+          "baseline": {
+            "$ref": "#/components/schemas/ModelSpec-Input"
+          },
+          "corpus": {
+            "$ref": "#/components/schemas/RetrievalCorpus"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/RetrievalSettings-Input"
+          },
+          "metric": {
+            "$ref": "#/components/schemas/MetricSpec"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/Budget-Input"
+          },
+          "candidates": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/RetrievalSettings-Input"
+                },
+                "type": "array",
+                "maxItems": 5,
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidates"
+          },
+          "assumed_usd_per_cpu_hour": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "decimal_places": 12,
+                "ge": 0,
+                "le": 1000000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assumed Usd Per Cpu Hour"
+          },
+          "max_query_bytes": {
+            "type": "integer",
+            "maximum": 8192.0,
+            "minimum": 1.0,
+            "title": "Max Query Bytes",
+            "default": 1024
+          },
+          "retain_case_outputs": {
+            "type": "boolean",
+            "title": "Retain Case Outputs",
+            "default": false
+          },
+          "configuration_binding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RetrievalConfigurationBinding-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "baseline",
+          "corpus",
+          "settings",
+          "metric",
+          "budget"
+        ],
+        "title": "RetrievalDraftInput"
+      },
+      "RetrievalExecutionSpec-Input": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.retrieval-execution.v1",
+            "title": "Version",
+            "default": "cutback.retrieval-execution.v1"
+          },
+          "contract_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Contract Sha256",
+            "default": "05e5f5852cfb3d64bd0d4f56443424cc2685610975579ec18aac634cb9a6164c"
+          },
+          "corpus": {
+            "$ref": "#/components/schemas/RetrievalCorpus"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/RetrievalVariant-Input"
+            },
+            "type": "array",
+            "maxItems": 6,
+            "minItems": 2,
+            "title": "Variants"
+          },
+          "max_query_bytes": {
+            "type": "integer",
+            "maximum": 8192.0,
+            "minimum": 1.0,
+            "title": "Max Query Bytes",
+            "default": 1024
+          },
+          "assumed_usd_per_cpu_hour": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "decimal_places": 12,
+                "ge": 0,
+                "le": 1000000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assumed Usd Per Cpu Hour"
+          },
+          "cpu_charge_quantum_ms": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Cpu Charge Quantum Ms",
+            "default": 1
+          },
+          "configuration_binding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RetrievalConfigurationBinding-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "corpus",
+          "variants"
+        ],
+        "title": "RetrievalExecutionSpec"
+      },
+      "RetrievalExecutionSpec-Output": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.retrieval-execution.v1",
+            "title": "Version",
+            "default": "cutback.retrieval-execution.v1"
+          },
+          "contract_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Contract Sha256",
+            "default": "05e5f5852cfb3d64bd0d4f56443424cc2685610975579ec18aac634cb9a6164c"
+          },
+          "corpus": {
+            "$ref": "#/components/schemas/RetrievalCorpus"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/RetrievalVariant-Output"
+            },
+            "type": "array",
+            "maxItems": 6,
+            "minItems": 2,
+            "title": "Variants"
+          },
+          "max_query_bytes": {
+            "type": "integer",
+            "maximum": 8192.0,
+            "minimum": 1.0,
+            "title": "Max Query Bytes",
+            "default": 1024
+          },
+          "assumed_usd_per_cpu_hour": {
+            "anyOf": [
+              {
+                "type": "string",
+                "decimal_places": 12,
+                "ge": 0,
+                "le": 1000000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assumed Usd Per Cpu Hour"
+          },
+          "cpu_charge_quantum_ms": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Cpu Charge Quantum Ms",
+            "default": 1
+          },
+          "configuration_binding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RetrievalConfigurationBinding-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "corpus",
+          "variants"
+        ],
+        "title": "RetrievalExecutionSpec"
+      },
+      "RetrievalProposal": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.retrieval-proposal.v1",
+            "title": "Version",
+            "default": "cutback.retrieval-proposal.v1"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Run Id"
+          },
+          "plan_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Plan Hash"
+          },
+          "dataset_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Dataset Hash"
+          },
+          "binding": {
+            "$ref": "#/components/schemas/RetrievalConfigurationBinding-Output"
+          },
+          "baseline": {
+            "$ref": "#/components/schemas/RetrievalSettings-Output"
+          },
+          "proposed": {
+            "$ref": "#/components/schemas/RetrievalSettings-Output"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "synthetic_local_review_only",
+              "sample_review_required",
+              "heldout_review_required"
+            ],
+            "title": "Decision"
+          },
+          "production_approval_required": {
+            "type": "boolean",
+            "const": true,
+            "title": "Production Approval Required",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "run_id",
+          "plan_hash",
+          "dataset_hash",
+          "binding",
+          "baseline",
+          "proposed",
+          "decision"
+        ],
+        "title": "RetrievalProposal"
+      },
+      "RetrievalSettings-Input": {
+        "properties": {
+          "chunk_chars": {
+            "type": "integer",
+            "maximum": 4096.0,
+            "minimum": 128.0,
+            "title": "Chunk Chars",
+            "default": 1024
+          },
+          "overlap_chars": {
+            "type": "integer",
+            "maximum": 1024.0,
+            "minimum": 0.0,
+            "title": "Overlap Chars",
+            "default": 128
+          },
+          "top_k": {
+            "type": "integer",
+            "maximum": 12.0,
+            "minimum": 1.0,
+            "title": "Top K",
+            "default": 3
+          },
+          "max_context_bytes": {
+            "type": "integer",
+            "maximum": 48000.0,
+            "minimum": 1024.0,
+            "title": "Max Context Bytes",
+            "default": 12000
+          },
+          "k1": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 3.0,
+                "minimum": 0.1
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "K1",
+            "default": "1.2"
+          },
+          "b": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "B",
+            "default": "0.75"
+          },
+          "rerank": {
+            "type": "string",
+            "enum": [
+              "none",
+              "query_term_coverage"
+            ],
+            "title": "Rerank",
+            "default": "none"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "RetrievalSettings"
+      },
+      "RetrievalSettings-Output": {
+        "properties": {
+          "chunk_chars": {
+            "type": "integer",
+            "maximum": 4096.0,
+            "minimum": 128.0,
+            "title": "Chunk Chars",
+            "default": 1024
+          },
+          "overlap_chars": {
+            "type": "integer",
+            "maximum": 1024.0,
+            "minimum": 0.0,
+            "title": "Overlap Chars",
+            "default": 128
+          },
+          "top_k": {
+            "type": "integer",
+            "maximum": 12.0,
+            "minimum": 1.0,
+            "title": "Top K",
+            "default": 3
+          },
+          "max_context_bytes": {
+            "type": "integer",
+            "maximum": 48000.0,
+            "minimum": 1024.0,
+            "title": "Max Context Bytes",
+            "default": 12000
+          },
+          "k1": {
+            "type": "string",
+            "title": "K1",
+            "default": "1.2"
+          },
+          "b": {
+            "type": "string",
+            "title": "B",
+            "default": "0.75"
+          },
+          "rerank": {
+            "type": "string",
+            "enum": [
+              "none",
+              "query_term_coverage"
+            ],
+            "title": "Rerank",
+            "default": "none"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "RetrievalSettings"
+      },
+      "RetrievalVariant-Input": {
+        "properties": {
+          "model_key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Model Key"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/RetrievalSettings-Input"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "model_key",
+          "settings"
+        ],
+        "title": "RetrievalVariant"
+      },
+      "RetrievalVariant-Output": {
+        "properties": {
+          "model_key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Model Key"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/RetrievalSettings-Output"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "model_key",
+          "settings"
+        ],
+        "title": "RetrievalVariant"
       },
       "ReviewAdjudication": {
         "properties": {

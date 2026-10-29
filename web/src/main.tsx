@@ -36,6 +36,9 @@ const GatewayBudgets = React.lazy(() =>
     default: module.GatewayBudgets,
   })),
 );
+const Retrieval = React.lazy(() =>
+  import("./retrieval").then((module) => ({ default: module.Retrieval })),
+);
 
 class BudgetViewBoundary extends React.Component<
   { children: React.ReactNode },
@@ -95,6 +98,7 @@ const views = [
   "Costs",
   "Task economics",
   "Campaigns",
+  "Retrieval",
   "Opportunities",
   "Experiments",
   "Review",
@@ -803,6 +807,30 @@ function App() {
                   "editor",
                 ].includes(identity.project_roles?.[project] || identity.role)}
               />
+            )}
+            {view === "Retrieval" && project && (
+              <BudgetViewBoundary key={project}>
+                <React.Suspense
+                  fallback={
+                    <p role="status">Loading retrieval optimization…</p>
+                  }
+                >
+                  <Retrieval
+                    key={project}
+                    api={api}
+                    project={project}
+                    canApprove={admin}
+                    canWrite={[
+                      "admin",
+                      "project_admin",
+                      "analyst",
+                      "editor",
+                    ].includes(
+                      identity.project_roles?.[project] || identity.role,
+                    )}
+                  />
+                </React.Suspense>
+              </BudgetViewBoundary>
             )}
             {view === "Application budgets" && project && (
               <BudgetViewBoundary key={project}>
