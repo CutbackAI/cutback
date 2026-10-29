@@ -11,7 +11,7 @@ python -m pip install "cutback[server,openai]==0.1.0.dev5"
 cutback demo
 ```
 
-For source development, use uv 0.13.6, clone the repository, run `uv sync --locked --extra server --extra openai`, then `uv run cutback demo`. The built dashboard ships in the package.
+For source development, install Git on PATH and use uv 0.13.6, clone the repository, run `uv sync --locked --extra server --extra openai`, then `uv run cutback demo`. The built dashboard ships in the package. In the current source demo, the separate task-economics application adds seven intercepted SDK calls in a third workflow: the whole sample project has 19 application calls, while the two support-desk source workflows still total 12. The version-pinned dev5 walkthrough below remains the earlier sample.
 
 The first Docker run may download the pinned PostgreSQL image. The launcher creates its own database container and random scoped credentials. It never connects to your application or an existing customer database. Wait for `Ready:` and the browser to open. If the port is occupied, use `cutback demo --port 8877`; `--no-open-browser` prints the address without opening a tab.
 

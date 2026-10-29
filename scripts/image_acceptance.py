@@ -156,8 +156,10 @@ print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":mani
                 usage = client.get(
                     base + "/usage?traffic_kind=application&group_by=workflow"
                 ).json()
-                assert usage["summary"]["observed_attempts"] == 12 and len(usage["groups"]) == 2
-                assert all("app.py" in group["label"] for group in usage["groups"])
+                assert usage["summary"]["observed_attempts"] == 19 and len(usage["groups"]) == 3
+                source_groups = [group for group in usage["groups"] if "app.py" in group["label"]]
+                assert len(source_groups) == 2
+                assert sum(group["observed_attempts"] for group in source_groups) == 12
                 assert client.get(base + "/changes").json()
                 with psycopg.connect(**kwargs, autocommit=True) as conn:
                     key = os.urandom(32)
@@ -173,7 +175,8 @@ from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.engine import make_url
 from cutback.server.runtime import configure_secrets
-from cutback.server.db import database,PayloadSample
+from cutback.server.db import database,PayloadSample,ExperimentPlanRecord
+from cutback.evals.datasets import digest
 from cutback.evals.artifacts import configured_store,EncryptedFileStore
 configure_secrets()
 original=configured_store()
@@ -192,7 +195,15 @@ with sessions() as session:
   before=original.get(row.project_id,row.object_ref)
   rotating.rekey(row.project_id,row.object_ref)
   assert new_only.get(row.project_id,row.object_ref)==before
-print(json.dumps({"restored_and_rekeyed_objects":len(rows),"database_pointers_preserved":True}))
+ plans=session.scalars(select(ExperimentPlanRecord)).all()
+ assert plans
+ for row in plans:
+  before=original.get(row.project_id,row.specification["artifact_ref"])
+  assert digest(json.loads(before))==row.specification["plan_hash"]
+  rotating.rekey(row.project_id,row.specification["artifact_ref"])
+  after=new_only.get(row.project_id,row.specification["artifact_ref"])
+  assert before==after
+print(json.dumps({"restored_and_rekeyed_objects":len(rows),"restored_and_rekeyed_plans":len(plans),"database_pointers_preserved":True}))
 engine.dispose()
 """.replace("RECOVERED", repr(names[1]))
                 recovered = json.loads(inside(container, recovery, values).strip().splitlines()[-1])
@@ -311,8 +322,10 @@ engine.dispose()
                     "uid": 10001,
                     "python": "3.11.18",
                     "migration": revision,
-                    "sample_application_calls": 12,
+                    "sample_application_calls": 19,
+                    "source_linked_support_desk_calls": 12,
                     "source_workflows": 2,
+                    "application_workflows": 3,
                     "paid_provider_calls": 0,
                     "restored_tables": len(after),
                     "row_counts_match": True,

@@ -4,7 +4,7 @@ Find where an AI application spends money. Test cheaper alternatives against its
 
 Cutback is an Apache-2.0 Python tool with an offline scanner and a self-hosted collector, PostgreSQL worker and dashboard. **Pre-alpha: synthetic tests demonstrate the workflow; production behavior and real customer savings are not validated.**
 
-[What works, which version to install, and what remains](https://github.com/CutbackAI/cutback/blob/main/docs/status.md). The GitHub source contains workflows that are not yet in the published PyPI package.
+[What works, which version to install, and what remains](https://github.com/CutbackAI/cutback/blob/main/docs/status.md). The GitHub source contains workflows that are not yet in the published PyPI package. The source-built demo also requires Git on PATH to prepare its source-bound retrieval application; the collector image includes a pinned Git package.
 
 Source checkouts also include [agent and RAG evaluation](https://github.com/CutbackAI/cutback/blob/main/docs/agent-evaluation.md): native tool-call conversations, declared final-state checks, retrieval/citation evidence and individual durable request receipts. Try the [independent applications](https://github.com/CutbackAI/cutback/blob/main/examples/agent-evaluation/README.md), then inspect them in the guided demo. PyPI dev5 remains the earlier package.
 

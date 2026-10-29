@@ -78,6 +78,7 @@ packages = ["src/cutback"]
 
 [tool.hatch.build.targets.sdist]
 include = [
+  "/.dockerignore",
   "/docs/testing-the-sample.md", "/docs/experiment-files.md", "/docs/evidence",
   "/docs/quickstart.md", "/docs/deployment.md", "/docs/providers.md",
   "/docs/limitations.md", "/docs/architecture.md", "/docs/security-and-privacy.md",

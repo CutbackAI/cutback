@@ -117,6 +117,9 @@ def check(directory: Path):
                         "source archive contains non-UTF8 text: " + member.name
                     ) from None
         for required in (
+            ".dockerignore",
+            "scripts/image_acceptance.py",
+            "tests/unit/test_demo_prerequisites.py",
             ".github/workflows/publish.yml",
             "scripts/check_toolchain.py",
             "docs/otel-ingestion.md",

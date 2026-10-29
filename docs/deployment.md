@@ -1,5 +1,7 @@
 # Self-hosted deployment
 
+The Linux collector image additionally installs Debian `git` and `git-man` `1:2.47.3-0+deb13u1`, plus the system CA certificates, through signed APT repositories. [Debian package/source and copyright references](https://packages.debian.org/trixie/git) describe those separately distributed OS components; their installed notices remain under `/usr/share/doc`. Git is required for the source-bound demo and local configuration/check workflows. Python wheels do not vendor Git, and the offline scanner still parses source without it (Git revision is then unknown). Application wheel/sdist reproducibility does not imply bit-identical OS package resolution or image rebuilds.
+
 ## Local reference
 
 ```sh

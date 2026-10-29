@@ -1,6 +1,6 @@
 {
   "feature": "bounded_agent_recovery_and_large_source_discovery",
-  "status": "installed_qualified_exact_public_hosted_acceptance_tracked_in_pull_request",
+  "status": "public_source_merged_no_new_pypi_upload",
   "scope": [
     "exact_plan_lost_queue_lookup_without_replay",
     "no_post_when_approval_or_queue_is_uncertain_and_run_absent",
@@ -79,5 +79,32 @@
   "pypi_version_unchanged": "0.1.0.dev5",
   "production_deployment": false,
   "full_product_or_market_baseline_complete": false,
-  "final_release_gates": "sanitized source/history/archive identity and all ten exact-head hosted checks before merge"
+  "final_release_gates": "passed; reviewed and merged source trees match",
+  "public_pull_request": "https://github.com/CutbackAI/cutback/pull/35",
+  "final_public_head": "7e13c0a01e72905f04fbb2a35c0dd8b39824af63",
+  "public_merge": "32fde4d4b0334b27e965af91ae72b8720f2fb64c",
+  "final_tree": "1094d39501c5631d17c2ee0d52e5d3d160f7c7f7",
+  "final_required_checks_passed": 10,
+  "final_hosted": {
+    "python_3_11": {
+      "passed": 1016,
+      "skipped": 29,
+      "seconds": 818.99
+    },
+    "python_3_13": {
+      "passed": 1014,
+      "skipped": 31,
+      "seconds": 752.53
+    },
+    "sdk3_both": {
+      "passed_each": 802,
+      "skipped_each": 5
+    }
+  },
+  "final_public_boundary": {
+    "files": 715,
+    "reachable_objects": 2748,
+    "archive_members": 942,
+    "findings": 0
+  }
 }

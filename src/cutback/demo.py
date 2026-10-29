@@ -13,6 +13,14 @@ from pathlib import Path
 from uuid import uuid4
 
 
+def require_demo_git():
+    """Source-bound sample workspaces need Git before any resources are created."""
+    import shutil
+
+    if shutil.which("git") is None:
+        raise ValueError("DEMO_GIT_REQUIRED")
+
+
 def sample_cases():
     cases = []
     for i in range(240):
@@ -86,6 +94,8 @@ def fixture_response(request):
 
 def seed_support_desk(app, endpoint, admin, workspace: Path):
     """Use actual scoped HTTP APIs and the durable worker, retaining the sample project."""
+    require_demo_git()
+
     import hashlib
     import runpy
     import shutil
@@ -431,6 +441,8 @@ def install_demo_routes(app, manifest, token, endpoint):
 
 def launch_demo(port=8766, open_browser=True):
     """Own one temporary Docker database. Never connect to production or reuse app keys."""
+    require_demo_git()
+
     import psycopg
     import uvicorn
 
