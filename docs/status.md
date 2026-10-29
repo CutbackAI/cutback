@@ -7,7 +7,7 @@ Updated 28 October 2026. Cutback is a pre-alpha product with tested, bounded wor
 | Installation | Available scope |
 |---|---|
 | PyPI `0.1.0.dev5` | Offline scanner, native observation, collector/PostgreSQL/dashboard, support-desk demo and the earlier source-bound evaluation/change workflow. Use the version-pinned README instructions. |
-| Current GitHub source | Also includes workflow/session tracing, import and blind review, prompt versions/releases, online evaluations/incidents, synthetic agent/RAG execution, task economics, bounded instruction campaigns, application-check discovery and finite outcome observation. Follow each source example's installation instructions. |
+| Current GitHub source | Also includes workflow/session tracing, import and blind review, prompt versions/releases, online evaluations/incidents, synthetic agent/RAG execution, task economics, bounded instruction campaigns, application-check discovery, finite outcome observation, finite gateway budgets and actual local corpus retrieval comparisons. Follow each source example's installation instructions. |
 | Native modern-text follow-up | [PR 32](https://github.com/CutbackAI/cutback/pull/32) is merged after installed-package qualification and all ten required hosted checks. This adds explicit request/price contracts, not universal model support. |
 
 A source merge does not update the PyPI wheel. New source commands require a source-matched installation and collector; do not mix them with an older wheel and assume compatibility.
@@ -20,7 +20,7 @@ The independent [campaign application](../examples/improvement-campaign/README.m
 
 ## Engineering still required
 
-1. **Gateway breadth and reliability:** the working source implements a separately enabled, finite text-gateway contract with virtual keys, shared budgets and no uncertain replay ([scope](gateway-budgets.md)); exact package qualification and public acceptance are tracked in [PR 33](https://github.com/CutbackAI/cutback/pull/33). Additional providers/surfaces, streaming, configurable reliability/fallback behavior and operational acceptance remain unfinished.
+1. **Gateway breadth and reliability:** the publicly merged source implements a separately enabled, finite text-gateway contract with virtual keys, shared budgets and no uncertain replay ([scope](gateway-budgets.md)); installed-package qualification and all ten hosted checks passed in [PR 33](https://github.com/CutbackAI/cutback/pull/33). Additional providers/surfaces, streaming, configurable reliability/fallback behavior and operational acceptance remain unfinished.
 2. **Broader automatic improvements:** evidence-driven strategy selection, remote/vector retrieval and learned reranking, tool/compression/batch optimization, learned routing and additional source/framework adapters. [Bounded actual local corpus retrieval](retrieval-optimization.md) now has its own candidate/confirmation/settings-check journey in the working source; final acceptance/publication is tracked in progress.md. It does not supply every strategy or prove a customer advantage.
 3. **Broader evaluation:** generated criteria and real-data scenarios, qualified application/tool isolation and simulation, broader adversarial/guardrail integrations, and the documented modality/cloud specialties.
 4. **Operational qualification:** evaluator/worker/gateway capacity, intended clean-host deployment and recovery modes, remaining collaboration/provisioning journeys, and their complete dashboard lifecycles.

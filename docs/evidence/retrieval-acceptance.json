@@ -1,6 +1,6 @@
 {
   "feature": "actual_local_corpus_retrieval_optimization",
-  "status": "bounded_implementation_final_public_acceptance_tracked_in_pull_request",
+  "status": "application_accepted_final_release_guard_followup_tracked_in_pr_34",
   "contract": "cutback.retrieval-execution.v1",
   "evaluator": "deterministic-v6",
   "scope": "finite encrypted text corpus; BM25/chunk/overlap/top-k/lexical reranking; native answer comparison; untouched confirmation; source settings diff/rollback and checked local review ref",
@@ -24,8 +24,8 @@
     "predates_final_demo_and_frontend_followup": true
   },
   "legacy_sdk_minimum_pydantic_scanner_and_core_retrieval": {
-    "passed": 32,
-    "seconds": 2.45
+    "passed": 34,
+    "seconds": 3.02
   },
   "core_only_installed_wheel_smoke": "passed_without_sdk_or_server_dependencies",
   "native_node_tests": 13,
@@ -37,9 +37,8 @@
   "python_payload_modules": 212,
   "current_source_wheel_sdk3_payload_identity": "passed",
   "pending_final_gates": [
-    "runtime-bound exact installed default full regression and SDK3 focused acceptance",
-    "sanitized public source/archive/history and exact application payload identity",
-    "all ten exact-head hosted checks"
+    "ten exact-head hosted checks for release-only follow-up",
+    "merge with reviewed-head precondition"
   ],
   "synthetic_provider_replies_and_usage": true,
   "real_model_quality_or_customer_savings_established": false,
@@ -88,5 +87,58 @@
       "Two new privacy tests incorrectly searched only the first bounded project-list page; fixture now reads its exact owned project identity.",
       "One sample-source identity check compared an obsolete earlier installed candidate after the independent sample evolved."
     ]
+  },
+  "public_pull_request": "https://github.com/CutbackAI/cutback/pull/34",
+  "accepted_application_head": "0324ab3485346e88205708a1bac4b07fa9bdbf0d",
+  "installed_full_windows": {
+    "passed": 992,
+    "skipped": 36,
+    "seconds": 1461.67
+  },
+  "installed_full_skip_reasons": {
+    "helm_qualified_separately": 5,
+    "separate_sdk3_matrix": 25,
+    "separate_legacy_sdk_matrix": 4,
+    "windows_symlink_privilege_qualified_on_linux": 2
+  },
+  "installed_exact_public_sdk3": {
+    "passed": 55,
+    "seconds": 104.47
+  },
+  "installed_sdk3_real_migration": {
+    "passed": 1,
+    "seconds": 5.4
+  },
+  "helm": {
+    "passed": 5,
+    "seconds": 5.4
+  },
+  "application_payload_identity": {
+    "files": 227,
+    "python_modules": 212,
+    "source_public_wheel_sdist_both_installed_environments": true,
+    "installed_distribution_metadata_also_identical": true
+  },
+  "reproducible_wheel_and_sdist": true,
+  "archive_identity_adversarial_tests": {
+    "passed": 10,
+    "seconds": 4.69
+  },
+  "hosted_application_head": {
+    "required_checks_passed": 10,
+    "python_3_11": {
+      "passed": 999,
+      "skipped": 29,
+      "seconds": 678.25
+    },
+    "python_3_13": {
+      "passed": 997,
+      "skipped": 31,
+      "seconds": 719.6
+    },
+    "sdk3_both": {
+      "passed_each": 795,
+      "skipped_each": 5
+    }
   }
 }
