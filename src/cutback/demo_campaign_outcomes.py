@@ -4,7 +4,7 @@ import json
 import shutil
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from cutback.core.workspace import private_directory
 
@@ -123,20 +123,15 @@ def run_sample(
     watch=False,
     modern_model=False,
 ):
-    from sqlalchemy import select
-
-    from cutback.agent import analyze, prepare
+    from cutback.agent import analyze, load_session, prepare, selected_profile
     from cutback.agent_campaign import advance, proposal, review, status
     from cutback.agent_campaign import prepare as prepare_campaign
     from cutback.agent_control import Control
     from cutback.application_check_discovery import discover
     from cutback.application_checks import ApplicationCheckContract, git, run_checks
+    from cutback.campaign_operator import CampaignOperator
     from cutback.campaign_outcomes import record_outcomes
     from cutback.demo_campaigns import synthetic_executor
-    from cutback.server.campaign_db import CampaignRecord, CampaignRun
-    from cutback.server.campaign_worker import advance_one
-    from cutback.server.proposal_worker import run_proposal_one
-    from cutback.server.worker import run_one
 
     control = Control(endpoint, admin, client=client)
     writer = Control(endpoint, ingest_token, client=client)
@@ -228,45 +223,21 @@ def run_sample(
     sessions, store = app.state.sessions, app.state.artifact_store
     executor, requests = synthetic_executor(seeds_from_scope=True)
     try:
-        for _ in range(8):
-            with sessions.begin() as session:
-                session.get(CampaignRecord, UUID(campaign["id"])).available_at = None
-            transition = advance_one(
-                sessions,
-                store,
-                execution_enabled=True,
-                only_campaign_id=campaign["id"],
-                synthetic_transport=True,
-            )
-            if transition["status"] == "COMPLETED":
-                break
-            if not transition["status"].startswith("WAITING_"):
-                raise ValueError("OWNED_CAMPAIGN_STEP_STOPPED")
-            phase = transition["status"].removeprefix("WAITING_").lower()
-            with sessions() as session:
-                run_id = session.scalar(
-                    select(CampaignRun.run_id)
-                    .where(
-                        CampaignRun.campaign_id == UUID(campaign["id"]), CampaignRun.phase == phase
-                    )
-                    .order_by(
-                        CampaignRun.round_index.desc(),
-                        CampaignRun.created_at.desc(),
-                        CampaignRun.id.desc(),
-                    )
-                    .limit(1)
-                )
-            worker = run_proposal_one if phase == "proposal" else run_one
-            completed_child = worker(
-                sessions, store, executor=executor, execution_enabled=True, only_run_id=run_id
-            )
-            if completed_child["status"] != "COMPLETED":
-                # Fixed phase/status codes only; no native errors, payloads or keys.
-                raise ValueError(
-                    "OWNED_CAMPAIGN_CHILD_STOPPED:" + phase + ":" + completed_child["status"]
-                )
-        else:
-            raise ValueError("OWNED_CAMPAIGN_STEP_BOUND")
+
+        def source_scope():
+            selected_profile(application, load_session(application), workflow)
+
+        driven = CampaignOperator(
+            sessions,
+            store,
+            project_id=project,
+            campaign_id=campaign["id"],
+            campaign_hash=campaign["campaign_hash"],
+            preflight=source_scope,
+            executor=executor,
+        ).run()
+        if driven["status"] != "COMPLETED":
+            raise ValueError("OWNED_CAMPAIGN_DRIVER_STOPPED")
         artifact = proposal(
             application, control, purpose="owned-synthetic-review", sample_only=True
         )

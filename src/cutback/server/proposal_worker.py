@@ -4,7 +4,7 @@ import json
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, true
 
 from cutback.core.observation import observation_scope
 from cutback.evals.campaigns import ProposalOnlyPlan, decode_proposals
@@ -46,6 +46,7 @@ def run_proposal_one(sessions, store, *, executor=None, execution_enabled=False,
             .where(
                 JobRecord.execution_kind == "proposal",
                 JobRecord.status == "RUNNING",
+                JobRecord.run_id == only_run_id if only_run_id is not None else true(),
                 JobRecord.lease_until <= now,
             )
             .limit(100)

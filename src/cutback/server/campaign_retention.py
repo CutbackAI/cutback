@@ -1,8 +1,9 @@
 """Expire execution authority independently of inference; prune bounded historical metadata."""
 
 from datetime import UTC, datetime
+from uuid import UUID
 
-from sqlalchemy import delete, or_, select
+from sqlalchemy import delete, or_, select, true
 
 from cutback.server.campaign_db import (
     CampaignCandidate,
@@ -16,16 +17,18 @@ from cutback.server.dataset_lineage import lock_lineage
 from cutback.server.db import AuditEvent
 
 
-def expire_campaigns(sessions, *, now=None):
+def expire_campaigns(sessions, *, now=None, only_campaign_id=None):
     from cutback.server.campaign_worker import fail_parent
 
     now = now or datetime.now(UTC)
+    identifier = UUID(str(only_campaign_id)) if only_campaign_id is not None else None
     statuses = {"QUEUED", "READY_FOR_APPROVAL", *ACTIVE}
     with sessions() as reader:
         expired = reader.execute(
             select(CampaignRecord.id, CampaignRecord.project_id)
             .where(
                 CampaignRecord.status.in_(statuses),
+                CampaignRecord.id == identifier if identifier is not None else true(),
                 or_(CampaignRecord.expires_at <= now, CampaignRecord.deadline_at <= now),
             )
             .order_by(CampaignRecord.expires_at, CampaignRecord.id)

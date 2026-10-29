@@ -65,7 +65,22 @@ cutback campaign continue --campaign-hash EXACT_HASH --approval-reference actual
 cutback campaign continue
 ```
 
-The configured operator worker performs the journey. For an owned local stack, `cutback campaign work` advances one step and executes at most the eligible child operation using the explicitly configured worker keys. It uses real providers when configured: the synthetic sample is a separate injected transport, never a fallback to a real key. Cancellation uses `cutback campaign cancel`.
+The configured operator worker performs the journey. For the same owned local stack, run the already approved campaign to its terminal state:
+
+```sh
+cutback campaign run
+cutback campaign status
+```
+
+`run` does not approve a pending campaign or allocate another campaign, experiment family or budget. It keeps the original approval hash, cumulative reservations and wall deadline. It performs at most eight local child-operation attempts, enough for static validation, three proposal/validation rounds and confirmation. `--max-operations 1` intentionally stops at a local operation boundary; rerunning resumes the same campaign. This limit counts local child-job attempts, not native requests, and does not suspend other already authorized workers. The frozen parent/child request and dollar ceilings remain authoritative.
+
+Both `run` and the single-step `campaign work` verify the saved local destination, exact project/campaign/hash and current source profile before executing work. A changed source or destination stops execution. Lease recovery and expiry are scoped to that campaign and run before provider credentials are constructed. An expired reserved call becomes uncertain; the driver fails that campaign without replaying it. Cancellation stops new calls, while a late known bill remains part of the original ledger. The driver also has a monotonic wait bound and never extends the original paid deadline.
+
+Each local execution step isolates Decimal precision, rounding and signal traps for its native budget/accounting calculations, then restores the caller's settings. Embedding the driver in a Python process with restrictive arithmetic settings must not change the approved costs or cause a valid trial to fail solely because of that ambient context.
+
+These commands use real providers when worker BYOK credentials are configured. The independent samples inject owned native HTTP transports into the **same driver** and require no provider key; this is an explicit sample boundary, never an automatic fallback to a real key. Cancellation uses `cutback campaign cancel`. Completion means the frozen evaluation journey ended: the recorded decision may still reject the change or require representative data and application checks. It does not authorize deployment.
+
+`campaign run` writes one final JSON result to stdout and metadata-only JSON-line progress to stderr. Scripts can parse the final object directly; inspect its `status`, `operator_code` and `decision`, rather than treating a finished process as evidence of a successful improvement. Cumulative request/known-cost counters and spend subtotals belong to the entire campaign and may include other authorized workers. They are not claimed as calls made solely by this local process.
 
 Every physical generation/target/judge request reserves against both the exact child plan and cumulative campaign in the canonical PostgreSQL transaction. There is no budget reset between rounds. Repeated continuations reconcile the same identity. Expired/crashed leases fail uncertain billable work without automatic replay, including when inference is disabled. Cancellation stops new calls; later known usage repairs accounting without restoring authority.
 

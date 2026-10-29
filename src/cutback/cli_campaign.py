@@ -206,56 +206,25 @@ def register_campaign(app, output, guarded):
     @guarded
     def work(target: Path = Path(".")):
         """One approved local campaign step, using explicit worker BYOK credentials."""
-        import base64
-        import os
-        from uuid import UUID
+        from cutback.campaign_operator import run_local
 
-        from sqlalchemy import select
+        output({"event": "campaign_step", **run_local(target)})
 
-        from cutback.agent_campaign import current
-        from cutback.agent_control import connect
-        from cutback.evals.artifacts import EncryptedFileStore
-        from cutback.local_stack import configured, database_url
-        from cutback.server.campaign_db import CampaignRecord, CampaignRun
-        from cutback.server.campaign_worker import advance_one
-        from cutback.server.db import ExperimentRunRecord, database
-        from cutback.server.proposal_worker import run_proposal_one
-        from cutback.server.worker import run_one
+    @group.command("run")
+    @guarded
+    def run(target: Path = Path("."), max_operations: int = 8):
+        """Finish the same approved local campaign within its original limits. Uses worker BYOK."""
+        import json
 
-        control, _ = connect(target)
-        state = current(target, control)
-        location, config = configured(target)
-        if state["endpoint"] != config["endpoint"] or not config["allow_payloads"]:
-            raise ValueError("LOCAL_OPERATOR_SCOPE_MISMATCH")
-        engine, sessions = database(database_url(location, config))
-        old = os.environ.get("CUTBACK_ALLOW_PAYLOADS")
-        try:
-            os.environ["CUTBACK_ALLOW_PAYLOADS"] = "true"
-            store = EncryptedFileStore(
-                location / "encrypted", base64.b64decode(config["payload_key"])
-            )
-            with sessions() as session:
-                parent = session.get(CampaignRecord, UUID(state["campaign_id"]))
-                if not parent or parent.project_id != UUID(state["project_id"]):
-                    raise ValueError("LOCAL_CAMPAIGN_SCOPE_MISMATCH")
-            output(advance_one(sessions, store, execution_enabled=True, only_campaign_id=parent.id))
-            with sessions() as session:
-                child = session.execute(
-                    select(CampaignRun.run_id, CampaignRun.phase)
-                    .join(ExperimentRunRecord, ExperimentRunRecord.id == CampaignRun.run_id)
-                    .where(
-                        CampaignRun.campaign_id == parent.id,
-                        ExperimentRunRecord.status.in_(["QUEUED", "BLOCKED"]),
-                    )
-                    .order_by(CampaignRun.created_at)
-                    .limit(1)
-                ).first()
-            if child:
-                run = run_proposal_one if child.phase == "proposal" else run_one
-                output(run(sessions, store, execution_enabled=True, only_run_id=child.run_id))
-        finally:
-            engine.dispose()
-            if old is None:
-                os.environ.pop("CUTBACK_ALLOW_PAYLOADS", None)
-            else:
-                os.environ["CUTBACK_ALLOW_PAYLOADS"] = old
+        from cutback.campaign_operator import run_local
+
+        receipt = run_local(
+            target,
+            complete=True,
+            max_operations=max_operations,
+            emit=lambda value: typer.echo(
+                json.dumps({"event": "campaign_progress", **value}, ensure_ascii=True, default=str),
+                err=True,
+            ),
+        )
+        output({"event": "campaign_result", **receipt})

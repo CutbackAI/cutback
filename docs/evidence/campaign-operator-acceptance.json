@@ -1,0 +1,71 @@
+{
+  "contract": "cutback.campaign-operator-acceptance.v1",
+  "date": "2026-10-29",
+  "status": "installed_qualified_final_public_archives_and_hosted_gates_tracked_in_containing_pull_request",
+  "scope": "finite_already_approved_local_campaign_with_shared_native_sample_driver",
+  "installed_default": {
+    "passed": 687,
+    "skipped": 23,
+    "seconds": 707.78,
+    "openai": "2.29.0",
+    "anthropic": "2.3.0",
+    "authenticated_browser_mobile_axe_and_modern_contract_browser": true
+  },
+  "installed_sdk3": {
+    "passed": 693,
+    "skipped": 6,
+    "seconds": 690.00,
+    "openai": "3.35.1",
+    "anthropic": "2.3.0"
+  },
+  "source_final_operator_and_cli": {"passed": 14, "seconds": 107.38},
+  "source_shared_driver_browser_outcome_before_final_context_isolation": {
+    "passed": 15,
+    "seconds": 270.02,
+    "superseded_by_final_installed_acceptance": true
+  },
+  "failed_trial": {
+    "passed": 2,
+    "failed": 2,
+    "deselected": 6,
+    "seconds": 27.23,
+    "cause": "restrictive_host_decimal_context_aborted_valid_native_campaigns",
+    "resolution": "isolate_each_native_step_in_80_digit_context_and_restore_caller_precision_rounding_and_traps",
+    "accepted": false
+  },
+  "qualification": [
+    "actual_native_sdk_transports_postgresql_and_existing_frozen_parent_child_ledger",
+    "static_success_and_instruction_fallback_complete_same_campaign_without_approval_replay",
+    "local_child_operation_limit_resumes_original_hash_budget_and_deadline",
+    "pending_approval_wrong_project_wrong_hash_and_changed_source_stop_before_inference",
+    "actual_cli_rejects_different_owned_local_destination",
+    "actual_cli_stdout_is_one_json_result_and_stderr_is_metadata_json_lines",
+    "credentials_and_literal_source_instructions_absent_from_cli_output",
+    "crashed_running_reservation_recovers_without_credentials_or_transport_construction",
+    "monotonic_cutoff_recovers_expired_metadata_without_native_replay",
+    "targeted_expiry_and_proposer_recovery_leave_unrelated_jobs_untouched",
+    "caller_decimal_context_cannot_alter_native_cost_execution_and_is_restored",
+    "shared_finite_driver_replaces_bespoke_demo_loops",
+    "source_diff_rollback_both_tree_checks_and_later_outcome_accounting",
+    "v1_and_v2_campaigns_and_both_existing_native_sdk_matrices"
+  ],
+  "application_files": 228,
+  "python_modules": 213,
+  "distribution_metadata_files": 5,
+  "source_and_both_installs_match": true,
+  "static_checks": {
+    "core_only_wheel_smoke": "passed",
+    "typing_modules": 213,
+    "ruff_and_format_files": 545,
+    "openapi_contract": "exactly_unchanged",
+    "dashboard_assets": "unchanged"
+  },
+  "migration_unchanged": "0019",
+  "new_dependencies_or_sdk_support_expansion": false,
+  "paid_provider_calls": 0,
+  "pypi_upload": false,
+  "pypi_version_unchanged": "0.1.0.dev5",
+  "production_deployment": false,
+  "customer_roi_claim": false,
+  "full_market_baseline_or_product_complete": false
+}

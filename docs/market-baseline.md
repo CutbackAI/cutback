@@ -191,7 +191,7 @@ Evidence: [Braintrust administration](https://www.braintrust.dev/docs), [Fiddler
 
 | ID | Acceptance requirement | Cutback state | Current anchor / remaining work |
 |---|---|---|---|
-| R01 | Run real released migrations and upgrade existing installations without rewriting history | Bounded | Real PostgreSQL upgrade/downgrade/drift contracts; released migrations 0001–0018 remain immutable. New schema work requires additive revisions. |
+| R01 | Run real released migrations and upgrade existing installations without rewriting history | Bounded | Real PostgreSQL upgrade/downgrade/drift contracts; released migrations 0001–0019 remain immutable. New schema work requires additive revisions. |
 | R02 | Reserve experiment spend before every target/judge call; uncertain crashes never silently retry | Bounded | Durable worker ledger, locks/leases and failure tests |
 | R03 | Bound body sizes, batch counts, query windows, rate limits and tenant queues | Bounded | Shared quotas and queue fairness; published capacity envelope is limited |
 | R04 | Retain summaries without inventing missing raw quantiles, identities or coverage | Bounded | `server/operations.py`, retained-dimension tests |
