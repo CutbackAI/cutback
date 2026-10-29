@@ -176,6 +176,8 @@ def check(directory: Path):
             "tests/integration/test_gateway_streaming.py",
             "tests/integration/test_gateway_stream_controls.py",
             "tests/unit/test_profile_bindings.py",
+            "tests/unit/test_namespace_model_profiles.py",
+            "tests/unit/test_source_client_settings.py",
             "src/cutback/evals/input_groups.py",
             "tests/unit/test_effective_input_groups.py",
             "tests/integration/test_native_input_lineage.py",

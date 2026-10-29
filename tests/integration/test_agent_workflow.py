@@ -11,7 +11,7 @@ from cutback.server.worker import run_one
 pytestmark = pytest.mark.postgres
 
 
-@pytest.mark.parametrize("kind", ["classifier", "extractor", "shared"])
+@pytest.mark.parametrize("kind", ["classifier", "extractor", "shared", "namespace"])
 def test_fresh_app_agent_plan_native_worker_bound_patch_without_demo(
     api, tenant, tmp_path, monkeypatch, kind
 ):
@@ -60,7 +60,7 @@ def test_fresh_app_agent_plan_native_worker_bound_patch_without_demo(
     artifact = proposal(root, control, purpose="owned-synthetic-review")
     assert artifact["review_status"] == "human_review_required"
     assert "gpt-4.1-mini" in artifact["diff"] and "gpt-4.1" in artifact["rollback_diff"]
-    assert artifact["source_file"] == ("config.py" if kind == "shared" else "app.py")
+    assert artifact["source_file"] == ("config.py" if kind in {"shared", "namespace"} else "app.py")
     assert (root / "app.py").read_bytes() == before
     assert load_session(root)["phase"] == "PROPOSAL_READY"
     (root / "app.py").write_bytes(before + b"\n# modified\n")

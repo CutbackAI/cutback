@@ -648,6 +648,131 @@ class Resolver:
             raise ValueError("DYNAMIC_REQUEST_TEMPLATE_REQUIRES_REVIEW") from None
 
 
+def _qualified_client_settings(tree, call, surface):
+    """Reject explicit custom client destinations without evaluating client code."""
+    nodes = tuple(ast.walk(tree))
+    constructors = {"OpenAI", "AsyncOpenAI", "Anthropic", "AsyncAnthropic"}
+    modules: set[str] = set()
+    for node in nodes:
+        if isinstance(node, ast.ImportFrom) and node.module in {"openai", "anthropic"}:
+            constructors.update(
+                alias.asname or alias.name for alias in node.names if alias.name in constructors
+            )
+        elif isinstance(node, ast.Import):
+            modules.update(
+                alias.asname or alias.name
+                for alias in node.names
+                if alias.name in {"openai", "anthropic"}
+            )
+
+    def constructor(node):
+        return (
+            isinstance(node, ast.Name)
+            and node.id in constructors
+            or (
+                isinstance(node, ast.Attribute)
+                and isinstance(node.value, ast.Name)
+                and node.value.id in modules
+                and node.attr in {"OpenAI", "AsyncOpenAI", "Anthropic", "AsyncAnthropic"}
+            )
+        )
+
+    def path(node):
+        parts: list[str] = []
+        while isinstance(node, ast.Attribute) and len(parts) <= 16:
+            parts.append(node.attr)
+            node = node.value
+        if isinstance(node, ast.Name):
+            return (node.id, *reversed(parts))
+        return None
+
+    receiver = path(call.func)
+    prefix = receiver[: -len(surface.split("."))] if receiver else None
+    clients = {prefix} if prefix else set()
+    # Simple constructor/client aliases remain bounded. Unknown alias expansion
+    # cannot silently turn into a default-provider qualification.
+    for _ in range(16):
+        before = len(constructors), len(clients), len(modules)
+        for node in nodes:
+            if not isinstance(node, (ast.Assign, ast.AnnAssign)) or node.value is None:
+                continue
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            for target in targets:
+                if (
+                    isinstance(target, ast.Name)
+                    and isinstance(node.value, ast.Name)
+                    and node.value.id in modules
+                ):
+                    modules.add(target.id)
+                if isinstance(target, ast.Name) and constructor(node.value):
+                    constructors.add(target.id)
+                alias = path(target)
+                if alias and (
+                    isinstance(node.value, ast.Call)
+                    and constructor(node.value.func)
+                    or path(node.value) in clients
+                ):
+                    clients.add(alias)
+        if max(len(constructors), len(clients), len(modules)) > 256:
+            raise ValueError("SOURCE_CLIENT_CONFIGURATION_TOO_COMPLEX")
+        if before == (len(constructors), len(clients), len(modules)):
+            break
+    else:
+        raise ValueError("SOURCE_CLIENT_CONFIGURATION_TOO_COMPLEX")
+
+    producers = set()
+    receiver_node = call.func
+    for _ in surface.split("."):
+        receiver_node = receiver_node.value if isinstance(receiver_node, ast.Attribute) else None
+    if isinstance(receiver_node, ast.Call):
+        producers.add(id(receiver_node))
+    for node in nodes:
+        if isinstance(node, (ast.Assign, ast.AnnAssign)) and isinstance(node.value, ast.Call):
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            if any(path(target) in clients for target in targets):
+                producers.add(id(node.value))
+
+    def changed_destination(target):
+        target = path(target)
+        return target and any(
+            target[: len(client)] == client
+            and len(target) > len(client)
+            and target[len(client)] in {"base_url", "_base_url"}
+            for client in clients
+        )
+
+    for node in nodes:
+        if isinstance(node, ast.Call):
+            if (
+                constructor(node.func)
+                and node.args
+                or (constructor(node.func) or id(node) in producers)
+                and any(keyword.arg in {None, "base_url"} for keyword in node.keywords)
+            ):
+                raise ValueError("CUSTOM_PROVIDER_DESTINATION_REQUIRES_REVIEW")
+            if (
+                isinstance(node.func, ast.Name)
+                and node.func.id in {"setattr", "delattr"}
+                and len(node.args) >= 2
+                and path(node.args[0]) in clients
+                and (
+                    not isinstance(node.args[1], ast.Constant)
+                    or not isinstance(node.args[1].value, str)
+                    or node.args[1].value in {"base_url", "_base_url"}
+                )
+            ):
+                raise ValueError("CUSTOM_PROVIDER_DESTINATION_REQUIRES_REVIEW")
+        targets = (
+            node.targets
+            if isinstance(node, (ast.Assign, ast.Delete))
+            else [node.target]
+            if isinstance(node, (ast.AnnAssign, ast.AugAssign))
+            else []
+        )
+        if any(changed_destination(target) for target in targets):
+            raise ValueError("CUSTOM_PROVIDER_DESTINATION_REQUIRES_REVIEW")
+
+
 def prepare_profile(
     root: Path,
     site: dict,
@@ -738,15 +863,7 @@ def prepare_profile(
                 and node.id in parameters
             ):
                 raise ValueError("TRANSFORMED_REQUEST_PARAMETER_REQUIRES_REVIEW")
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Call) and any(k.arg == "base_url" for k in node.keywords):
-            if isinstance(node.func, ast.Name) and node.func.id in {
-                "OpenAI",
-                "AsyncOpenAI",
-                "Anthropic",
-                "AsyncAnthropic",
-            }:
-                raise ValueError("CUSTOM_PROVIDER_DESTINATION_REQUIRES_REVIEW")
+    _qualified_client_settings(tree, call, site["sdk_surface"])
     payload = resolver.template(values[payload_key], relative, call.lineno, parameters)
     used = sorted({n["name"] for n in _nodes(payload) if n.get("op") == "parameter"})
     instruction = ""

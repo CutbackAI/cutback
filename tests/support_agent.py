@@ -41,6 +41,10 @@ def route(text):
 def classify(text):
     return shared(text)
 """
+        if kind == "namespace":
+            source = source.replace("from config import MODEL", "import config as cfg").replace(
+                "model=MODEL", "model=cfg.MODEL"
+            )
     if model is not None:
         assert kind == "classifier"
         source = source.replace('model="gpt-4.1"', f'model="{model}"')

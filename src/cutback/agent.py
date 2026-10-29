@@ -47,6 +47,17 @@ def save_session(directory, state, phase=None, code=None):
 def next_action(state):
     phase = state["phase"]
     if phase in {"ANALYZED", "SOURCE_CHANGED"}:
+        if not state.get("profiles") and any(
+            item.get("diagnostic_code") == "CUSTOM_PROVIDER_DESTINATION_REQUIRES_REVIEW"
+            for item in state.get("unresolved", [])
+        ):
+            return {
+                "code": "QUALIFY_CLIENT_DESTINATION",
+                "tool": "cutback workflow analyze",
+                "requires": ["explicit_supported_client_options_or_inspected_destination_adapter"],
+                "effects": ["read_source_metadata"],
+                "provider_calls": 0,
+            }
         return {
             "code": "REVIEW_DATA_RIGHTS_AND_PREPARE",
             "tool": "cutback workflow prepare",
@@ -164,15 +175,25 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
                         root, site, workflow_id=identity, commit=inventory["project"].get("commit")
                     )
                     profiles.append(profile.public())
-                except (ValueError, OSError, SyntaxError, TypeError, RecursionError):
-                    unresolved.append(
-                        {
-                            "call_site_id": site["call_site_id"],
-                            "workflow_id": identity,
-                            "source_file": site["source_file"],
-                            "reason": "REQUEST_REQUIRES_INSPECTED_ADAPTER_OR_EXPLICIT_BOUND",
-                        }
-                    )
+                except (ValueError, OSError, SyntaxError, TypeError, RecursionError) as exc:
+                    issue = {
+                        "call_site_id": site["call_site_id"],
+                        "workflow_id": identity,
+                        "source_file": site["source_file"],
+                        "reason": "REQUEST_REQUIRES_INSPECTED_ADAPTER_OR_EXPLICIT_BOUND",
+                    }
+                    # Never expose arbitrary parser/provider exception text. This
+                    # exact fixed code carries no URL, source content or credential.
+                    if (
+                        type(exc) is ValueError
+                        and str(exc) == "CUSTOM_PROVIDER_DESTINATION_REQUIRES_REVIEW"
+                    ):
+                        issue.update(
+                            diagnostic_code="CUSTOM_PROVIDER_DESTINATION_REQUIRES_REVIEW",
+                            next_action="Metadata observation can continue; source replay needs "
+                            "explicit client options and a qualified provider destination.",
+                        )
+                    unresolved.append(issue)
                 entrypoints[entry["file"]] = entry
         fixtures = discover_fixtures(root)
         for fixture in fixtures:
