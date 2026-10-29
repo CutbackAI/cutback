@@ -13,6 +13,7 @@ from cutback.gateway.contracts import (
     GatewayKeyInput,
     GatewayPolicy,
     ModelLimit,
+    ResponsesStream,
     ResponsesText,
     qualify_model,
     qualify_request,
@@ -399,7 +400,7 @@ def reserve(
     token,
     operation_id,
     request_hmac,
-    request: ResponsesText,
+    request: ResponsesText | ResponsesStream,
     *,
     now=None,
     traceparent=None,
@@ -474,6 +475,7 @@ def reserve(
             model_key=model.key,
             request_hmac=request_hmac,
             max_output_tokens=request.max_output_tokens,
+            streaming=request.stream,
             traffic_kind=GatewayKeyInput.model_validate(key.specification).traffic_kind,
             price_sha256=model.price_contract.price_sha256,
             reserved_usd=amount,
@@ -515,6 +517,25 @@ def accounting_rows(session, call):
             raise GatewayError("GATEWAY_BUDGET_INTEGRITY_FAILURE", 409)
         found.append(row)
     return found
+
+
+def record_first_text_delta(sessions, reservation, elapsed_us):
+    """One observed gateway timing, scoped to its reserved live operation."""
+    if type(elapsed_us) is not int or not 0 <= elapsed_us <= 120000000:
+        raise GatewayError("GATEWAY_STREAM_TIMING_OUTSIDE_BOUNDS", 502)
+    with sessions() as session, session.begin():
+        lock_project(session, reservation.project_id)
+        call = session.get(GatewayCallRow, (reservation.project_id, reservation.operation_id))
+        if (
+            call is None
+            or call.event_id != reservation.event_id
+            or call.key_id != reservation.key_id
+            or call.streaming is not True
+            or call.state != "DISPATCHED"
+        ):
+            raise GatewayError("GATEWAY_STREAM_TIMING_SCOPE_OR_STATE_CHANGED", 409)
+        if call.first_text_delta_us is None:
+            call.first_text_delta_us = elapsed_us
 
 
 @exact_accounting
@@ -560,6 +581,8 @@ def finish(
             "GATEWAY_UPSTREAM_SURFACE_UNQUALIFIED",
             "GATEWAY_RESPONSE_TOO_LARGE_BILLING_UNCERTAIN",
             "GATEWAY_COST_OUTSIDE_APPROVED_BOUNDS",
+            "GATEWAY_STREAM_PROTOCOL_UNQUALIFIED",
+            "GATEWAY_STREAM_FRAME_TOO_LARGE",
         } and not (call.state == "UNCERTAIN" and call.code == code):
             policy = session.get(GatewayPolicyRow, call.policy_id)
             if policy is not None:

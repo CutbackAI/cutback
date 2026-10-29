@@ -59,7 +59,9 @@ class TeamLimit(StrictModel):
 
 class ModelLimit(StrictModel):
     # An exact model and route, not an arbitrary destination or alias resolver.
-    key: Literal["openai-luna-responses-text-v1"] = "openai-luna-responses-text-v1"
+    key: Literal["openai-luna-responses-text-v1", "openai-luna-responses-text-stream-v1"] = (
+        "openai-luna-responses-text-v1"
+    )
     provider: Literal["openai"] = "openai"
     model: Literal["gpt-6-luna"] = "gpt-6-luna"
     sdk_surface: Literal["responses.create"] = "responses.create"
@@ -80,7 +82,9 @@ class ModelLimit(StrictModel):
 
 
 class GatewayPolicy(StrictModel):
-    version: Literal["cutback.gateway-policy.v1"] = "cutback.gateway-policy.v1"
+    version: Literal["cutback.gateway-policy.v1", "cutback.gateway-policy.v2"] = (
+        "cutback.gateway-policy.v1"
+    )
     policy_id: UUID
     environment_ids: list[UUID] = Field(min_length=1, max_length=100)
     starts_at: datetime
@@ -93,6 +97,13 @@ class GatewayPolicy(StrictModel):
 
     @model_validator(mode="after")
     def finite_unique_scopes(self):
+        expected = (
+            "openai-luna-responses-text-v1"
+            if self.version == "cutback.gateway-policy.v1"
+            else "openai-luna-responses-text-stream-v1"
+        )
+        if any(model.key != expected for model in self.models):
+            raise ValueError("GATEWAY_POLICY_VERSION_MODEL_CONTRACT_MISMATCH")
         if not timedelta(0) < self.expires_at - self.starts_at <= timedelta(days=31):
             raise ValueError("GATEWAY_FINITE_WINDOW_REQUIRED")
         identities: list[list[str]] = [
@@ -134,7 +145,9 @@ class GatewayKeyInput(StrictModel):
     ] = "application"
     expires_at: datetime
     limit: SpendLimit
-    model_keys: list[Literal["openai-luna-responses-text-v1"]] = Field(min_length=1, max_length=5)
+    model_keys: list[
+        Literal["openai-luna-responses-text-v1", "openai-luna-responses-text-stream-v1"]
+    ] = Field(min_length=1, max_length=5)
 
     _time = field_validator("expires_at")(aware)
 
@@ -175,6 +188,32 @@ class ResponsesText(StrictModel):
     def actual_false(cls, value):
         if value is not False:
             raise ValueError("GATEWAY_FALSE_BOOLEAN_REQUIRED")
+        return value
+
+
+class StreamOptions(StrictModel):
+    include_obfuscation: bool = Field(strict=True)
+
+
+class ResponsesStream(StrictModel):
+    """Explicit HTTP SSE text surface; legacy ResponsesText stays unchanged."""
+
+    model: Literal["gpt-6-luna"]
+    input: str = Field(min_length=1, max_length=262144)
+    instructions: str | None = Field(default=None, max_length=262144)
+    max_output_tokens: int = Field(strict=True, ge=16, le=16384)
+    store: Literal[False]
+    service_tier: Literal["default"]
+    stream: Literal[True]
+    reasoning: Reasoning = Field(default_factory=Reasoning)
+    prompt_cache_options: CacheOptions | None = None
+    stream_options: StreamOptions | None = None
+
+    @field_validator("store", "stream", mode="before")
+    @classmethod
+    def actual_boolean(cls, value):
+        if type(value) is not bool:
+            raise ValueError("GATEWAY_ACTUAL_BOOLEAN_REQUIRED")
         return value
 
 
@@ -219,10 +258,12 @@ def upper_cost(model: ModelLimit, catalog=None):
         )
 
 
-def qualify_request(request: ResponsesText, model: ModelLimit):
+def qualify_request(request: ResponsesText | ResponsesStream, model: ModelLimit):
     qualify_model(model)
     if (
         request.model != model.model
+        or request.stream
+        and model.key != "openai-luna-responses-text-stream-v1"
         or request.max_output_tokens > model.max_output_tokens
         or request.reasoning.effort != model.price_contract.reasoning_effort
     ):

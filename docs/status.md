@@ -22,13 +22,17 @@ The independent [campaign application](../examples/improvement-campaign/README.m
 
 ## Engineering still required
 
-1. **Gateway breadth and reliability:** the publicly merged source implements a separately enabled, finite text-gateway contract with virtual keys, shared budgets and no uncertain replay ([scope](gateway-budgets.md)); installed-package qualification and all ten hosted checks passed in [PR 33](https://github.com/CutbackAI/cutback/pull/33). Additional providers/surfaces, streaming, configurable reliability/fallback behavior and operational acceptance remain unfinished.
+1. **Gateway breadth and reliability:** the publicly merged source implements a separately enabled, finite text-gateway contract with virtual keys, shared budgets and no uncertain replay ([scope](gateway-budgets.md)); installed-package qualification and all ten hosted checks passed in [PR 33](https://github.com/CutbackAI/cutback/pull/33). An explicit HTTP SSE/first-text-timing extension is under separate source qualification in [progress](progress.md). Additional providers/surfaces, configurable reliability/fallback behavior and operational acceptance remain unfinished.
 2. **Broader automatic improvements:** evidence-driven strategy selection, remote/vector retrieval and learned reranking, tool/compression/batch optimization, learned routing and additional source/framework adapters. [Bounded actual local corpus retrieval](retrieval-optimization.md) now has its own candidate/confirmation/settings-check journey, merged with full installed and all ten hosted checks in [PR 34](https://github.com/CutbackAI/cutback/pull/34); exact acceptance is recorded in progress.md. It does not supply every strategy or prove a customer advantage.
 3. **Broader evaluation:** generated criteria and real-data scenarios, qualified application/tool isolation and simulation, broader adversarial/guardrail integrations, and the documented modality/cloud specialties.
 4. **Operational qualification:** evaluator/worker/gateway capacity, intended clean-host deployment and recovery modes, remaining collaboration/provisioning journeys, and their complete dashboard lifecycles.
 5. **Release convergence:** make a separately versioned release containing the accepted source workflows, qualify its final archives and complete its publication gates. The QA artifacts used during development do not replace the published wheel.
 
 These are implementation requirements, not requests for a maintainer to finish the engineering. They remain visible in the baseline until their user journeys and acceptance gates pass.
+
+Current source qualification also hardens [request bindings and proposed patch fidelity](source-request-safety.md): ambiguous Python scopes remain unresolved, and changing a shared model constant cannot silently change an unevaluated instruction/payload. This does not supply the remaining dynamic/shared-configuration source adapters.
+
+The same qualification adds [rendered native-input grouping](evaluation.md) before plan approval, provider dispatch and source review. Unused record fields cannot inflate the current dataset's independent example count; collisions across frozen splits reject. Cross-dataset rendered-request history remains unknown. Final combined installed archives and exact public CI gates are still pending; earlier passing source checks do not close that release gate.
 
 ## External evidence still required
 

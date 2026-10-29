@@ -32,6 +32,10 @@ test("finite application budgets preserve uncertain money and one-shot native op
   await expect(
     page.getByRole("button", { name: "Prepare gateway policy", exact: true }),
   ).toBeEnabled();
+  await expect(page.getByLabel("Native text streaming")).toHaveValue(
+    "disabled",
+  );
+  await page.getByLabel("Native text streaming").selectOption("enabled");
   await page
     .getByRole("button", { name: "Prepare gateway policy", exact: true })
     .click();
@@ -40,6 +44,7 @@ test("finite application budgets preserve uncertain money and one-shot native op
     exact: true,
   });
   await expect(review).toContainText("PENDING");
+  await expect(review).toContainText("HTTP SSE and nonstreaming text");
   await expect(review).toContainText("reasoning medium");
   await expect(review).toContainText("requested tier default");
   await page
@@ -81,11 +86,14 @@ test("finite application budgets preserve uncertain money and one-shot native op
       store: false,
       service_tier: "default",
       reasoning: { effort: "medium" },
+      stream: true,
     },
   };
   const gateway = process.env.CUTBACK_GATEWAY_UI_URL! + "/v1/responses";
   const first = await page.request.post(gateway, options);
   expect(first.status()).toBe(200);
+  expect(first.headers()["content-type"]).toContain("text/event-stream");
+  expect(await first.text()).toContain("response.completed");
   expect(first.headers()["x-should-retry"]).toBe("false");
   expect((await page.request.post(gateway, options)).status()).toBe(409);
   const uncertain = await page.request.post(gateway, {
@@ -114,6 +122,10 @@ test("finite application budgets preserve uncertain money and one-shot native op
   await expect(receipts).toContainText("SETTLED");
   await expect(receipts).toContainText("UNCERTAIN");
   await expect(receipts).toContainText("Unknown");
+  await expect(receipts).toContainText("HTTP SSE");
+  await expect(
+    receipts.getByRole("columnheader", { name: "Gateway first text (ms)" }),
+  ).toBeVisible();
   const exported = await page.request.get(
     `/v1/projects/${process.env.CUTBACK_UI_PROJECT}/export`,
     {

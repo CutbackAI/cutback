@@ -56,7 +56,13 @@ def response_event(before: LLMEvent, model, body, duration_ms, status_code, *, o
         values["event_schema_version"] = "1.2"
         values["response_model"] = body.get("model")
         values["service_tier"] = body.get("service_tier")
-        values["status"] = "success" if body.get("status") == "completed" else "incomplete"
+        values["status"] = (
+            "success"
+            if body.get("status") == "completed"
+            else "error"
+            if body.get("status") == "failed"
+            else "incomplete"
+        )
         output = body.get("output")
         supported = (
             isinstance(output, list)

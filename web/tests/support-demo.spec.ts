@@ -64,10 +64,18 @@ test("newcomer explores real sample decisions, unknown intervals, private cases 
     .getByLabel("Correction review reference")
     .first()
     .fill("synthetic-browser-correction");
-  await page
-    .getByRole("button", { name: "Create corrected dataset", exact: true })
-    .first()
-    .click();
+  const [correction] = await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.url().endsWith("/cases/correct") &&
+        response.request().method() === "POST",
+    ),
+    page
+      .getByRole("button", { name: "Create corrected dataset", exact: true })
+      .first()
+      .click(),
+  ]);
+  expect(correction.status()).toBe(201);
   await expect(
     page.getByText(
       "Created a new dataset. The original evidence is unchanged.",

@@ -11,16 +11,16 @@ uv run cutback collector status --target .
 uv run python examples/gateway/sample.py --local-target .
 ```
 
-Use a clean checkout or a reviewed source-matched owned local collector whose readiness reports schema `0019`. This example accepts only an owned numeric-loopback/local collector. It needs neither a provider key nor payload capture permission. It does not inspect another application's source or data, start a production gateway or read inference credentials from the environment.
+Use a clean checkout or a reviewed source-matched owned local collector whose readiness reports schema `0020`. This example accepts only an owned numeric-loopback/local collector. It needs neither a provider key nor payload capture permission. It does not inspect another application's source or data, start a production gateway or read inference credentials from the environment.
 
 Open [the independent native SDK application](../../src/cutback/sample_app/gateway.py). Its SDK call remains ordinary; `operation_headers` binds one logical UUID across retries. The sample starts a real loopback ASGI gateway with an exclusively synthetic provider transport, then uses actual native SDK HTTP and real PostgreSQL.
 
 Expected sequence:
 
-1. Prepare and approve a finite project/team/model policy, then issue two one-time environment-scoped keys.
-2. A native text response records one known modeled fixture cost.
+1. Prepare and approve a finite v2 project/team/model policy allowing HTTP SSE and JSON, then issue two one-time environment-scoped keys.
+2. A native text stream records one known modeled fixture cost and a measured gateway first-text delay. The application accepts its accumulated text only after a completed terminal event.
 3. Reusing that operation UUID returns a nonretryable conflict and makes no second provider request.
-4. A second fixture omits usage. Its full reservation remains held; complete modeled cost is unknown.
+4. A second, nonstreaming fixture omits usage. Its full reservation remains held; complete modeled cost is unknown. Both transports share the same model allowance.
 5. A newly issued key cannot evade the shared team/model allowance. The next request stops before the provider transport.
 6. Stop the owned gateway, revoke both sample keys and disable the policy. Preserve metadata for dashboard inspection.
 
@@ -32,4 +32,4 @@ Each run saves a metadata-only journal below `.cutback/gateway-example/`. A fail
 
 Add `--cleanup` to explicitly delete this sample project after acceptance. A cleanup failure is reported as unconfirmed. To stop the local development collector while preserving its database, use `uv run cutback collector down --target .`.
 
-The first gateway contract is synchronous/asynchronous nonstreaming Luna Responses text. Other providers, Chat/tools/modalities/streaming, native fallback policies and production operational acceptance remain unqualified. Follow the frozen request/purpose/price contract rather than treating this example as a universal reverse proxy.
+This gateway contract is synchronous/asynchronous Luna Responses text with explicitly approved HTTP SSE. Other providers, Chat/tools/modalities, native fallback policies and production operational acceptance remain unqualified. First-text timing measures the gateway, not the user's full network path. Follow the frozen request/purpose/price contract rather than treating this example as a universal reverse proxy.

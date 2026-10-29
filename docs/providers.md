@@ -1,5 +1,7 @@
 # Provider compatibility
 
+The optional [application gateway](gateway-budgets.md) has a distinct Luna Responses text contract. Its source streaming extension exercises actual OpenAI 2.29.0 and 3.35.1 sync/async SDK events over loopback HTTP with owned synthetic upstreams and real PostgreSQL; [acceptance state](progress.md). Explicit v2 policy approval enables HTTP SSE, not agent/tool/Chat/background execution, additional models or paid-provider acceptance. First-text timing is gateway-local; partial usage remains unknown without qualified final usage.
+
 Newer source separately qualifies [Luna Responses text execution](native-modern-text.md) through an explicit model/request/price reference, preserving supported reasoning and tier choices. It adds no Luna agent/tool/Chat execution or live-provider claim. [Progress](progress.md) distinguishes local/public gates and the unchanged PyPI wheel.
 
 The working source additionally supports exact OpenAI **3.35.1**, including its native HTTPX2 transport and legacy HTTPX compatibility path. The separately locked [compatibility environment](../infra/sdk-compat/README.md) and hosted Python matrix qualify it without changing the main OpenAI 2.29.0 extra or an application's existing pin. PyPI dev5 does not include this addition; consult [acceptance/publication state](progress.md). SDK support does not qualify additional models, reasoning modes or prices.

@@ -94,6 +94,8 @@ class GatewayCallReceipt(StrictModel):
     model_key: str
     traffic_kind: str
     max_output_tokens: int
+    streaming: bool | None
+    first_text_delta_us: int | None
     state: str
     price_sha256: str
     reserved_usd: Decimal

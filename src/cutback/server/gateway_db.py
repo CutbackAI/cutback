@@ -7,6 +7,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import (
     JSON,
     BigInteger,
+    Boolean,
     CheckConstraint,
     DateTime,
     ForeignKey,
@@ -147,6 +148,11 @@ class GatewayCallRow(Base):
         ),
         CheckConstraint("max_output_tokens BETWEEN 16 AND 16384", name="ck_gateway_call_output"),
         CheckConstraint(
+            "first_text_delta_us IS NULL OR (streaming IS TRUE "
+            "AND first_text_delta_us BETWEEN 0 AND 120000000)",
+            name="ck_gateway_stream_timing",
+        ),
+        CheckConstraint(
             "traffic_kind IN ('application','evaluation','judge',"
             "'optimization','simulation','unknown')",
             name="ck_gateway_call_purpose",
@@ -173,6 +179,8 @@ class GatewayCallRow(Base):
     model_key: Mapped[str] = mapped_column(String(100))
     request_hmac: Mapped[str] = mapped_column(String(64))
     max_output_tokens: Mapped[int] = mapped_column(Integer)
+    streaming: Mapped[bool | None] = mapped_column(Boolean)
+    first_text_delta_us: Mapped[int | None] = mapped_column(BigInteger)
     traffic_kind: Mapped[str] = mapped_column(String(20))
     state: Mapped[str] = mapped_column(String(20), default="DISPATCHED")
     price_sha256: Mapped[str] = mapped_column(String(64))

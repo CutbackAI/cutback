@@ -163,7 +163,7 @@ Evidence: [LiteLLM](https://docs.litellm.ai/docs/proxy/virtual_keys), [Portkey](
 | G04 | Run exact scoped encrypted caching with expiry and explicit eligibility | Bounded | `server/cache_api.py`; does not imply universal automatic cache selection |
 | G05 | Qualify semantic caching against false hits, privacy boundaries and task regressions | Missing | Exact cache must not be rebranded semantic |
 | G06 | Compare learned routing with baseline/heuristic routing including router costs and quality | Partial | Byte-length route mechanism exists; trained/custom-router acceptance absent |
-| G07 | Measure streaming first-token latency/cancellation and account for partial usage | Partial | Qualified native stream tests exist; cross-provider gateway behavior not qualified |
+| G07 | Measure streaming first-token latency/cancellation and account for partial usage | Partial | Native stream observation plus an explicit Luna gateway SSE/first-nonempty-text-delta timing extension under qualification in [progress](progress.md). Unknown partial usage keeps its hold; measured gateway timing is not client end-to-end latency. Cross-provider behavior remains unqualified. |
 | G08 | Batch/schedule eligible work with measured turnaround and full cost attribution | Missing | Experiment queue is not a provider batch-optimization product |
 | G09 | Evaluate context compression/token reduction against original task behavior | Missing | Smaller output caps do not implement input compression |
 | G10 | Measure local-model/GPU costs without assuming public API rates equal hardware economics | Partial | Bounded local training/compute assumptions; live GPU/infrastructure metering absent |

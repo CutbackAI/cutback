@@ -793,6 +793,14 @@ def install_evaluation(app, sessions, authorize, scope):
                 raise HTTPException(403, "DATASET_OR_VENDOR_SCOPE_DENIED")
             try:
                 summary = plan_summary(body.specification, dataset_manifest(session, dataset))
+                from cutback.evals.input_groups import effective_input_groups, requires_projection
+
+                if requires_projection(body.specification):
+                    from cutback.server.worker import load_dataset
+
+                    loaded, _ = load_dataset(session, dataset, store)
+                    _, grouping = effective_input_groups(body.specification, loaded)
+                    summary["input_grouping"] = grouping
             except ValueError as exc:
                 code = str(exc)
                 raise HTTPException(

@@ -1,0 +1,85 @@
+{
+  "status": "source_qualified_final_installed_and_exact_public_gates_pending",
+  "date": "2026-10-29",
+  "scope": [
+    "explicit v2 Luna Responses HTTP SSE with shared JSON/SSE allowances",
+    "pinned native sync/async streaming, metadata-only timing and conservative uncertainty",
+    "parse-only source binding and proposed request/dependency fidelity",
+    "bounded RAM-only native-input grouping for current frozen text corpus"
+  ],
+  "existing_serialization_preserved": [
+    "gateway-policy-v1",
+    "valid request-profile-v1",
+    "frozen experiment approvals"
+  ],
+  "released_migrations_unchanged": "0001 through 0019",
+  "new_migration": "0020_gateway_streaming",
+  "source_gateway_controls": {
+    "default": {
+      "passed": 64,
+      "seconds": 42.82
+    },
+    "openai3": {
+      "passed": 64,
+      "seconds": 41.35
+    }
+  },
+  "source_effective_input_broad": {
+    "passed": 696,
+    "skipped": 24,
+    "seconds": 226.98,
+    "real_postgresql": true
+  },
+  "source_effective_input_sdk3_focused": {
+    "passed": 48,
+    "skipped": 1,
+    "seconds": 16.49
+  },
+  "previous_combined_installed_trial": {
+    "default": {
+      "passed": 1128,
+      "skipped": 39,
+      "failed": 1,
+      "seconds": 1780.55,
+      "accepted_full_suite": false
+    },
+    "openai3": {
+      "passed": 921,
+      "skipped": 8,
+      "seconds": 923.06
+    },
+    "predates_final_unicode_and_input_grouping": true
+  },
+  "browser_follow_up": {
+    "unchanged_isolated": {
+      "passed": 1,
+      "seconds": 113.9
+    },
+    "response_verified_correction_flow": {
+      "passed": 1,
+      "seconds": 72.89
+    },
+    "desktop_mobile_axe": true,
+    "original_timing_cause_proved": false
+  },
+  "failure_disclosures": [
+    "Initial native stream error format did not raise in pinned SDK; nested native error corrected.",
+    "Migration tests initially shared retained streaming data; refusal was correct, test databases isolated.",
+    "Incomplete/failed usage initially expected to settle; corrected to preserve existing unknown-billing contract.",
+    "Literal Unicode text line separators initially broke SSE parsing; three failing regressions then fixed.",
+    "Initial lineage test expected an unsanitized detail envelope; corrected to the API code envelope."
+  ],
+  "limits": [
+    "streaming is explicit Luna Responses text-only, not a cross-provider guarantee",
+    "first text timing is gateway-observed, not end-user latency",
+    "partial, missing or unqualified usage retains its hold",
+    "no automatic replay of uncertain native operations",
+    "native input projection bounded to 32 MiB and current dataset; historical rendered-input identity unknown",
+    "frozen datasets and approvals are not rewritten; regrouped imports require new approval",
+    "broader market baseline and operational/customer acceptance remain unfinished"
+  ],
+  "paid_provider_calls": 0,
+  "pypi_upload": false,
+  "production_deployed": false,
+  "whole_product_complete": false
+}

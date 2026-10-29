@@ -16,6 +16,10 @@ Import infers a reviewable task hint from label shape: independent structured go
 
 Frozen hashes include content and provenance. Normalized duplicates are unioned with customer groups before seeded stratified train/validation/test assignment. Rare groups/missing splits are flagged. This is selected near-duplicate detection, not universal semantic deduplication. Training examples never become held-out test evidence.
 
+For frozen text request templates, source qualification also checks the actual rendered native inputs across the entire current dataset, before sampling, budget reservation or provider dispatch. Differences in unused record fields cannot create independent examples. Collisions merge existing families for paired confidence and required criteria; they never split a declared customer family. A merged family spanning train/validation/test rejects the plan with `NATIVE_INPUT_FAMILY_SPANS_DATASET_SPLITS`. Supply task-level customer groups and import a new dataset version; frozen assignments and approvals are never rewritten automatically.
+
+This bounded check allows at most 32 MiB of rendered projection work. Rendering and input signatures remain in memory; public receipts contain only counts, the check version and its scope. Malformed templates or excess work fail before billing. Recommendation review repeats the check, so older template-based results without a matching receipt need new confirmation. `cross_dataset_rendered_input_history` stays `unknown`: the existing persistent lineage tracks normalized raw records and declared customer families, not every historical rendering under different templates. Episode/tool execution and retrieval keep their separate evidence contracts. This check neither supplies semantic deduplication nor establishes otherwise unknown population coverage.
+
 ## Plan, approve and run
 
 ```sh

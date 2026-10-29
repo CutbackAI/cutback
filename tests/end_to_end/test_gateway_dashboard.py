@@ -1,5 +1,6 @@
 """Authenticated gateway controls over real HTTP/PostgreSQL; provider calls are intercepted."""
 
+import json
 import os
 import shutil
 import subprocess
@@ -27,7 +28,16 @@ def test_gateway_controls_dashboard(api, tenant):
         body = native_response()
         if len(calls) == 2:
             body.pop("usage")
-        return httpx.Response(200, json=body)
+        assert json.loads(request.content)["stream"] is True
+        frames = (
+            'data: {"type":"response.output_text.delta","delta":"A"}\n\n'
+            + "event: response.completed\ndata: "
+            + json.dumps({"type": "response.completed", "response": body})
+            + "\n\n"
+        )
+        return httpx.Response(
+            200, content=frames.encode(), headers={"content-type": "text/event-stream"}
+        )
 
     gateway = create_gateway(
         database_url=api[2].state.engine.url.render_as_string(hide_password=False),

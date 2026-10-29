@@ -16,7 +16,7 @@ from cutback.gateway.contracts import (
 from cutback.server.db import Environment
 
 
-def prepare_gateway(api, tenant, *, cap="10", concurrency=8, actor=None):
+def prepare_gateway(api, tenant, *, cap="10", concurrency=8, actor=None, streaming=False):
     client, admin, app = api
     project = UUID(tenant[0])
     with app.state.sessions() as session:
@@ -27,6 +27,7 @@ def prepare_gateway(api, tenant, *, cap="10", concurrency=8, actor=None):
     team = uuid4()
     limit = SpendLimit(modeled_usd=cap, requests=20, concurrent_requests=concurrency)
     specification = GatewayPolicy(
+        version="cutback.gateway-policy.v2" if streaming else "cutback.gateway-policy.v1",
         policy_id=uuid4(),
         environment_ids=[environment],
         starts_at=now - timedelta(seconds=1),
@@ -35,6 +36,9 @@ def prepare_gateway(api, tenant, *, cap="10", concurrency=8, actor=None):
         teams=[TeamLimit(team_id=team, limit=limit)],
         models=[
             ModelLimit(
+                key="openai-luna-responses-text-stream-v1"
+                if streaming
+                else "openai-luna-responses-text-v1",
                 price_contract=NativeModelContract.current_luna_text(reasoning_effort="medium"),
                 limit=limit,
             )

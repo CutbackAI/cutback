@@ -4525,6 +4525,10 @@ export interface components {
             traffic_kind: string;
             /** Max Output Tokens */
             max_output_tokens: number;
+            /** Streaming */
+            streaming: boolean | null;
+            /** First Text Delta Us */
+            first_text_delta_us: number | null;
             /** State */
             state: string;
             /** Price Sha256 */
@@ -4597,7 +4601,7 @@ export interface components {
             expires_at: string;
             limit: components["schemas"]["SpendLimit-Input"];
             /** Model Keys */
-            model_keys: "openai-luna-responses-text-v1"[];
+            model_keys: ("openai-luna-responses-text-v1" | "openai-luna-responses-text-stream-v1")[];
         };
         /** GatewayKeyInput */
         "GatewayKeyInput-Output": {
@@ -4634,7 +4638,7 @@ export interface components {
             expires_at: string;
             limit: components["schemas"]["SpendLimit-Output"];
             /** Model Keys */
-            model_keys: "openai-luna-responses-text-v1"[];
+            model_keys: ("openai-luna-responses-text-v1" | "openai-luna-responses-text-stream-v1")[];
         };
         /** GatewayKeyPage */
         GatewayKeyPage: {
@@ -4684,9 +4688,9 @@ export interface components {
             /**
              * Version
              * @default cutback.gateway-policy.v1
-             * @constant
+             * @enum {string}
              */
-            version: "cutback.gateway-policy.v1";
+            version: "cutback.gateway-policy.v1" | "cutback.gateway-policy.v2";
             /**
              * Policy Id
              * Format: uuid
@@ -4715,9 +4719,9 @@ export interface components {
             /**
              * Version
              * @default cutback.gateway-policy.v1
-             * @constant
+             * @enum {string}
              */
-            version: "cutback.gateway-policy.v1";
+            version: "cutback.gateway-policy.v1" | "cutback.gateway-policy.v2";
             /**
              * Policy Id
              * Format: uuid
@@ -5413,9 +5417,9 @@ export interface components {
             /**
              * Key
              * @default openai-luna-responses-text-v1
-             * @constant
+             * @enum {string}
              */
-            key: "openai-luna-responses-text-v1";
+            key: "openai-luna-responses-text-v1" | "openai-luna-responses-text-stream-v1";
             /**
              * Provider
              * @default openai
@@ -5464,9 +5468,9 @@ export interface components {
             /**
              * Key
              * @default openai-luna-responses-text-v1
-             * @constant
+             * @enum {string}
              */
-            key: "openai-luna-responses-text-v1";
+            key: "openai-luna-responses-text-v1" | "openai-luna-responses-text-stream-v1";
             /**
              * Provider
              * @default openai
