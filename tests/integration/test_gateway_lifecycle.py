@@ -21,6 +21,12 @@ from cutback.server.repository import PostgresEventRepository
 pytestmark = pytest.mark.postgres
 
 
+@pytest.fixture
+def api_database_url(isolated_postgres_url):
+    """Migration guards must not inspect another feature's retained receipts."""
+    return isolated_postgres_url
+
+
 def test_key_purpose_separates_optimizer_overhead_without_claiming_an_internal_run(api, tenant):
     context = prepare_gateway(api, tenant)
     key = issue_gateway_key(context, traffic_kind="optimization")
@@ -128,8 +134,8 @@ def test_retention_keeps_unknown_money_and_late_settlement_cannot_reinsert_archi
 def test_gateway_intent_cannot_be_destroyed_by_downgrade(
     api_database_url, api, tenant, monkeypatch
 ):
-    # This test uses the standard disposable database but never downgrades when
-    # rows exist; the migration refuses before its first destructive operation.
+    # Own the complete migration chain; later features can retain independent
+    # receipts in the session database and must keep their stricter guards.
     prepare_gateway(api, tenant)
     cfg = Config()
     cfg.set_main_option("script_location", str(files("cutback.server").joinpath("migrations")))
