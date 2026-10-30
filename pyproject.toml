@@ -109,6 +109,7 @@ include = [
   "/docs/retrieval-optimization.md",
   "/docs/context-compression.md",
   "/docs/joint-model-context.md",
+  "/docs/reviewed-criteria.md",
   "/docs/semantic-cache.md",
   "/docs/identity-and-teams.md", "/docs/hosted-billing.md", "/docs/continuous-operations.md",
   "/docs/advanced-optimization.md", "/docs/local-training.md", "/docs/adr", "/docs/assets", "/packages/js-sdk/index.mjs", "/packages/js-sdk/index.d.ts",

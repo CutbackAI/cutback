@@ -141,6 +141,8 @@ def sample_frontier(report: dict) -> dict:
 def regression_gate(report, *, expected_plan_hash, candidate=None, sample_only=False):
     """Fail closed for CI. Passing this gate never approves or deploys a change."""
     reasons = []
+    from cutback.core.evaluation_criteria import source_evaluator_eligible
+
     if report.get("status") != "COMPLETED" or report.get("billing_complete") is not True:
         reasons.append("run_or_accounting_incomplete")
     if report.get("plan", {}).get("plan_hash") != expected_plan_hash:
@@ -153,7 +155,11 @@ def regression_gate(report, *, expected_plan_hash, candidate=None, sample_only=F
         r
         for r in report.get("recommendations", [])
         if (candidate is None or r["candidate"]["key"] == candidate)
-        and r.get("evaluator_version") == "deterministic-v3"
+        and source_evaluator_eligible(r)
+        and (
+            r.get("evaluator_version") != "deterministic-v13"
+            or r.get("criteria_binding") == report.get("criteria_binding")
+        )
         and r.get("quality_gate_passed") is True
         and r.get("cheaper_on_sample") is True
     ]

@@ -94,6 +94,9 @@ jobs:
         run: >-
           uv run --project infra/sdk-compat/openai3 --locked python scripts/check.py -q
           tests/unit tests/contract/test_migrations.py
+          tests/integration/test_reviewed_criteria_workflow.py
+          tests/integration/test_reviewed_criteria_migrations.py
+          tests/end_to_end/test_reviewed_criteria_pipeline.py
           tests/integration/test_native_episodes.py tests/integration/test_semantic_episodes.py
           tests/integration/test_semantic_episode_controls.py tests/integration/test_episode_lifecycle.py
           tests/integration/test_execution_ledger.py tests/integration/test_campaign_workflow.py
@@ -138,7 +141,7 @@ jobs:
           tests/integration/test_security_episodes.py
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 75
     strategy:
       fail-fast: false
       matrix:
@@ -184,7 +187,7 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy
-      - run: uv run pytest --cov=cutback --cov-report=term-missing --cov-report=xml
+      - run: uv run python scripts/check.py --cov=cutback --cov-report=term-missing --cov-report=xml
         env:
           CUTBACK_TEST_BROWSER: 'true'
           CUTBACK_TEST_LOCAL_STACK: ${{ matrix.python == '3.11.18' && 'true' || 'false' }}
@@ -233,4 +236,4 @@ jobs:
           docker build --tag cutback-ci-tools:${{ github.sha }} --file infra/compose/Dockerfile .
           echo "CUTBACK_TEST_TOOL_IMAGE_ID=$(docker image inspect cutback-ci-tools:${{ github.sha }} --format '{{.Id}}')" >> "$GITHUB_ENV"
       - name: Verify actual kernel controls, separate-process HTTP, native SQL and authenticated UI
-        run: uv run python scripts/check.py tests/integration/test_tool_isolation.py tests/end_to_end/test_isolated_tools_pipeline.py tests/end_to_end/test_security_suite_pipeline.py tests/end_to_end/test_guarded_tools_pipeline.py tests/end_to_end/test_guarded_security_pipeline.py -q
+        run: uv run python scripts/check.py tests/integration/test_tool_isolation.py tests/end_to_end/test_isolated_tools_pipeline.py tests/end_to_end/test_security_suite_pipeline.py tests/end_to_end/test_guarded_tools_pipeline.py tests/end_to_end/test_guarded_security_pipeline.py tests/end_to_end/test_reviewed_criteria_pipeline.py -q

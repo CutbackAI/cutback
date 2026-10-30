@@ -25,11 +25,17 @@ def campaign_for_run(session, run):
     return parent, link
 
 
-def reserve_campaign_call(session, run, environment, plan_sha256, purpose, amount):
+def reserve_campaign_call(
+    session, run, environment, plan_sha256, purpose, amount, *, operation=None
+):
     parent, link = campaign_for_run(session, run)
     if parent is None:
         if purpose == "optimization":
-            raise ValueError("PROPOSER_REQUIRES_APPROVED_CAMPAIGN")
+            if operation != "criteria-generation-v1":
+                raise ValueError("PROPOSER_REQUIRES_APPROVED_CAMPAIGN")
+            from cutback.server.criteria_service import reserve_criteria_generation
+
+            reserve_criteria_generation(session, run, environment, plan_sha256, amount)
         return
     now = datetime.now(UTC)
     if (

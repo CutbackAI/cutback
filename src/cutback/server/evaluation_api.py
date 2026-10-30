@@ -46,10 +46,11 @@ from cutback.server.db import (
     RecommendationRecord,
     ScanRun,
 )
-from cutback.server.plan_artifacts import freeze_plan, load_plan
+from cutback.server.plan_artifacts import freeze_plan, load_plan, target_evaluation_clause
 
 
 def policy_object_count(session, policy_id):
+    from cutback.server.criteria_db import CriteriaVersionRecord
     from cutback.server.enterprise_db import CacheEntry
     from cutback.server.quality_db import QualityEvaluation, QualityRule
     from cutback.server.semantic_upload_db import SemanticDatasetUpload
@@ -85,7 +86,20 @@ def policy_object_count(session, policy_id):
         )
         or 0
     )
-    return stored + reserved + uploads
+    criteria_outputs = (
+        session.scalar(
+            select(func.count())
+            .select_from(CriteriaVersionRecord)
+            .where(
+                CriteriaVersionRecord.capture_policy_id == policy_id,
+                CriteriaVersionRecord.output_payload_id.is_(None),
+                CriteriaVersionRecord.state.in_(["PENDING", "QUEUED", "RUNNING"]),
+                CriteriaVersionRecord.expires_at > datetime.now(UTC),
+            )
+        )
+        or 0
+    )
+    return stored + reserved + uploads + criteria_outputs
 
 
 class PlanInput(StrictModel):
@@ -592,9 +606,7 @@ def install_evaluation(app, sessions, authorize, scope):
                     select(ExperimentPlanRecord)
                     .where(
                         ExperimentPlanRecord.project_id == project_id,
-                        ExperimentPlanRecord.specification["public_specification"]["operation"]
-                        .as_string()
-                        .is_distinct_from("candidate-generation-v1"),
+                        target_evaluation_clause(),
                     )
                     .order_by(ExperimentPlanRecord.id)
                     .limit(limit)
@@ -894,6 +906,14 @@ def install_evaluation(app, sessions, authorize, scope):
             loaded_prompts = validate_bindings(
                 session, require_store(app), project_id, body.specification, auth
             )
+            from cutback.server.criteria_service import validate_binding as validate_criteria
+
+            try:
+                reviewed_criteria = validate_criteria(
+                    session, store, project_id, body.specification
+                )
+            except ValueError:
+                raise HTTPException(409, "EXACT_CURRENT_REVIEWED_CRITERIA_REQUIRED") from None
             from cutback.server.stages import validate_stage
 
             try:
@@ -971,6 +991,10 @@ def install_evaluation(app, sessions, authorize, scope):
                         datetime.fromisoformat(frozen["expires_at"]),
                         *(graph.expires_at for _, graph in loaded_prompts),
                     ).isoformat()
+                if reviewed_criteria is not None:
+                    frozen["expires_at"] = min(
+                        datetime.fromisoformat(frozen["expires_at"]), reviewed_criteria.expires_at
+                    ).isoformat()
             except ValueError:
                 raise HTTPException(422, "PLAN_CONTENT_POLICY_DENIED") from None
             refs.append(frozen["artifact_ref"])
@@ -982,6 +1006,9 @@ def install_evaluation(app, sessions, authorize, scope):
             session.add(row)
             session.flush()
             register_bindings(session, project_id, row.id, body.specification, auth, loaded_prompts)
+            from cutback.server.criteria_service import register_binding as register_criteria
+
+            register_criteria(session, project_id, row.id, body.specification, reviewed_criteria)
             session.add(
                 AuditEvent(
                     project_id=project_id,
@@ -1008,6 +1035,9 @@ def install_evaluation(app, sessions, authorize, scope):
                 from cutback.server.prompt_experiments import recheck_bindings
 
                 recheck_bindings(session, store, project_id, row, plan)
+                from cutback.server.criteria_service import validate_binding as validate_criteria
+
+                validate_criteria(session, store, project_id, plan)
             except ValueError as exc:
                 raise HTTPException(409, str(exc)) from None
             session.add(
@@ -1057,6 +1087,11 @@ def install_evaluation(app, sessions, authorize, scope):
             row = session.get(ExperimentPlanRecord, plan_id, with_for_update=True)
             if not row or row.project_id != project_id:
                 raise HTTPException(404, "PLAN_NOT_FOUND")
+            if (
+                row.specification.get("public_specification", {}).get("operation")
+                == "criteria-generation-v1"
+            ):
+                raise HTTPException(409, "CRITERIA_REQUIRES_ITS_SCOPED_GENERATION_APPROVAL")
             if row.approval_status != "pending":
                 raise HTTPException(409, "PLAN_ALREADY_DECIDED")
             if row.specification["plan_hash"] != body.plan_hash:
@@ -1095,6 +1130,9 @@ def install_evaluation(app, sessions, authorize, scope):
                 from cutback.server.prompt_experiments import recheck_bindings
 
                 recheck_bindings(session, require_store(app), project_id, plan, frozen)
+                from cutback.server.criteria_service import validate_binding as validate_criteria
+
+                validate_criteria(session, require_store(app), project_id, frozen)
                 validate_stage(
                     session,
                     require_store(app),
@@ -1144,9 +1182,7 @@ def install_evaluation(app, sessions, authorize, scope):
                 .join(ExperimentPlanRecord, ExperimentPlanRecord.id == ExperimentRunRecord.plan_id)
                 .where(
                     ExperimentRunRecord.project_id == project_id,
-                    ExperimentPlanRecord.specification["public_specification"]["operation"]
-                    .as_string()
-                    .is_distinct_from("candidate-generation-v1"),
+                    target_evaluation_clause(),
                 )
                 .order_by(ExperimentRunRecord.created_at.desc())
                 .limit(limit)
@@ -1313,9 +1349,10 @@ def install_evaluation(app, sessions, authorize, scope):
                 raise HTTPException(404, "RECOMMENDATION_NOT_FOUND")
             if row.status != "pending":
                 raise HTTPException(409, "RECOMMENDATION_ALREADY_REVIEWED")
-            if (
-                body.decision == "accepted_for_staging"
-                and row.evidence.get("evaluator_version") != "deterministic-v3"
+            from cutback.core.evaluation_criteria import source_evaluator_eligible
+
+            if body.decision == "accepted_for_staging" and not source_evaluator_eligible(
+                row.evidence
             ):
                 raise HTTPException(409, "EVALUATOR_REAPPROVAL_REQUIRED")
             if body.decision == "accepted_for_staging" and (
@@ -1354,4 +1391,7 @@ def install_evaluation(app, sessions, authorize, scope):
     from cutback.server.joint_context_api import install_joint_context
 
     install_joint_context(app, sessions, authorize, scope, create_plan)
+    from cutback.server.criteria_api import install_criteria
+
+    install_criteria(app, sessions, authorize, scope, create_plan)
     return import_dataset

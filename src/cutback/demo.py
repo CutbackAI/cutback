@@ -108,6 +108,7 @@ def seed_support_desk(
     guarded_tools=False,
     guarded_security=False,
     joint_model_context=False,
+    reviewed_criteria=False,
 ):
     """Use actual scoped HTTP APIs and the durable worker, retaining the sample project."""
     require_demo_git()
@@ -383,6 +384,11 @@ def seed_support_desk(
                 app, control, project["id"], workspace, joint=joint_model_context
             )
             joint_sample = compression_sample if joint_model_context else None
+            criteria_sample = None
+            if reviewed_criteria:
+                from cutback.demo_criteria import seed_criteria
+
+                criteria_sample = seed_criteria(app, control, project["id"], workspace=workspace)
             ticket_sample = None
             if ticket_router:
                 from cutback.demo_campaign_outcomes import run_sample
@@ -447,6 +453,7 @@ def seed_support_desk(
                 "sample_source": "cutback/sample_app/app.py",
                 "source_diff": patch,
                 "paid_provider_calls": 0,
+                **({"reviewed_criteria_sample": criteria_sample} if criteria_sample else {}),
                 **({"isolated_tool_sample": isolated_sample} if isolated_sample else {}),
                 **({"security_suite_sample": security_sample} if security_sample else {}),
                 **({"runtime_guardrail_sample": runtime_sample} if runtime_sample else {}),
@@ -590,6 +597,7 @@ def launch_demo(
     guarded_tools=False,
     guarded_security=False,
     joint_model_context=False,
+    reviewed_criteria=False,
 ):
     """Own one temporary Docker database. Never connect to production or reuse app keys."""
     require_demo_git()
@@ -724,6 +732,7 @@ def launch_demo(
                 guarded_tools=guarded_tools,
                 guarded_security=guarded_security,
                 joint_model_context=joint_model_context,
+                reviewed_criteria=reviewed_criteria,
             )
             print(
                 f"Ready: {endpoint}/dashboard/\n"

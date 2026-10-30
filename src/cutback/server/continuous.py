@@ -386,7 +386,9 @@ def install_continuous(app, sessions, authorize, scope):
                 "cheaper_on_sample"
             ):
                 raise HTTPException(409, "REQUIRED_COST_AND_QUALITY_GATES_NOT_PASSED")
-            if rec.evidence.get("evaluator_version") != "deterministic-v3":
+            from cutback.core.evaluation_criteria import source_evaluator_eligible
+
+            if not source_evaluator_eligible(rec.evidence):
                 raise HTTPException(409, "EVALUATOR_REAPPROVAL_REQUIRED")
             if rec.evidence.get("lineage", {}).get("fresh_test_claim") is not True:
                 raise HTTPException(409, "TEST_LINEAGE_REAPPROVAL_REQUIRED")

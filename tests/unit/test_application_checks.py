@@ -84,7 +84,12 @@ def test_local_execution_limits_and_failures_are_not_passes(tmp_path, failure):
         "exit": "raise SystemExit(7)",
     }[failure]
     command = ApplicationCommand(
-        key="bounded", arguments=["-c", source], max_output_bytes=100, timeout_seconds=1
+        key="bounded",
+        arguments=["-c", source],
+        max_output_bytes=100,
+        # Only the timeout case is testing a one-second deadline. Process startup
+        # under a loaded clean-host matrix must not relabel exit/output fixtures.
+        timeout_seconds=1 if failure == "timeout" else 10,
     )
     started = time.monotonic()
     result = execute_command(tmp_path, command)
@@ -92,7 +97,8 @@ def test_local_execution_limits_and_failures_are_not_passes(tmp_path, failure):
         result["status"]
         == {"output": "output_limit", "timeout": "timeout", "exit": "failed"}[failure]
     )
-    assert time.monotonic() - started < 5 and "PRIVATE_OUTPUT" not in json.dumps(result)
+    assert time.monotonic() - started < command.timeout_seconds + 4
+    assert "PRIVATE_OUTPUT" not in json.dumps(result)
 
 
 def test_descendants_are_reaped_even_when_direct_process_exits(tmp_path):
