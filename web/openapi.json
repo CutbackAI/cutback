@@ -2385,6 +2385,162 @@
         }
       }
     },
+    "/v1/projects/{project_id}/compression/draft": {
+      "post": {
+        "summary": "Draft",
+        "operationId": "draft_v1_projects__project_id__compression_draft_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompressionDraftInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/compression/confirmation": {
+      "post": {
+        "summary": "Confirm",
+        "operationId": "confirm_v1_projects__project_id__compression_confirmation_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompressionConfirmationInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/compression/{run_id}/proposal": {
+      "post": {
+        "summary": "Proposal",
+        "operationId": "proposal_v1_projects__project_id__compression__run_id__proposal_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentPurpose"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompressionProposal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{project_id}/campaign-templates": {
       "get": {
         "summary": "Templates",
@@ -13609,6 +13765,415 @@
         ],
         "title": "CheckoutInput"
       },
+      "CompressionConfigurationBinding": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "maxLength": 240,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_./-]+$",
+            "title": "File"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Sha256"
+          },
+          "source_tree_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Source Tree Hash"
+          },
+          "commit": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{40,64}$",
+            "title": "Commit"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/CompressionSettings"
+          },
+          "compression_contract_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Compression Contract Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "file",
+          "sha256",
+          "source_tree_hash",
+          "commit",
+          "settings",
+          "compression_contract_sha256"
+        ],
+        "title": "CompressionConfigurationBinding"
+      },
+      "CompressionConfirmationInput": {
+        "properties": {
+          "validation_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Validation Run Id"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/Budget-Input"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "validation_run_id",
+          "budget"
+        ],
+        "title": "CompressionConfirmationInput"
+      },
+      "CompressionDraftInput": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Dataset Id"
+          },
+          "baseline": {
+            "$ref": "#/components/schemas/ModelSpec-Input"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/CompressionSettings"
+          },
+          "metric": {
+            "$ref": "#/components/schemas/MetricSpec"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/Budget-Input"
+          },
+          "candidates": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CompressionSettings"
+                },
+                "type": "array",
+                "maxItems": 5,
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidates"
+          },
+          "assumed_usd_per_cpu_hour": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "decimal_places": 12,
+                "ge": 0,
+                "le": 1000000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assumed Usd Per Cpu Hour"
+          },
+          "max_query_bytes": {
+            "type": "integer",
+            "maximum": 4096.0,
+            "minimum": 1.0,
+            "title": "Max Query Bytes",
+            "default": 1024
+          },
+          "retain_case_outputs": {
+            "type": "boolean",
+            "title": "Retain Case Outputs",
+            "default": false
+          },
+          "configuration_binding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CompressionConfigurationBinding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "baseline",
+          "settings",
+          "metric",
+          "budget"
+        ],
+        "title": "CompressionDraftInput"
+      },
+      "CompressionExecutionSpec-Input": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.compression-execution.v1",
+            "title": "Version",
+            "default": "cutback.compression-execution.v1"
+          },
+          "contract_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Contract Sha256",
+            "default": "ed14197d466c05fa5c6540d3b934ef188c3578d9852d153085f2dd99695ca1d5"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/CompressionVariant"
+            },
+            "type": "array",
+            "maxItems": 6,
+            "minItems": 2,
+            "title": "Variants"
+          },
+          "max_query_bytes": {
+            "type": "integer",
+            "maximum": 4096.0,
+            "minimum": 1.0,
+            "title": "Max Query Bytes",
+            "default": 1024
+          },
+          "assumed_usd_per_cpu_hour": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "decimal_places": 12,
+                "ge": 0,
+                "le": 1000000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assumed Usd Per Cpu Hour"
+          },
+          "cpu_charge_quantum_ms": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Cpu Charge Quantum Ms",
+            "default": 1
+          },
+          "configuration_binding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CompressionConfigurationBinding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "variants"
+        ],
+        "title": "CompressionExecutionSpec"
+      },
+      "CompressionExecutionSpec-Output": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.compression-execution.v1",
+            "title": "Version",
+            "default": "cutback.compression-execution.v1"
+          },
+          "contract_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Contract Sha256",
+            "default": "ed14197d466c05fa5c6540d3b934ef188c3578d9852d153085f2dd99695ca1d5"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/CompressionVariant"
+            },
+            "type": "array",
+            "maxItems": 6,
+            "minItems": 2,
+            "title": "Variants"
+          },
+          "max_query_bytes": {
+            "type": "integer",
+            "maximum": 4096.0,
+            "minimum": 1.0,
+            "title": "Max Query Bytes",
+            "default": 1024
+          },
+          "assumed_usd_per_cpu_hour": {
+            "anyOf": [
+              {
+                "type": "string",
+                "decimal_places": 12,
+                "ge": 0,
+                "le": 1000000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assumed Usd Per Cpu Hour"
+          },
+          "cpu_charge_quantum_ms": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Cpu Charge Quantum Ms",
+            "default": 1
+          },
+          "configuration_binding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CompressionConfigurationBinding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "variants"
+        ],
+        "title": "CompressionExecutionSpec"
+      },
+      "CompressionProposal": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.compression-proposal.v1",
+            "title": "Version",
+            "default": "cutback.compression-proposal.v1"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Run Id"
+          },
+          "plan_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Plan Hash"
+          },
+          "dataset_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Dataset Hash"
+          },
+          "binding": {
+            "$ref": "#/components/schemas/CompressionConfigurationBinding"
+          },
+          "baseline": {
+            "$ref": "#/components/schemas/CompressionSettings"
+          },
+          "proposed": {
+            "$ref": "#/components/schemas/CompressionSettings"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "synthetic_local_review_only",
+              "sample_review_required",
+              "heldout_review_required"
+            ],
+            "title": "Decision"
+          },
+          "production_approval_required": {
+            "type": "boolean",
+            "const": true,
+            "title": "Production Approval Required",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "run_id",
+          "plan_hash",
+          "dataset_hash",
+          "binding",
+          "baseline",
+          "proposed",
+          "decision"
+        ],
+        "title": "CompressionProposal"
+      },
+      "CompressionSettings": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.extractive-context.v1",
+            "title": "Version",
+            "default": "cutback.extractive-context.v1"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "identity",
+              "deduplicate_lines",
+              "query_lines"
+            ],
+            "title": "Mode",
+            "default": "identity"
+          },
+          "max_context_bytes": {
+            "type": "integer",
+            "maximum": 32768.0,
+            "minimum": 64.0,
+            "title": "Max Context Bytes",
+            "default": 8192
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CompressionSettings"
+      },
+      "CompressionVariant": {
+        "properties": {
+          "model_key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Model Key"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/CompressionSettings"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "model_key",
+          "settings"
+        ],
+        "title": "CompressionVariant"
+      },
       "ContentPurpose": {
         "properties": {
           "purpose": {
@@ -14921,7 +15486,8 @@
               "deterministic-v3",
               "deterministic-v4",
               "deterministic-v5",
-              "deterministic-v6"
+              "deterministic-v6",
+              "deterministic-v7"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -14940,6 +15506,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/RetrievalExecutionSpec-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "compression_execution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CompressionExecutionSpec-Input"
               },
               {
                 "type": "null"
@@ -15205,7 +15781,8 @@
               "deterministic-v3",
               "deterministic-v4",
               "deterministic-v5",
-              "deterministic-v6"
+              "deterministic-v6",
+              "deterministic-v7"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -15224,6 +15801,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/RetrievalExecutionSpec-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "compression_execution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CompressionExecutionSpec-Output"
               },
               {
                 "type": "null"

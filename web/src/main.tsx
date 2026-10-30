@@ -39,6 +39,9 @@ const GatewayBudgets = React.lazy(() =>
 const Retrieval = React.lazy(() =>
   import("./retrieval").then((module) => ({ default: module.Retrieval })),
 );
+const Compression = React.lazy(() =>
+  import("./compression").then((module) => ({ default: module.Compression })),
+);
 
 class BudgetViewBoundary extends React.Component<
   { children: React.ReactNode },
@@ -99,6 +102,7 @@ const views = [
   "Task economics",
   "Campaigns",
   "Retrieval",
+  "Compression",
   "Opportunities",
   "Experiments",
   "Review",
@@ -807,6 +811,28 @@ function App() {
                   "editor",
                 ].includes(identity.project_roles?.[project] || identity.role)}
               />
+            )}
+            {view === "Compression" && project && (
+              <BudgetViewBoundary key={project}>
+                <React.Suspense
+                  fallback={<p role="status">Loading context compression…</p>}
+                >
+                  <Compression
+                    key={project}
+                    api={api}
+                    project={project}
+                    canApprove={admin}
+                    canWrite={[
+                      "admin",
+                      "project_admin",
+                      "analyst",
+                      "editor",
+                    ].includes(
+                      identity.project_roles?.[project] || identity.role,
+                    )}
+                  />
+                </React.Suspense>
+              </BudgetViewBoundary>
             )}
             {view === "Retrieval" && project && (
               <BudgetViewBoundary key={project}>

@@ -359,6 +359,9 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
             from cutback.demo_retrieval import seed_retrieval
 
             retrieval_sample = seed_retrieval(app, control, project["id"], workspace)
+            from cutback.demo_compression import seed_compression
+
+            compression_sample = seed_compression(app, control, project["id"], workspace)
             manifest = {
                 "available": True,
                 "title": "Support-desk triage",
@@ -381,6 +384,17 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
                 "improvement_campaign_sample": campaign_sample,
                 "retrieval_sample": {
                     key: retrieval_sample[key]
+                    for key in (
+                        "dataset_id",
+                        "validation_run_id",
+                        "confirmation_run_id",
+                        "native_sdk_calls",
+                        "source_change",
+                        "paid_provider_calls",
+                    )
+                },
+                "compression_sample": {
+                    key: compression_sample[key]
                     for key in (
                         "dataset_id",
                         "validation_run_id",

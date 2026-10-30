@@ -1,0 +1,111 @@
+{
+  "status": "bounded_increment_merged_and_accepted",
+  "public_pr": "https://github.com/CutbackAI/cutback/pull/40",
+  "public_head": "507da2c1d959703ef1d7331050bf6748522b7720",
+  "public_merge": "6cec73ab4af4bfbf9bfc936c14fce915f25075b4",
+  "merged_tree": "f510261aef237944215d98fd8a856cd476e486e8",
+  "wheel_sha256": "34fa9144c431c504885b286f358e5985c68c96c984043fa0a2e9d940e9b95c09",
+  "application_files": 231,
+  "python_modules": 216,
+  "metadata_files": 5,
+  "source_default_combined": {
+    "passed": 105,
+    "skipped": 2,
+    "seconds": 104.71
+  },
+  "source_sdk3_combined": {
+    "passed": 105,
+    "skipped": 2,
+    "seconds": 104.6
+  },
+  "installed_default": {
+    "passed": 764,
+    "skipped": 24,
+    "seconds": 449.19,
+    "exit_code": 0
+  },
+  "installed_sdk3": {
+    "passed": 781,
+    "skipped": 7,
+    "seconds": 453.93,
+    "exit_code": 0
+  },
+  "exact_head_required_checks": {
+    "passed": 10,
+    "failed": 0
+  },
+  "hosted_tests": {
+    "infrastructure/6_Run uv run pytest tests_contract_test_helm.py -q.txt": [
+      {
+        "passed": 5,
+        "skipped": 0,
+        "seconds": 1.56
+      }
+    ],
+    "verify (3.11.18)/18_Run uv run pytest --cov=cutback --cov-report=term-missing --cov-report=xml.txt": [
+      {
+        "passed": 1203,
+        "skipped": 30,
+        "seconds": 993.05
+      }
+    ],
+    "legacy-sdk (3.13.18)/6_Run _tmp_cutback-legacy_bin_python -m pytest tests_unit_test_legacy_sdk.py tests_unit_test_scanner.py tests_unit_test_scanner_extended.py tests_unit_test_scanner_lazy.py -q.txt": [
+      {
+        "passed": 21,
+        "skipped": 0,
+        "seconds": 0.84
+      }
+    ],
+    "legacy-sdk (3.11.18)/6_Run _tmp_cutback-legacy_bin_python -m pytest tests_unit_test_legacy_sdk.py tests_unit_test_scanner.py tests_unit_test_scanner_extended.py tests_unit_test_scanner_lazy.py -q.txt": [
+      {
+        "passed": 21,
+        "skipped": 0,
+        "seconds": 0.78
+      }
+    ],
+    "openai3-sdk (3.11.18)/6_Qualify native observer, worker and approval boundaries.txt": [
+      {
+        "passed": 992,
+        "skipped": 6,
+        "seconds": 325.63
+      }
+    ],
+    "openai3-sdk (3.13.18)/6_Qualify native observer, worker and approval boundaries.txt": [
+      {
+        "passed": 993,
+        "skipped": 5,
+        "seconds": 295.5
+      }
+    ],
+    "verify (3.13.18)/18_Run uv run pytest --cov=cutback --cov-report=term-missing --cov-report=xml.txt": [
+      {
+        "passed": 1202,
+        "skipped": 31,
+        "seconds": 958.33
+      }
+    ]
+  },
+  "boundary": {
+    "source_files": 736,
+    "public_history_objects": 2989,
+    "archive_members": 968,
+    "findings": 0
+  },
+  "paid_calls": 0,
+  "pypi_upload": false,
+  "production_deployed": false,
+  "whole_product_complete": false,
+  "date": "2026-10-29",
+  "scope": [
+    "parse-only local namespace model references with exact origins",
+    "static client destination alias/mutation rejection and safe agent qualification action"
+  ],
+  "serialization": "previous approvals preserved",
+  "released_migrations_unchanged": "0001 through 0020",
+  "pypi_release": "0.1.0.dev5 remains earlier published package; qualification artifacts were not uploaded",
+  "limits": [
+    "static module configuration only; runtime factories, environment routing and opaque transports require qualification",
+    "not every framework, provider or dynamic instruction adapter",
+    "broader market-baseline engineering remains unfinished"
+  ]
+}

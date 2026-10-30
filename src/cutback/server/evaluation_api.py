@@ -1174,4 +1174,7 @@ def install_evaluation(app, sessions, authorize, scope):
     from cutback.server.prompt_playground import install_prompt_playground
 
     install_prompt_playground(app, sessions, authorize, scope, create_plan)
+    from cutback.server.compression_api import install_compression
+
+    install_compression(app, sessions, authorize, scope, create_plan)
     return import_dataset

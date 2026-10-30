@@ -134,6 +134,7 @@ class ImprovementCampaign(StrictModel):
             or plan.pilot_samples
             or plan.episode_execution
             or plan.retrieval_execution
+            or plan.compression_execution
             or plan.prompt_bindings
         ):
             raise ValueError("CAMPAIGN_REQUIRES_UNSTAGED_NATIVE_VALIDATION_TEMPLATE")

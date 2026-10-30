@@ -697,6 +697,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/compression/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Draft */
+        post: operations["draft_v1_projects__project_id__compression_draft_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/compression/confirmation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm */
+        post: operations["confirm_v1_projects__project_id__compression_confirmation_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/compression/{run_id}/proposal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Proposal */
+        post: operations["proposal_v1_projects__project_id__compression__run_id__proposal_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/campaign-templates": {
         parameters: {
             query?: never;
@@ -3802,6 +3853,172 @@ export interface components {
              */
             request_id: string;
         };
+        /** CompressionConfigurationBinding */
+        CompressionConfigurationBinding: {
+            /** File */
+            file: string;
+            /** Sha256 */
+            sha256: string;
+            /** Source Tree Hash */
+            source_tree_hash: string;
+            /** Commit */
+            commit: string;
+            settings: components["schemas"]["CompressionSettings"];
+            /** Compression Contract Sha256 */
+            compression_contract_sha256: string;
+        };
+        /** CompressionConfirmationInput */
+        CompressionConfirmationInput: {
+            /**
+             * Validation Run Id
+             * Format: uuid
+             */
+            validation_run_id: string;
+            budget: components["schemas"]["Budget-Input"];
+        };
+        /** CompressionDraftInput */
+        CompressionDraftInput: {
+            /**
+             * Dataset Id
+             * Format: uuid
+             */
+            dataset_id: string;
+            baseline: components["schemas"]["ModelSpec-Input"];
+            settings: components["schemas"]["CompressionSettings"];
+            metric: components["schemas"]["MetricSpec"];
+            budget: components["schemas"]["Budget-Input"];
+            /** Candidates */
+            candidates?: components["schemas"]["CompressionSettings"][] | null;
+            /** Assumed Usd Per Cpu Hour */
+            assumed_usd_per_cpu_hour?: (number | string) | null;
+            /**
+             * Max Query Bytes
+             * @default 1024
+             */
+            max_query_bytes: number;
+            /**
+             * Retain Case Outputs
+             * @default false
+             */
+            retain_case_outputs: boolean;
+            configuration_binding?: components["schemas"]["CompressionConfigurationBinding"] | null;
+        };
+        /** CompressionExecutionSpec */
+        "CompressionExecutionSpec-Input": {
+            /**
+             * Version
+             * @default cutback.compression-execution.v1
+             * @constant
+             */
+            version: "cutback.compression-execution.v1";
+            /**
+             * Contract Sha256
+             * @default ed14197d466c05fa5c6540d3b934ef188c3578d9852d153085f2dd99695ca1d5
+             */
+            contract_sha256: string;
+            /** Variants */
+            variants: components["schemas"]["CompressionVariant"][];
+            /**
+             * Max Query Bytes
+             * @default 1024
+             */
+            max_query_bytes: number;
+            /** Assumed Usd Per Cpu Hour */
+            assumed_usd_per_cpu_hour?: (number | string) | null;
+            /**
+             * Cpu Charge Quantum Ms
+             * @default 1
+             */
+            cpu_charge_quantum_ms: number;
+            configuration_binding?: components["schemas"]["CompressionConfigurationBinding"] | null;
+        };
+        /** CompressionExecutionSpec */
+        "CompressionExecutionSpec-Output": {
+            /**
+             * Version
+             * @default cutback.compression-execution.v1
+             * @constant
+             */
+            version: "cutback.compression-execution.v1";
+            /**
+             * Contract Sha256
+             * @default ed14197d466c05fa5c6540d3b934ef188c3578d9852d153085f2dd99695ca1d5
+             */
+            contract_sha256: string;
+            /** Variants */
+            variants: components["schemas"]["CompressionVariant"][];
+            /**
+             * Max Query Bytes
+             * @default 1024
+             */
+            max_query_bytes: number;
+            /** Assumed Usd Per Cpu Hour */
+            assumed_usd_per_cpu_hour?: string | null;
+            /**
+             * Cpu Charge Quantum Ms
+             * @default 1
+             */
+            cpu_charge_quantum_ms: number;
+            configuration_binding?: components["schemas"]["CompressionConfigurationBinding"] | null;
+        };
+        /** CompressionProposal */
+        CompressionProposal: {
+            /**
+             * Version
+             * @default cutback.compression-proposal.v1
+             * @constant
+             */
+            version: "cutback.compression-proposal.v1";
+            /**
+             * Run Id
+             * Format: uuid
+             */
+            run_id: string;
+            /** Plan Hash */
+            plan_hash: string;
+            /** Dataset Hash */
+            dataset_hash: string;
+            binding: components["schemas"]["CompressionConfigurationBinding"];
+            baseline: components["schemas"]["CompressionSettings"];
+            proposed: components["schemas"]["CompressionSettings"];
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "synthetic_local_review_only" | "sample_review_required" | "heldout_review_required";
+            /**
+             * Production Approval Required
+             * @default true
+             * @constant
+             */
+            production_approval_required: true;
+        };
+        /** CompressionSettings */
+        CompressionSettings: {
+            /**
+             * Version
+             * @default cutback.extractive-context.v1
+             * @constant
+             */
+            version: "cutback.extractive-context.v1";
+            /**
+             * Mode
+             * @default identity
+             * @enum {string}
+             */
+            mode: "identity" | "deduplicate_lines" | "query_lines";
+            /**
+             * Max Context Bytes
+             * @default 8192
+             */
+            max_context_bytes: number;
+        };
+        /** CompressionVariant */
+        CompressionVariant: {
+            /** Model Key */
+            model_key: string;
+            settings: components["schemas"]["CompressionSettings"];
+        };
         /** ContentPurpose */
         ContentPurpose: {
             /** Purpose */
@@ -4317,9 +4534,10 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
             retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Input"] | null;
+            compression_execution?: components["schemas"]["CompressionExecutionSpec-Input"] | null;
             source_binding?: components["schemas"]["SourceBinding"] | null;
             /** Prompt Bindings */
             prompt_bindings?: components["schemas"]["PromptModelBinding"][] | null;
@@ -4414,9 +4632,10 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
             retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Output"] | null;
+            compression_execution?: components["schemas"]["CompressionExecutionSpec-Output"] | null;
             source_binding?: components["schemas"]["SourceBinding"] | null;
             /** Prompt Bindings */
             prompt_bindings?: components["schemas"]["PromptModelBinding"][] | null;
@@ -9897,6 +10116,112 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    draft_v1_projects__project_id__compression_draft_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompressionDraftInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_v1_projects__project_id__compression_confirmation_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompressionConfirmationInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    proposal_v1_projects__project_id__compression__run_id__proposal_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentPurpose"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompressionProposal"];
                 };
             };
             /** @description Validation Error */

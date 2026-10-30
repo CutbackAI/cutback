@@ -171,6 +171,15 @@ export function createSDK(request:Request) {return {
   prepare_playground_v1_projects__project_id__prompts_playground_post: (args:{project_id:string;body:components["schemas"]["PromptPlayground"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/prompts/playground`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  draft_v1_projects__project_id__compression_draft_post: (args:{project_id:string;body:components["schemas"]["CompressionDraftInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/compression/draft`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  confirm_v1_projects__project_id__compression_confirmation_post: (args:{project_id:string;body:components["schemas"]["CompressionConfirmationInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/compression/confirmation`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  proposal_v1_projects__project_id__compression__run_id__proposal_post: (args:{project_id:string;run_id:string;body:components["schemas"]["ContentPurpose"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/compression/${encodeURIComponent(String(args.run_id))}/proposal`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   templates_v1_projects__project_id__campaign_templates_get: (args:{project_id:string;after?:string | null;limit?:number}) => {
     const query=new URLSearchParams();
     if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
