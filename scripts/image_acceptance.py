@@ -446,7 +446,7 @@ with sessions() as session:
   from cutback.evals.compression import JointModelContextExecutionSpec
   from cutback.server.plan_artifacts import load_plan
   joint_plans=[row for row in plans if
-   row.specification["public_specification"]["evaluator_version"]=="deterministic-v12"]
+   row.specification["public_specification"].get("evaluator_version")=="deterministic-v12"]
   assert len(joint_plans)==2
   joint_ids=[row.id for row in joint_plans]
   joint_runs=session.scalars(select(ExperimentRunRecord).where(
