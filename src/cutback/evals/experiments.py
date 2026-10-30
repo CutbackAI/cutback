@@ -23,7 +23,11 @@ from cutback.core.native_models import NativeModelContract, validate_luna_text_c
 from cutback.core.observation import observation_scope
 from cutback.core.request_profiles import RequestContract, SourceBinding
 from cutback.core.security_suites import SecurityEvaluationSpec
-from cutback.evals.compression import CompressionExecutionSpec, CompressionProcessor
+from cutback.evals.compression import (
+    CompressionExecutionSpec,
+    CompressionProcessor,
+    JointModelContextExecutionSpec,
+)
 from cutback.evals.datasets import digest
 from cutback.evals.metrics import MetricSpec, evaluate, grouped_confidence
 from cutback.evals.retrieval import RetrievalExecutionSpec, RetrievalProcessor
@@ -307,10 +311,11 @@ class ExperimentPlan(StrictModel):
         "deterministic-v9",
         "deterministic-v10",
         "deterministic-v11",
+        "deterministic-v12",
     ] = "deterministic-v3"
     episode_execution: EpisodeExecutionSpec | None = None
     retrieval_execution: RetrievalExecutionSpec | None = None
-    compression_execution: CompressionExecutionSpec | None = None
+    compression_execution: CompressionExecutionSpec | JointModelContextExecutionSpec | None = None
     source_binding: SourceBinding | None = None
     prompt_bindings: list[PromptModelBinding] | None = Field(
         default=None, min_length=1, max_length=6
@@ -336,8 +341,23 @@ class ExperimentPlan(StrictModel):
     def eligibility(self):
         if self.compression_execution:
             compression = self.compression_execution
+            joint = isinstance(compression, JointModelContextExecutionSpec)
             if (
-                self.evaluator_version != "deterministic-v7"
+                isinstance(compression, JointModelContextExecutionSpec)
+                and compression.producer_binding
+            ):
+                producer = compression.producer_binding
+                if (
+                    self.baseline.provider != producer.provider
+                    or self.baseline.model != producer.model
+                    or self.baseline.max_output_tokens != producer.max_output_tokens
+                    or self.baseline.instruction
+                    or self.baseline.request_contract
+                    or self.baseline.native_contract
+                ):
+                    raise ValueError("JOINT_BASELINE_DIFFERS_FROM_QUALIFIED_SOURCE_PRODUCER")
+            if (
+                self.evaluator_version != ("deterministic-v12" if joint else "deterministic-v7")
                 or self.episode_execution
                 or self.retrieval_execution
                 or self.source_binding
@@ -353,16 +373,21 @@ class ExperimentPlan(StrictModel):
             models = [self.baseline, *self.candidates]
             if [v.model_key for v in compression.variants] != [m.key for m in models]:
                 raise ValueError("COMPRESSION_VARIANTS_MUST_MATCH_ALL_MODEL_KEYS_IN_ORDER")
-            original = self.baseline.model_dump(mode="json", exclude={"key"})
+            excluded = {"key", "model", "max_output_tokens"} if joint else {"key"}
+            original = self.baseline.model_dump(mode="json", exclude=excluded)
             for model in models:
                 if (
                     model.provider not in {"openai", "anthropic"}
                     or model.routes
                     or model.prompt_cache
                     or model.agent_turn is not None
-                    or model.model_dump(mode="json", exclude={"key"}) != original
+                    or model.model_dump(mode="json", exclude=excluded) != original
+                    or joint
+                    and model.max_output_tokens > self.baseline.max_output_tokens
                 ):
                     raise ValueError("COMPRESSION_MUST_PRESERVE_NATIVE_MODEL_CONFIGURATION")
+                if joint:
+                    qualified_native_model(model)
                 contract = model.request_contract
                 if contract is not None and (
                     contract.version != "native-text-v1"
@@ -481,7 +506,9 @@ class ExperimentPlan(StrictModel):
         elif (
             self.evaluator_version
             != (
-                "deterministic-v7"
+                "deterministic-v12"
+                if isinstance(self.compression_execution, JointModelContextExecutionSpec)
+                else "deterministic-v7"
                 if self.compression_execution
                 else "deterministic-v6"
                 if self.retrieval_execution
@@ -926,10 +953,17 @@ def run(
     )
     processor: CompressionProcessor | RetrievalProcessor | None = None
     if plan.compression_execution:
+        if (
+            isinstance(plan.compression_execution, JointModelContextExecutionSpec)
+            and plan.compression_execution.transport == "scripted_test_only"
+            and getattr(executor, "synthetic_transport", False) is not True
+        ):
+            raise ValueError("SCRIPTED_JOINT_SEARCH_REQUIRES_EXPLICIT_SYNTHETIC_EXECUTOR")
         processor = CompressionProcessor(
             plan.compression_execution,
             check=check_authority,
             deadline=ledger.started + plan.budget.max_wall_seconds,
+            split=plan.split,
         )
         ledger.prepare_input = processor.prepare
     dataset, input_grouping = effective_input_groups(
@@ -1046,6 +1080,10 @@ def run(
                                 routed_counts.get(result.actual_model, 0) + 1
                             )
                     except (TimeoutError, ConnectionError):
+                        if isinstance(plan.compression_execution, JointModelContextExecutionSpec):
+                            raise ValueError(
+                                "JOINT_NATIVE_CALL_UNCERTAIN_NO_FURTHER_REQUESTS"
+                            ) from None
                         answers.append(None)
                 evidence = evaluate(
                     cases, answers, plan.metric, independent_labels=independent_labels

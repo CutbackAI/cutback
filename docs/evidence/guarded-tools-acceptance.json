@@ -1,0 +1,199 @@
+{
+  "version": "cutback.source-acceptance.v1",
+  "scope": "guarded-isolated-record-tools",
+  "reviewed_head": "dd29b6138f4ffa95127f64902a4ebcf323443f79",
+  "merge_commit": "30e4070cd5eea102f43b692fe95db500b0b29453",
+  "merged_at": "2026-10-30T15:27:47Z",
+  "accepted_tree": "3db59b3466f1d5211a264c27cdb48ac5c605ab8b",
+  "local_installed_default": {
+    "passed": 1552,
+    "skipped": 33,
+    "seconds": 2931.35
+  },
+  "local_installed_sdk3": {
+    "passed": 1320,
+    "skipped": 7,
+    "seconds": 1708.23
+  },
+  "hosted": [
+    {
+      "run_id": 41074820041,
+      "jobs": [
+        {
+          "name": "infrastructure",
+          "id": 124128558211,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 7,
+              "skipped": 0,
+              "seconds": 2.35
+            }
+          ]
+        },
+        {
+          "name": "legacy-sdk (3.11.18)",
+          "id": 124128558577,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 0.6
+            }
+          ]
+        },
+        {
+          "name": "isolated-tools",
+          "id": 124128558613,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 8,
+              "skipped": 0,
+              "seconds": 67.74
+            }
+          ]
+        },
+        {
+          "name": "verify (3.13.18)",
+          "id": 124128558669,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1546,
+              "skipped": 39,
+              "seconds": 1040.95
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.13.18)",
+          "id": 124128558739,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1311,
+              "skipped": 7,
+              "seconds": 555.75
+            }
+          ]
+        },
+        {
+          "name": "verify (3.11.18)",
+          "id": 124128558780,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1547,
+              "skipped": 38,
+              "seconds": 1208.68
+            }
+          ]
+        },
+        {
+          "name": "legacy-sdk (3.13.18)",
+          "id": 124128558946,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 0.84
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.11.18)",
+          "id": 124128558953,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1310,
+              "skipped": 8,
+              "seconds": 569.39
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": 41074820040,
+      "jobs": [
+        {
+          "name": "codeql (python)",
+          "id": 124128075489,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "codeql (javascript-typescript)",
+          "id": 124128075916,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "audit",
+          "id": 124128076190,
+          "conclusion": "success",
+          "tests": []
+        }
+      ]
+    }
+  ],
+  "archives": {
+    "cutback-0.1.0.dev5-py3-none-any.whl": "e3f8e4454ca6bcdf3aec1df5a68fedc20b9cd90d0a7fade08cdbf812cda07293",
+    "cutback-0.1.0.dev5.tar.gz": "9653835b6e50efc5f8832393de3f18045124b4340ee45c8e7bac23bff192b7c1"
+  },
+  "image": {
+    "image": "cutback-qualification:guarded-tools",
+    "image_id": "sha256:3fb9a6207bf692fe3c361deb805373bc5fb4cb3f97b7ece78ebdb09174cc1c03",
+    "uid": 10001,
+    "python": "3.11.18",
+    "migration": "0026",
+    "sample_application_calls": 23,
+    "source_linked_support_desk_calls": 12,
+    "source_workflows": 2,
+    "application_workflows": 4,
+    "paid_provider_calls": 0,
+    "native_batch_fixture_restored": true,
+    "guarded_tool_effects_and_delivery_restored": true,
+    "restored_tables": 95,
+    "row_counts_match": true,
+    "restored_and_rekeyed_objects": 1492,
+    "restored_and_rekeyed_cache_objects": 1,
+    "restored_and_rekeyed_plans": 18,
+    "semantic_qualified_catalog_restored": true,
+    "isolated_tool_receipts_restored": true,
+    "paired_security_suite_restored": true,
+    "runtime_guardrail_receipts_restored": true,
+    "database_pointers_preserved": true,
+    "production_changed": false,
+    "secret_delivery": "anonymous_stdin_pipes_and_scoped_memory_clients",
+    "independent_otel_producer_and_replay": "passed",
+    "concurrent_load": {
+      "tenants": 2,
+      "accepted": 2000,
+      "duplicates": 2000,
+      "seconds": 2.125,
+      "production_sla": false
+    }
+  },
+  "publication_boundary": {
+    "files_checked": 933,
+    "history_objects_checked": 3940,
+    "archive_members_checked": 1249,
+    "findings": 0,
+    "private_marker_values_logged": false
+  },
+  "scope_limits": [
+    "Two existing isolated scoped record operations only; no arbitrary production tools.",
+    "A known SQL write remains an observed effect even when output delivery is withheld.",
+    "A lost write acknowledgement is uncertain and is never automatically replayed.",
+    "Known policy decisions do not establish semantic safety or general coverage.",
+    "Synthetic native replies do not establish real customer quality or savings."
+  ],
+  "paid_provider_calls": 0,
+  "production_changed": false,
+  "pypi_uploaded": false
+}

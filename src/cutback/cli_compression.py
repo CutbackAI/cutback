@@ -6,13 +6,14 @@ from typing import Annotated
 import typer
 
 
-def register_compression(app, output, request, fail):
+def register_compression(app, output, request, fail, *, joint=False):
+    route = "model-context" if joint else "compression"
     group = typer.Typer(
         no_args_is_help=True, help="Prepare context compression search and review changes."
     )
-    app.add_typer(group, name="compression")
+    app.add_typer(group, name=route)
 
-    @group.command("inspect-config")
+    @group.command("inspect-producer" if joint else "inspect-config")
     def inspect(
         root: Path, configuration: str, destination: Annotated[Path, typer.Option("--output")]
     ):
@@ -20,7 +21,13 @@ def register_compression(app, output, request, fail):
         from cutback.compression_changes import inspect_configuration
 
         try:
-            settings, binding = inspect_configuration(root, configuration)
+            producer = None
+            if joint:
+                from cutback.joint_context_changes import inspect_producer
+
+                settings, binding, producer = inspect_producer(root, configuration)
+            else:
+                settings, binding = inspect_configuration(root, configuration)
         except (ValueError, OSError):
             fail(
                 "COMPRESSION_CONFIGURATION_NOT_QUALIFIED",
@@ -35,6 +42,7 @@ def register_compression(app, output, request, fail):
             {
                 "settings": settings.model_dump(mode="json"),
                 "configuration_binding": binding.model_dump(mode="json"),
+                **({"producer_binding": producer.model_dump(mode="json")} if producer else {}),
             },
             destination,
         )
@@ -60,7 +68,7 @@ def register_compression(app, output, request, fail):
                 "COMPRESSION_DRAFT_INPUT_INVALID", "Use the documented compression draft contract."
             )
         output(
-            request("POST", endpoint, f"/v1/projects/{project}/compression/draft", json=body),
+            request("POST", endpoint, f"/v1/projects/{project}/{route}/draft", json=body),
             destination,
         )
 
@@ -99,7 +107,7 @@ def register_compression(app, output, request, fail):
             request(
                 "POST",
                 endpoint,
-                f"/v1/projects/{project}/compression/confirmation",
+                f"/v1/projects/{project}/{route}/confirmation",
                 json={"validation_run_id": run, "budget": budget.model_dump(mode="json")},
             ),
             destination,
@@ -121,6 +129,14 @@ def register_compression(app, output, request, fail):
         from pydantic import TypeAdapter
 
         from cutback.compression_changes import CompressionProposal, prepare_patch
+
+        if joint:
+            from cutback.joint_context_changes import (
+                JointContextProposal,
+            )
+            from cutback.joint_context_changes import (
+                prepare_patch as joint_patch,
+            )
         from cutback.core.models import Identifier
 
         try:
@@ -132,11 +148,15 @@ def register_compression(app, output, request, fail):
             source = request(
                 "POST",
                 endpoint,
-                f"/v1/projects/{project}/compression/{run}/proposal",
+                f"/v1/projects/{project}/{route}/{run}/proposal",
                 json={"purpose": purpose},
                 token_env="CUTBACK_ADMIN_TOKEN",
             )
-            change = prepare_patch(root, CompressionProposal.model_validate(source))
+            change = (
+                joint_patch(root, JointContextProposal.model_validate(source))
+                if joint
+                else prepare_patch(root, CompressionProposal.model_validate(source))
+            )
         except (ValueError, OSError):
             fail(
                 "COMPRESSION_PROPOSAL_NOT_QUALIFIED",
@@ -159,10 +179,22 @@ def register_compression(app, output, request, fail):
         from cutback.cli_checks import read
         from cutback.compression_changes import CompressionProposal, prepare_patch
 
+        if joint:
+            from cutback.joint_context_changes import (
+                JointContextProposal,
+            )
+            from cutback.joint_context_changes import (
+                prepare_patch as joint_patch,
+            )
+
         try:
             if destination.resolve().is_relative_to(root.resolve()):
                 raise ValueError("output")
-            result = prepare_patch(root, CompressionProposal.model_validate(read(proposal_file)))
+            result = (
+                joint_patch(root, JointContextProposal.model_validate(read(proposal_file)))
+                if joint
+                else prepare_patch(root, CompressionProposal.model_validate(read(proposal_file)))
+            )
         except (ValueError, OSError):
             fail(
                 "COMPRESSION_PATCH_INPUT_OR_SOURCE_CHANGED",
@@ -189,6 +221,9 @@ def register_compression(app, output, request, fail):
         """Verify exact local checks and optionally create a review ref. Never pushes."""
         from cutback.cli_checks import read
         from cutback.compression_changes import review_change
+
+        if joint:
+            from cutback.joint_context_changes import review_change as review_change
 
         try:
             if any(

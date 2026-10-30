@@ -90,6 +90,7 @@ The commands above target the published dev5 package. For the newer source-check
 | Try a cheaper model/cap first, then generate instructions only if needed | [Runnable campaign, confirmation and rollback, source checkout](https://github.com/CutbackAI/cutback/blob/main/examples/improvement-campaign/README.md) |
 | Optimize actual corpus chunking and retrieval context | [Independent RAG application and confirmation workflow](https://github.com/CutbackAI/cutback/blob/main/examples/retrieval-optimization/README.md) |
 | Compare original and compressed context against answer-quality requirements | [Independent context application, native/CPU costs, confirmation and checked rollback](https://github.com/CutbackAI/cutback/blob/main/examples/context-compression/README.md) |
+| Search model and context choices together, then review one combined source change | [Independent joint-search application and agent walkthrough](https://github.com/CutbackAI/cutback/blob/main/examples/model-context-search/README.md) |
 | Connect a reviewed change to later task outcomes | [`--outcomes` sample and agent follow-up](https://github.com/CutbackAI/cutback/blob/main/docs/campaign-outcomes.md) |
 | Prepare instruction search from a cheapest-model application | [`workflow prepare --for-campaign` and vendor scope](https://github.com/CutbackAI/cutback/blob/main/docs/improvement-campaigns.md) |
 | Keep an existing OpenAI 3.35.1 application pin | [Separate locked SDK qualification and limits](https://github.com/CutbackAI/cutback/blob/main/infra/sdk-compat/README.md) |

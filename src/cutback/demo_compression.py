@@ -10,7 +10,7 @@ from unittest.mock import patch
 from uuid import UUID, uuid4
 
 
-def synthetic_executor():
+def synthetic_executor(*, joint=False):
     import httpx
 
     from cutback.evals.executors import OpenAIExecutor
@@ -28,6 +28,8 @@ def synthetic_executor():
         calls.append(len(text.encode()))
         fact = re.search(r"\bdeadline-days=(\d+)\b", frame["context"])
         answer = fact.group(1) if fact else "unknown"
+        if joint and body["model"] == "gpt-4.1-mini" and len(frame["context"].splitlines()) > 3:
+            answer = "unknown"
         count = len(text.encode())  # Synthetic usage, never a real tokenizer measurement.
         return httpx.Response(
             200,
@@ -66,7 +68,7 @@ def synthetic_executor():
     return executor, calls
 
 
-def seed_compression(app, control, project_id, workspace, *, execute=True):
+def seed_compression(app, control, project_id, workspace, *, execute=True, joint=False):
     from cutback.compression_changes import (
         CompressionProposal,
         inspect_configuration,
@@ -90,6 +92,9 @@ def seed_compression(app, control, project_id, workspace, *, execute=True):
     workspace.mkdir(parents=True, exist_ok=True)
     root = private_directory(workspace, "compression-" + uuid4().hex)
     shutil.copyfile(Path(__file__).parent / "sample_app/compression.py", root / "app.py")
+    if joint:
+        path = root / "app.py"
+        path.write_bytes(path.read_bytes().replace(b'model="gpt-4.1-mini"', b'model="gpt-4.1"'))
     settings = CompressionSettings(max_context_bytes=1024)
     (root / "compression.json").write_text(
         settings.model_dump_json(indent=2) + "\n", encoding="utf-8"
@@ -126,7 +131,13 @@ def seed_compression(app, control, project_id, workspace, *, execute=True):
         "Independent synthetic context application",
     )
     _, binding = inspect_configuration(root, "compression.json")
-    workflow = "synthetic-context-compression"
+    producer = None
+    if joint:
+        from cutback.joint_context_changes import inspect_producer
+
+        _, _, producer = inspect_producer(root, "app.py")
+    route = "model-context" if joint else "compression"
+    workflow = "synthetic-joint-model-context" if joint else "synthetic-context-compression"
     policy = post(
         base + "/capture-policies",
         {
@@ -158,21 +169,23 @@ def seed_compression(app, control, project_id, workspace, *, execute=True):
     result = {
         "dataset_id": dataset["id"],
         "configuration_binding": binding.model_dump(mode="json"),
+        **({"producer_binding": producer.model_dump(mode="json")} if producer else {}),
         "source_directory": str(root),
         "paid_provider_calls": 0,
     }
     if not execute:
         return result
     plan = post(
-        base + "/compression/draft",
+        base + f"/{route}/draft",
         {
             "dataset_id": dataset["id"],
             "settings": settings.model_dump(mode="json"),
             "configuration_binding": binding.model_dump(mode="json"),
+            **({"producer_binding": producer.model_dump(mode="json")} if producer else {}),
             "baseline": {
                 "key": "baseline",
                 "provider": "openai",
-                "model": "gpt-4.1-mini",
+                "model": "gpt-4.1" if joint else "gpt-4.1-mini",
                 "max_input_tokens": 20000,
                 "max_output_tokens": 128,
             },
@@ -187,7 +200,7 @@ def seed_compression(app, control, project_id, workspace, *, execute=True):
             "retain_case_outputs": True,
         },
     )
-    executor, calls = synthetic_executor()
+    executor, calls = synthetic_executor(joint=joint)
 
     def execute_plan(plan):
         post(
@@ -209,19 +222,30 @@ def seed_compression(app, control, project_id, workspace, *, execute=True):
     try:
         validation = execute_plan(plan)
         confirmation = post(
-            base + "/compression/confirmation",
+            base + f"/{route}/confirmation",
             {"validation_run_id": validation, "budget": {"max_usd": "1", "max_requests": 100}},
         )
         confirmation_id = execute_plan(confirmation)
         proposal = post(
-            base + f"/compression/{confirmation_id}/proposal",
+            base + f"/{route}/{confirmation_id}/proposal",
             {"purpose": "synthetic-source-review"},
         )
+        if joint:
+            from cutback.joint_context_changes import (
+                JointContextProposal,
+            )
+            from cutback.joint_context_changes import (
+                prepare_patch as joint_patch,
+            )
+
+            change = joint_patch(root, JointContextProposal.model_validate(proposal))
+        else:
+            change = prepare_patch(root, CompressionProposal.model_validate(proposal))
         result.update(
             validation_run_id=validation,
             confirmation_run_id=confirmation_id,
             native_sdk_calls=len(calls),
-            source_change=prepare_patch(root, CompressionProposal.model_validate(proposal)),
+            source_change=change,
         )
         return result
     finally:

@@ -30,23 +30,28 @@ def setup(api, tenant, tmp_path, monkeypatch):
     return f"/v1/projects/{tenant[0]}"
 
 
+@pytest.mark.parametrize("joint", [False, True])
 def test_corpus_native_pipeline_prepares_exact_diff_and_passes_both_application_trees(
-    api, tenant, tmp_path, monkeypatch
+    api, tenant, tmp_path, monkeypatch, joint
 ):
     from cutback.application_check_discovery import discover
     from cutback.application_checks import ApplicationCheckContract, run_checks, verify
     from cutback.compression_changes import review_change
+
+    if joint:
+        from cutback.joint_context_changes import review_change as review_change
 
     setup(api, tenant, tmp_path, monkeypatch)
     with (
         server(api[2]) as endpoint,
         httpx.Client(base_url=endpoint, headers=api[1], trust_env=False) as control,
     ):
-        result = seed_compression(api[2], control, tenant[0], tmp_path / "workspace")
+        result = seed_compression(api[2], control, tenant[0], tmp_path / "workspace", joint=joint)
     assert result["paid_provider_calls"] == 0
     base = f"/v1/projects/{tenant[0]}"
+    route = "model-context" if joint else "compression"
     repeated = api[0].post(
-        base + "/compression/confirmation",
+        base + f"/{route}/confirmation",
         headers=api[1],
         json={
             "validation_run_id": result["validation_run_id"],
@@ -57,7 +62,7 @@ def test_corpus_native_pipeline_prepares_exact_diff_and_passes_both_application_
     assert (
         api[0]
         .post(
-            base + f"/compression/{result['confirmation_run_id']}/proposal",
+            base + f"/{route}/{result['confirmation_run_id']}/proposal",
             headers=tenant[2],
             json={"purpose": "viewer-negative"},
         )
@@ -111,7 +116,7 @@ def test_corpus_native_pipeline_prepares_exact_diff_and_passes_both_application_
         )
         == review
     )
-    with pytest.raises(ValueError, match="DECLARE_SETTINGS"):
+    with pytest.raises(ValueError, match="DECLARE_CONSUMER" if joint else "DECLARE_SETTINGS"):
         review_change(artifact, contract.model_dump(mode="json"), receipt, root, proposed, {})
     git(proposed, "branch", "different-ref", contract.base.commit)
     with pytest.raises(ValueError, match="POINTS_ELSEWHERE"):
@@ -137,7 +142,11 @@ def test_corpus_native_pipeline_prepares_exact_diff_and_passes_both_application_
                     ExperimentPlanRecord.specification["public_specification"][
                         "workflow"
                     ].as_string()
-                    == "synthetic-context-compression",
+                    == (
+                        "synthetic-joint-model-context"
+                        if joint
+                        else "synthetic-context-compression"
+                    ),
                 )
             )
         )
@@ -153,8 +162,9 @@ def test_corpus_native_pipeline_prepares_exact_diff_and_passes_both_application_
         assert all("deadline-days=" not in json.dumps(r.results) for r in runs)
 
 
+@pytest.mark.parametrize("joint", [False, True])
 def test_authenticated_compression_authoring_confirmation_and_mobile_accessibility(
-    api, tenant, tmp_path, monkeypatch
+    api, tenant, tmp_path, monkeypatch, joint
 ):
     if os.getenv("CUTBACK_TEST_BROWSER") != "true":
         pytest.skip(
@@ -163,7 +173,7 @@ def test_authenticated_compression_authoring_confirmation_and_mobile_accessibili
     setup(api, tenant, tmp_path, monkeypatch)
     stop = threading.Event()
     errors = []
-    executor, calls = synthetic_executor()
+    executor, calls = synthetic_executor(joint=joint)
 
     def worker():
         try:
@@ -198,11 +208,16 @@ def test_authenticated_compression_authoring_confirmation_and_mobile_accessibili
             httpx.Client(base_url=endpoint, headers=api[1], trust_env=False) as control,
         ):
             result = seed_compression(
-                api[2], control, tenant[0], tmp_path / "browser-source", execute=False
+                api[2], control, tenant[0], tmp_path / "browser-source", execute=False, joint=joint
             )
             inspection = tmp_path / "inspection.json"
             inspection.write_text(
-                json.dumps({"configuration_binding": result["configuration_binding"]}),
+                json.dumps(
+                    {
+                        "configuration_binding": result["configuration_binding"],
+                        **({"producer_binding": result["producer_binding"]} if joint else {}),
+                    }
+                ),
                 encoding="utf-8",
             )
             thread.start()
@@ -216,6 +231,7 @@ def test_authenticated_compression_authoring_confirmation_and_mobile_accessibili
                     "CUTBACK_UI_PROJECT": tenant[0],
                     "CUTBACK_UI_OUTPUT_DIR": str(tmp_path / "compression-browser-output"),
                     "CUTBACK_COMPRESSION_BROWSER": "true",
+                    "CUTBACK_JOINT_CONTEXT_BROWSER": "true" if joint else "false",
                     "CUTBACK_COMPRESSION_VIEWER": viewer,
                     "CUTBACK_COMPRESSION_INSPECTION": str(inspection),
                     "CUTBACK_COMPRESSION_DATASET": result["dataset_id"],

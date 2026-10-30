@@ -1,0 +1,200 @@
+{
+  "version": "cutback.source-acceptance.v1",
+  "scope": "guarded-paired-security-utility",
+  "reviewed_head": "a9a2e73c1fd882f13a2304e60f0b4782a3679eda",
+  "merge_commit": "1b2ca9007ad47ea2f809d886f228b478f0d903fb",
+  "merged_at": "2026-10-30T15:59:46Z",
+  "accepted_tree": "ac93f434ebb94829f220647e9d36e6b7ba7184e2",
+  "local_installed_default": {
+    "passed": 1558,
+    "skipped": 35,
+    "seconds": 3309.27
+  },
+  "local_installed_sdk3": {
+    "passed": 1328,
+    "skipped": 7,
+    "seconds": 2103.21
+  },
+  "hosted": [
+    {
+      "run_id": 41081008421,
+      "jobs": [
+        {
+          "name": "isolated-tools",
+          "id": 124150217828,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 10,
+              "skipped": 0,
+              "seconds": 64.52
+            }
+          ]
+        },
+        {
+          "name": "verify (3.11.18)",
+          "id": 124150218237,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1553,
+              "skipped": 40,
+              "seconds": 1585.3
+            }
+          ]
+        },
+        {
+          "name": "verify (3.13.18)",
+          "id": 124150218288,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1552,
+              "skipped": 41,
+              "seconds": 1428.4
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.13.18)",
+          "id": 124150218321,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1317,
+              "skipped": 7,
+              "seconds": 421.33
+            }
+          ]
+        },
+        {
+          "name": "legacy-sdk (3.11.18)",
+          "id": 124150218343,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 0.53
+            }
+          ]
+        },
+        {
+          "name": "infrastructure",
+          "id": 124150218379,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 7,
+              "skipped": 0,
+              "seconds": 2.2
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.11.18)",
+          "id": 124150218531,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1316,
+              "skipped": 8,
+              "seconds": 599.39
+            }
+          ]
+        },
+        {
+          "name": "legacy-sdk (3.13.18)",
+          "id": 124150218592,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 0.65
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": 41081008290,
+      "jobs": [
+        {
+          "name": "codeql (javascript-typescript)",
+          "id": 124149811633,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "codeql (python)",
+          "id": 124149812044,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "audit",
+          "id": 124149812322,
+          "conclusion": "success",
+          "tests": []
+        }
+      ]
+    }
+  ],
+  "archives": {
+    "cutback-0.1.0.dev5-py3-none-any.whl": "50f478f88e1ee0cbfb82258a4bb3420d86c0f351263af79a8d9165046bb7eea8",
+    "cutback-0.1.0.dev5.tar.gz": "bcbe1773d70b4ac79388fb1c2bf89ae26a2001cc37597a349cdd15d23d045304"
+  },
+  "image": {
+    "image": "cutback-qualification:guarded-security",
+    "image_id": "sha256:0dd5ba57200c2674a8bdc3fa1107cab4d811a23c5e40de991ef2846ce8697664",
+    "uid": 10001,
+    "python": "3.11.18",
+    "migration": "0026",
+    "sample_application_calls": 23,
+    "source_linked_support_desk_calls": 12,
+    "source_workflows": 2,
+    "application_workflows": 4,
+    "paid_provider_calls": 0,
+    "native_batch_fixture_restored": true,
+    "guarded_tool_effects_and_delivery_restored": true,
+    "guarded_security_utility_and_policy_decisions_restored": true,
+    "restored_tables": 95,
+    "row_counts_match": true,
+    "restored_and_rekeyed_objects": 1493,
+    "restored_and_rekeyed_cache_objects": 1,
+    "restored_and_rekeyed_plans": 18,
+    "semantic_qualified_catalog_restored": true,
+    "isolated_tool_receipts_restored": true,
+    "paired_security_suite_restored": true,
+    "runtime_guardrail_receipts_restored": true,
+    "database_pointers_preserved": true,
+    "production_changed": false,
+    "secret_delivery": "anonymous_stdin_pipes_and_scoped_memory_clients",
+    "independent_otel_producer_and_replay": "passed",
+    "concurrent_load": {
+      "tenants": 2,
+      "accepted": 2000,
+      "duplicates": 2000,
+      "seconds": 2.516,
+      "production_sla": false
+    }
+  },
+  "publication_boundary": {
+    "files_checked": 939,
+    "history_objects_checked": 4031,
+    "archive_members_checked": 1255,
+    "findings": 0,
+    "private_marker_values_logged": false
+  },
+  "scope_limits": [
+    "Two existing isolated scoped record operations and declared paired suite only.",
+    "Known early policy decisions do not manufacture complete check coverage.",
+    "Fail-open business completion with unknown policy evidence cannot qualify a joint win.",
+    "General false-positive rates and semantic security remain unknown.",
+    "Synthetic results do not establish real customer quality, savings or market advantage."
+  ],
+  "paid_provider_calls": 0,
+  "production_changed": false,
+  "pypi_uploaded": false
+}

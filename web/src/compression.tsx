@@ -6,6 +6,7 @@ import { CaseEvidence } from "./case-evidence";
 
 type Draft = components["schemas"]["CompressionDraftInput"];
 type Binding = NonNullable<Draft["configuration_binding"]>;
+type JointDraft = components["schemas"]["JointContextDraftInput"];
 
 export function Compression({
   api,
@@ -28,6 +29,9 @@ export function Compression({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [binding, setBinding] = useState<Binding | null>(null);
+  const [joint, setJoint] = useState(false);
+  const [producer, setProducer] =
+    useState<JointDraft["producer_binding"]>(null);
   const [plan, setPlan] = useState<Data | null>(null);
   const [run, setRun] = useState<Data | null>(null);
   const [approved, setApproved] = useState(false);
@@ -110,6 +114,7 @@ export function Compression({
   async function readBinding(file?: File) {
     const version = ++bindingGeneration.current;
     setBinding(null);
+    setProducer(null);
     try {
       if (!file || file.size > 16384)
         throw new Error("Choose a small inspect-config JSON receipt.");
@@ -119,8 +124,13 @@ export function Compression({
         !value.configuration_binding?.source_tree_hash
       )
         throw new Error("Inspect the clean compression settings first.");
-      if (alive.current && version === bindingGeneration.current)
+      if (alive.current && version === bindingGeneration.current) {
         setBinding(value.configuration_binding);
+        if (value.producer_binding) {
+          setProducer(value.producer_binding);
+          setJoint(true);
+        }
+      }
     } catch (e) {
       if (alive.current && version === bindingGeneration.current)
         setError(explain(e));
@@ -128,14 +138,21 @@ export function Compression({
   }
   const confirmation = Boolean(run?.specification?.predecessor_run_id);
   const results = run?.results;
+  const runJoint =
+    run?.specification?.compression_execution?.version ===
+    "cutback.joint-model-context.v1";
+  const runRoute = runJoint ? "model-context" : "compression";
+  const eligibility = runJoint
+    ? "joint_model_context_confirmation_eligible"
+    : "compression_automation_eligible";
   return (
     <section aria-labelledby="compression-title">
       <h1 id="compression-title">Context compression</h1>
       <p>
-        Compare original context with exact duplicate-line removal and bounded
-        query-based line selection. The native model, instruction and output
-        ceiling stay fixed. A smaller input can lose essential facts; answer
-        quality and complete modeled component costs decide whether to continue.
+        Choose a fixed-model context comparison or a joint search of native
+        models, output ceilings and extractive context settings under one API
+        budget. A smaller input can lose essential facts; answer quality and
+        complete modeled component costs decide whether to continue.
       </p>
       <p>
         Use an authorized dataset whose inputs contain a query and context.
@@ -145,8 +162,24 @@ export function Compression({
       {error && <p role="alert">{error}</p>}
       {loading && <p role="status">Loading compression datasets and runs…</p>}
       {canWrite && !loading && (
+        <label>
+          <input
+            type="checkbox"
+            checked={joint}
+            disabled={busy}
+            onChange={(event) => {
+              setJoint(event.target.checked);
+              setPlan(null);
+              setRun(null);
+              setProposal(null);
+            }}
+          />
+          Search model and output ceiling alongside context
+        </label>
+      )}
+      {canWrite && !loading && (
         <form
-          key={binding?.sha256 || "unbound"}
+          key={`${binding?.sha256 || "unbound"}-${joint}`}
           onSubmit={(event) => {
             event.preventDefault();
             const f = new FormData(event.currentTarget);
@@ -155,11 +188,18 @@ export function Compression({
                 dataset_id: String(f.get("dataset")),
                 baseline: {
                   key: "baseline",
-                  provider: String(f.get("provider")) as "openai" | "anthropic",
-                  model: String(f.get("model")),
+                  provider:
+                    joint && producer
+                      ? producer.provider
+                      : (String(f.get("provider")) as "openai" | "anthropic"),
+                  model:
+                    joint && producer ? producer.model : String(f.get("model")),
                   instruction: String(f.get("instruction") || ""),
                   max_input_tokens: Number(f.get("inputLimit")),
-                  max_output_tokens: Number(f.get("outputLimit")),
+                  max_output_tokens:
+                    joint && producer
+                      ? producer.max_output_tokens
+                      : Number(f.get("outputLimit")),
                 },
                 settings: binding?.settings || {
                   version: "cutback.extractive-context.v1",
@@ -185,7 +225,15 @@ export function Compression({
                 retain_case_outputs: f.get("retain") === "on",
                 max_query_bytes: 1024,
               };
-              prepared(await json(api, `${base}/compression/draft`, body));
+              prepared(
+                await json(
+                  api,
+                  `${base}/${joint ? "model-context" : "compression"}/draft`,
+                  joint
+                    ? { ...body, producer_binding: producer, max_candidates: 5 }
+                    : body,
+                ),
+              );
             });
           }}
         >
@@ -248,13 +296,21 @@ export function Compression({
           <p>
             For a source diff, use{" "}
             <code>
-              cutback compression inspect-config APP_ROOT compression.json
-              --output ../inspection.json
+              {joint
+                ? "cutback model-context inspect-producer APP_ROOT app.py --output ../inspection.json"
+                : "cutback compression inspect-config APP_ROOT compression.json --output ../inspection.json"}
             </code>
             . The exact clean source is checked again before preparing a diff.
           </p>
           {binding && (
             <p role="status">Bound source configuration: {binding.file}</p>
+          )}
+          {joint && (
+            <p>
+              {producer
+                ? `Qualified source producer: ${producer.file}. Model and settings will be reviewed together.`
+                : "Validation can run without source binding. Automatic source proposals require the qualified producer inspection; unsupported builders abstain."}
+            </p>
           )}
           <div className="form-grid">
             <label>
@@ -267,12 +323,19 @@ export function Compression({
             <Field
               label="Native model"
               name="model"
-              defaultValue="gpt-4.1-mini"
+              defaultValue={
+                joint ? producer?.model || "gpt-4.1" : "gpt-4.1-mini"
+              }
+              readOnly={Boolean(joint && producer)}
               required
             />
             <label>
               Application instruction (optional)
-              <textarea name="instruction" maxLength={16000} />
+              <textarea
+                name="instruction"
+                maxLength={16000}
+                disabled={Boolean(joint && producer)}
+              />
             </label>
             <Field
               label="Native input ceiling"
@@ -289,7 +352,10 @@ export function Compression({
               type="number"
               min={16}
               max={16384}
-              defaultValue={128}
+              defaultValue={
+                joint && producer ? producer.max_output_tokens : 128
+              }
+              readOnly={Boolean(joint && producer)}
               required
             />
             <Field
@@ -354,7 +420,9 @@ export function Compression({
             compressed input under the existing policy
           </label>
           <button disabled={busy || !datasets.length}>
-            Prepare compression comparison
+            {joint
+              ? "Prepare model and context comparison"
+              : "Prepare compression comparison"}
           </button>
         </form>
       )}
@@ -507,6 +575,14 @@ export function Compression({
                     : "unknown"}
                 ; statistical gate{" "}
                 {d.statistical_gate_passed ? "passed" : "not established"}.
+                {runJoint && (
+                  <span>
+                    {" "}
+                    Model: {d.candidate.model}; output ceiling:{" "}
+                    {d.candidate.max_output_tokens}; changed axes:{" "}
+                    {d.search_axes_changed?.join(", ") || "none"}.
+                  </span>
+                )}
               </li>
             ))}
           </ul>
@@ -517,14 +593,12 @@ export function Compression({
             <button
               disabled={
                 busy ||
-                !results?.recommendations?.some(
-                  (d: Data) => d.compression_automation_eligible,
-                )
+                !results?.recommendations?.some((d: Data) => d[eligibility])
               }
               onClick={() =>
                 void act(async () => {
                   prepared(
-                    await json(api, `${base}/compression/confirmation`, {
+                    await json(api, `${base}/${runRoute}/confirmation`, {
                       validation_run_id: run.id,
                       budget: run.specification.budget,
                     }),
@@ -542,7 +616,7 @@ export function Compression({
                 void act(async () => {
                   const value = await json(
                     api,
-                    `${base}/compression/${run.id}/proposal`,
+                    `${base}/${runRoute}/${run.id}/proposal`,
                     { purpose },
                   );
                   if (alive.current) setProposal(value);
@@ -564,7 +638,11 @@ export function Compression({
           )}
           {proposal && (
             <section aria-label="Compression source proposal">
-              <h3>Review the settings change</h3>
+              <h3>
+                {runJoint
+                  ? "Review the combined model and context change"
+                  : "Review the settings change"}
+              </h3>
               <p>
                 {proposal.decision}. Application checks and separate production
                 approval are required.
@@ -579,7 +657,7 @@ export function Compression({
                   );
                   const a = document.createElement("a");
                   a.href = url;
-                  a.download = "compression-proposal.json";
+                  a.download = `${runRoute}-proposal.json`;
                   a.click();
                   URL.revokeObjectURL(url);
                 }}
