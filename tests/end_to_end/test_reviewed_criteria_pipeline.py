@@ -127,7 +127,16 @@ def test_independent_criteria_sample_runs_review_validation_and_untouched_confir
     patch.write_text(result["source_change"]["diff"], encoding="utf-8", newline="")
     git(proposed, "apply", str(patch))
     git(proposed, "add", ".")
-    git(proposed, "commit", "-m", "Owned reviewed criteria candidate")
+    git(
+        proposed,
+        "-c",
+        "user.name=Cutback synthetic sample",
+        "-c",
+        "user.email=synthetic@example.invalid",
+        "commit",
+        "-m",
+        "Owned reviewed criteria candidate",
+    )
     contract = prepare(
         original,
         proposed,
