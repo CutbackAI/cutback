@@ -24,9 +24,7 @@ def test_guardrail_approval_native_delivery_cost_and_viewer_dashboard(
     if os.getenv("CUTBACK_TEST_BROWSER") != "true":
         pytest.skip("set CUTBACK_TEST_BROWSER=true for actual authenticated guardrail acceptance")
     service_id = uuid4()
-    definition, _, state, _, _ = prepare(
-        api, tenant, tmp_path, monkeypatch, service_id=service_id
-    )
+    definition, _, state, _, _ = prepare(api, tenant, tmp_path, monkeypatch, service_id=service_id)
     calls = []
 
     async def provider(request):
