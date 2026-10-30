@@ -22,6 +22,7 @@ from cutback.server.db import (
     Project,
 )
 from cutback.server.execution_ledger import ExecutionLedger
+from cutback.server.migrate import CURRENT_REVISION
 from cutback.server.plan_artifacts import load_plan
 from cutback.server.tool_db import ToolOperationRecord, ToolSessionRecord
 from cutback.server.tool_ledger import ToolJournal
@@ -119,7 +120,9 @@ def test_compound_tool_scope_and_populated_downgrade_require_explicit_containmen
     api, tenant, tmp_path, monkeypatch, api_database_url
 ):
     base, ledger, journal, policy = prepared_journal(api, tenant, tmp_path, monkeypatch)
-    assert api[0].get("/v1/health/ready", headers=api[1]).json()["schema_revision"] == "0024"
+    assert (
+        api[0].get("/v1/health/ready", headers=api[1]).json()["schema_revision"] == CURRENT_REVISION
+    )
     with pytest.raises(IntegrityError):
         with ledger.sessions.begin() as session:
             session.add(
@@ -141,6 +144,9 @@ def test_compound_tool_scope_and_populated_downgrade_require_explicit_containmen
     command.check(cfg)
     with pytest.raises(RuntimeError, match="ISOLATED_TOOL_DOWNGRADE_REQUIRES"):
         command.downgrade(cfg, "0023")
+    assert (
+        api[0].get("/v1/health/ready", headers=api[1]).json()["schema_revision"] == CURRENT_REVISION
+    )
     assert (
         api[0]
         .post(base + "/experiments/" + str(ledger.run_id) + "/cancel", headers=api[1], json={})
