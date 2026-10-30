@@ -41,7 +41,7 @@ jobs:
       - name: Build non-root collector and complete synthetic demo image
         run: docker build --tag cutback-ci-acceptance:${{ github.sha }} --file infra/compose/Dockerfile .
       - name: Verify image demo, encrypted plan recovery and tenant isolation
-        run: uv run python scripts/image_acceptance.py --image cutback-ci-acceptance:${{ github.sha }} --isolated-tools
+        run: uv run python scripts/image_acceptance.py --image cutback-ci-acceptance:${{ github.sha }} --isolated-tools --joint-model-context
       - name: Remove this job's owned image-acceptance database
         if: always()
         run: docker compose -f infra/compose/docker-compose.yml down --volumes --remove-orphans
@@ -123,6 +123,8 @@ jobs:
           tests/integration/test_retrieval_workflow.py
           tests/end_to_end/test_retrieval_pipeline.py
           tests/integration/test_compression_workflow.py
+          tests/integration/test_joint_context_workflow.py
+          tests/integration/test_agent_joint_context_workflow.py
           tests/integration/test_task_aware_split_workflow.py
           tests/end_to_end/test_compression_pipeline.py
           tests/end_to_end/test_ticket_campaign.py

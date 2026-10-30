@@ -78,6 +78,9 @@ def register_agent(app, output, fail):
         search: bool = False,
         for_campaign: bool = False,
         campaign_generator_provider: Literal["openai"] | None = None,
+        joint_context: bool = False,
+        assumed_usd_per_cpu_hour: str | None = None,
+        min_test_samples: int = typer.Option(30, min=1, max=10000),
     ):
         """Prepare permitted examples and the request in an approved encrypted store."""
         from cutback.agent import prepare as run
@@ -104,6 +107,9 @@ def register_agent(app, output, fail):
                 search=search,
                 for_campaign=for_campaign,
                 campaign_generator_provider=campaign_generator_provider,
+                joint_context=joint_context,
+                assumed_usd_per_cpu_hour=assumed_usd_per_cpu_hour,
+                min_test_samples=min_test_samples,
             )
         )
 

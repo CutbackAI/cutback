@@ -2541,6 +2541,162 @@
         }
       }
     },
+    "/v1/projects/{project_id}/model-context/draft": {
+      "post": {
+        "summary": "Draft",
+        "operationId": "draft_v1_projects__project_id__model_context_draft_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JointContextDraftInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/model-context/confirmation": {
+      "post": {
+        "summary": "Confirm",
+        "operationId": "confirm_v1_projects__project_id__model_context_confirmation_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JointContextConfirmationInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/model-context/{run_id}/proposal": {
+      "post": {
+        "summary": "Proposal",
+        "operationId": "proposal_v1_projects__project_id__model_context__run_id__proposal_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentPurpose"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JointContextProposal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{project_id}/campaign-templates": {
       "get": {
         "summary": "Templates",
@@ -16629,6 +16785,78 @@
         ],
         "title": "ContentPurpose"
       },
+      "ContextProducerBinding": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.context-producer.v1",
+            "title": "Version",
+            "default": "cutback.context-producer.v1"
+          },
+          "file": {
+            "type": "string",
+            "maxLength": 240,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_./-]+$",
+            "title": "File"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Sha256"
+          },
+          "source_tree_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Source Tree Hash"
+          },
+          "commit": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{40,64}$",
+            "title": "Commit"
+          },
+          "program_sha256": {
+            "type": "string",
+            "const": "a6175e8cf0f03483bc69efd5e6f49efe0e5f5fc8eed2f6836e08b8175220828e",
+            "title": "Program Sha256",
+            "default": "a6175e8cf0f03483bc69efd5e6f49efe0e5f5fc8eed2f6836e08b8175220828e"
+          },
+          "provider": {
+            "type": "string",
+            "const": "openai",
+            "title": "Provider",
+            "default": "openai"
+          },
+          "surface": {
+            "type": "string",
+            "const": "responses.create",
+            "title": "Surface",
+            "default": "responses.create"
+          },
+          "model": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Model"
+          },
+          "max_output_tokens": {
+            "type": "integer",
+            "maximum": 16384.0,
+            "minimum": 16.0,
+            "title": "Max Output Tokens"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "file",
+          "sha256",
+          "source_tree_hash",
+          "commit",
+          "model",
+          "max_output_tokens"
+        ],
+        "title": "ContextProducerBinding"
+      },
       "ConversationCheck": {
         "properties": {
           "user_turn": {
@@ -18043,7 +18271,8 @@
               "deterministic-v8",
               "deterministic-v9",
               "deterministic-v10",
-              "deterministic-v11"
+              "deterministic-v11",
+              "deterministic-v12"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -18074,9 +18303,13 @@
                 "$ref": "#/components/schemas/CompressionExecutionSpec-Input"
               },
               {
+                "$ref": "#/components/schemas/JointModelContextExecutionSpec-Input"
+              },
+              {
                 "type": "null"
               }
-            ]
+            ],
+            "title": "Compression Execution"
           },
           "source_binding": {
             "anyOf": [
@@ -18342,7 +18575,8 @@
               "deterministic-v8",
               "deterministic-v9",
               "deterministic-v10",
-              "deterministic-v11"
+              "deterministic-v11",
+              "deterministic-v12"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -18373,9 +18607,13 @@
                 "$ref": "#/components/schemas/CompressionExecutionSpec-Output"
               },
               {
+                "$ref": "#/components/schemas/JointModelContextExecutionSpec-Output"
+              },
+              {
                 "type": "null"
               }
-            ]
+            ],
+            "title": "Compression Execution"
           },
           "source_binding": {
             "anyOf": [
@@ -21358,6 +21596,399 @@
           "schema_definition"
         ],
         "title": "JSONShapeRule"
+      },
+      "JointContextConfirmationInput": {
+        "properties": {
+          "validation_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Validation Run Id"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/Budget-Input"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "validation_run_id",
+          "budget"
+        ],
+        "title": "JointContextConfirmationInput"
+      },
+      "JointContextDraftInput": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Dataset Id"
+          },
+          "baseline": {
+            "$ref": "#/components/schemas/ModelSpec-Input"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/CompressionSettings"
+          },
+          "metric": {
+            "$ref": "#/components/schemas/MetricSpec"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/Budget-Input"
+          },
+          "models": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ModelSpec-Input"
+                },
+                "type": "array",
+                "maxItems": 5
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Models"
+          },
+          "contexts": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CompressionSettings"
+                },
+                "type": "array",
+                "maxItems": 5,
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contexts"
+          },
+          "max_candidates": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Max Candidates",
+            "default": 5
+          },
+          "assumed_usd_per_cpu_hour": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "decimal_places": 12,
+                "ge": 0,
+                "le": 1000000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assumed Usd Per Cpu Hour"
+          },
+          "max_query_bytes": {
+            "type": "integer",
+            "maximum": 4096.0,
+            "minimum": 1.0,
+            "title": "Max Query Bytes",
+            "default": 1024
+          },
+          "retain_case_outputs": {
+            "type": "boolean",
+            "title": "Retain Case Outputs",
+            "default": false
+          },
+          "configuration_binding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CompressionConfigurationBinding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "producer_binding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContextProducerBinding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "baseline",
+          "settings",
+          "metric",
+          "budget"
+        ],
+        "title": "JointContextDraftInput"
+      },
+      "JointContextProposal": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.joint-context-proposal.v1",
+            "title": "Version",
+            "default": "cutback.joint-context-proposal.v1"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Run Id"
+          },
+          "plan_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Plan Hash"
+          },
+          "dataset_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Dataset Hash"
+          },
+          "binding": {
+            "$ref": "#/components/schemas/CompressionConfigurationBinding"
+          },
+          "producer": {
+            "$ref": "#/components/schemas/ContextProducerBinding"
+          },
+          "baseline": {
+            "$ref": "#/components/schemas/ModelSpec-Output"
+          },
+          "proposed": {
+            "$ref": "#/components/schemas/ModelSpec-Output"
+          },
+          "proposed_settings": {
+            "$ref": "#/components/schemas/CompressionSettings"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "synthetic_local_review_only",
+              "sample_review_required",
+              "heldout_review_required"
+            ],
+            "title": "Decision"
+          },
+          "production_approval_required": {
+            "type": "boolean",
+            "const": true,
+            "title": "Production Approval Required",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "run_id",
+          "plan_hash",
+          "dataset_hash",
+          "binding",
+          "producer",
+          "baseline",
+          "proposed",
+          "proposed_settings",
+          "decision"
+        ],
+        "title": "JointContextProposal"
+      },
+      "JointModelContextExecutionSpec-Input": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.joint-model-context.v1",
+            "title": "Version",
+            "default": "cutback.joint-model-context.v1"
+          },
+          "transport": {
+            "type": "string",
+            "enum": [
+              "native_provider",
+              "scripted_test_only"
+            ],
+            "title": "Transport",
+            "default": "native_provider"
+          },
+          "contract_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Contract Sha256"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/CompressionVariant"
+            },
+            "type": "array",
+            "maxItems": 6,
+            "minItems": 2,
+            "title": "Variants"
+          },
+          "max_query_bytes": {
+            "type": "integer",
+            "maximum": 4096.0,
+            "minimum": 1.0,
+            "title": "Max Query Bytes",
+            "default": 1024
+          },
+          "assumed_usd_per_cpu_hour": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "decimal_places": 12,
+                "ge": 0,
+                "le": 1000000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assumed Usd Per Cpu Hour"
+          },
+          "cpu_charge_quantum_ms": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Cpu Charge Quantum Ms",
+            "default": 1
+          },
+          "configuration_binding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CompressionConfigurationBinding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "producer_binding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContextProducerBinding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "variants"
+        ],
+        "title": "JointModelContextExecutionSpec",
+        "description": "Separate approval for a frozen native model/output/context search.\n\nThe legacy fields remain independently declared so their serialized order\nand contract do not change when this execution target evolves."
+      },
+      "JointModelContextExecutionSpec-Output": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.joint-model-context.v1",
+            "title": "Version",
+            "default": "cutback.joint-model-context.v1"
+          },
+          "transport": {
+            "type": "string",
+            "enum": [
+              "native_provider",
+              "scripted_test_only"
+            ],
+            "title": "Transport",
+            "default": "native_provider"
+          },
+          "contract_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Contract Sha256"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/CompressionVariant"
+            },
+            "type": "array",
+            "maxItems": 6,
+            "minItems": 2,
+            "title": "Variants"
+          },
+          "max_query_bytes": {
+            "type": "integer",
+            "maximum": 4096.0,
+            "minimum": 1.0,
+            "title": "Max Query Bytes",
+            "default": 1024
+          },
+          "assumed_usd_per_cpu_hour": {
+            "anyOf": [
+              {
+                "type": "string",
+                "decimal_places": 12,
+                "ge": 0,
+                "le": 1000000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assumed Usd Per Cpu Hour"
+          },
+          "cpu_charge_quantum_ms": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Cpu Charge Quantum Ms",
+            "default": 1
+          },
+          "configuration_binding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CompressionConfigurationBinding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "producer_binding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContextProducerBinding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "variants"
+        ],
+        "title": "JointModelContextExecutionSpec",
+        "description": "Separate approval for a frozen native model/output/context search.\n\nThe legacy fields remain independently declared so their serialized order\nand contract do not change when this execution target evolves."
       },
       "JsonValue": {},
       "KeyInput": {

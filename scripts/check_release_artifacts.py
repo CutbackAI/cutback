@@ -119,6 +119,13 @@ def check(directory: Path):
         for required in (
             ".dockerignore",
             "scripts/image_acceptance.py",
+            "examples/model-context-search/README.md",
+            "examples/model-context-search/app.py",
+            "examples/model-context-search/check_application.py",
+            "examples/model-context-search/questions.jsonl",
+            "docs/joint-model-context.md",
+            "src/cutback/core/context_producer.py",
+            "tests/integration/test_agent_joint_context_workflow.py",
             "tests/unit/test_demo_prerequisites.py",
             ".github/workflows/publish.yml",
             "scripts/check_toolchain.py",

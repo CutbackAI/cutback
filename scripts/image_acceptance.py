@@ -157,6 +157,7 @@ def main(
     runtime_guardrails=False,
     guarded_tools=False,
     guarded_security=False,
+    joint_model_context=False,
 ):
     from cutback.server.migrate import CURRENT_REVISION
 
@@ -272,7 +273,10 @@ assert os.getuid()==10001 and sys.version_info[:3]==(3,11,18)
 app=create_app(allow_insecure_http=True)
 app.state.artifact_store=configured_store()
 os.environ["CUTBACK_SEMANTIC_CACHE_ENABLED"]="true"
-manifest=seed_support_desk(app,"http://127.0.0.1:8080",os.environ["CUTBACK_ADMIN_TOKEN"],Path("/tmp/owned-support-desk"),provider_batch=True,semantic_cache=True,runtime_guardrails=RUNTIME_GUARDS)
+manifest=seed_support_desk(app,"http://127.0.0.1:8080",os.environ["CUTBACK_ADMIN_TOKEN"],Path("/tmp/owned-support-desk"),provider_batch=True,semantic_cache=True,runtime_guardrails=RUNTIME_GUARDS,joint_model_context=JOINT_EXPECTED)
+if JOINT_EXPECTED:
+ assert manifest["joint_model_context_sample"]["native_sdk_calls"]>0
+ assert manifest["joint_model_context_sample"]["paid_provider_calls"]==0
 assert manifest["provider_batch_sample"]["status"]=="COMPLETED"
 assert manifest["provider_batch_sample"]["vendor_files_deleted"] is True
 assert manifest["semantic_cache_sample"]["status"]=="PASSED"
@@ -285,6 +289,7 @@ if RUNTIME_GUARDS:
 print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":manifest["paid_provider_calls"]}))
 """
                 code = code.replace("RUNTIME_GUARDS", repr(runtime_guardrails))
+                code = code.replace("JOINT_EXPECTED", repr(joint_model_context))
                 manifest = json.loads(inside(container, code, values).strip().splitlines()[-1])
                 base = "/v1/projects/" + manifest["project_id"]
                 usage = client.get(
@@ -437,6 +442,24 @@ with sessions() as session:
   rotating.rekey(row.project_id,row.specification["artifact_ref"])
   after=new_only.get(row.project_id,row.specification["artifact_ref"])
   assert before==after
+ if JOINT_EXPECTED:
+  from cutback.evals.compression import JointModelContextExecutionSpec
+  from cutback.server.plan_artifacts import load_plan
+  joint_plans=[row for row in plans if
+   row.specification["public_specification"]["evaluator_version"]=="deterministic-v12"]
+  assert len(joint_plans)==2
+  joint_ids=[row.id for row in joint_plans]
+  joint_runs=session.scalars(select(ExperimentRunRecord).where(
+   ExperimentRunRecord.plan_id.in_(joint_ids))).all()
+  assert len(joint_runs)==2 and all(row.status=="COMPLETED" for row in joint_runs)
+  for row in joint_plans:
+   restored=load_plan(new_only,row.project_id,row.specification)
+   assert isinstance(restored.compression_execution,JointModelContextExecutionSpec)
+   assert restored.compression_execution.producer_binding
+  confirmed=next(row for row in joint_runs if row.results["plan"]["split"]=="test")
+  assert confirmed.results["lineage"]["fresh_test_claim"] is True
+  decision=confirmed.results["recommendations"][0]
+  assert decision["joint_model_context_confirmation_eligible"] is True
 print(json.dumps({"restored_and_rekeyed_objects":len(rows)+len(caches),"restored_and_rekeyed_cache_objects":len(caches),"restored_and_rekeyed_plans":len(plans),"semantic_qualified_catalog_restored":True,"isolated_tool_receipts_restored":bool(TOOLS_EXPECTED),"paired_security_suite_restored":bool(SECURITY_EXPECTED),"runtime_guardrail_receipts_restored":bool(RUNTIME_GUARDS),"database_pointers_preserved":True}))
 engine.dispose()
 """.replace("RECOVERED", repr(names[1]))
@@ -445,6 +468,7 @@ engine.dispose()
                     .replace("RUNTIME_GUARDS", repr(runtime_guardrails))
                     .replace("GUARDED_TOOLS", repr(guarded_tools))
                     .replace("GUARDED_SECURITY", repr(guarded_security))
+                    .replace("JOINT_EXPECTED", repr(joint_model_context))
                 )
                 recovered = json.loads(inside(container, recovery, values).strip().splitlines()[-1])
 
@@ -570,6 +594,9 @@ engine.dispose()
                     "native_batch_fixture_restored": True,
                     "guarded_tool_effects_and_delivery_restored": guarded_tools,
                     "guarded_security_utility_and_policy_decisions_restored": guarded_security,
+                    "joint_model_context_confirmation_and_source_binding_restored": (
+                        joint_model_context
+                    ),
                     "restored_tables": len(after),
                     "row_counts_match": True,
                     **recovered,
@@ -611,6 +638,7 @@ if __name__ == "__main__":
     parser.add_argument("--runtime-guardrails", action="store_true")
     parser.add_argument("--guarded-tools", action="store_true")
     parser.add_argument("--guarded-security", action="store_true")
+    parser.add_argument("--joint-model-context", action="store_true")
     args = parser.parse_args()
     main(
         args.image,
@@ -619,4 +647,5 @@ if __name__ == "__main__":
         runtime_guardrails=args.runtime_guardrails,
         guarded_tools=args.guarded_tools,
         guarded_security=args.guarded_security,
+        joint_model_context=args.joint_model_context,
     )

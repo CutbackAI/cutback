@@ -4,6 +4,7 @@ from uuid import UUID
 
 from sqlalchemy import select
 
+from cutback.evals.compression import JointModelContextExecutionSpec
 from cutback.evals.datasets import digest
 from cutback.server.db import DatasetRecord, ExperimentPlanRecord, ExperimentRunRecord
 from cutback.server.plan_artifacts import load_plan
@@ -69,7 +70,14 @@ def validate_confirmation(session, store, project_id, plan, *, run_id=None):
         or not decision.get("quality_gate_passed")
         or not decision.get("cheaper_on_sample")
         or (prior.retrieval_execution and not decision.get("retrieval_automation_eligible"))
-        or (prior.compression_execution and not decision.get("compression_automation_eligible"))
+        or (
+            prior.compression_execution
+            and not decision.get(
+                "joint_model_context_confirmation_eligible"
+                if isinstance(prior.compression_execution, JointModelContextExecutionSpec)
+                else "compression_automation_eligible"
+            )
+        )
     ):
         raise ValueError("SELECTED_SEARCH_CANDIDATE_DID_NOT_PASS_GATES")
     # Serialize test-group consumption across different plans and concurrent queue calls.

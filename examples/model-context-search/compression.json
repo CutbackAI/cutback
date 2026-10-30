@@ -1,0 +1,5 @@
+{
+  "version": "cutback.extractive-context.v1",
+  "mode": "identity",
+  "max_context_bytes": 1024
+}

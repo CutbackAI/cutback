@@ -111,6 +111,7 @@ def demo(
     runtime_guardrails: bool = False,
     guarded_tools: bool = False,
     guarded_security: bool = False,
+    joint_model_context: bool = False,
 ):
     """Explore the complete sample. Requires Docker and Git; no API key or paid calls."""
     try:
@@ -127,6 +128,7 @@ def demo(
             runtime_guardrails=runtime_guardrails,
             guarded_tools=guarded_tools,
             guarded_security=guarded_security,
+            joint_model_context=joint_model_context,
         )
     except ImportError:
         fail(
@@ -540,6 +542,7 @@ register_security(app, output, request, fail)
 register_guardrails(app, output, request, fail)
 register_retrieval(app, output, request, fail)
 register_compression(app, output, request, fail)
+register_compression(app, output, request, fail, joint=True)
 register_batch(app, output, request, fail)
 register_semantic_cache(app, output, request, fail)
 

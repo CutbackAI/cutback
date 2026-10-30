@@ -47,6 +47,24 @@ def save_session(directory, state, phase=None, code=None):
 def next_action(state):
     phase = state["phase"]
     if phase in {"ANALYZED", "SOURCE_CHANGED"}:
+        if state.get("context_producers") and not state.get("profiles"):
+            return {
+                "code": "REVIEW_DATA_RIGHTS_AND_PREPARE_JOINT_CONTEXT",
+                "tool": "cutback workflow prepare --joint-context",
+                "requires": [
+                    "permitted_labeled_query_context_examples",
+                    "rights_reference",
+                    "approved_collector",
+                    "budget_ceiling",
+                    "declared_cpu_cost_basis",
+                ],
+                "effects": [
+                    "read_permitted_examples",
+                    "upload_to_approved_encrypted_store",
+                    "freeze_joint_model_context_grid",
+                ],
+                "provider_calls": 0,
+            }
         if not state.get("profiles") and any(
             item.get("diagnostic_code") == "CUSTOM_PROVIDER_DESTINATION_REQUIRES_REVIEW"
             for item in state.get("unresolved", [])
@@ -104,7 +122,10 @@ def next_action(state):
             "requeue": False,
         }
     if phase in {"COMPLETED", "PROPOSAL_READY"}:
-        if state.get("search_mode") == "model_and_output_cap" and not state.get("confirmation"):
+        if state.get("search_mode") in {
+            "model_and_output_cap",
+            "joint_model_context",
+        } and not state.get("confirmation"):
             return {
                 "code": "SELECT_CANDIDATE_AND_FREEZE_CONFIRMATION",
                 "tool": "cutback workflow confirm",
@@ -196,6 +217,42 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
                     unresolved.append(issue)
                 entrypoints[entry["file"]] = entry
         fixtures = discover_fixtures(root)
+        context_producers = []
+        from cutback.application_checks import snapshot
+        from cutback.core.context_producer import qualify
+        from cutback.joint_context_changes import inspect_producer
+
+        context_files = []
+        try:
+            context_files = sorted(name for name in snapshot(root).files if name.endswith(".py"))
+        except (ValueError, OSError):
+            pass
+        context_analysis = {
+            "tracked_python_files": len(context_files),
+            "inspected_files": min(200, len(context_files)),
+            "omitted_files": max(0, len(context_files) - 200),
+            "file_limit": 200,
+            "qualification": "exact_wrapper_in_clean_git_source_only",
+        }
+        for name in context_files[:200]:
+            identity, _ = workflow_identity(name, "answer")
+            if workflow and identity != workflow:
+                continue
+            try:
+                path = permitted_file(root, name)
+                if path.stat().st_size > 65536:
+                    continue
+                qualify(path.read_bytes())
+                _, configuration, producer = inspect_producer(root, name)
+            except (ValueError, OSError):
+                continue
+            context_producers.append(
+                {
+                    "workflow_id": identity,
+                    "configuration_binding": configuration.model_dump(mode="json"),
+                    "producer_binding": producer.model_dump(mode="json"),
+                }
+            )
         for fixture in fixtures:
             path = root / fixture["path"]
             fixture["identity"] = {"size": path.stat().st_size, "mtime_ns": path.stat().st_mtime_ns}
@@ -206,6 +263,8 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
                 "fixtures": fixtures,
                 "inventory": inventory,
                 "profile_analysis": profile_analysis,
+                "context_producers": context_producers,
+                "context_profile_analysis": context_analysis,
             }
         )
         prior = (
@@ -240,6 +299,8 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
             "phase": "ANALYZED",
             "checkpoints": prior["checkpoints"] if prior else [],
             "profiles": profiles,
+            "context_producers": context_producers,
+            "context_profile_analysis": context_analysis,
             "profile_analysis": profile_analysis,
             "unresolved": unresolved,
             "fixtures": fixtures,
@@ -251,7 +312,7 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
         state["strategies"] = strategy_assessments(profiles)
         if previous_id:
             state["previous_session_id"] = previous_id
-        if not profiles:
+        if not profiles and not context_producers:
             state["decisions_required"].append("request_contract_qualification")
         if not fixtures:
             state["decisions_required"].append("permitted_examples_or_observation_scope")
@@ -322,6 +383,10 @@ def strategy_assessments(profiles):
 
 
 def selected_profile(root, state, workflow=None):
+    if state.get("search_mode") == "joint_model_context":
+        from cutback.agent_context import selected_source
+
+        return selected_source(root, state, workflow)
     from cutback.scanner import scan
 
     choices = [
@@ -412,6 +477,9 @@ def prepare(
     search=False,
     for_campaign=False,
     campaign_generator_provider=None,
+    joint_context=False,
+    assumed_usd_per_cpu_hour=None,
+    min_test_samples=30,
 ):
     """Read only explicitly permitted files; upload to the chosen encrypted collector; no calls."""
     from datetime import timedelta
@@ -423,6 +491,29 @@ def prepare(
     from cutback.evals.planning import draft_plan
     from cutback.evals.records import read_records
 
+    if joint_context:
+        if search or for_campaign or campaign_generator_provider:
+            raise ValueError("JOINT_CONTEXT_REQUIRES_ITS_OWN_FROZEN_SEARCH")
+        from cutback.agent_context import prepare as prepare_context
+
+        return prepare_context(
+            root,
+            control,
+            project,
+            files=files,
+            rights_basis=rights_basis,
+            rights_ref=rights_ref,
+            max_usd=max_usd,
+            workflow=workflow,
+            max_requests=max_requests,
+            minimum=minimum,
+            independent_labels=independent_labels,
+            representative=representative,
+            retain_case_outputs=retain_case_outputs,
+            mapping=mapping,
+            assumed_usd_per_cpu_hour=assumed_usd_per_cpu_hour,
+            min_test_samples=min_test_samples,
+        )
     root, directory = workspace(root)
     from uuid import UUID
 
@@ -693,7 +784,7 @@ def advance(root, control, *, plan_hash=None, approval_ref=None):
                 state["next_review"] = (
                     "cutback workflow confirm --candidate KEY --max-usd CEILING "
                     "--purpose-reference REVIEW"
-                    if state.get("search_mode") == "model_and_output_cap"
+                    if state.get("search_mode") in {"model_and_output_cap", "joint_model_context"}
                     and not state.get("confirmation")
                     else "cutback workflow proposal --purpose-reference REVIEW"
                 )
@@ -714,6 +805,15 @@ def gate(root, control, *, candidate=None, sample_only=False):
             raise ValueError("COLLECTOR_DESTINATION_MISMATCH")
         selected_profile(root, state, state["selected_workflow"])
         report = control("GET", f"/v1/projects/{state['project_id']}/experiments/{state['run_id']}")
+        if state.get("search_mode") == "joint_model_context":
+            from cutback.evals.joint_context_planning import regression_gate as joint_gate
+
+            return joint_gate(
+                report["results"],
+                expected_plan_hash=state["plan"]["plan_hash"],
+                candidate=candidate,
+                sample_only=sample_only,
+            )
         return regression_gate(
             report["results"],
             expected_plan_hash=state["plan"]["plan_hash"],
@@ -734,7 +834,7 @@ def confirm(root, control, *, candidate, max_usd, max_requests=100, purpose):
         if (
             state["phase"] != "COMPLETED"
             or state.get("confirmation")
-            or state.get("search_mode") != "model_and_output_cap"
+            or state.get("search_mode") not in {"model_and_output_cap", "joint_model_context"}
         ):
             raise ValueError("COMPLETED_SEARCH_REQUIRED")
         selected_profile(root, state, state["selected_workflow"])
@@ -751,6 +851,14 @@ def confirm(root, control, *, candidate, max_usd, max_requests=100, purpose):
         )
         if not decision.get("quality_gate_passed") or not decision.get("cheaper_on_sample"):
             raise ValueError("SELECTED_SEARCH_CANDIDATE_DID_NOT_PASS_GATES")
+        if state.get("search_mode") == "joint_model_context":
+            if decision.get("joint_model_context_confirmation_eligible") is not True:
+                raise ValueError("JOINT_COMPONENT_COST_AND_QUALITY_GATES_REQUIRED")
+            spec["compression_execution"]["variants"] = [
+                value
+                for value in spec["compression_execution"]["variants"]
+                if value["model_key"] in {spec["baseline"]["key"], candidate}
+            ]
         spec.update(
             candidates=matches,
             split="test",
@@ -802,6 +910,23 @@ def proposal(root, control, *, purpose, candidate=None):
         base = f"/v1/projects/{state['project_id']}"
         if state["endpoint"] != control.endpoint:
             raise ValueError("COLLECTOR_DESTINATION_MISMATCH")
+        if state.get("search_mode") == "joint_model_context":
+            from cutback.joint_context_changes import JointContextProposal, prepare_patch
+
+            source = control(
+                "POST", base + f"/model-context/{state['run_id']}/proposal", {"purpose": purpose}
+            )
+            proposed = JointContextProposal.model_validate(source)
+            if candidate is not None and proposed.proposed.key != candidate:
+                raise ValueError("SELECTED_JOINT_CONFIRMATION_CANDIDATE_CHANGED")
+            artifact = prepare_patch(root, proposed)
+            state["proposal"] = {
+                "version": artifact["version"],
+                "run_id": str(proposed.run_id),
+                "proposed_files": artifact["proposed_files"],
+            }
+            save_session(directory, state, "PROPOSAL_READY")
+            return artifact
         # Content purpose and current rights are checked and audited by the collector.
         content = control(
             "POST", base + f"/experiments/plans/{state['plan']['id']}/content", {"purpose": purpose}

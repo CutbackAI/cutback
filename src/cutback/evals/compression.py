@@ -15,6 +15,7 @@ from cutback.core.compression import (
     ContextInput,
     compress_context,
 )
+from cutback.core.context_producer import ContextProducerBinding
 from cutback.core.models import StrictModel
 from cutback.evals.retrieval import AssumedCPURate
 
@@ -57,11 +58,81 @@ class CompressionExecutionSpec(StrictModel):
         }
 
 
+class JointModelContextExecutionSpec(StrictModel):
+    """Separate approval for a frozen native model/output/context search.
+
+    The legacy fields remain independently declared so their serialized order
+    and contract do not change when this execution target evolves.
+    """
+
+    version: Literal["cutback.joint-model-context.v1"] = "cutback.joint-model-context.v1"
+    transport: Literal["native_provider", "scripted_test_only"] = "native_provider"
+    contract_sha256: str = Field(default_factory=lambda: CONTRACT_SHA256, pattern=r"^[a-f0-9]{64}$")
+    variants: tuple[CompressionVariant, ...] = Field(min_length=2, max_length=6)
+    max_query_bytes: int = Field(default=1024, strict=True, ge=1, le=4096)
+    assumed_usd_per_cpu_hour: AssumedCPURate | None = None
+    cpu_charge_quantum_ms: int = Field(default=1, strict=True, ge=1, le=1000)
+    configuration_binding: CompressionConfigurationBinding | None = None
+    producer_binding: ContextProducerBinding | None = None
+
+    @model_validator(mode="after")
+    def valid(self):
+        if self.producer_binding and (
+            not self.configuration_binding
+            or self.producer_binding.commit != self.configuration_binding.commit
+            or self.producer_binding.source_tree_hash != self.configuration_binding.source_tree_hash
+        ):
+            raise ValueError("JOINT_PRODUCER_AND_SETTINGS_MUST_BIND_SAME_SOURCE_TREE")
+        if self.producer_binding:
+            from pathlib import PurePosixPath
+
+            assert self.configuration_binding is not None
+            expected = str(PurePosixPath(self.producer_binding.file).parent / "compression.json")
+            if self.configuration_binding.file != expected:
+                raise ValueError("JOINT_SETTINGS_MUST_BE_ADJACENT_TO_QUALIFIED_PRODUCER")
+        if self.contract_sha256 != CONTRACT_SHA256:
+            raise ValueError("COMPRESSION_CONTRACT_CHANGED_REAPPROVAL_REQUIRED")
+        if len({value.model_key for value in self.variants}) != len(self.variants):
+            raise ValueError("COMPRESSION_VARIANTS_MUST_HAVE_UNIQUE_MODEL_KEYS")
+        if (
+            self.configuration_binding
+            and self.configuration_binding.settings != self.variants[0].settings
+        ):
+            raise ValueError("COMPRESSION_BASELINE_DIFFERS_FROM_BOUND_CONFIGURATION")
+        return self
+
+    def input_byte_bound(self):
+        return (
+            (
+                self.max_query_bytes
+                + max(value.settings.max_context_bytes for value in self.variants)
+            )
+            * 6
+            + len(FRAME_INSTRUCTION.encode())
+            + 128
+        )
+
+    def public_summary(self):
+        return {
+            **self.model_dump(mode="json"),
+            "search_axes": ["model", "output_cap", "extractive_context"],
+            "content": "query_and_context_in_authorized_encrypted_dataset_only",
+            "cost_scope": "native_api_and_declared_cpu_components_not_task_or_invoice",
+        }
+
+
 class CompressionProcessor:
     """A bounded RAM-only cache also accounts for lineage preprocessing CPU."""
 
-    def __init__(self, spec: CompressionExecutionSpec, *, check=None, deadline=None):
-        self.spec, self.check, self.deadline = spec, check, deadline
+    def __init__(
+        self,
+        spec: CompressionExecutionSpec | JointModelContextExecutionSpec,
+        *,
+        check=None,
+        deadline=None,
+        split=None,
+    ):
+        self.spec, self.check, self.deadline, self.split = spec, check, deadline, split
         self.settings = {v.model_key: v.settings for v in spec.variants}
         self.cache: dict[tuple[str, str], tuple[str, dict]] = {}
         self.cache_bytes = 0
@@ -201,4 +272,36 @@ class CompressionProcessor:
             key=lambda r: Decimal(r.get("sample_modeled_cost_difference_usd") or "-Infinity"),
             reverse=True,
         )
+        if isinstance(self.spec, JointModelContextExecutionSpec):
+            baseline = (report.get("models") or [{}])[0].get("model", {})
+            first = self.spec.variants[0].settings
+            variants = {value.model_key: value.settings for value in self.spec.variants}
+            for decision in report.get("recommendations", []):
+                key = decision["candidate"]["key"]
+                model = next(
+                    value["model"] for value in report["models"] if value["model"]["key"] == key
+                )
+                decision["joint_model_context_confirmation_eligible"] = decision[
+                    "compression_automation_eligible"
+                ]
+                decision["compression_automation_eligible"] = False
+                decision["search_axes_changed"] = [
+                    axis
+                    for axis, changed in (
+                        ("model", model["model"] != baseline["model"]),
+                        ("output_cap", model["max_output_tokens"] != baseline["max_output_tokens"]),
+                        ("extractive_context", variants[key] != first),
+                    )
+                    if changed
+                ]
+            report["joint_model_context"] = {
+                "version": self.spec.version,
+                "candidate_count": len(self.spec.variants) - 1,
+                "split": self.split,
+                "independent_confirmation_requires_lineage_receipt": True,
+                "cost_evidence": "scripted_fixture_usage"
+                if self.spec.transport == "scripted_test_only"
+                else "executor_usage_and_declared_cpu_not_invoice",
+                "full_task_cost_known": False,
+            }
         return report

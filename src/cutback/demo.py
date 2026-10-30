@@ -107,6 +107,7 @@ def seed_support_desk(
     runtime_guardrails=False,
     guarded_tools=False,
     guarded_security=False,
+    joint_model_context=False,
 ):
     """Use actual scoped HTTP APIs and the durable worker, retaining the sample project."""
     require_demo_git()
@@ -377,6 +378,11 @@ def seed_support_desk(
             from cutback.demo_compression import seed_compression
 
             compression_sample = seed_compression(app, control, project["id"], workspace)
+            joint_sample = (
+                seed_compression(app, control, project["id"], workspace, joint=True)
+                if joint_model_context
+                else None
+            )
             ticket_sample = None
             if ticket_router:
                 from cutback.demo_campaign_outcomes import run_sample
@@ -445,6 +451,22 @@ def seed_support_desk(
                 **({"security_suite_sample": security_sample} if security_sample else {}),
                 **({"runtime_guardrail_sample": runtime_sample} if runtime_sample else {}),
                 **({"semantic_cache_sample": semantic_sample} if semantic_sample else {}),
+                **(
+                    {
+                        "joint_model_context_sample": {
+                            key: joint_sample[key]
+                            for key in (
+                                "dataset_id",
+                                "validation_run_id",
+                                "confirmation_run_id",
+                                "native_sdk_calls",
+                                "paid_provider_calls",
+                            )
+                        }
+                    }
+                    if joint_sample
+                    else {}
+                ),
                 **(
                     {
                         "provider_batch_sample": {
@@ -567,6 +589,7 @@ def launch_demo(
     runtime_guardrails=False,
     guarded_tools=False,
     guarded_security=False,
+    joint_model_context=False,
 ):
     """Own one temporary Docker database. Never connect to production or reuse app keys."""
     require_demo_git()
@@ -700,6 +723,7 @@ def launch_demo(
                 runtime_guardrails=runtime_guardrails,
                 guarded_tools=guarded_tools,
                 guarded_security=guarded_security,
+                joint_model_context=joint_model_context,
             )
             print(
                 f"Ready: {endpoint}/dashboard/\n"

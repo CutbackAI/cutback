@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
 test.use({ screenshot: "off", trace: "off", video: "off" });
+const joint = process.env.CUTBACK_JOINT_CONTEXT_BROWSER === "true";
 
 test("context compression, lost queue acknowledgement, confirmation and scoped source review", async ({
   page,
@@ -41,7 +42,9 @@ test("context compression, lost queue acknowledgement, confirmation and scoped s
     .check();
   await page
     .getByRole("button", {
-      name: "Prepare compression comparison",
+      name: joint
+        ? "Prepare model and context comparison"
+        : "Prepare compression comparison",
       exact: true,
     })
     .click();
@@ -89,6 +92,13 @@ test("context compression, lost queue acknowledgement, confirmation and scoped s
     await expect(results).toContainText("COMPLETED");
   }).toPass({ timeout: 60000 });
   await expect(results).toContainText("answer quality requires review");
+  if (joint) {
+    await expect(results).toContainText("changed axes:");
+    await expect(results).toContainText("gpt-4.1-mini");
+    await expect(
+      page.getByLabel("Search model and output ceiling alongside context"),
+    ).toBeChecked();
+  }
   await page
     .getByLabel("Purpose for reading case evidence")
     .fill("owned-compressed-input-review");
@@ -130,6 +140,12 @@ test("context compression, lost queue acknowledgement, confirmation and scoped s
   await expect(
     page.getByRole("region", { name: "Compression source proposal" }),
   ).toContainText("synthetic_local_review_only");
+  if (joint)
+    await expect(
+      page.getByRole("heading", {
+        name: "Review the combined model and context change",
+      }),
+    ).toBeVisible();
   expect(
     await page.evaluate(() =>
       [localStorage, sessionStorage].some((s) =>
