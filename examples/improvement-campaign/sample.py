@@ -23,6 +23,14 @@ def main():
     parser.add_argument("--local-target", type=Path, required=True)
     parser.add_argument("--cleanup", action="store_true")
     parser.add_argument(
+        "--ticket-router",
+        action="store_true",
+        help=(
+            "Use the independent three-label ticket task with encrypted case evidence; "
+            "requires --outcomes"
+        ),
+    )
+    parser.add_argument(
         "--modern-model",
         action="store_true",
         help="Use a Luna application through ordinary agent preparation; requires --outcomes",
@@ -42,6 +50,8 @@ def main():
         parser.error("--watch requires --outcomes")
     if args.modern_model and not args.outcomes:
         parser.error("--modern-model requires --outcomes")
+    if args.ticket_router and (not args.outcomes or args.modern_model):
+        parser.error("--ticket-router requires --outcomes and its qualified legacy native profile")
     location, config = configured(args.local_target)
     if status(args.local_target)["status"] != "READY" or not config["allow_payloads"]:
         raise ValueError("START_OWNED_LOCAL_COLLECTOR_WITH_AUTHORIZED_ENCRYPTED_STORAGE")
@@ -86,6 +96,7 @@ def main():
                     workspace,
                     watch=args.watch,
                     modern_model=args.modern_model,
+                    ticket_router=args.ticket_router,
                 )
             else:
                 result = seed_campaign(owned, client, project, key.json()["token"], workspace)
@@ -101,6 +112,14 @@ def main():
                         "known_modeled_subtotal_usd": report["known_spend_subtotal_usd"],
                         "decision": report["summary"]["decision"],
                         "paid_provider_calls": 0,
+                        **(
+                            {
+                                "scenario": result["scenario"],
+                                "reference_labels": result["reference_labels"],
+                            }
+                            if args.ticket_router
+                            else {}
+                        ),
                         "dashboard": config["endpoint"] + "/dashboard/?project=" + project,
                         "disclosure": result["disclosure"],
                         **(

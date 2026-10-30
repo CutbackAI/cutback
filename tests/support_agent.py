@@ -134,6 +134,7 @@ def prepare_fresh(
     search=False,
     for_campaign=False,
     campaign_generator_provider=None,
+    retain_case_outputs=False,
     model=None,
     output_cap=None,
 ):
@@ -164,6 +165,7 @@ def prepare_fresh(
         search=search,
         for_campaign=for_campaign,
         campaign_generator_provider=campaign_generator_provider,
+        retain_case_outputs=retain_case_outputs,
     )
     result = prepare(root, control, tenant[0], **args)
     return root, control, result, args

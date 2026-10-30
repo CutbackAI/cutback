@@ -2,7 +2,6 @@
 
 import json
 import os
-import shutil
 import subprocess
 import threading
 from pathlib import Path
@@ -11,6 +10,7 @@ from uuid import UUID
 import httpx
 import pytest
 from sqlalchemy import select
+from support_browser import browser_command
 from support_retrieval_application import git
 from test_pipeline import server
 
@@ -186,12 +186,7 @@ def test_authenticated_retrieval_authoring_confirmation_and_mobile_accessibility
             )
             thread.start()
             completed = subprocess.run(
-                [
-                    shutil.which("npm.cmd") or shutil.which("npm") or "npm",
-                    "test",
-                    "--",
-                    "retrieval.spec.ts",
-                ],
+                browser_command(Path(__file__).resolve().parents[2] / "web", "retrieval.spec.ts"),
                 cwd=Path(__file__).resolve().parents[2] / "web",
                 env={
                     **os.environ,

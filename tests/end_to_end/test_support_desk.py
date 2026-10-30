@@ -3,13 +3,13 @@
 import json
 import os
 import secrets
-import shutil
 import subprocess
 from pathlib import Path
 from uuid import uuid4
 
 import httpx
 import pytest
+from support_browser import browser_command
 from test_pipeline import server
 
 from cutback.demo import seed_support_desk
@@ -102,13 +102,11 @@ def test_support_desk_decisions_stages_encrypted_cases_and_browser(
         assert client.post("/v1/demo/connect", json={}).status_code == 403
         if os.getenv("CUTBACK_TEST_BROWSER") == "true":
             result = subprocess.run(
-                [
-                    shutil.which("npm.cmd") or "npm",
-                    "test",
-                    "--",
+                browser_command(
+                    Path(__file__).resolve().parents[2] / "web",
                     "support-demo.spec.ts",
                     "execution.spec.ts",
-                ],
+                ),
                 cwd=Path(__file__).resolve().parents[2] / "web",
                 env={**os.environ, "CUTBACK_UI_URL": endpoint, "CUTBACK_SUPPORT_DEMO": "true"},
                 capture_output=True,

@@ -14,6 +14,8 @@ Source checkouts also include [context-compression comparisons](https://github.c
 
 New source-based [automatic campaigns](https://github.com/CutbackAI/cutback/blob/main/docs/improvement-campaigns.md) prepare several model and output-limit alternatives under one reviewed budget. They compare those first, use reserved instruction search only when needed, then confirm one candidate before preparing application checks and a reversible source change. [Run the independent example](https://github.com/CutbackAI/cutback/blob/main/examples/automatic-portfolio/README.md); no provider key is needed for its synthetic journey.
 
+From a matching source checkout, `uv run cutback demo --ticket-router` adds a three-label application to **Explore sample**. Inspect why a cheap constant answer fails, read authorized paired cases, and follow the automatically prepared change and rollback. The 240 synthetic rows stay in 60 declared intent families; they are not a real-model benchmark.
+
 ## Start with a working application
 
 The support-desk sample routes tickets by category and priority. Two workflows, ticket triage and escalation, share one native SDK call. It shows why a cheaper configuration that mishandles urgent tickets must be rejected.

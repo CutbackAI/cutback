@@ -6,7 +6,6 @@ import html
 import json
 import os
 import secrets
-import shutil
 import subprocess
 import time
 from pathlib import Path
@@ -18,6 +17,7 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
+from support_browser import browser_command
 from test_pipeline import server
 
 from cutback.server.api import create_app
@@ -122,7 +122,7 @@ def test_browser_sso_pkce_rsa_and_memory_only_credentials(postgres_url, monkeypa
                 json={"project_id": project, "role": "viewer"},
             ).raise_for_status()
             result = subprocess.run(
-                [shutil.which("npm.cmd") or shutil.which("npm"), "test", "--", "tests/sso.spec.ts"],
+                browser_command(Path(__file__).resolve().parents[2] / "web", "tests/sso.spec.ts"),
                 cwd=Path(__file__).resolve().parents[2] / "web",
                 env={**os.environ, "CUTBACK_UI_URL": endpoint, "CUTBACK_UI_SSO_TEST": "true"},
                 capture_output=True,

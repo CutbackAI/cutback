@@ -13931,8 +13931,7 @@
           "contract_sha256": {
             "type": "string",
             "pattern": "^[a-f0-9]{64}$",
-            "title": "Contract Sha256",
-            "default": "ed14197d466c05fa5c6540d3b934ef188c3578d9852d153085f2dd99695ca1d5"
+            "title": "Contract Sha256"
           },
           "variants": {
             "items": {
@@ -14007,8 +14006,7 @@
           "contract_sha256": {
             "type": "string",
             "pattern": "^[a-f0-9]{64}$",
-            "title": "Contract Sha256",
-            "default": "ed14197d466c05fa5c6540d3b934ef188c3578d9852d153085f2dd99695ca1d5"
+            "title": "Contract Sha256"
           },
           "variants": {
             "items": {
@@ -21613,8 +21611,7 @@
           "contract_sha256": {
             "type": "string",
             "pattern": "^[a-f0-9]{64}$",
-            "title": "Contract Sha256",
-            "default": "05e5f5852cfb3d64bd0d4f56443424cc2685610975579ec18aac634cb9a6164c"
+            "title": "Contract Sha256"
           },
           "corpus": {
             "$ref": "#/components/schemas/RetrievalCorpus"
@@ -21693,8 +21690,7 @@
           "contract_sha256": {
             "type": "string",
             "pattern": "^[a-f0-9]{64}$",
-            "title": "Contract Sha256",
-            "default": "05e5f5852cfb3d64bd0d4f56443424cc2685610975579ec18aac634cb9a6164c"
+            "title": "Contract Sha256"
           },
           "corpus": {
             "$ref": "#/components/schemas/RetrievalCorpus"

@@ -63,9 +63,9 @@ def test_policy_gates_redacted_encrypted_runtime_sample_and_project_delete(
     exported = client.get(path + "/export", headers=admin)
     assert exported.status_code == 200 and b"private output" not in exported.content
     assert client.delete(path, headers=admin, params={"confirm_slug": "wrong"}).status_code == 409
-    slug = next(
-        p["slug"] for p in client.get("/v1/projects", headers=admin).json() if p["id"] == project
-    )
+    detail = client.get(path, headers=admin)
+    assert detail.status_code == 200, detail.text
+    slug = detail.json()["slug"]
     deleted = client.delete(path, headers=admin, params={"confirm_slug": slug})
     assert deleted.status_code == 200, deleted.text
     assert not list((tmp_path / project).iterdir())

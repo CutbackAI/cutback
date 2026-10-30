@@ -95,12 +95,16 @@ def main(
 
 
 @app.command()
-def demo(port: int = typer.Option(8766, min=1024, max=65535), open_browser: bool = True):
+def demo(
+    port: int = typer.Option(8766, min=1024, max=65535),
+    open_browser: bool = True,
+    ticket_router: bool = False,
+):
     """Explore the complete sample. Requires Docker and Git; no API key or paid calls."""
     try:
         from cutback.demo import launch_demo
 
-        launch_demo(port, open_browser)
+        launch_demo(port, open_browser, ticket_router=ticket_router)
     except ImportError:
         fail(
             "DEMO_EXTRAS_REQUIRED",

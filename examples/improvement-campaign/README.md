@@ -16,6 +16,8 @@ The collector and worker code must both come from this source checkout and have 
 
 The ordinary `--outcomes` agent path now prepares a v3 portfolio before instruction search; see the [step-by-step portfolio walkthrough](../automatic-portfolio/README.md). The guided demo's saved campaign below remains v2 for compatibility. Both use one cumulative parent ledger and untouched confirmation.
 
+For a three-label application, use `uv run cutback demo --ticket-router`. **Explore sample → Inspect ticket-routing failures** shows why a constant cheap answer fails access/technical tickets, with purpose-scoped paired outputs. This is the first-use path without copied credentials. The advanced owned-collector script accepts `--outcomes --ticket-router`; it preserves 60 declared intent families across 240 synthetic variants and checks all three labels on the base and proposed source trees.
+
 Open [the classifier](../../src/cutback/sample_app/campaign.py): it uses the native SDK and has no Cutback import. The sample scans a copied file without executing it. It registers that exact source profile, imports forty synthetic examples, and freezes an explicitly declared synthetic business-cost window. Its conservative opportunity forecast bounds the complete search before approval.
 
 The owned provider fixture deliberately produces these results:

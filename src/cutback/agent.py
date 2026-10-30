@@ -407,6 +407,7 @@ def prepare(
     minimum=None,
     independent_labels=False,
     representative=False,
+    retain_case_outputs=False,
     mapping=None,
     search=False,
     for_campaign=False,
@@ -552,6 +553,7 @@ def prepare(
                 **spec.model_dump(mode="json"),
                 "source_binding": profile.binding.model_dump(mode="json"),
                 "criteria": [c.model_dump(mode="json") for c in criteria],
+                "retain_case_outputs": retain_case_outputs,
                 "split": "validation" if search or for_campaign else "test",
                 **({"name": "Campaign preparation basis"} if for_campaign else {}),
             }

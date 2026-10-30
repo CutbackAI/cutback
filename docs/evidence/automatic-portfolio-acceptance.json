@@ -1,0 +1,124 @@
+{
+  "status": "bounded_increment_merged_and_accepted",
+  "public_pr": "https://github.com/CutbackAI/cutback/pull/42",
+  "public_head": "6accd7ecd3f3af2617491293468322205ac5f5e9",
+  "public_merge": "6b54b7ebe5a26161a20693dcc20eecd9604778a9",
+  "merged_tree": "41f4637c39549ad2c75a8a4d16a1c814482e58e3",
+  "archives": {
+    "cutback-0.1.0.dev5-py3-none-any.whl": "aecff21dd6254224c9e007a4a67f3759c1d786245424bb6d9f485cf716b8b4f1",
+    "cutback-0.1.0.dev5.tar.gz": "c5fcfafb2676c98da49b75f9ce0c6c1439a7dcc28a3a8a2e7898a3650783b437"
+  },
+  "exact_final_public_wheel": {
+    "application_files": 240,
+    "python_modules": 225,
+    "distribution_metadata_files": 5,
+    "both_installs_byte_identical": true,
+    "default_focus": {
+      "passed": 50,
+      "skipped": 1,
+      "seconds": 605.1,
+      "authenticated_desktop_mobile_axe": true
+    },
+    "sdk3_focus": {
+      "passed": 48,
+      "skipped": 3,
+      "seconds": 579.25
+    }
+  },
+  "code_equivalent_crlf_predecessor_broad_installed": {
+    "default": {
+      "passed": 1025,
+      "skipped": 32,
+      "seconds": 1475.67
+    },
+    "sdk3": {
+      "passed": 1044,
+      "skipped": 9,
+      "seconds": 1154.52
+    },
+    "difference": "Two unchanged files had CRLF working bytes hidden by Git text normalization. Canonical final archives were rebuilt and rerun separately; these broad results are not exact-final-archive broad runs."
+  },
+  "hosted": {
+    "run": 41007437905,
+    "security_run": 41007437899,
+    "all_ten_required_checks": "success",
+    "jobs": [
+      {
+        "job": "infrastructure",
+        "conclusion": "success",
+        "pytest": [
+          "5 passed in 1.46s"
+        ]
+      },
+      {
+        "job": "verify (3.11.18)",
+        "conclusion": "success",
+        "pytest": [
+          "1258 passed, 30 skipped in 1138.84s"
+        ]
+      },
+      {
+        "job": "openai3-sdk (3.13.18)",
+        "conclusion": "success",
+        "pytest": [
+          "1047 passed, 6 skipped in 388.83s"
+        ]
+      },
+      {
+        "job": "legacy-sdk (3.13.18)",
+        "conclusion": "success",
+        "pytest": [
+          "21 passed in 0.83s"
+        ]
+      },
+      {
+        "job": "legacy-sdk (3.11.18)",
+        "conclusion": "success",
+        "pytest": [
+          "21 passed in 0.82s"
+        ]
+      },
+      {
+        "job": "verify (3.13.18)",
+        "conclusion": "success",
+        "pytest": [
+          "1257 passed, 31 skipped in 1026.27s"
+        ]
+      },
+      {
+        "job": "openai3-sdk (3.11.18)",
+        "conclusion": "success",
+        "pytest": [
+          "1046 passed, 7 skipped in 352.02s"
+        ]
+      }
+    ]
+  },
+  "public_boundary": {
+    "source_files": 770,
+    "reachable_history_objects": 3154,
+    "archive_members": 1011,
+    "findings": 0
+  },
+  "raw_committed_source_snapshot": {
+    "files": 770,
+    "bytes": 8563165,
+    "different": 0,
+    "missing": 0,
+    "unsafe": 0,
+    "staged": false,
+    "untracked": 0
+  },
+  "archives_reproduce": true,
+  "core_only_smoke": "passed",
+  "released_migrations_0001_through_0020": "unchanged",
+  "paid_provider_calls": 0,
+  "pypi_upload": false,
+  "production_deployment": false,
+  "product_complete": false,
+  "limits": [
+    "Qualified same-provider native text model/output-cap portfolio and reserved instruction search only.",
+    "Retrieval and compression remain separate approved engines.",
+    "No real customer quality, invoice savings, production SLA or market validation is claimed."
+  ]
+}

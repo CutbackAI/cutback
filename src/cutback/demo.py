@@ -92,7 +92,7 @@ def fixture_response(request):
     )
 
 
-def seed_support_desk(app, endpoint, admin, workspace: Path):
+def seed_support_desk(app, endpoint, admin, workspace: Path, *, ticket_router=False):
     """Use actual scoped HTTP APIs and the durable worker, retaining the sample project."""
     require_demo_git()
 
@@ -362,6 +362,20 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
             from cutback.demo_compression import seed_compression
 
             compression_sample = seed_compression(app, control, project["id"], workspace)
+            ticket_sample = None
+            if ticket_router:
+                from cutback.demo_campaign_outcomes import run_sample
+
+                ticket_sample = run_sample(
+                    app,
+                    control,
+                    endpoint,
+                    admin,
+                    project["id"],
+                    ingest,
+                    workspace,
+                    ticket_router=True,
+                )
             manifest = {
                 "available": True,
                 "title": "Support-desk triage",
@@ -378,6 +392,24 @@ def seed_support_desk(app, endpoint, admin, workspace: Path):
                 "sample_source": "cutback/sample_app/app.py",
                 "source_diff": patch,
                 "paid_provider_calls": 0,
+                **(
+                    {
+                        "ticket_campaign_sample": {
+                            "campaign_id": ticket_sample["campaign_id"],
+                            "validation_run_id": next(
+                                r["run_id"]
+                                for r in ticket_sample["report"]["runs"]
+                                if r["phase"] == "validation"
+                            ),
+                            "native_calls": ticket_sample["native_calls"],
+                            "reference_labels": 3,
+                            "declared_intent_families": 60,
+                            "paid_provider_calls": 0,
+                        }
+                    }
+                    if ticket_sample
+                    else {}
+                ),
                 "execution_samples": execution_samples,
                 "agent_episode_run_id": agent_sample["run_id"],
                 "task_economics_sample": task_sample,
@@ -453,7 +485,7 @@ def install_demo_routes(app, manifest, token, endpoint):
         )
 
 
-def launch_demo(port=8766, open_browser=True):
+def launch_demo(port=8766, open_browser=True, *, ticket_router=False):
     """Own one temporary Docker database. Never connect to production or reuse app keys."""
     require_demo_git()
 
@@ -562,7 +594,9 @@ def launch_demo(port=8766, open_browser=True):
                 ),
                 flush=True,
             )
-            manifest = seed_support_desk(app, endpoint, admin, workspace)
+            manifest = seed_support_desk(
+                app, endpoint, admin, workspace, ticket_router=ticket_router
+            )
             print(
                 f"Ready: {endpoint}/dashboard/\n"
                 "Choose Explore sample. No API key is needed.\n"

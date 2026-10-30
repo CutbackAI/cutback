@@ -109,6 +109,40 @@ export function SampleGuide({
           </button>
         )}
       </div>
+      {demo.ticket_campaign_sample && (
+        <section aria-label="Automatic ticket-routing task">
+          <h3>Three labels. One automatic improvement.</h3>
+          <p>
+            The independent ticket router chooses billing, access or technical.
+            Its 240 synthetic examples belong to 60 declared intent families;
+            related variants stay together. A cheap constant answer must fail
+            before the agent proposes a better instruction and confirms it.
+          </p>
+          <p>
+            All provider replies and later outcomes are synthetic. Inspect the
+            failed answers, cumulative campaign costs, application checks and
+            rollback; these do not establish real-model accuracy or customer
+            savings.
+          </p>
+          <div className="actions">
+            <button
+              onClick={() =>
+                inspect(demo.ticket_campaign_sample.validation_run_id)
+              }
+            >
+              Inspect ticket-routing failures
+            </button>
+            <button onClick={() => navigate("Campaigns")}>
+              Follow the ticket-routing campaign
+            </button>
+          </div>
+          <p>
+            In Campaigns, inspect the row ending in{" "}
+            {String(demo.ticket_campaign_sample.campaign_id).slice(0, 8)}.
+            Encrypted cases require an explicit review purpose.
+          </p>
+        </section>
+      )}
       {error && <p role="alert">{error}</p>}
       {loading && <p role="status">Loading sample evidence…</p>}
       {detail && (

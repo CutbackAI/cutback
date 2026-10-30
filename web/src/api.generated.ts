@@ -3911,11 +3911,8 @@ export interface components {
              * @constant
              */
             version: "cutback.compression-execution.v1";
-            /**
-             * Contract Sha256
-             * @default ed14197d466c05fa5c6540d3b934ef188c3578d9852d153085f2dd99695ca1d5
-             */
-            contract_sha256: string;
+            /** Contract Sha256 */
+            contract_sha256?: string;
             /** Variants */
             variants: components["schemas"]["CompressionVariant"][];
             /**
@@ -3940,11 +3937,8 @@ export interface components {
              * @constant
              */
             version: "cutback.compression-execution.v1";
-            /**
-             * Contract Sha256
-             * @default ed14197d466c05fa5c6540d3b934ef188c3578d9852d153085f2dd99695ca1d5
-             */
-            contract_sha256: string;
+            /** Contract Sha256 */
+            contract_sha256?: string;
             /** Variants */
             variants: components["schemas"]["CompressionVariant"][];
             /**
@@ -6927,11 +6921,8 @@ export interface components {
              * @constant
              */
             version: "cutback.retrieval-execution.v1";
-            /**
-             * Contract Sha256
-             * @default 05e5f5852cfb3d64bd0d4f56443424cc2685610975579ec18aac634cb9a6164c
-             */
-            contract_sha256: string;
+            /** Contract Sha256 */
+            contract_sha256?: string;
             corpus: components["schemas"]["RetrievalCorpus"];
             /** Variants */
             variants: components["schemas"]["RetrievalVariant-Input"][];
@@ -6957,11 +6948,8 @@ export interface components {
              * @constant
              */
             version: "cutback.retrieval-execution.v1";
-            /**
-             * Contract Sha256
-             * @default 05e5f5852cfb3d64bd0d4f56443424cc2685610975579ec18aac634cb9a6164c
-             */
-            contract_sha256: string;
+            /** Contract Sha256 */
+            contract_sha256?: string;
             corpus: components["schemas"]["RetrievalCorpus"];
             /** Variants */
             variants: components["schemas"]["RetrievalVariant-Output"][];

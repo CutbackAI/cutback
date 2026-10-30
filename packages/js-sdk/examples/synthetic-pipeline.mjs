@@ -12,6 +12,9 @@ const observer = createObserver({
   projectId: process.env.CUTBACK_PROJECT_ID,
   serviceName: "node-synthetic-example",
   environment: "staging",
+  // The owned collector may be cold or running under coverage on shared CI.
+  // Keep these demonstration deadlines explicit; the SDK default stays 300 ms.
+  exportTimeoutMs: 2000,
   fetch: async (input) => {
     const url = new URL(input);
     if (url.hostname === "api.openai.com")
@@ -87,7 +90,7 @@ try {
     }),
   );
 } finally {
-  const counters = await observer.close();
+  const counters = await observer.close({ timeoutMs: 10000 });
   console.log(
     JSON.stringify({
       disclosure:

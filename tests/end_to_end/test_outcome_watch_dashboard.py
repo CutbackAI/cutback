@@ -1,11 +1,11 @@
 """Authenticated observation authoring/history against a real migrated collector."""
 
 import os
-import shutil
 import subprocess
 from pathlib import Path
 
 import pytest
+from support_browser import browser_command
 from test_pipeline import server
 
 
@@ -27,12 +27,7 @@ def test_outcome_watch_dashboard(api, tenant, tmp_path, monkeypatch):
     admin, viewer = api[1]["Authorization"][7:], tenant[2]["Authorization"][7:]
     with server(api[2]) as endpoint:
         completed = subprocess.run(
-            [
-                shutil.which("npm.cmd") or shutil.which("npm") or "npm",
-                "test",
-                "--",
-                "outcome-watches.spec.ts",
-            ],
+            browser_command(root / "web", "outcome-watches.spec.ts"),
             cwd=root / "web",
             env={
                 **os.environ,

@@ -38,7 +38,8 @@ AssumedCPURate = Annotated[
 
 class RetrievalExecutionSpec(StrictModel):
     version: Literal["cutback.retrieval-execution.v1"] = "cutback.retrieval-execution.v1"
-    contract_sha256: str = Field(default=CONTRACT_SHA256, pattern=r"^[a-f0-9]{64}$")
+    # Unicode tables belong to the runtime contract, not the portable OpenAPI default.
+    contract_sha256: str = Field(default_factory=lambda: CONTRACT_SHA256, pattern=r"^[a-f0-9]{64}$")
     corpus: RetrievalCorpus
     variants: tuple[RetrievalVariant, ...] = Field(min_length=2, max_length=6)
     max_query_bytes: int = Field(default=1024, strict=True, ge=1, le=8192)

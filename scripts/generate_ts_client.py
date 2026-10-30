@@ -74,5 +74,7 @@ for path, methods in contract["paths"].items():
             + ");},"
         )
 lines.append("};}")
-(root / "web/src/client.generated.ts").write_text("\n".join(lines) + "\n", encoding="utf-8")
+(root / "web/src/client.generated.ts").write_text(
+    "\n".join(lines) + "\n", encoding="utf-8", newline="\n"
+)
 print("TypeScript API client generated from OpenAPI paths, parameters and body schemas.")
