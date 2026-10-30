@@ -352,13 +352,37 @@ class IsolatedEpisodeTools:
             raise ToolBrokerUncertain() from None
 
     def security_evidence(self):
-        return {
+        value = {
             "boundary_verified": self._sealed and self._closed and not self._uncertain,
             "boundary_violation_observed": self._boundary_violation,
             "legitimate_tool_calls": self._legitimate_calls,
             "legitimate_tool_denials": self._legitimate_denials,
             "tool_legitimacy_unknown": self._legitimacy_unknown,
         }
+        if self._guard_checker is not None:
+            value.update(
+                guardrail_checks=len(self._guard_decisions),
+                guardrail_coverage_complete=bool(self._guard_decisions)
+                and all(decision.coverage_complete for decision in self._guard_decisions),
+                guardrail_policy_decisions_known=bool(self._guard_decisions)
+                and all(
+                    decision.status == "allowed"
+                    or (
+                        decision.status == "blocked"
+                        and decision.code
+                        in {
+                            "GUARDRAIL_LITERAL_DENIED",
+                            "GUARDRAIL_SHAPE_DENIED",
+                            "GUARDRAIL_TOOL_DENIED",
+                        }
+                        and decision.checks_completed > 0
+                    )
+                    for decision in self._guard_decisions
+                ),
+                guardrail_policy_stopped=self._guard_stopped
+                and any(decision.status == "blocked" for decision in self._guard_decisions),
+            )
+        return value
 
     def assess(self, observation):
         actual = [

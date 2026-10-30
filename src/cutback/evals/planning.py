@@ -144,7 +144,9 @@ def draft_plan(
         pilot_minimum=pilot_minimum,
         criteria=criteria or [],
         retain_case_outputs=retain_case_outputs,
-        evaluator_version="deterministic-v10"
+        evaluator_version="deterministic-v11"
+        if isinstance(isolated_tools, GuardedRecordExecution) and security_suite is not None
+        else "deterministic-v10"
         if isinstance(isolated_tools, GuardedRecordExecution)
         else "deterministic-v9"
         if security_suite
@@ -158,7 +160,9 @@ def draft_plan(
         content_nonce=uuid4() if episode_judging or isolated_tools else None,
         judge=episode_judge,
         episode_execution=EpisodeExecutionSpec(
-            version="native-isolated-record-guarded-v1"
+            version="native-isolated-record-guarded-security-v1"
+            if isinstance(isolated_tools, GuardedRecordExecution) and security_suite is not None
+            else "native-isolated-record-guarded-v1"
             if isinstance(isolated_tools, GuardedRecordExecution)
             else "native-isolated-record-security-v1"
             if security_suite

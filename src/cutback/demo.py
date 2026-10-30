@@ -106,6 +106,7 @@ def seed_support_desk(
     security_suite=False,
     runtime_guardrails=False,
     guarded_tools=False,
+    guarded_security=False,
 ):
     """Use actual scoped HTTP APIs and the durable worker, retaining the sample project."""
     require_demo_git()
@@ -407,10 +408,12 @@ def seed_support_desk(
                 from cutback.demo_runtime_guardrails import seed_runtime_guardrails
 
                 runtime_sample = seed_runtime_guardrails(app, control, project["id"])
-            if security_suite:
+            if security_suite or guarded_security:
                 from cutback.demo_security_suites import seed_security_suite
 
-                security_sample = seed_security_suite(app, control, project["id"], tool_image_id)
+                security_sample = seed_security_suite(
+                    app, control, project["id"], tool_image_id, guarded=guarded_security
+                )
             if tool_image_id:
                 from cutback.demo_isolated_tools import seed_isolated_tools
 
@@ -563,6 +566,7 @@ def launch_demo(
     security_suite=False,
     runtime_guardrails=False,
     guarded_tools=False,
+    guarded_security=False,
 ):
     """Own one temporary Docker database. Never connect to production or reuse app keys."""
     require_demo_git()
@@ -570,6 +574,8 @@ def launch_demo(
         raise ValueError("SECURITY_DEMO_REQUIRES_EXPLICIT_LOCAL_TOOL_IMAGE_ID")
     if guarded_tools and tool_image_id is None:
         raise ValueError("GUARDED_TOOL_DEMO_REQUIRES_EXPLICIT_LOCAL_TOOL_IMAGE_ID")
+    if guarded_security and tool_image_id is None:
+        raise ValueError("GUARDED_SECURITY_DEMO_REQUIRES_EXPLICIT_LOCAL_TOOL_IMAGE_ID")
     if tool_image_id is not None and not re.fullmatch(r"sha256:[a-f0-9]{64}", tool_image_id):
         raise ValueError("DEMO_EXACT_LOCAL_TOOL_IMAGE_ID_REQUIRED")
 
@@ -693,6 +699,7 @@ def launch_demo(
                 security_suite=security_suite,
                 runtime_guardrails=runtime_guardrails,
                 guarded_tools=guarded_tools,
+                guarded_security=guarded_security,
             )
             print(
                 f"Ready: {endpoint}/dashboard/\n"

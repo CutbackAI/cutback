@@ -29,7 +29,18 @@ def api_database_url(isolated_postgres_url):
     return isolated_postgres_url
 
 
-def security_run(api, tenant, tmp_path, monkeypatch, *, repeats=1, image=None):
+def security_run(
+    api,
+    tenant,
+    tmp_path,
+    monkeypatch,
+    *,
+    repeats=1,
+    image=None,
+    guarded=False,
+    guard_term="resolved",
+    guard_mode="fail_closed",
+):
     base, store, old, _ = authorized_dataset(api, tenant, tmp_path, monkeypatch)
     project, principal, broker = UUID(tenant[0]), uuid4(), uuid4()
     image = image or "sha256:" + "a" * 64
@@ -45,17 +56,73 @@ def security_run(api, tenant, tmp_path, monkeypatch, *, repeats=1, image=None):
     canaries = {
         str(case.episode.seeds[0].id): case.security.output_canaries[0] for case in body.cases
     }
+    guard, definition = None, None
+    if guarded:
+        from unit.test_guardrails import policy
+
+        definition = policy(
+            project_id=project,
+            principal_id=principal,
+            workflows=["classify"],
+            protected_stages=["tool_input", "tool_output"],
+            max_evaluation_ms=1000,
+            on_unavailable=guard_mode,
+            rules=[
+                {
+                    "kind": "literal_deny",
+                    "key": "owned-input",
+                    "stages": ["tool_input"],
+                    "terms": ["OWNED_UNMATCHED_INPUT_CANARY"],
+                },
+                {
+                    "kind": "literal_deny",
+                    "key": "owned-output",
+                    "stages": ["tool_output"],
+                    "terms": [guard_term],
+                    "normalization": "nfkc_casefold",
+                },
+            ],
+        )
+        registered = api[0].post(
+            base + "/runtime-guardrails",
+            headers=api[1],
+            json={
+                "service_id": str(uuid4()),
+                "capture_policy_id": old["provenance"]["policy_id"],
+                "policy": definition.model_dump(mode="json"),
+                "max_checks": 100,
+            },
+        )
+        assert registered.status_code == 201, registered.text
+        registered = registered.json()
+        response = api[0].post(
+            base + f"/runtime-guardrails/{registered['id']}/approve",
+            headers=api[1],
+            json={
+                "approval_hash": registered["approval_hash"],
+                "approval_ref": str(uuid4()),
+                "expected_state_version": registered["state_version"],
+            },
+        )
+        assert response.status_code == 200, response.text
+        guard = response.json()["binding"]
     raw = isolated_plan(project, principal, broker, image, sample_limit=2).model_dump(mode="json")
     raw["dataset_hash"], raw["repeats"] = dataset["immutable_hash"], repeats
     raw["retain_case_outputs"] = True
     raw["candidates"][0]["instruction"] = "SCRIPTED_CANDIDATE"
-    raw["evaluator_version"] = "deterministic-v9"
+    raw["evaluator_version"] = "deterministic-v11" if guarded else "deterministic-v9"
     raw["episode_execution"].update(
-        version="native-isolated-record-security-v1",
+        version="native-isolated-record-guarded-security-v1"
+        if guarded
+        else "native-isolated-record-security-v1",
         max_turns=8,
         max_tool_calls=6,
         security_suite={"suite": body.security_suite.model_dump(mode="json")},
     )
+    if guard:
+        raw["episode_execution"]["isolated_tools"].update(
+            version="isolated-record-guarded-tools-v1", runtime_guardrails=guard
+        )
     wrong = {**raw, "evaluator_version": "deterministic-v8"}
     with pytest.raises(ValueError):
         ExperimentPlan.model_validate(wrong)
@@ -74,7 +141,7 @@ def security_run(api, tenant, tmp_path, monkeypatch, *, repeats=1, image=None):
     assert response.status_code == 200, response.text
     response = api[0].post(base + "/experiments", headers=api[1], json={"plan_id": plan["id"]})
     assert response.status_code == 202, response.text
-    return (
+    result = (
         base,
         store,
         UUID(response.json()["id"]),
@@ -86,6 +153,7 @@ def security_run(api, tenant, tmp_path, monkeypatch, *, repeats=1, image=None):
         dataset,
         prepared,
     )
+    return (*result, definition, guard) if guarded else result
 
 
 def scripted_security_reply(request, *, behavior="attempt_then_finish", canaries=None):

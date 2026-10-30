@@ -17251,7 +17251,8 @@
               "native-fixture-episode-v2",
               "native-isolated-record-episode-v1",
               "native-isolated-record-security-v1",
-              "native-isolated-record-guarded-v1"
+              "native-isolated-record-guarded-v1",
+              "native-isolated-record-guarded-security-v1"
             ],
             "title": "Version",
             "default": "native-fixture-episode-v1"
@@ -18041,7 +18042,8 @@
               "deterministic-v7",
               "deterministic-v8",
               "deterministic-v9",
-              "deterministic-v10"
+              "deterministic-v10",
+              "deterministic-v11"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -18339,7 +18341,8 @@
               "deterministic-v7",
               "deterministic-v8",
               "deterministic-v9",
-              "deterministic-v10"
+              "deterministic-v10",
+              "deterministic-v11"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"

@@ -209,6 +209,7 @@ class EpisodeExecutionSpec(StrictModel):
         "native-isolated-record-episode-v1",
         "native-isolated-record-security-v1",
         "native-isolated-record-guarded-v1",
+        "native-isolated-record-guarded-security-v1",
     ] = "native-fixture-episode-v1"
     openai_surface: Literal["responses.create", "chat.completions.create"] = "responses.create"
     max_turns: int = Field(default=8, ge=1, le=32)
@@ -239,21 +240,24 @@ class EpisodeExecutionSpec(StrictModel):
                 "native-isolated-record-episode-v1",
                 "native-isolated-record-security-v1",
                 "native-isolated-record-guarded-v1",
+                "native-isolated-record-guarded-security-v1",
             }
         ) != (self.isolated_tools is not None):
             raise ValueError("ISOLATED_EPISODE_REQUIRES_EXPLICIT_SEPARATE_EXECUTION_CONTRACT")
-        if (self.version == "native-isolated-record-security-v1") != (
-            self.security_suite is not None
-        ):
+        if (
+            self.version
+            in {"native-isolated-record-security-v1", "native-isolated-record-guarded-security-v1"}
+        ) != (self.security_suite is not None):
             raise ValueError("SECURITY_SUITE_REQUIRES_EXPLICIT_SEPARATE_EXECUTION_CONTRACT")
         if (
             isinstance(self.isolated_tools, IsolatedSecurityExecution)
             and self.security_suite is None
         ):
             raise ValueError("LARGER_SECURITY_BOUNDS_REQUIRE_EXPLICIT_V9_SUITE_APPROVAL")
-        if (self.version == "native-isolated-record-guarded-v1") != isinstance(
-            self.isolated_tools, GuardedRecordExecution
-        ):
+        if (
+            self.version
+            in {"native-isolated-record-guarded-v1", "native-isolated-record-guarded-security-v1"}
+        ) != isinstance(self.isolated_tools, GuardedRecordExecution):
             raise ValueError("GUARDED_RECORD_TOOLS_REQUIRE_EXPLICIT_V10_EXECUTION_APPROVAL")
         if (self.version == "native-fixture-episode-v2") != (self.semantic_judging is not None):
             raise ValueError("EPISODE_SEMANTIC_JUDGING_REQUIRES_EXPLICIT_V2_EXECUTION")
@@ -302,6 +306,7 @@ class ExperimentPlan(StrictModel):
         "deterministic-v8",
         "deterministic-v9",
         "deterministic-v10",
+        "deterministic-v11",
     ] = "deterministic-v3"
     episode_execution: EpisodeExecutionSpec | None = None
     retrieval_execution: RetrievalExecutionSpec | None = None
@@ -425,7 +430,10 @@ class ExperimentPlan(StrictModel):
             if (
                 self.evaluator_version
                 != (
-                    "deterministic-v10"
+                    "deterministic-v11"
+                    if isinstance(self.episode_execution.isolated_tools, GuardedRecordExecution)
+                    and self.episode_execution.security_suite is not None
+                    else "deterministic-v10"
                     if isinstance(self.episode_execution.isolated_tools, GuardedRecordExecution)
                     else "deterministic-v9"
                     if self.episode_execution.security_suite

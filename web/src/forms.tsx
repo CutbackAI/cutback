@@ -473,7 +473,7 @@ export function PlanForm({
         onSubmit={async (data) => {
           const [provider, model] = String(data.model).split("|");
           let toolGuardBinding;
-          if (isolated && !securitySuite && toolGuards) {
+          if (isolated && toolGuards) {
             const policy = await api(
               `${base}/runtime-guardrails/${String(data.tool_guard_policy)}`,
             );
@@ -816,7 +816,7 @@ export function PlanForm({
                   name="tool_sessions"
                   type="number"
                   min="1"
-                  max={securitySuite ? "1000" : "128"}
+                  max={securitySuite && !toolGuards ? "1000" : "128"}
                   defaultValue={securitySuite ? "128" : "32"}
                   required
                 />
@@ -825,7 +825,7 @@ export function PlanForm({
                   name="tool_calls"
                   type="number"
                   min="1"
-                  max={securitySuite ? "100000" : "4096"}
+                  max={securitySuite && !toolGuards ? "100000" : "4096"}
                   defaultValue={securitySuite ? "4096" : "512"}
                   required
                 />
@@ -857,40 +857,36 @@ export function PlanForm({
                   confirmed cleanup are required for a passing task. Tool and
                   complete task costs remain unknown.
                 </p>
-                {!securitySuite && (
-                  <>
-                    <label className="check">
-                      <input
-                        type="checkbox"
-                        checked={toolGuards}
-                        onChange={(event) =>
-                          setToolGuards(event.target.checked)
-                        }
+                <>
+                  <label className="check">
+                    <input
+                      type="checkbox"
+                      checked={toolGuards}
+                      onChange={(event) => setToolGuards(event.target.checked)}
+                    />
+                    Require approved checks before each tool call and before
+                    releasing its response.
+                  </label>
+                  {toolGuards && (
+                    <>
+                      <Field
+                        label="Approved tool guard policy ID"
+                        name="tool_guard_policy"
+                        required
+                        pattern="[a-fA-F0-9-]{36}"
                       />
-                      Require approved checks before each tool call and before
-                      releasing its response.
-                    </label>
-                    {toolGuards && (
-                      <>
-                        <Field
-                          label="Approved tool guard policy ID"
-                          name="tool_guard_policy"
-                          required
-                          pattern="[a-fA-F0-9-]{36}"
-                        />
-                        <p>
-                          Register and approve a policy in Runtime guardrails
-                          with exactly tool_input and tool_output stages. It
-                          must match this record owner, project, environment and
-                          workflow. The operator must configure its separate
-                          checker on the worker. A blocked response does not
-                          undo a recorded write. Model prompts and replies are
-                          outside this tool policy.
-                        </p>
-                      </>
-                    )}
-                  </>
-                )}
+                      <p>
+                        Register and approve a policy in Runtime guardrails with
+                        exactly tool_input and tool_output stages. It must match
+                        this record owner, project, environment and workflow.
+                        The operator must configure its separate checker on the
+                        worker. A blocked response does not undo a recorded
+                        write. Model prompts and replies are outside this tool
+                        policy.
+                      </p>
+                    </>
+                  )}
+                </>
               </fieldset>
             )}
             {!isolated && (

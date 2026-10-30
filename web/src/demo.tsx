@@ -186,6 +186,14 @@ export function SampleGuide({
             cannot establish population security or a general guardrail
             false-positive rate.
           </p>
+          {demo.security_suite_sample.runtime_guardrails && (
+            <p>
+              This comparison also runs a separate tool checker. Inspect its
+              known policy decisions, remaining check coverage and observed
+              interruptions to benign work alongside task completion. Its sample
+              policy is disabled after execution.
+            </p>
+          )}
         </section>
       )}
       {demo.runtime_guardrail_sample && (

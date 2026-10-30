@@ -271,6 +271,15 @@ def _execute_with_environment(
                 else "unknown",
             },
         ]
+        if plan.evaluator_version == "deterministic-v11":
+            checks.append(
+                {
+                    "key": "known_runtime_tool_policy_decisions",
+                    "status": "passed"
+                    if security.get("guardrail_policy_decisions_known") is True
+                    else "unknown",
+                }
+            )
         assessment["checks"] = checks
         assessment["status"] = (
             "failed"
@@ -519,7 +528,11 @@ def run_episodes(
                 from cutback.evals.security_suites import compare_security, summarize_security
 
                 spec = plan.episode_execution.security_suite
-                security = summarize_security(spec, security_rows)
+                security = summarize_security(
+                    spec,
+                    security_rows,
+                    require_guard_coverage=plan.evaluator_version == "deterministic-v11",
+                )
                 if model_results:
                     security = compare_security(
                         spec,
@@ -557,7 +570,9 @@ def run_episodes(
             from cutback.evals.security_suites import summarize_security
 
             partial_summary = summarize_security(
-                plan.episode_execution.security_suite, security_rows
+                plan.episode_execution.security_suite,
+                security_rows,
+                require_guard_coverage=plan.evaluator_version == "deterministic-v11",
             )
             partial_summary["gate"] = "execution_incomplete"
             partial_security = {

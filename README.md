@@ -85,6 +85,7 @@ The commands above target the published dev5 package. For the newer source-check
 | Follow this journey | Start here |
 |---|---|
 | Investigate a whole workflow or session | [Tracing walkthrough](https://github.com/CutbackAI/cutback/blob/main/docs/workflow-tracing.md) |
+| Check whether a tool guard also stops legitimate work | [Guarded security/utility sample, source qualification](https://github.com/CutbackAI/cutback/blob/main/examples/guarded-security/README.md) |
 | Account for failed tasks and optimization overhead | [Task-economics sample, source checkout](https://github.com/CutbackAI/cutback/blob/main/examples/task-economics/README.md) |
 | Try a cheaper model/cap first, then generate instructions only if needed | [Runnable campaign, confirmation and rollback, source checkout](https://github.com/CutbackAI/cutback/blob/main/examples/improvement-campaign/README.md) |
 | Optimize actual corpus chunking and retrieval context | [Independent RAG application and confirmation workflow](https://github.com/CutbackAI/cutback/blob/main/examples/retrieval-optimization/README.md) |
