@@ -5817,8 +5817,11 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
-            /** Execution Authority */
-            execution_authority: string;
+            /**
+             * Execution Authority
+             * @enum {string}
+             */
+            execution_authority: "current" | "ended" | "inactive" | "unknown";
         };
         /** GuardrailDecision */
         GuardrailDecision: {
@@ -5900,10 +5903,16 @@ export interface components {
              * Format: uuid
              */
             operation_id: string;
-            /** Stage */
-            stage: string;
-            /** State */
-            state: string;
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "input" | "output" | "tool_input" | "tool_output";
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "RESERVED" | "COMPLETED" | "UNKNOWN";
             decision: components["schemas"]["GuardrailDecision"] | null;
             /**
              * Created At
