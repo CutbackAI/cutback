@@ -269,6 +269,9 @@ class DatasetItem(Base):
 
 class ExperimentPlanRecord(Base):
     __tablename__ = "experiment_plans"
+    __table_args__ = (
+        UniqueConstraint("id", "project_id", name="uq_experiment_plan_project_scope"),
+    )
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
     project_id: Mapped[UUID] = mapped_column(
         ForeignKey("projects.id", ondelete="CASCADE"), index=True
@@ -319,6 +322,7 @@ class JobRecord(Base):
     )
     available_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     __table_args__ = (
+        UniqueConstraint("id", "project_id", "run_id", name="uq_job_project_run_scope"),
         Index("ix_jobs_eligibility", "status", "available_at", "created_at"),
         Index(
             "ix_jobs_kind_eligibility",
@@ -391,3 +395,4 @@ importlib.import_module("cutback.server.economics_db")
 importlib.import_module("cutback.server.campaign_db")
 importlib.import_module("cutback.server.outcome_watch_db")
 importlib.import_module("cutback.server.gateway_db")
+importlib.import_module("cutback.server.provider_batch_db")

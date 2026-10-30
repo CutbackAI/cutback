@@ -22,6 +22,18 @@ export const money = (value: unknown) =>
 export function explain(error: unknown) {
   const code = (error as Error)?.message || "REQUEST_FAILED";
   const messages: Record<string, string> = {
+    BATCH_REQUIRES_EXPLICIT_PLAIN_VALIDATION_PLAN:
+      "Choose a plain text validation plan. Holdout tests, tools, source changes, judges and retained outputs use their separate workflows.",
+    BATCH_CONTENT_EXPIRES_BEFORE_TURNAROUND:
+      "These example rights expire before the batch could finish. Renew the authorized dataset policy before preparing this job.",
+    BATCH_PLAN_EXCEEDS_NATIVE_REQUEST_OR_MONEY_BOUND:
+      "The complete batch must fit the plan's dollar and request limits and the 1,000-item bound. Prepare a smaller plan or explicitly review a different budget.",
+    BATCH_STEP_FAILED_NO_AUTOMATIC_REPLAY:
+      "This step is uncertain. Keep its reservation and use read-only reconciliation; creating another run could repeat a charged operation.",
+    BATCH_VENDOR_FILE_CLEANUP_RETRY_REQUIRED:
+      "Measurements are recorded, but provider-file deletion needs another bounded cleanup attempt. Keep the worker credentials available and inspect cleanup status.",
+    BATCH_AUTHORITY_ENDED_CONTAINMENT_REQUIRED:
+      "Execution authority ended. The worker is stopping known provider jobs and cleaning up files; no new inference is authorized.",
     COMPRESSION_DRAFT_CONTRACT_INVALID:
       "Check independent task labels, query/context JSON, source settings, the native model and its input ceiling. No provider call was made.",
     COMPRESSION_CONFIRMATION_GATES_NOT_PASSED:

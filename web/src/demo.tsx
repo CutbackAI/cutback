@@ -109,6 +109,29 @@ export function SampleGuide({
           </button>
         )}
       </div>
+      {demo.provider_batch_sample && (
+        <section aria-label="Native batch ticket sample">
+          <h2>Process a three-label task asynchronously</h2>
+          <p>
+            This synthetic batch runs billing, access and technical tickets
+            through the native SDK, durable per-item budget reservations, result
+            collection and provider-file cleanup. Local mock replies establish
+            lifecycle behavior; they do not establish model quality or customer
+            savings.
+          </p>
+          <button onClick={() => navigate("Provider batches")}>
+            Inspect the native batch lifecycle
+          </button>
+          <p>
+            Batch {String(demo.provider_batch_sample.batch_id).slice(0, 8)} ·
+            Vendor files deleted:{" "}
+            {demo.provider_batch_sample.vendor_files_deleted
+              ? "yes"
+              : "pending"}{" "}
+            · Paid provider calls: zero.
+          </p>
+        </section>
+      )}
       {demo.ticket_campaign_sample && (
         <section aria-label="Automatic ticket-routing task">
           <h3>Three labels. One automatic improvement.</h3>

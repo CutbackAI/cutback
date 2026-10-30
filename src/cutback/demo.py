@@ -92,7 +92,9 @@ def fixture_response(request):
     )
 
 
-def seed_support_desk(app, endpoint, admin, workspace: Path, *, ticket_router=False):
+def seed_support_desk(
+    app, endpoint, admin, workspace: Path, *, ticket_router=False, provider_batch=False
+):
     """Use actual scoped HTTP APIs and the durable worker, retaining the sample project."""
     require_demo_git()
 
@@ -376,6 +378,11 @@ def seed_support_desk(app, endpoint, admin, workspace: Path, *, ticket_router=Fa
                     workspace,
                     ticket_router=True,
                 )
+            batch_sample = None
+            if provider_batch:
+                from cutback.demo_provider_batches import seed_provider_batch
+
+                batch_sample = seed_provider_batch(app, control, project["id"])
             manifest = {
                 "available": True,
                 "title": "Support-desk triage",
@@ -392,6 +399,23 @@ def seed_support_desk(app, endpoint, admin, workspace: Path, *, ticket_router=Fa
                 "sample_source": "cutback/sample_app/app.py",
                 "source_diff": patch,
                 "paid_provider_calls": 0,
+                **(
+                    {
+                        "provider_batch_sample": {
+                            key: batch_sample[key]
+                            for key in (
+                                "batch_id",
+                                "status",
+                                "reference_labels",
+                                "declared_intent_families",
+                                "vendor_files_deleted",
+                                "paid_provider_calls",
+                            )
+                        }
+                    }
+                    if batch_sample
+                    else {}
+                ),
                 **(
                     {
                         "ticket_campaign_sample": {
@@ -485,7 +509,7 @@ def install_demo_routes(app, manifest, token, endpoint):
         )
 
 
-def launch_demo(port=8766, open_browser=True, *, ticket_router=False):
+def launch_demo(port=8766, open_browser=True, *, ticket_router=False, provider_batch=False):
     """Own one temporary Docker database. Never connect to production or reuse app keys."""
     require_demo_git()
 
@@ -595,7 +619,12 @@ def launch_demo(port=8766, open_browser=True, *, ticket_router=False):
                 flush=True,
             )
             manifest = seed_support_desk(
-                app, endpoint, admin, workspace, ticket_router=ticket_router
+                app,
+                endpoint,
+                admin,
+                workspace,
+                ticket_router=ticket_router,
+                provider_batch=provider_batch,
             )
             print(
                 f"Ready: {endpoint}/dashboard/\n"

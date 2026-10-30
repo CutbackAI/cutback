@@ -42,6 +42,16 @@ const Retrieval = React.lazy(() =>
 const Compression = React.lazy(() =>
   import("./compression").then((module) => ({ default: module.Compression })),
 );
+const ProviderBatches = React.lazy(() =>
+  import("./provider-batches").then((module) => ({
+    default: module.ProviderBatches,
+  })),
+);
+const ProviderBatchEvidence = React.lazy(() =>
+  import("./provider-batches").then((module) => ({
+    default: module.ProviderBatchEvidence,
+  })),
+);
 
 class BudgetViewBoundary extends React.Component<
   { children: React.ReactNode },
@@ -101,6 +111,7 @@ const views = [
   "Costs",
   "Task economics",
   "Campaigns",
+  "Provider batches",
   "Retrieval",
   "Compression",
   "Opportunities",
@@ -811,6 +822,28 @@ function App() {
                   "editor",
                 ].includes(identity.project_roles?.[project] || identity.role)}
               />
+            )}
+            {view === "Provider batches" && project && (
+              <BudgetViewBoundary key={project}>
+                <React.Suspense
+                  fallback={<p role="status">Loading provider batches…</p>}
+                >
+                  <ProviderBatches
+                    key={project}
+                    api={api}
+                    project={project}
+                    canApprove={admin}
+                    canWrite={[
+                      "admin",
+                      "project_admin",
+                      "analyst",
+                      "editor",
+                    ].includes(
+                      identity.project_roles?.[project] || identity.role,
+                    )}
+                  />
+                </React.Suspense>
+              </BudgetViewBoundary>
             )}
             {view === "Compression" && project && (
               <BudgetViewBoundary key={project}>
@@ -1779,6 +1812,14 @@ function Experiments({
 }
 function RunEvidence({ detail }: { detail: RecordData }) {
   const result = detail.results;
+  if (result?.execution_mode === "provider_batch")
+    return (
+      <React.Suspense
+        fallback={<p role="status">Loading native batch evidence…</p>}
+      >
+        <ProviderBatchEvidence report={result.provider_batch || {}} />
+      </React.Suspense>
+    );
   if (!result?.models)
     return <p>Operation recorded. Review the updated status above.</p>;
   return (

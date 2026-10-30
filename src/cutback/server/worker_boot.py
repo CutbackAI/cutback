@@ -60,6 +60,10 @@ def worker_cycle(sessions, store, *, maintenance_due=True):
             ),
         )
         attempt("experiments", lambda: run_one(sessions, store, execution_enabled=True))
+    if store and os.getenv("CUTBACK_BATCH_EXECUTION", "false").lower() == "true":
+        from cutback.server.provider_batch_worker import run_batch_one
+
+        attempt("provider_batches", lambda: run_batch_one(sessions, store, execution_enabled=True))
     if os.getenv("CUTBACK_OUTCOME_WATCH_EXECUTION", "false").lower() == "true":
         from cutback.server.outcome_watches import run_outcome_watch_one
 

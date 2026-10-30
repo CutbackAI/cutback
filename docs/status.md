@@ -1,6 +1,6 @@
 # What works and what remains
 
-Updated 29 October 2026. Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business. [Executed acceptance](progress.md) records the exact artifacts, checks, failures and limits; [the baseline](market-baseline.md) records remaining requirements.
+Updated 30 October 2026. Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business. [Executed acceptance](progress.md) records the exact artifacts, checks, failures and limits; [the baseline](market-baseline.md) records remaining requirements.
 
 ## Choose the right installation
 
@@ -14,7 +14,9 @@ A source merge does not update the PyPI wheel. New source commands require a sou
 
 The context-compression follow-up adds actual original-versus-compressed native input comparisons, encrypted input review and checked settings proposals. Its current qualification and remaining gates are recorded in [progress](progress.md); [the independent application](../examples/context-compression/README.md) provides the source-checkout walkthrough.
 
-The next source increment extends new agent/dashboard campaigns to a frozen portfolio of up to four qualified model/output-limit alternatives, sharing one parent budget and one independent confirmation. Its native/lineage/source/dashboard qualification is tracked separately in [progress](progress.md). Existing saved campaigns keep their exact contracts; this does not update PyPI or combine every optimizer into one automatic system.
+The [PR 42](https://github.com/CutbackAI/cutback/pull/42) source increment extends new agent/dashboard campaigns to a frozen portfolio of up to four qualified model/output-limit alternatives, sharing one parent budget and one independent confirmation. It passed installed and all ten hosted gates recorded in [progress](progress.md). Existing saved campaigns keep their exact contracts; this does not update PyPI or combine every optimizer into one automatic system.
+
+The [native batch workflow](provider-batches.md) is a separate source increment under final qualification. It adds actual asynchronous provider submission and file lifecycle handling, rather than treating the ordinary experiment queue as batching. It requires its own budget and provider-storage approval. Its synthetic example does not establish real model quality, full application economics or universal automatic optimization.
 
 ## What the automatic workflow does
 
