@@ -103,6 +103,7 @@ def seed_support_desk(
     provider_batch=False,
     semantic_cache=False,
     tool_image_id=None,
+    security_suite=False,
 ):
     """Use actual scoped HTTP APIs and the durable worker, retaining the sample project."""
     require_demo_git()
@@ -398,6 +399,11 @@ def seed_support_desk(
 
                 semantic_sample = seed_semantic_cache(app, control, project["id"])
             isolated_sample = None
+            security_sample = None
+            if security_suite:
+                from cutback.demo_security_suites import seed_security_suite
+
+                security_sample = seed_security_suite(app, control, project["id"], tool_image_id)
             if tool_image_id:
                 from cutback.demo_isolated_tools import seed_isolated_tools
 
@@ -419,6 +425,7 @@ def seed_support_desk(
                 "source_diff": patch,
                 "paid_provider_calls": 0,
                 **({"isolated_tool_sample": isolated_sample} if isolated_sample else {}),
+                **({"security_suite_sample": security_sample} if security_sample else {}),
                 **({"semantic_cache_sample": semantic_sample} if semantic_sample else {}),
                 **(
                     {
@@ -538,9 +545,12 @@ def launch_demo(
     provider_batch=False,
     semantic_cache=False,
     tool_image_id=None,
+    security_suite=False,
 ):
     """Own one temporary Docker database. Never connect to production or reuse app keys."""
     require_demo_git()
+    if security_suite and tool_image_id is None:
+        raise ValueError("SECURITY_DEMO_REQUIRES_EXPLICIT_LOCAL_TOOL_IMAGE_ID")
     if tool_image_id is not None and not re.fullmatch(r"sha256:[a-f0-9]{64}", tool_image_id):
         raise ValueError("DEMO_EXACT_LOCAL_TOOL_IMAGE_ID_REQUIRED")
 
@@ -661,6 +671,7 @@ def launch_demo(
                 provider_batch=provider_batch,
                 semantic_cache=semantic_cache,
                 tool_image_id=tool_image_id,
+                security_suite=security_suite,
             )
             print(
                 f"Ready: {endpoint}/dashboard/\n"

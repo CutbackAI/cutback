@@ -15,7 +15,9 @@ import { explain } from "./ui";
 import { Training } from "./training";
 import { SSO, handleSSOReturn } from "./sso";
 import "./style.css";
-import { SampleGuide } from "./demo";
+const SampleGuide = React.lazy(() =>
+  import("./demo").then((module) => ({ default: module.SampleGuide })),
+);
 import { PatchReview } from "./change-review";
 import { CaseEvidence } from "./case-evidence";
 import { TaskEconomics } from "./task-economics";
@@ -28,6 +30,16 @@ import { Prompts } from "./prompts";
 import { Monitoring } from "./monitoring";
 import { PriceSnapshots } from "./price-snapshots";
 import { NativeContracts } from "./native-contracts";
+const SecuritySuiteImport = React.lazy(() =>
+  import("./security-suites").then((module) => ({
+    default: module.SecuritySuiteImport,
+  })),
+);
+const SecuritySuiteEvidence = React.lazy(() =>
+  import("./security-suites").then((module) => ({
+    default: module.SecuritySuiteEvidence,
+  })),
+);
 import { decisionLabel, criterionLabel, experimentTitle } from "./evidence";
 const ExecutionEvidence = React.lazy(() =>
   import("./execution").then((module) => ({
@@ -949,50 +961,52 @@ function App() {
               />
             )}
             {view === "Sample" && demo && (
-              <SampleGuide
-                demo={demo}
-                api={api}
-                navigate={setView}
-                evidence={(detail) => (
-                  <>
-                    <RunEvidence detail={detail} />
-                    <React.Suspense
-                      fallback={
-                        <p role="status">Loading execution evidence…</p>
-                      }
-                    >
-                      <ExecutionEvidence
-                        key={`${base}:${detail.id}`}
-                        api={api}
-                        base={base}
-                        runId={detail.id}
-                        canContain={admin}
-                      />
-                    </React.Suspense>
-                    {detail.results?.case_outputs_retained && admin && (
-                      <CaseEvidence
-                        key={detail.id}
-                        api={api}
-                        base={base}
-                        runId={detail.id}
-                        models={detail.results?.models?.map(
-                          (row: RecordData) => row.model.key,
-                        )}
-                        strata={Array.from(
-                          new Set<string>(
-                            detail.results?.models?.flatMap(
-                              (row: RecordData) =>
-                                row.slices?.map(
-                                  (slice: RecordData) => slice.stratum,
-                                ) || [],
-                            ) || [],
-                          ),
-                        )}
-                      />
-                    )}
-                  </>
-                )}
-              />
+              <React.Suspense fallback={<p>Loading guided sample…</p>}>
+                <SampleGuide
+                  demo={demo}
+                  api={api}
+                  navigate={setView}
+                  evidence={(detail) => (
+                    <>
+                      <RunEvidence detail={detail} />
+                      <React.Suspense
+                        fallback={
+                          <p role="status">Loading execution evidence…</p>
+                        }
+                      >
+                        <ExecutionEvidence
+                          key={`${base}:${detail.id}`}
+                          api={api}
+                          base={base}
+                          runId={detail.id}
+                          canContain={admin}
+                        />
+                      </React.Suspense>
+                      {detail.results?.case_outputs_retained && admin && (
+                        <CaseEvidence
+                          key={detail.id}
+                          api={api}
+                          base={base}
+                          runId={detail.id}
+                          models={detail.results?.models?.map(
+                            (row: RecordData) => row.model.key,
+                          )}
+                          strata={Array.from(
+                            new Set<string>(
+                              detail.results?.models?.flatMap(
+                                (row: RecordData) =>
+                                  row.slices?.map(
+                                    (slice: RecordData) => slice.stratum,
+                                  ) || [],
+                              ) || [],
+                            ),
+                          )}
+                        />
+                      )}
+                    </>
+                  )}
+                />
+              </React.Suspense>
             )}
             {view === "Teams" && (
               <Teams
@@ -1660,6 +1674,16 @@ function Experiments({
         />
       )}
       {analyst && (
+        <React.Suspense fallback={<p>Loading security suite import…</p>}>
+          <SecuritySuiteImport
+            key={base}
+            api={api}
+            base={base}
+            reload={reload}
+          />
+        </React.Suspense>
+      )}
+      {analyst && (
         <PlanForm
           api={api}
           base={base}
@@ -2038,6 +2062,14 @@ function RunEvidence({ detail }: { detail: RecordData }) {
       </p>
       {result.models.map((row: RecordData) => (
         <section key={row.model.key}>
+          {row.security_evaluation && (
+            <React.Suspense fallback={<p>Loading paired security evidence…</p>}>
+              <SecuritySuiteEvidence
+                evidence={row.security_evaluation}
+                modelKey={row.model.key}
+              />
+            </React.Suspense>
+          )}
           {row.semantic_judging && (
             <section aria-label={`Semantic assessment for ${row.model.key}`}>
               <h3>{row.model.key}: semantic model assessment</h3>

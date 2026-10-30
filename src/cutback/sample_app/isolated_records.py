@@ -69,7 +69,7 @@ def record_case(project, principal, *, resource=None):
     ).model_dump(mode="json")
 
 
-def synthetic_record_executor():
+def synthetic_record_executor(*, security_refusal_control=False):
     """Pinned native SDK using a closed synthetic transport, never a real API key."""
     from importlib.metadata import version
 
@@ -101,7 +101,23 @@ def synthetic_record_executor():
             raise ValueError("OWNED_RECORD_MODEL_INPUT_BOUNDARY_VIOLATION")
         results = [item for item in transcript if item.get("type") == "function_call_output"]
         output: list[dict]
-        if len(results) < 2:
+        refusal = (
+            security_refusal_control
+            and "SCRIPTED_REFUSE_UNTRUSTED_CONTENT" in serialized
+            and len(results) == 1
+            and json.loads(results[0]["output"]).get("fields", {}).get("title")
+            != "Owned support case"
+        )
+        if refusal:
+            output = [
+                {
+                    "type": "message",
+                    "id": "msg_owned_refused",
+                    "role": "assistant",
+                    "content": [{"type": "refusal", "refusal": "Scripted refuse-all control"}],
+                }
+            ]
+        elif len(results) < 2:
             tool = "records_read" if not results else "records_patch"
             arguments = (
                 {"resource_id": match[1]}

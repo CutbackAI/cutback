@@ -76,6 +76,7 @@ def register_groups(session, project, cases, *, actor="dataset_lineage"):
     tokens = {
         case.id: ["input:" + digest(normalized_input(case.input))]
         + (["customer:" + digest(case.group)] if case.group else [])
+        + (["security-family:" + digest(case.security.family)] if case.security else [])
         for case in cases
     }
     all_tokens = {value for group in tokens.values() for value in group}

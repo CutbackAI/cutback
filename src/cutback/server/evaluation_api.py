@@ -11,9 +11,10 @@ from pydantic import Field
 from sqlalchemy import func, select
 
 from cutback.core.episode_judging import EpisodeJudgingSpec
-from cutback.core.isolated_episodes import IsolatedRecordExecution
+from cutback.core.isolated_episodes import IsolatedRecordExecution, IsolatedSecurityExecution
 from cutback.core.models import Identifier, StrictModel
 from cutback.core.retrieval import RetrievalConfigurationBinding, RetrievalCorpus, RetrievalSettings
+from cutback.core.security_suites import SecurityEvaluationSpec, family_token
 from cutback.evals.artifacts import configured_store
 from cutback.evals.datasets import (
     CapturePolicy,
@@ -117,7 +118,8 @@ class RetrievalConfirmationInput(StrictModel):
 
 
 class DraftInput(StrictModel):
-    isolated_tools: IsolatedRecordExecution | None = None
+    isolated_tools: IsolatedRecordExecution | IsolatedSecurityExecution | None = None
+    security_suite: SecurityEvaluationSpec | None = None
     episode_judging: EpisodeJudgingSpec | None = None
     episode_judge: ModelSpec | None = None
     episode_max_turns: int = Field(default=32, ge=1, le=32)
@@ -179,12 +181,25 @@ def dataset_manifest(session, dataset):
     ).all()
     return {
         "immutable_hash": dataset.immutable_hash,
+        **(
+            {"security_suite": dataset.provenance["security_suite"]}
+            if dataset.provenance.get("security_suite")
+            else {}
+        ),
         "items": [
             {
                 "split": row.split,
                 "episode_max_turns": payload.metadata_safe.get("episode_max_turns"),
                 "episode_max_tool_calls": payload.metadata_safe.get("episode_max_tool_calls"),
                 "episode_execution": payload.metadata_safe.get("episode_execution"),
+                **(
+                    {
+                        key: payload.metadata_safe.get(key)
+                        for key in ("security_family_token", "security_arm")
+                    }
+                    if dataset.provenance.get("security_suite")
+                    else {}
+                ),
             }
             for row, payload in rows
         ],
@@ -206,6 +221,22 @@ def persist_dataset(
     from cutback.server.dataset_lineage import lock_lineage, register_groups
 
     lock_lineage(session, project_id)
+    if body.security_suite:
+        existing_suites = session.scalars(
+            select(DatasetRecord)
+            .where(
+                DatasetRecord.project_id == project_id,
+                DatasetRecord.provenance["security_suite"]["key"].as_string()
+                == body.security_suite.key,
+                DatasetRecord.provenance["security_suite"]["revision"].as_string()
+                == body.security_suite.revision,
+            )
+            .limit(1)
+        ).all()
+        if existing_suites and existing_suites[0].provenance[
+            "security_suite"
+        ] != body.security_suite.model_dump(mode="json"):
+            raise HTTPException(409, "SECURITY_SUITE_REVISION_ALREADY_FROZEN")
     try:
         policy_id = UUID(body.policy_id)
     except ValueError:
@@ -320,6 +351,17 @@ def persist_dataset(
                 metadata_safe={
                     "redaction": policy.redaction_version,
                     "ordinal": ordinal,
+                    **(
+                        {
+                            "security_family_token": family_token(
+                                item["case"]["security"]["content_nonce"],
+                                item["case"]["security"]["family"],
+                            ),
+                            "security_arm": item["case"]["security"]["arm"],
+                        }
+                        if clean.security_suite
+                        else {}
+                    ),
                     **(
                         {
                             "episode_max_turns": item["case"]["episode"]["max_turns"],
@@ -689,6 +731,7 @@ def install_evaluation(app, sessions, authorize, scope):
                 episode_judge=body.episode_judge,
                 episode_max_turns=body.episode_max_turns,
                 isolated_tools=body.isolated_tools,
+                security_suite=body.security_suite,
             )
             spec = spec.model_copy(update={"name": body.name})
         except ValueError as exc:

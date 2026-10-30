@@ -2,6 +2,19 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { csv, parseRecords } from "../src/records.ts";
 
+test("flat imports refuse to discard typed execution and security authority", () => {
+  for (const key of ["episode", "security"]) {
+    assert.throws(
+      () =>
+        parseRecords(
+          JSON.stringify([{ input: "owned", [key]: { version: "typed" } }]),
+          "owned.json",
+        ),
+      /COMPLETE_TYPED_SUITE_IMPORT/,
+    );
+  }
+});
+
 test("CSV quotes, commas, embedded newlines, CRLF and escaped quotes survive import", () => {
   const rows = parseRecords(
     'input,gold,output\r\n"question, with comma","{\"\"a\"\":1}","line one\nline \"\"two\"\""\r\n',

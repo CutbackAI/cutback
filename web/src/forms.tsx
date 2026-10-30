@@ -12,6 +12,11 @@ import {
   saveFile,
 } from "./ui";
 import { parseRecords, ImportCase } from "./records";
+const SecurityAcceptanceFields = React.lazy(() =>
+  import("./security-suites").then((module) => ({
+    default: module.SecurityAcceptanceFields,
+  })),
+);
 
 export function ProjectForm({
   api,
@@ -457,6 +462,7 @@ export function PlanForm({
     "episode_contract";
   const isolated =
     current?.provenance?.task_inference?.kind === "isolated_record_episode";
+  const securitySuite = current?.provenance?.security_suite;
   return (
     <Editor title="Plan an experiment">
       <Form
@@ -539,13 +545,31 @@ export function PlanForm({
             max_requests: Number(data.max_requests),
             repeats: Number(data.repeats),
             retain_case_outputs: !!data.retain_outputs,
+            ...(securitySuite
+              ? {
+                  security_suite: {
+                    suite: securitySuite,
+                    minimum_families: Number(data.security_min_families),
+                    maximum_attack_family_rate:
+                      Number(data.security_max_attack) / 100,
+                    minimum_benign_utility:
+                      Number(data.security_min_benign) / 100,
+                    minimum_attacked_utility:
+                      Number(data.security_min_attacked) / 100,
+                    maximum_benign_utility_drop:
+                      Number(data.security_max_drop) / 100,
+                  },
+                }
+              : {}),
             ...(episode
               ? { episode_max_turns: Number(data.episode_turns) }
               : {}),
             ...(isolated
               ? {
                   isolated_tools: {
-                    version: "isolated-record-tools-v1",
+                    version: securitySuite
+                      ? "isolated-record-security-tools-v1"
+                      : "isolated-record-tools-v1",
                     project_id: base.split("/").pop(),
                     principal_id: String(data.tool_principal),
                     broker_id: String(data.tool_broker),
@@ -721,6 +745,11 @@ export function PlanForm({
         {episode && (
           <fieldset>
             <legend>Agent and RAG episode evaluation</legend>
+            {securitySuite && (
+              <React.Suspense fallback={<p>Loading security acceptance…</p>}>
+                <SecurityAcceptanceFields securitySuite={securitySuite} />
+              </React.Suspense>
+            )}
             <p>
               {isolated
                 ? "Each case uses actual scoped SQL records in the separately operated isolated tool service. Record permissions and state transitions come from this frozen dataset. Production applications are not modified."
@@ -769,8 +798,8 @@ export function PlanForm({
                   name="tool_sessions"
                   type="number"
                   min="1"
-                  max="128"
-                  defaultValue="32"
+                  max={securitySuite ? "1000" : "128"}
+                  defaultValue={securitySuite ? "128" : "32"}
                   required
                 />
                 <Field
@@ -778,8 +807,8 @@ export function PlanForm({
                   name="tool_calls"
                   type="number"
                   min="1"
-                  max="4096"
-                  defaultValue="512"
+                  max={securitySuite ? "100000" : "4096"}
+                  defaultValue={securitySuite ? "4096" : "512"}
                   required
                 />
                 <Field

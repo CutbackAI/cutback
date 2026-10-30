@@ -22,6 +22,8 @@ From a matching source checkout, `uv run cutback demo --ticket-router` adds a th
 
 Source checkouts can also run `uv run cutback demo --provider-batch`: an independent three-category task with native asynchronous submission, per-item budget reservations, out-of-order result collection and provider-file cleanup. The [batch guide](https://github.com/CutbackAI/cutback/blob/main/docs/provider-batches.md) explains explicit storage approval, cancellation and uncertain billing. This source feature is under qualification and is absent from PyPI dev5; its model replies and usage are synthetic.
 
+The source [paired security sample](https://github.com/CutbackAI/cutback/blob/main/examples/paired-security/README.md) shows why blocking an attack is insufficient when the agent also refuses legitimate work. Versioned benign/attack families, separate security and utility results, explicit unknowns and canonical tool receipts are available under source qualification. The scripted sample intentionally cannot pass its small-sample security gate.
+
 ## Start with a working application
 
 The support-desk sample routes tickets by category and priority. Two workflows, ticket triage and escalation, share one native SDK call. It shows why a cheaper configuration that mishandles urgent tickets must be rejected.

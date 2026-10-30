@@ -75,6 +75,10 @@ export function parseRecords(text: string, name: string): ImportCase[] {
     throw new Error("ONE_TO_TEN_THOUSAND_EXAMPLES_REQUIRED");
   return rows.map((row, index) => {
     if (!row || typeof row !== "object") throw new Error("TEXT_INPUT_REQUIRED");
+    if (row.security || row.episode)
+      throw new Error(
+        "USE_THE_COMPLETE_TYPED_SUITE_IMPORT_TO_PRESERVE_EXECUTION_AND_SECURITY_CONTRACTS",
+      );
     const input = row.input ?? row.prompt ?? row.text;
     if (typeof input !== "string" || !input.length || input.length > 64000)
       throw new Error("BOUNDED_TEXT_INPUT_REQUIRED");
