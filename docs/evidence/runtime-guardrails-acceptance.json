@@ -1,0 +1,220 @@
+{
+  "version": "cutback.source-acceptance.v1",
+  "scope": "runtime-guardrails",
+  "reviewed_head": "5b161c52c08e015562294cfe25c701db89a1dfb7",
+  "merge_commit": "4350850c8970bc7641cb86f24094bdcaef95d254",
+  "merged_at": "2026-10-30T14:38:19Z",
+  "accepted_tree": "dc50e117d68d2e9e953addf2cbf86ba298173de4",
+  "local_installed_default": {
+    "passed": 1527,
+    "skipped": 35,
+    "seconds": 3121.77
+  },
+  "local_installed_sdk3": {
+    "passed": 1061,
+    "skipped": 7,
+    "seconds": 478.35
+  },
+  "hosted": [
+    {
+      "run_id": 41068972052,
+      "jobs": [
+        {
+          "name": "verify (3.13.18)",
+          "id": 124107725746,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1525,
+              "skipped": 37,
+              "seconds": 1470.37
+            }
+          ]
+        },
+        {
+          "name": "legacy-sdk (3.11.18)",
+          "id": 124107726089,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 0.66
+            }
+          ]
+        },
+        {
+          "name": "infrastructure",
+          "id": 124107726099,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 7,
+              "skipped": 0,
+              "seconds": 1.66
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.11.18)",
+          "id": 124107726112,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1289,
+              "skipped": 8,
+              "seconds": 508.63
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.13.18)",
+          "id": 124107726168,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1290,
+              "skipped": 7,
+              "seconds": 345.99
+            }
+          ]
+        },
+        {
+          "name": "legacy-sdk (3.13.18)",
+          "id": 124107726189,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 0.65
+            }
+          ]
+        },
+        {
+          "name": "isolated-tools",
+          "id": 124107726300,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 6,
+              "skipped": 0,
+              "seconds": 42.92
+            }
+          ]
+        },
+        {
+          "name": "verify (3.11.18)",
+          "id": 124107726375,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1526,
+              "skipped": 36,
+              "seconds": 1549.43
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": 41068972099,
+      "jobs": [
+        {
+          "name": "codeql (javascript-typescript)",
+          "id": 124107725848,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "codeql (python)",
+          "id": 124107726173,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "audit",
+          "id": 124107726306,
+          "conclusion": "success",
+          "tests": []
+        }
+      ]
+    }
+  ],
+  "archives": {
+    "cutback-0.1.0.dev5-py3-none-any.whl": "f845753467235f9a6b5eecb39e2510fbb3d0ce2396111c145e06f1f941941466",
+    "cutback-0.1.0.dev5.tar.gz": "8a5a3f34cd513ff810ba0dc9dc8a35734e3b1bf94daa296adf9e4434dccf69b2"
+  },
+  "installed_identity": {
+    "application_files": 314,
+    "python_files": 293,
+    "metadata_files": 5,
+    "identical": true,
+    "openai_default": "2.29.0",
+    "openai_compatibility": "3.35.1"
+  },
+  "image": {
+    "image": "cutback-qualification:runtime-guards",
+    "image_id": "sha256:c0380f3f228a6c30af29b0c74f84909c15418a2ea87b7cd1f362b6d120fa3185",
+    "uid": 10001,
+    "python": "3.11.18",
+    "migration": "0025",
+    "sample_application_calls": 23,
+    "source_linked_support_desk_calls": 12,
+    "source_workflows": 2,
+    "application_workflows": 4,
+    "paid_provider_calls": 0,
+    "native_batch_fixture_restored": true,
+    "restored_tables": 95,
+    "row_counts_match": true,
+    "restored_and_rekeyed_objects": 1491,
+    "restored_and_rekeyed_cache_objects": 1,
+    "restored_and_rekeyed_plans": 18,
+    "semantic_qualified_catalog_restored": true,
+    "isolated_tool_receipts_restored": true,
+    "paired_security_suite_restored": true,
+    "runtime_guardrail_receipts_restored": true,
+    "database_pointers_preserved": true,
+    "production_changed": false,
+    "secret_delivery": "anonymous_stdin_pipes_and_scoped_memory_clients",
+    "independent_otel_producer_and_replay": "passed",
+    "concurrent_load": {
+      "tenants": 2,
+      "accepted": 2000,
+      "duplicates": 2000,
+      "seconds": 2.016,
+      "production_sla": false
+    }
+  },
+  "source_snapshot": {
+    "files": 924,
+    "bytes": 10091424,
+    "different": 0,
+    "missing": 0,
+    "unsafe": 0,
+    "untracked": 0
+  },
+  "publication_boundary": {
+    "files_checked": 924,
+    "history_objects_checked": 3799,
+    "archive_members_checked": 1239,
+    "findings": 0,
+    "private_marker_values_logged": false
+  },
+  "core_only_consumer": "passed",
+  "twine": "passed",
+  "exact_application_payload": "passed",
+  "qualification_notes": [
+    "Final generated receipt enum types changed no application wheel bytes.",
+    "An earlier full run failed only the stale 0024 migration assertion; a later candidate passed tests but failed the source snapshot on stale generated TypeScript types. Both are superseded by this final acceptance."
+  ],
+  "limits": [
+    "Bounded literal, structural JSON and tool-name rules do not establish semantic safety.",
+    "Explicit native text JSON/SSE and JSON function boundaries only; broker interposition is a separate follow-up.",
+    "Synthetic model transports do not validate real-model quality, customer savings or production SLOs."
+  ],
+  "new_pypi_upload": false,
+  "paid_provider_calls": 0,
+  "production_changed": false,
+  "whole_product_complete": false
+}

@@ -79,6 +79,8 @@ class ToolSessionReceipt(StrictModel):
     repeat_index: int | None = None
     principal_id: UUID
     broker_id: UUID
+    guardrail_policy_id: UUID | None = None
+    guardrail_policy_sha256: str | None = None
     broker_generation: UUID
     policy_sha256: str
     approval_hash: str
@@ -111,6 +113,9 @@ class ToolOperationReceipt(StrictModel):
     tool_kind: str
     state: str
     state_changed: bool | None
+    guardrail_policy_id: UUID | None = None
+    broker_intent: str | None = None
+    result_delivery: str | None = None
     created_at: datetime
     completed_at: datetime | None
 

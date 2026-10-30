@@ -351,8 +351,6 @@ def install_privacy(app, sessions, authorize, scope):
                 .values(state="REVOKED", active_qualification_id=None, active_approval_hash=None)
             )
             for cls in (
-                GuardrailOperationRow,
-                GuardrailPolicyRow,
                 SemanticUploadCase,
                 SemanticDatasetUpload,
                 SemanticCacheMember,
@@ -377,6 +375,8 @@ def install_privacy(app, sessions, authorize, scope):
                 ExecutionCall,
                 ToolOperationRecord,
                 ToolSessionRecord,
+                GuardrailOperationRow,
+                GuardrailPolicyRow,
                 ExecutionEpisode,
                 QualityEvaluation,
                 QualityPromptUse,

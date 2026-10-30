@@ -16878,6 +16878,9 @@
                 "$ref": "#/components/schemas/IsolatedSecurityExecution"
               },
               {
+                "$ref": "#/components/schemas/GuardedRecordExecution"
+              },
+              {
                 "type": "null"
               }
             ],
@@ -17247,7 +17250,8 @@
               "native-fixture-episode-v1",
               "native-fixture-episode-v2",
               "native-isolated-record-episode-v1",
-              "native-isolated-record-security-v1"
+              "native-isolated-record-security-v1",
+              "native-isolated-record-guarded-v1"
             ],
             "title": "Version",
             "default": "native-fixture-episode-v1"
@@ -17301,6 +17305,9 @@
               },
               {
                 "$ref": "#/components/schemas/IsolatedSecurityExecution"
+              },
+              {
+                "$ref": "#/components/schemas/GuardedRecordExecution"
               },
               {
                 "type": "null"
@@ -18033,7 +18040,8 @@
               "deterministic-v6",
               "deterministic-v7",
               "deterministic-v8",
-              "deterministic-v9"
+              "deterministic-v9",
+              "deterministic-v10"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -18330,7 +18338,8 @@
               "deterministic-v6",
               "deterministic-v7",
               "deterministic-v8",
-              "deterministic-v9"
+              "deterministic-v9",
+              "deterministic-v10"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -19358,6 +19367,90 @@
           "project_id"
         ],
         "title": "GrantInput"
+      },
+      "GuardedRecordExecution": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "principal_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Principal Id"
+          },
+          "broker_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Broker Id"
+          },
+          "environment": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Environment"
+          },
+          "image_id": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$",
+            "title": "Image Id"
+          },
+          "max_wall_seconds": {
+            "type": "integer",
+            "maximum": 120.0,
+            "minimum": 1.0,
+            "title": "Max Wall Seconds",
+            "default": 60
+          },
+          "max_result_bytes": {
+            "type": "integer",
+            "maximum": 64000.0,
+            "minimum": 256.0,
+            "title": "Max Result Bytes",
+            "default": 16000
+          },
+          "content_use_approved": {
+            "type": "boolean",
+            "const": true,
+            "title": "Content Use Approved"
+          },
+          "version": {
+            "type": "string",
+            "const": "isolated-record-guarded-tools-v1",
+            "title": "Version",
+            "default": "isolated-record-guarded-tools-v1"
+          },
+          "max_sessions": {
+            "type": "integer",
+            "maximum": 128.0,
+            "minimum": 1.0,
+            "title": "Max Sessions",
+            "default": 32
+          },
+          "max_total_tool_calls": {
+            "type": "integer",
+            "maximum": 4096.0,
+            "minimum": 1.0,
+            "title": "Max Total Tool Calls",
+            "default": 512
+          },
+          "runtime_guardrails": {
+            "$ref": "#/components/schemas/GuardrailBinding"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "project_id",
+          "principal_id",
+          "broker_id",
+          "environment",
+          "image_id",
+          "content_use_approved",
+          "runtime_guardrails"
+        ],
+        "title": "GuardedRecordExecution",
+        "description": "A separate tool-only guard contract; never silently changes released v8/v9."
       },
       "GuardrailActivation": {
         "properties": {
@@ -29462,6 +29555,40 @@
             ],
             "title": "State Changed"
           },
+          "guardrail_policy_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guardrail Policy Id"
+          },
+          "broker_intent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Broker Intent"
+          },
+          "result_delivery": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Delivery"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -29590,6 +29717,29 @@
             "type": "string",
             "format": "uuid",
             "title": "Broker Id"
+          },
+          "guardrail_policy_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guardrail Policy Id"
+          },
+          "guardrail_policy_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guardrail Policy Sha256"
           },
           "broker_generation": {
             "type": "string",

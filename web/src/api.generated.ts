@@ -4770,7 +4770,7 @@ export interface components {
         /** DraftInput */
         DraftInput: {
             /** Isolated Tools */
-            isolated_tools?: components["schemas"]["IsolatedRecordExecution"] | components["schemas"]["IsolatedSecurityExecution"] | null;
+            isolated_tools?: components["schemas"]["IsolatedRecordExecution"] | components["schemas"]["IsolatedSecurityExecution"] | components["schemas"]["GuardedRecordExecution"] | null;
             security_suite?: components["schemas"]["SecurityEvaluationSpec"] | null;
             episode_judging?: components["schemas"]["EpisodeJudgingSpec"] | null;
             episode_judge?: components["schemas"]["ModelSpec-Input"] | null;
@@ -4886,7 +4886,7 @@ export interface components {
              * @default native-fixture-episode-v1
              * @enum {string}
              */
-            version: "native-fixture-episode-v1" | "native-fixture-episode-v2" | "native-isolated-record-episode-v1" | "native-isolated-record-security-v1";
+            version: "native-fixture-episode-v1" | "native-fixture-episode-v2" | "native-isolated-record-episode-v1" | "native-isolated-record-security-v1" | "native-isolated-record-guarded-v1";
             /**
              * Openai Surface
              * @default responses.create
@@ -4911,7 +4911,7 @@ export interface components {
             transport: "native_provider" | "scripted_test_only";
             semantic_judging?: components["schemas"]["EpisodeJudgingSpec"] | null;
             /** Isolated Tools */
-            isolated_tools?: components["schemas"]["IsolatedRecordExecution"] | components["schemas"]["IsolatedSecurityExecution"] | null;
+            isolated_tools?: components["schemas"]["IsolatedRecordExecution"] | components["schemas"]["IsolatedSecurityExecution"] | components["schemas"]["GuardedRecordExecution"] | null;
             security_suite?: components["schemas"]["SecurityEvaluationSpec"] | null;
         };
         /** EpisodeJudgingSpec */
@@ -5204,7 +5204,7 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
             retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Input"] | null;
             compression_execution?: components["schemas"]["CompressionExecutionSpec-Input"] | null;
@@ -5302,7 +5302,7 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
             retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Output"] | null;
             compression_execution?: components["schemas"]["CompressionExecutionSpec-Output"] | null;
@@ -5702,6 +5702,63 @@ export interface components {
              * @enum {string}
              */
             role: "viewer" | "analyst" | "editor" | "project_admin" | "prompt_reader";
+        };
+        /**
+         * GuardedRecordExecution
+         * @description A separate tool-only guard contract; never silently changes released v8/v9.
+         */
+        GuardedRecordExecution: {
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /**
+             * Principal Id
+             * Format: uuid
+             */
+            principal_id: string;
+            /**
+             * Broker Id
+             * Format: uuid
+             */
+            broker_id: string;
+            /** Environment */
+            environment: string;
+            /** Image Id */
+            image_id: string;
+            /**
+             * Max Wall Seconds
+             * @default 60
+             */
+            max_wall_seconds: number;
+            /**
+             * Max Result Bytes
+             * @default 16000
+             */
+            max_result_bytes: number;
+            /**
+             * Content Use Approved
+             * @constant
+             */
+            content_use_approved: true;
+            /**
+             * Version
+             * @default isolated-record-guarded-tools-v1
+             * @constant
+             */
+            version: "isolated-record-guarded-tools-v1";
+            /**
+             * Max Sessions
+             * @default 32
+             */
+            max_sessions: number;
+            /**
+             * Max Total Tool Calls
+             * @default 512
+             */
+            max_total_tool_calls: number;
+            runtime_guardrails: components["schemas"]["GuardrailBinding"];
         };
         /** GuardrailActivation */
         GuardrailActivation: {
@@ -9864,6 +9921,12 @@ export interface components {
             state: string;
             /** State Changed */
             state_changed: boolean | null;
+            /** Guardrail Policy Id */
+            guardrail_policy_id?: string | null;
+            /** Broker Intent */
+            broker_intent?: string | null;
+            /** Result Delivery */
+            result_delivery?: string | null;
             /**
              * Created At
              * Format: date-time
@@ -9921,6 +9984,10 @@ export interface components {
              * Format: uuid
              */
             broker_id: string;
+            /** Guardrail Policy Id */
+            guardrail_policy_id?: string | null;
+            /** Guardrail Policy Sha256 */
+            guardrail_policy_sha256?: string | null;
             /**
              * Broker Generation
              * Format: uuid

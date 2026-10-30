@@ -4,6 +4,7 @@ import json
 import re
 from copy import deepcopy
 from dataclasses import dataclass
+from typing import Literal
 
 from cutback.core.episodes import (
     EpisodeRetrieval,
@@ -57,6 +58,7 @@ def write_state(state, pointer, value):
 class FixtureExecution:
     event: EpisodeToolResult
     retrieval: EpisodeRetrieval | None = None
+    stop: Literal["policy_denied", "outage"] | None = None
 
 
 class FixtureRunner:

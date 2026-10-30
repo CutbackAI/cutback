@@ -30,3 +30,17 @@ def test_missing_git_is_actionable_before_workspace_database_or_http_setup(
             else:
                 seed_retrieval(None, None, "not-used", tmp_path / "sample")
     assert not list(tmp_path.iterdir())
+
+
+def test_guarded_tool_demo_requires_a_local_image_before_creating_any_workspace(
+    tmp_path, monkeypatch
+):
+    from cutback.demo import launch_demo
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("cutback.demo.require_demo_git", lambda: None)
+    with pytest.raises(
+        ValueError, match="^GUARDED_TOOL_DEMO_REQUIRES_EXPLICIT_LOCAL_TOOL_IMAGE_ID$"
+    ):
+        launch_demo(open_browser=False, guarded_tools=True)
+    assert not list(tmp_path.iterdir())

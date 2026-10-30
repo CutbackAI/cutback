@@ -45,7 +45,16 @@ def inside(container, code, values):
 
 
 def seed_owned_isolated_records(
-    container, directory, values, project, image_id, password, database, *, security_suite=False
+    container,
+    directory,
+    values,
+    project,
+    image_id,
+    password,
+    database,
+    *,
+    security_suite=False,
+    guarded_tools=False,
 ):
     """A separate host worker/broker; the image receives no Docker socket."""
     import uvicorn
@@ -91,7 +100,17 @@ def seed_owned_isolated_records(
                 trust_env=False,
                 headers={"Authorization": "Bearer " + values["CUTBACK_ADMIN_TOKEN"]},
             ) as control:
-                receipt = seed_isolated_tools(app, control, project, image_id)
+                receipt = seed_isolated_tools(
+                    app,
+                    control,
+                    project,
+                    image_id,
+                    guarded=guarded_tools,
+                    deny_tool_output=guarded_tools,
+                )
+                if guarded_tools:
+                    assert receipt["runtime_guardrails"]["checks"] == 16
+                    assert receipt["runtime_guardrails"]["withheld_operations"] == 4
                 if security_suite:
                     from cutback.demo_security_suites import seed_security_suite
 
@@ -127,8 +146,18 @@ def seed_owned_isolated_records(
                 os.environ["CUTBACK_ALLOW_PAYLOADS"] = prior
 
 
-def main(image, *, isolated_tools=False, security_suite=False, runtime_guardrails=False):
+def main(
+    image,
+    *,
+    isolated_tools=False,
+    security_suite=False,
+    runtime_guardrails=False,
+    guarded_tools=False,
+):
     from cutback.server.migrate import CURRENT_REVISION
+
+    if guarded_tools and not (isolated_tools and runtime_guardrails):
+        raise ValueError("GUARDED_TOOL_RECOVERY_REQUIRES_BOTH_OWNED_SERVICE_GATES")
 
     if security_suite and not isolated_tools:
         raise ValueError("SECURITY_IMAGE_GATE_REQUIRES_ACTUAL_ISOLATED_TOOLS")
@@ -271,6 +300,7 @@ print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":mani
                         password,
                         names[0],
                         security_suite=security_suite,
+                        guarded_tools=guarded_tools,
                     )
                 with psycopg.connect(**kwargs, autocommit=True) as conn:
                     key = os.urandom(32)
@@ -365,16 +395,25 @@ with sessions() as session:
   runtime_policies=session.scalars(select(GuardrailPolicyRow)).all()
   runtime_checks=session.scalars(select(GuardrailOperationRow)).all()
   native_calls=session.scalars(select(GatewayCallRow)).all()
-  assert len(runtime_policies)==1 and runtime_policies[0].state=="DISABLED"
-  assert runtime_policies[0].checks_used==9 and len(runtime_checks)==9
+  assert len(runtime_policies)==1+int(GUARDED_TOOLS)
+  assert all(row.state=="DISABLED" for row in runtime_policies)
+  assert sum(row.checks_used for row in runtime_policies)==9+16*GUARDED_TOOLS
+  assert len(runtime_checks)==9+16*GUARDED_TOOLS
   assert all(row.state=="COMPLETED" and row.decision for row in runtime_checks)
-  assert sum(row.decision["action"]=="deny" for row in runtime_checks)==3
+  assert sum(row.decision["action"]=="deny" for row in runtime_checks)==3+4*GUARDED_TOOLS
+  if GUARDED_TOOLS:
+   guarded=[row for row in operations if row.guardrail_policy_id is not None]
+   assert len(guarded)==8 and all(row.broker_intent=="STARTED" for row in guarded)
+   assert sum(row.result_delivery=="WITHHELD" for row in guarded)==4
+   assert all(row.state_changed is True for row in guarded if row.result_delivery=="WITHHELD")
+   assert sum(row.result_delivery=="AUTHORIZED" for row in guarded)==4
   assert len(native_calls)==4
   assert all(row.state=="SETTLED" and row.cost_usd is not None for row in native_calls)
   assert all(row.revoked_at is not None for row in session.scalars(select(GatewayKeyRow)).all())
   assert all(row.state=="DISABLED" for row in session.scalars(select(GatewayPolicyRow)).all())
-  restored_policy=load_private_policy(session,new_only,runtime_policies[0],"bootstrap_admin","owned-recovery-check")
-  assert restored_policy.policy_sha256==binding_for(runtime_policies[0]).policy_sha256
+  for row in runtime_policies:
+   restored_policy=load_private_policy(session,new_only,row,"bootstrap_admin","owned-recovery-check")
+   assert restored_policy.policy_sha256==binding_for(row).policy_sha256
  assert plans
  for row in plans:
   before=original.get(row.project_id,row.specification["artifact_ref"])
@@ -388,6 +427,7 @@ engine.dispose()
                     .replace("TOOLS_EXPECTED", repr(isolated_tools))
                     .replace("SECURITY_EXPECTED", repr(security_suite))
                     .replace("RUNTIME_GUARDS", repr(runtime_guardrails))
+                    .replace("GUARDED_TOOLS", repr(guarded_tools))
                 )
                 recovered = json.loads(inside(container, recovery, values).strip().splitlines()[-1])
 
@@ -511,6 +551,7 @@ engine.dispose()
                     "application_workflows": 3 + runtime_guardrails,
                     "paid_provider_calls": 0,
                     "native_batch_fixture_restored": True,
+                    "guarded_tool_effects_and_delivery_restored": guarded_tools,
                     "restored_tables": len(after),
                     "row_counts_match": True,
                     **recovered,
@@ -550,10 +591,12 @@ if __name__ == "__main__":
     parser.add_argument("--isolated-tools", action="store_true")
     parser.add_argument("--security-suite", action="store_true")
     parser.add_argument("--runtime-guardrails", action="store_true")
+    parser.add_argument("--guarded-tools", action="store_true")
     args = parser.parse_args()
     main(
         args.image,
         isolated_tools=args.isolated_tools,
         security_suite=args.security_suite,
         runtime_guardrails=args.runtime_guardrails,
+        guarded_tools=args.guarded_tools,
     )

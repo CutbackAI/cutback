@@ -8,6 +8,7 @@ from uuid import UUID
 
 from sqlalchemy import and_, or_, select, true
 
+from cutback.core.isolated_episodes import GuardedRecordExecution
 from cutback.core.observation import observation_scope
 from cutback.evals.datasets import CapturePolicy, DatasetImport, digest
 from cutback.evals.experiments import provider_models, run
@@ -116,13 +117,21 @@ def load_dataset(
 
 
 def run_one(
-    sessions, store, *, executor=None, execution_enabled=False, only_run_id=None, tool_client=None
+    sessions,
+    store,
+    *,
+    executor=None,
+    execution_enabled=False,
+    only_run_id=None,
+    tool_client=None,
+    guardrail_client=None,
 ):
     only_run_id = UUID(str(only_run_id)) if only_run_id is not None else None
     if not execution_enabled:
         return {"status": "EXPERIMENT_EXECUTION_DISABLED", "provider_calls": 0}
     owned_executor = executor is None
     owned_tool_client = False
+    owned_guardrail_client = False
     if owned_executor:
         from cutback.evals.executors import ConfiguredExecutor
 
@@ -264,6 +273,32 @@ def run_one(
                         "provider_calls": 0,
                     }
                     return {"status": "BLOCKED", "provider_calls": 0}
+            guarded = plan.episode_execution and isinstance(
+                plan.episode_execution.isolated_tools, GuardedRecordExecution
+            )
+            if guarded:
+                try:
+                    if guardrail_client is None:
+                        from cutback.server.tool_execution import configured_tool_guard_client
+
+                        guardrail_client = configured_tool_guard_client(
+                            plan.episode_execution.isolated_tools, plan.workflow
+                        )
+                        owned_guardrail_client = True
+                    if (
+                        guardrail_client.binding
+                        != plan.episode_execution.isolated_tools.runtime_guardrails
+                        or guardrail_client.workflow != plan.workflow
+                    ):
+                        raise ValueError("SCOPE")
+                except (ValueError, KeyError, ImportError):
+                    record.status = job.status = "BLOCKED"
+                    job.available_at = None
+                    record.results = {
+                        "code": "GUARDED_TOOL_CHECKER_NOT_CONFIGURED",
+                        "provider_calls": 0,
+                    }
+                    return {"status": "BLOCKED", "provider_calls": 0}
             record.status, job.status = "RUNNING", "RUNNING"
             job.available_at = None
             job.attempts += 1
@@ -308,6 +343,16 @@ def run_one(
                     run_id,
                     synthetic_transport=getattr(executor, "synthetic_transport", False),
                 )
+                if guarded:
+                    from fastapi import HTTPException
+
+                    from cutback.server.guardrail_controls import current_authority
+
+                    binding = plan.episode_execution.isolated_tools.runtime_guardrails
+                    try:
+                        current_authority(session, project_id, binding.policy_id, binding)
+                    except HTTPException:
+                        raise ValueError("GUARDED_TOOL_CURRENT_APPROVAL_REQUIRED") from None
                 from cutback.server.principals import principal_role
 
                 active_plan = session.get(ExperimentPlanRecord, plan_row.id, populate_existing=True)
@@ -380,6 +425,7 @@ def run_one(
 
             tools_factory = None
             if plan.episode_execution and plan.episode_execution.isolated_tools:
+                from cutback.server.guardrail_execution import SyncDurableGuardrailChecker
                 from cutback.server.tool_execution import environment_factory
 
                 tools_factory = environment_factory(
@@ -391,6 +437,9 @@ def run_one(
                         datetime.fromisoformat(plan_row.specification["expires_at"]),
                         datetime.now(UTC) + timedelta(seconds=plan.budget.max_wall_seconds),
                     ),
+                    guard_checker=SyncDurableGuardrailChecker(sessions, guardrail_client)
+                    if guarded
+                    else None,
                 )
             with observation_scope("evaluation", run_id=run_id):
                 results = run(
@@ -536,6 +585,8 @@ def run_one(
     finally:
         if owned_tool_client:
             tool_client.close()
+        if owned_guardrail_client:
+            guardrail_client.close()
         if owned_executor:
             executor.close()
 

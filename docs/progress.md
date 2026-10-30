@@ -1,5 +1,32 @@
 # Implementation progress
 
+Runtime enforcement is accepted and merged in [PR 48](https://github.com/CutbackAI/cutback/pull/48), merge `4350850c8970bc7641cb86f24094bdcaef95d254`, reviewed `5b161c52c08e015562294cfe25c701db89a1dfb7`; accepted tree `dc50e117d68d2e9e953addf2cbf86ba298173de4`. [Final receipt](evidence/runtime-guardrails-acceptance.json). Installed default passed **1,527 / 35 skips in 3,121.77 seconds**; installed SDK3 **1,061 / seven in 478.35 seconds**. All 11 exact-head hosted checks pass: default **1,526 / 36** and **1,525 / 37**, SDK3 **1,289 / eight** and **1,290 / seven**, legacy **21 each**, infrastructure **seven**, actual isolated-tool/browser **six**, audit and both CodeQL analyses. Private/public wheel `f845753467235f9a6b5eecb39e2510fbb3d0ce2396111c145e06f1f941941466` and sdist `8a5a3f34cd513ff810ba0dc9dc8a35734e3b1bf94daa296adf9e4434dccf69b2` reproduce exactly. Both installs match 314 application / 293 Python / five metadata files. Non-root image recovery verifies schema 0025, 95 tables, 1,491 encrypted objects, 18 plans, guarded native receipts and retired authority. Snapshot **924 / 10,091,424 bytes / zero differences**; source/history/archive boundary **924 / 3,799 / 1,239 / zero findings**. Earlier stale migration/type-generation failures below are superseded. Migration 0025 is released and immutable. Broker interposition is a separate follow-up; semantic classifiers and the wider roadmap remain unfinished. No new PyPI upload, paid inference or production deployment occurred.
+
+Guarded isolated record execution is a source follow-up under qualification.
+Expanded native surface/migration acceptance passed **12 in 96.71 seconds**
+across the existing Responses, Chat Completions and Messages function turns,
+including compound policy identity, populated downgrade refusal, export,
+contained project deletion and clean downgrade/upgrade. Separate revocation
+immediately after a write passed **one in 12.52 seconds**; known effect and charge
+remain recorded while the response is withheld. Scoped worker configuration
+passed **six in 1.08 seconds**. The expanded browser flow also freezes a fresh
+v10 plan with an exact approved binding and zero provider calls. Its first trial
+asserted a private specification in the public planning response; the API
+correctly returned only the plan summary. The corrected test passed with the
+actual response contract (**two in 54.99 seconds**, including both Docker cases).
+Real PostgreSQL/native-SDK/SQLite acceptance passed **six tests in 36.07 seconds**:
+allow, pre-broker input denial, withheld output after a known write, both checker
+outage modes and no replay after a lost write acknowledgement. Actual separate
+checker/broker processes, pinned Docker SQL and authenticated administrator/viewer
+desktop/mobile/axe acceptance passed **two in 48.19 seconds**. Generated API/types,
+React build, Ruff and mypy **294 modules** pass. Initial Docker sample assertions
+incorrectly expected `ended` for a deliberately disabled policy; the API correctly
+reported `inactive`, and the corrected acceptance checks both `DISABLED` and
+`inactive`. This does not change execution authority semantics. Proposed migration
+0026 separates broker intent, observed effects and release permission; full
+installed, recovery, exact public CI and archive gates remain pending. No paid
+requests, production deployment or PyPI upload occurred.
+
 30 October runtime enforcement follow-up, **working source under qualification, not accepted or published**. [Contracts and independent command](runtime-guardrails.md). Added bounded literal/schema/tool-name rules, a separate credential-isolated checker process, fixed-origin sync/async clients, explicit JSON application boundaries, encrypted collector registration, exact approvals/current authority, shared durable check intents, and proposed additive migration `0025`. A distinct guarded gateway v3 buffers complete SSE before delivery and preserves canonical known cost after output denial. Dashboard review/approval/check receipts and guarded budget selection are implemented; generated contracts and React build pass. The new source is not in PyPI dev5.
 
 Expanded source checkpoint: **979 / 25 skips in 212.42 seconds** across units/contracts. The combined guarded native HTTP, current approvals, shared quota, separate checker process and authenticated desktop/mobile/axe group passed **25 in 68.61 seconds**. Its corrected actual browser fixture registers the same immutable service identity as the owned process before review, without changing database approval bytes afterward. Separate independent full native checker/gateway/PostgreSQL sample passed **one in 9.57 seconds**, retaining four known-cost native fixture calls and nine guard checks, then revoking its key/disabling its policies. `cutback demo --runtime-guardrails` and the guided sample expose this journey. Additional units cover fixed boot-profile errors, credential-file factory reuse without ambient credential copying, and privacy-safe frozen-nonce CLI validation. Joined response parts/refusal deltas and same-receipt settlement recovery are covered; unavailable check coverage never authorizes bypassing current authority or a shared quota. Final frozen installed, image recovery and public-head gates remain required.

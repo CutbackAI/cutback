@@ -50,11 +50,31 @@ def record_tool_definitions(*, write):
 
 
 class IsolatedEpisodeTools:
-    def __init__(self, scenario, policy, client, journal, *, approval_hash, check_authority):
+    def __init__(
+        self,
+        scenario,
+        policy,
+        client,
+        journal,
+        *,
+        approval_hash,
+        check_authority,
+        guard_checker=None,
+    ):
         if not callable(check_authority) or journal is None:
             raise ValueError("ISOLATED_TOOL_DURABLE_JOURNAL_AND_CURRENT_AUTHORITY_REQUIRED")
         self.scenario, self.policy, self.client, self.journal = scenario, policy, client, journal
         self.check_authority, self.approval_hash = check_authority, approval_hash
+        self._guard_checker, self._guard_stopped, self._guard_decisions = guard_checker, False, []
+        if guard_checker is not None:
+            binding = guard_checker.binding
+            if (
+                (binding.project_id, binding.principal_id, binding.environment)
+                != (policy.project_id, policy.principal_id, policy.environment)
+                or policy.workflow not in binding.workflows
+                or set(binding.protected_stages) != {"tool_input", "tool_output"}
+            ):
+                raise ValueError("GUARDED_TOOL_CHECKER_SESSION_SCOPE_MISMATCH")
         self.calls, self.receipts = {}, []
         self._state, self._sealed, self._closed, self._uncertain = b"{}", False, False, False
         self._boundary_violation = False
@@ -91,8 +111,16 @@ class IsolatedEpisodeTools:
         return record_tool_definitions(write=self.policy.write_approved)
 
     def execute(self, call):
-        if self._sealed or self._closed or self._uncertain or call.call_id in self.calls:
+        if (
+            self._sealed
+            or self._closed
+            or self._uncertain
+            or self._guard_stopped
+            or call.call_id in self.calls
+        ):
             raise ValueError("ISOLATED_TOOL_SESSION_OR_CALL_NOT_CURRENT")
+        if self._guard_checker is not None:
+            return self._execute_guarded(call)
         self.check_authority()
         operation = uuid4()
         self.calls[call.call_id] = call
@@ -134,6 +162,107 @@ class IsolatedEpisodeTools:
             )
         self.receipts.append(event.model_dump(mode="json"))
         return FixtureExecution(event)
+
+    def _execute_guarded(self, call):
+        """Keep native broker effects distinct from permission to release its reply."""
+        self.check_authority()
+        operation, observed, response = uuid4(), False, None
+        self.calls[call.call_id] = call
+        self.journal.reserve(self.policy.session_id, operation, call.tool)
+        try:
+            self._project(call)
+            legitimate = len(self.calls) <= self.policy.max_calls
+        except (ValueError, KeyError, TypeError):
+            legitimate = False
+        self._legitimate_calls += int(legitimate)
+        try:
+            # Interpret only the broker's already-qualified update JSON surface.
+            # The checker sees the same decoded updates that SQL/CAS will use.
+            arguments = (
+                native_patch_arguments(call.arguments)
+                if call.tool == "records_patch"
+                else call.arguments
+            )
+            decision = self._guard_checker.check(
+                operation_id=operation,
+                stage="tool_input",
+                content={"name": call.tool, "arguments": arguments},
+            )
+            self._guard_decisions.append(decision)
+            if decision.action != "allow":
+                self.journal.input_blocked(self.policy.session_id, operation)
+                return self._guard_denial(
+                    call, operation, legitimate, None, "GUARDED_TOOL_INPUT_WITHHELD"
+                )
+            # A lost durable-intent acknowledgement cannot authorize broker I/O.
+            self.journal.broker_started(self.policy.session_id, operation)
+            response = self.client.execute(self.policy, operation, call.tool, call.arguments)
+            self.journal.returned(self.policy.session_id, operation, response)
+            observed = True
+            self.check_authority()
+            try:
+                self._verify_effect(call, response)
+            except (ValueError, KeyError, TypeError):
+                self._boundary_violation = True
+                raise
+            decision = self._guard_checker.check(
+                operation_id=operation, stage="tool_output", content=response
+            )
+            self._guard_decisions.append(decision)
+            if decision.action != "allow":
+                self.journal.delivery(self.policy.session_id, operation, delivered=False)
+                return self._guard_denial(
+                    call, operation, legitimate, response, "GUARDED_TOOL_OUTPUT_WITHHELD"
+                )
+            self.journal.delivery(self.policy.session_id, operation, delivered=True)
+            self._legitimate_denials += int(legitimate and response["status"] == "denied")
+            event = EpisodeToolResult(
+                call_id=call.call_id,
+                tool=call.tool,
+                status=response["status"],
+                result=response["response"]
+                if response["status"] == "returned"
+                else {"code": "ISOLATED_TOOL_OPERATION_DENIED"},
+                effect_id="effect-" + operation.hex if response["state_changed"] else None,
+            )
+            self.receipts.append(event.model_dump(mode="json"))
+            return FixtureExecution(event)
+        except Exception:
+            # Permission/receipt loss must not release raw content. Preserve a
+            # committed broker receipt; uncertainty cannot erase a known write.
+            self._guard_stopped = True
+            if observed:
+                try:
+                    self.journal.delivery(self.policy.session_id, operation, delivered=False)
+                except Exception:
+                    pass
+                return self._guard_denial(
+                    call, operation, legitimate, response, "GUARDED_TOOL_DELIVERY_NOT_AUTHORIZED"
+                )
+            self._uncertain = True
+            self._legitimacy_unknown += int(legitimate)
+            self.journal.uncertain(self.policy.session_id, operation)
+            event = EpisodeToolResult(
+                call_id=call.call_id,
+                tool=call.tool,
+                status="uncertain",
+                result={"code": "GUARDED_TOOL_INTENT_OR_EFFECT_UNKNOWN_NO_RETRY"},
+            )
+            self.receipts.append(event.model_dump(mode="json"))
+            return FixtureExecution(event, stop="outage")
+
+    def _guard_denial(self, call, operation, legitimate, response, code):
+        self._guard_stopped = True
+        self._legitimate_denials += int(legitimate)
+        event = EpisodeToolResult(
+            call_id=call.call_id,
+            tool=call.tool,
+            status="denied",
+            result={"code": code},
+            effect_id="effect-" + operation.hex if response and response["state_changed"] else None,
+        )
+        self.receipts.append(event.model_dump(mode="json"))
+        return FixtureExecution(event, stop="policy_denied")
 
     def _verify_effect(self, call, response):
         """Check authorized visibility and projected effects before model delivery.
@@ -277,4 +406,29 @@ class IsolatedEpisodeTools:
             tool_cost_usd=None,
             complete_task_cost_usd=None,
         )
+        if self._guard_checker is not None:
+            complete = bool(self._guard_decisions) and all(
+                decision.coverage_complete for decision in self._guard_decisions
+            )
+            value["runtime_guardrails"] = {
+                "policy_id": str(self._guard_checker.binding.policy_id),
+                "checks": len(self._guard_decisions),
+                "coverage_complete": complete,
+                "allowed": sum(item.status == "allowed" for item in self._guard_decisions),
+                "blocked": sum(item.status == "blocked" for item in self._guard_decisions),
+                "unavailable": sum(item.status == "unavailable" for item in self._guard_decisions),
+            }
+            if not complete:
+                # Operational fail-open is not permission to certify a model
+                # change as having complete guard coverage. Keep business
+                # evidence separately rather than relabeling it as a failure.
+                value["business_contract"] = {
+                    key: value.get(key) for key in ("status", "score", "task_success")
+                }
+                value.update(
+                    status="unknown",
+                    score=None,
+                    task_success="not_verified",
+                    code="GUARDED_TOOL_COVERAGE_INCOMPLETE",
+                )
         return value

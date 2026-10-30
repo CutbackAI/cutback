@@ -456,6 +456,7 @@ export function PlanForm({
   const [criterionCount, setCriterionCount] = useState(0);
   const [semanticEnabled, setSemanticEnabled] = useState(false);
   const [semanticCount, setSemanticCount] = useState(1);
+  const [toolGuards, setToolGuards] = useState(false);
   const current = datasets.find((row) => row.id === dataset);
   const episode =
     current?.provenance?.task_inference?.suggested_metric ===
@@ -471,6 +472,18 @@ export function PlanForm({
         description="This form prepares standalone evaluations. Use Agent workflow to preserve the application's request and source binding for a change proposal. Planning makes zero provider calls; an exact hash approval is required to queue one run."
         onSubmit={async (data) => {
           const [provider, model] = String(data.model).split("|");
+          let toolGuardBinding;
+          if (isolated && !securitySuite && toolGuards) {
+            const policy = await api(
+              `${base}/runtime-guardrails/${String(data.tool_guard_policy)}`,
+            );
+            if (
+              policy.state !== "APPROVED" ||
+              policy.execution_authority !== "current"
+            )
+              throw new Error("GUARDED_TOOL_CURRENT_APPROVAL_REQUIRED");
+            toolGuardBinding = policy.binding;
+          }
           const baseline = {
             key: "baseline",
             provider,
@@ -567,9 +580,14 @@ export function PlanForm({
             ...(isolated
               ? {
                   isolated_tools: {
-                    version: securitySuite
-                      ? "isolated-record-security-tools-v1"
-                      : "isolated-record-tools-v1",
+                    version: toolGuardBinding
+                      ? "isolated-record-guarded-tools-v1"
+                      : securitySuite
+                        ? "isolated-record-security-tools-v1"
+                        : "isolated-record-tools-v1",
+                    ...(toolGuardBinding
+                      ? { runtime_guardrails: toolGuardBinding }
+                      : {}),
                     project_id: base.split("/").pop(),
                     principal_id: String(data.tool_principal),
                     broker_id: String(data.tool_broker),
@@ -839,6 +857,40 @@ export function PlanForm({
                   confirmed cleanup are required for a passing task. Tool and
                   complete task costs remain unknown.
                 </p>
+                {!securitySuite && (
+                  <>
+                    <label className="check">
+                      <input
+                        type="checkbox"
+                        checked={toolGuards}
+                        onChange={(event) =>
+                          setToolGuards(event.target.checked)
+                        }
+                      />
+                      Require approved checks before each tool call and before
+                      releasing its response.
+                    </label>
+                    {toolGuards && (
+                      <>
+                        <Field
+                          label="Approved tool guard policy ID"
+                          name="tool_guard_policy"
+                          required
+                          pattern="[a-fA-F0-9-]{36}"
+                        />
+                        <p>
+                          Register and approve a policy in Runtime guardrails
+                          with exactly tool_input and tool_output stages. It
+                          must match this record owner, project, environment and
+                          workflow. The operator must configure its separate
+                          checker on the worker. A blocked response does not
+                          undo a recorded write. Model prompts and replies are
+                          outside this tool policy.
+                        </p>
+                      </>
+                    )}
+                  </>
+                )}
               </fieldset>
             )}
             {!isolated && (

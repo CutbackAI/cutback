@@ -11,7 +11,11 @@ from pydantic import Field
 from sqlalchemy import func, select
 
 from cutback.core.episode_judging import EpisodeJudgingSpec
-from cutback.core.isolated_episodes import IsolatedRecordExecution, IsolatedSecurityExecution
+from cutback.core.isolated_episodes import (
+    GuardedRecordExecution,
+    IsolatedRecordExecution,
+    IsolatedSecurityExecution,
+)
 from cutback.core.models import Identifier, StrictModel
 from cutback.core.retrieval import RetrievalConfigurationBinding, RetrievalCorpus, RetrievalSettings
 from cutback.core.security_suites import SecurityEvaluationSpec, family_token
@@ -118,7 +122,9 @@ class RetrievalConfirmationInput(StrictModel):
 
 
 class DraftInput(StrictModel):
-    isolated_tools: IsolatedRecordExecution | IsolatedSecurityExecution | None = None
+    isolated_tools: (
+        IsolatedRecordExecution | IsolatedSecurityExecution | GuardedRecordExecution | None
+    ) = None
     security_suite: SecurityEvaluationSpec | None = None
     episode_judging: EpisodeJudgingSpec | None = None
     episode_judge: ModelSpec | None = None

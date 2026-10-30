@@ -88,6 +88,7 @@ include = [
   "/docs/product-research.md", "/docs/optimization-search.md",
   "/docs/status.md",
   "/docs/runtime-guardrails.md",
+  "/docs/guarded-tools.md",
   "/docs/market-baseline.md", "/docs/differentiation.md", "/docs/implementation-roadmap.md", "/docs/research",
   "/docs/workflow-tracing.md", "/docs/imports-and-review.md",
   "/docs/prompt-releases.md", "/docs/application-checks.md",
