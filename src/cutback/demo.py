@@ -377,12 +377,12 @@ def seed_support_desk(
             retrieval_sample = seed_retrieval(app, control, project["id"], workspace)
             from cutback.demo_compression import seed_compression
 
-            compression_sample = seed_compression(app, control, project["id"], workspace)
-            joint_sample = (
-                seed_compression(app, control, project["id"], workspace, joint=True)
-                if joint_model_context
-                else None
+            # These modes share a corpus. Execute one comparison so its protected
+            # confirmation groups are never reused by a second demonstration.
+            compression_sample = seed_compression(
+                app, control, project["id"], workspace, joint=joint_model_context
             )
+            joint_sample = compression_sample if joint_model_context else None
             ticket_sample = None
             if ticket_router:
                 from cutback.demo_campaign_outcomes import run_sample
