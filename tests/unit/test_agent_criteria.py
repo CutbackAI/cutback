@@ -80,9 +80,15 @@ def test_local_criteria_worker_dispatches_only_saved_run_and_preserves_operator_
     assert denied.exit_code != 0 and calls == [run_id]
 
 
-def test_private_criteria_read_requires_explicit_output():
+def test_private_criteria_read_requires_explicit_output(monkeypatch):
+    import cutback.agent_control
+
+    def forbidden_connection(*args, **kwargs):
+        raise AssertionError("PRIVATE_READ_MUST_REQUIRE_OUTPUT_BEFORE_CONNECTING")
+
+    monkeypatch.setattr(cutback.agent_control, "connect", forbidden_connection)
     result = CliRunner().invoke(app, ["workflow", "criteria-read", "--purpose-reference", "owned"])
-    assert result.exit_code != 0 and "--output" in result.output
+    assert result.exit_code == 2
 
 
 def test_private_review_output_is_atomic_and_refuses_redirected_parent(tmp_path):
