@@ -10469,6 +10469,1174 @@
         }
       }
     },
+    "/v1/projects/{project_id}/semantic-cache/namespaces": {
+      "post": {
+        "summary": "Create",
+        "operationId": "create_v1_projects__project_id__semantic_cache_namespaces_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NamespaceInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NamespaceReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Namespaces",
+        "operationId": "namespaces_v1_projects__project_id__semantic_cache_namespaces_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 25,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NamespaceReceipt"
+                  },
+                  "title": "Response Namespaces V1 Projects  Project Id  Semantic Cache Namespaces Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/semantic-cache/namespaces/{namespace_id}/entries": {
+      "get": {
+        "summary": "Entries",
+        "operationId": "entries_v1_projects__project_id__semantic_cache_namespaces__namespace_id__entries_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "namespace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Namespace Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/semantic-cache/namespaces/{namespace_id}/entries/{entry_id}/content": {
+      "post": {
+        "summary": "Entry Content",
+        "operationId": "entry_content_v1_projects__project_id__semantic_cache_namespaces__namespace_id__entries__entry_id__content_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "namespace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Namespace Id"
+            }
+          },
+          {
+            "name": "entry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Entry Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentPurpose"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/semantic-cache/namespaces/{namespace_id}": {
+      "delete": {
+        "summary": "Delete Namespace",
+        "operationId": "delete_namespace_v1_projects__project_id__semantic_cache_namespaces__namespace_id__delete",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "namespace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Namespace Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SemanticApproval"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Inspect Namespace",
+        "operationId": "inspect_namespace_v1_projects__project_id__semantic_cache_namespaces__namespace_id__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "namespace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Namespace Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NamespaceReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/semantic-cache/namespaces/{namespace_id}/revoke": {
+      "post": {
+        "summary": "Revoke",
+        "operationId": "revoke_v1_projects__project_id__semantic_cache_namespaces__namespace_id__revoke_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "namespace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Namespace Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SemanticControl"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NamespaceReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ingest/semantic-cache/put": {
+      "post": {
+        "summary": "Put",
+        "operationId": "put_v1_ingest_semantic_cache_put_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SemanticPut"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ingest/semantic-cache/lookup": {
+      "post": {
+        "summary": "Lookup",
+        "operationId": "lookup_v1_ingest_semantic_cache_lookup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SemanticLookup"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SemanticCacheLookupReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/semantic-cache/namespaces/{namespace_id}/qualifications": {
+      "post": {
+        "summary": "Prepare",
+        "operationId": "prepare_v1_projects__project_id__semantic_cache_namespaces__namespace_id__qualifications_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "namespace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Namespace Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QualificationPrepare"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QualificationReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/semantic-cache/qualifications": {
+      "get": {
+        "summary": "Qualifications",
+        "operationId": "qualifications_v1_projects__project_id__semantic_cache_qualifications_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 25,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QualificationReceipt"
+                  },
+                  "title": "Response Qualifications V1 Projects  Project Id  Semantic Cache Qualifications Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/semantic-cache/qualifications/{qualification_id}": {
+      "get": {
+        "summary": "Inspect Qualification",
+        "operationId": "inspect_qualification_v1_projects__project_id__semantic_cache_qualifications__qualification_id__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "qualification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Qualification Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QualificationReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/semantic-cache/qualifications/{qualification_id}/approve": {
+      "post": {
+        "summary": "Approve",
+        "operationId": "approve_v1_projects__project_id__semantic_cache_qualifications__qualification_id__approve_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "qualification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Qualification Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SemanticApproval"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QualificationReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/semantic-cache/qualifications/{qualification_id}/cancel": {
+      "post": {
+        "summary": "Cancel",
+        "operationId": "cancel_v1_projects__project_id__semantic_cache_qualifications__qualification_id__cancel_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "qualification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Qualification Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SemanticControl"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QualificationReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/semantic-cache/qualifications/{qualification_id}/activation": {
+      "get": {
+        "summary": "Activation",
+        "operationId": "activation_v1_projects__project_id__semantic_cache_qualifications__qualification_id__activation_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "qualification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Qualification Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/semantic-cache/qualifications/{qualification_id}/activate": {
+      "post": {
+        "summary": "Activate",
+        "operationId": "activate_v1_projects__project_id__semantic_cache_qualifications__qualification_id__activate_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "qualification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Qualification Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SemanticApproval"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NamespaceReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/semantic-cache/namespaces/{namespace_id}/dataset-uploads": {
+      "post": {
+        "summary": "Prepare",
+        "operationId": "prepare_v1_projects__project_id__semantic_cache_namespaces__namespace_id__dataset_uploads_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "namespace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Namespace Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SemanticUploadPrepare"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SemanticUploadReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/semantic-cache/dataset-uploads/{upload_id}": {
+      "get": {
+        "summary": "Show",
+        "operationId": "show_v1_projects__project_id__semantic_cache_dataset_uploads__upload_id__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "upload_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Upload Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SemanticUploadReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/semantic-cache/dataset-uploads/{upload_id}/append": {
+      "post": {
+        "summary": "Append",
+        "operationId": "append_v1_projects__project_id__semantic_cache_dataset_uploads__upload_id__append_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "upload_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Upload Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SemanticUploadAppend"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SemanticUploadReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/semantic-cache/dataset-uploads/{upload_id}/finalize": {
+      "post": {
+        "summary": "Finalize",
+        "operationId": "finalize_v1_projects__project_id__semantic_cache_dataset_uploads__upload_id__finalize_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "upload_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Upload Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SemanticUploadSeal"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SemanticUploadReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/semantic-cache/dataset-uploads/{upload_id}/cancel": {
+      "post": {
+        "summary": "Cancel",
+        "operationId": "cancel_v1_projects__project_id__semantic_cache_dataset_uploads__upload_id__cancel_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "upload_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Upload Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SemanticUploadSeal"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SemanticUploadReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{project_id}/training/config": {
       "get": {
         "summary": "Configuration",
@@ -12773,6 +13941,70 @@
         ],
         "title": "CachePut"
       },
+      "CacheQualificationSpec": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "pattern": "^cutback\\.semantic-cache-qualification\\.v1$",
+            "title": "Version",
+            "default": "cutback.semantic-cache-qualification.v1"
+          },
+          "rule": {
+            "$ref": "#/components/schemas/SemanticCacheRule"
+          },
+          "thresholds": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "maxItems": 32,
+            "minItems": 1,
+            "title": "Thresholds"
+          },
+          "maximum_false_positive_group_upper95": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Maximum False Positive Group Upper95"
+          },
+          "minimum_useful_hit_group_ratio": {
+            "type": "number",
+            "maximum": 1.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Minimum Useful Hit Group Ratio"
+          },
+          "maximum_utility_regression": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Maximum Utility Regression",
+            "default": 0
+          },
+          "minimum_negative_groups": {
+            "type": "integer",
+            "maximum": 512.0,
+            "minimum": 3.0,
+            "title": "Minimum Negative Groups",
+            "default": 30
+          },
+          "minimum_positive_groups": {
+            "type": "integer",
+            "maximum": 512.0,
+            "minimum": 3.0,
+            "title": "Minimum Positive Groups",
+            "default": 10
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "rule",
+          "thresholds",
+          "maximum_false_positive_group_upper95",
+          "minimum_useful_hit_group_ratio"
+        ],
+        "title": "CacheQualificationSpec"
+      },
       "CallPage": {
         "properties": {
           "items": {
@@ -15027,6 +16259,34 @@
           "baseline"
         ],
         "title": "DraftInput"
+      },
+      "EmbeddingContract": {
+        "properties": {
+          "adapter": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Adapter"
+          },
+          "revision_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Revision Sha256"
+          },
+          "dimensions": {
+            "type": "integer",
+            "maximum": 2048.0,
+            "minimum": 1.0,
+            "title": "Dimensions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "adapter",
+          "revision_sha256",
+          "dimensions"
+        ],
+        "title": "EmbeddingContract"
       },
       "EnvironmentInput": {
         "properties": {
@@ -19281,6 +20541,183 @@
         ],
         "title": "ModelSpec"
       },
+      "NamespaceInput": {
+        "properties": {
+          "policy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Policy Id"
+          },
+          "serving_key_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Serving Key Id"
+          },
+          "workflow": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Workflow"
+          },
+          "environment": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Environment"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "anthropic",
+              "local"
+            ],
+            "title": "Provider"
+          },
+          "model": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Model"
+          },
+          "prompt_revision": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Prompt Revision"
+          },
+          "freshness_ref": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Freshness Ref"
+          },
+          "access_context_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Access Context Sha256"
+          },
+          "rule": {
+            "$ref": "#/components/schemas/SemanticCacheRule"
+          },
+          "max_entries": {
+            "type": "integer",
+            "maximum": 256.0,
+            "minimum": 1.0,
+            "title": "Max Entries",
+            "default": 128
+          },
+          "max_lookups_per_minute": {
+            "type": "integer",
+            "maximum": 120.0,
+            "minimum": 1.0,
+            "title": "Max Lookups Per Minute",
+            "default": 30
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "curated_catalog_approved": {
+            "type": "boolean",
+            "const": true,
+            "title": "Curated Catalog Approved"
+          },
+          "encrypted_storage_approved": {
+            "type": "boolean",
+            "const": true,
+            "title": "Encrypted Storage Approved"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "policy_id",
+          "serving_key_id",
+          "workflow",
+          "environment",
+          "provider",
+          "model",
+          "prompt_revision",
+          "freshness_ref",
+          "access_context_sha256",
+          "rule",
+          "expires_at",
+          "curated_catalog_approved",
+          "encrypted_storage_approved"
+        ],
+        "title": "NamespaceInput"
+      },
+      "NamespaceReceipt": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "specification": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Specification"
+          },
+          "specification_hash": {
+            "type": "string",
+            "title": "Specification Hash"
+          },
+          "embedding_contract_sha256": {
+            "type": "string",
+            "title": "Embedding Contract Sha256"
+          },
+          "entry_count": {
+            "type": "integer",
+            "title": "Entry Count"
+          },
+          "active_qualification_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Qualification Id"
+          },
+          "active_approval_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Approval Hash"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "state",
+          "specification",
+          "specification_hash",
+          "embedding_contract_sha256",
+          "entry_count",
+          "active_qualification_id",
+          "active_approval_hash",
+          "expires_at"
+        ],
+        "title": "NamespaceReceipt"
+      },
       "NativeGeneratorSpec": {
         "properties": {
           "version": {
@@ -21561,6 +22998,123 @@
         ],
         "title": "ProviderBatchReceipt"
       },
+      "QualificationPrepare": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Dataset Id"
+          },
+          "specification": {
+            "$ref": "#/components/schemas/CacheQualificationSpec"
+          },
+          "max_wall_seconds": {
+            "type": "integer",
+            "maximum": 120.0,
+            "minimum": 1.0,
+            "title": "Max Wall Seconds",
+            "default": 60
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "specification"
+        ],
+        "title": "QualificationPrepare"
+      },
+      "QualificationReceipt": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "namespace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Namespace Id"
+          },
+          "dataset_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Dataset Id"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "approval_hash": {
+            "type": "string",
+            "title": "Approval Hash"
+          },
+          "specification": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Specification"
+          },
+          "selected_threshold": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Threshold"
+          },
+          "catalog_entries": {
+            "type": "integer",
+            "title": "Catalog Entries"
+          },
+          "report": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Report"
+          },
+          "accounted_active_processing_us": {
+            "type": "integer",
+            "title": "Accounted Active Processing Us"
+          },
+          "uncertain_active_processing_us": {
+            "type": "integer",
+            "title": "Uncertain Active Processing Us"
+          },
+          "held_active_processing_us": {
+            "type": "integer",
+            "title": "Held Active Processing Us"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "namespace_id",
+          "dataset_id",
+          "state",
+          "approval_hash",
+          "specification",
+          "selected_threshold",
+          "catalog_entries",
+          "report",
+          "accounted_active_processing_us",
+          "uncertain_active_processing_us",
+          "held_active_processing_us",
+          "expires_at"
+        ],
+        "title": "QualificationReceipt"
+      },
       "QualityComparison": {
         "properties": {
           "baseline_start": {
@@ -23461,6 +25015,532 @@
           "provider_calls"
         ],
         "title": "SearchEffortReceipt"
+      },
+      "SemanticApproval": {
+        "properties": {
+          "approval_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Approval Hash"
+          },
+          "approval_ref": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Approval Ref"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "approval_hash",
+          "approval_ref"
+        ],
+        "title": "SemanticApproval"
+      },
+      "SemanticCacheLookupReceipt": {
+        "properties": {
+          "hit": {
+            "type": "boolean",
+            "title": "Hit"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "response": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Response"
+          },
+          "cache_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Id"
+          },
+          "similarity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Similarity"
+          },
+          "lookup_processing_ms": {
+            "type": "number",
+            "title": "Lookup Processing Ms"
+          },
+          "embedding_cost_usd": {
+            "type": "null",
+            "title": "Embedding Cost Usd"
+          },
+          "complete_task_cost_usd": {
+            "type": "null",
+            "title": "Complete Task Cost Usd"
+          },
+          "realized_savings_usd": {
+            "type": "null",
+            "title": "Realized Savings Usd"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "hit",
+          "reason",
+          "lookup_processing_ms"
+        ],
+        "title": "SemanticCacheLookupReceipt"
+      },
+      "SemanticCacheRule": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.supplied-embedding-cache.v1",
+            "title": "Version",
+            "default": "cutback.supplied-embedding-cache.v1"
+          },
+          "contract_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Contract Sha256",
+            "default": "d4a625b3c6b58571c0b4554447401db26de0172bf4873f6b2d5edaaf2164d4f9"
+          },
+          "embedding": {
+            "$ref": "#/components/schemas/EmbeddingContract"
+          },
+          "threshold": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Threshold"
+          },
+          "minimum_distinct_answer_margin": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Minimum Distinct Answer Margin",
+            "default": 0.01
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "embedding",
+          "threshold"
+        ],
+        "title": "SemanticCacheRule"
+      },
+      "SemanticControl": {
+        "properties": {},
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SemanticControl"
+      },
+      "SemanticDatasetEnvelope": {
+        "properties": {
+          "workflow": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Workflow"
+          },
+          "environment": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Environment",
+            "default": "staging"
+          },
+          "policy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Policy Id"
+          },
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "synthetic_fixture",
+              "human_labeled",
+              "application_records",
+              "sdk_capture"
+            ],
+            "title": "Source Type"
+          },
+          "independent_labels": {
+            "type": "boolean",
+            "title": "Independent Labels",
+            "default": false
+          },
+          "representative": {
+            "type": "boolean",
+            "title": "Representative",
+            "default": false
+          },
+          "provenance_ref": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Provenance Ref"
+          },
+          "split_seed": {
+            "type": "integer",
+            "maximum": 2147483647.0,
+            "minimum": 0.0,
+            "title": "Split Seed",
+            "default": 17
+          },
+          "split_policy": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "task-aware-v2"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Split Policy"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "workflow",
+          "policy_id",
+          "source_type",
+          "provenance_ref"
+        ],
+        "title": "SemanticDatasetEnvelope"
+      },
+      "SemanticLookup": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "namespace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Namespace Id"
+          },
+          "access_context_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Access Context Sha256"
+          },
+          "embedding_contract_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Embedding Contract Sha256"
+          },
+          "vector": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "maxItems": 2048,
+            "minItems": 1,
+            "title": "Vector"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "project_id",
+          "namespace_id",
+          "access_context_sha256",
+          "embedding_contract_sha256",
+          "vector"
+        ],
+        "title": "SemanticLookup"
+      },
+      "SemanticPut": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "namespace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Namespace Id"
+          },
+          "access_context_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Access Context Sha256"
+          },
+          "embedding_contract_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Embedding Contract Sha256"
+          },
+          "vector": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "maxItems": 2048,
+            "minItems": 1,
+            "title": "Vector"
+          },
+          "query": {
+            "type": "string",
+            "maxLength": 64000,
+            "minLength": 1,
+            "title": "Query"
+          },
+          "response": {
+            "type": "string",
+            "maxLength": 64000,
+            "minLength": 1,
+            "title": "Response"
+          },
+          "source_group": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Group"
+          },
+          "ttl_seconds": {
+            "type": "integer",
+            "maximum": 2592000.0,
+            "minimum": 1.0,
+            "title": "Ttl Seconds"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "project_id",
+          "namespace_id",
+          "access_context_sha256",
+          "embedding_contract_sha256",
+          "vector",
+          "query",
+          "response",
+          "ttl_seconds"
+        ],
+        "title": "SemanticPut"
+      },
+      "SemanticUploadAppend": {
+        "properties": {
+          "approval_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Approval Hash"
+          },
+          "offset": {
+            "type": "integer",
+            "maximum": 511.0,
+            "minimum": 0.0,
+            "title": "Offset"
+          },
+          "cases": {
+            "items": {
+              "$ref": "#/components/schemas/Case"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Cases"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "approval_hash",
+          "offset",
+          "cases"
+        ],
+        "title": "SemanticUploadAppend"
+      },
+      "SemanticUploadPrepare": {
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/SemanticDatasetEnvelope"
+          },
+          "expected_cases": {
+            "type": "integer",
+            "maximum": 512.0,
+            "minimum": 1.0,
+            "title": "Expected Cases"
+          },
+          "expected_cases_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Expected Cases Sha256"
+          },
+          "max_bytes": {
+            "type": "integer",
+            "maximum": 33554432.0,
+            "minimum": 1.0,
+            "title": "Max Bytes",
+            "default": 33554432
+          },
+          "max_finalize_seconds": {
+            "type": "integer",
+            "maximum": 120.0,
+            "minimum": 1.0,
+            "title": "Max Finalize Seconds",
+            "default": 60
+          },
+          "max_finalize_attempts": {
+            "type": "integer",
+            "maximum": 2.0,
+            "minimum": 1.0,
+            "title": "Max Finalize Attempts",
+            "default": 1
+          },
+          "content_upload_approved": {
+            "type": "boolean",
+            "const": true,
+            "title": "Content Upload Approved"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "metadata",
+          "expected_cases",
+          "expected_cases_sha256",
+          "content_upload_approved"
+        ],
+        "title": "SemanticUploadPrepare"
+      },
+      "SemanticUploadReceipt": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "namespace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Namespace Id"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "approval_hash": {
+            "type": "string",
+            "title": "Approval Hash"
+          },
+          "specification": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Specification"
+          },
+          "received_cases": {
+            "type": "integer",
+            "title": "Received Cases"
+          },
+          "received_bytes": {
+            "type": "integer",
+            "title": "Received Bytes"
+          },
+          "dataset_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Id"
+          },
+          "attempts": {
+            "type": "integer",
+            "title": "Attempts"
+          },
+          "uncertain_attempts": {
+            "type": "integer",
+            "title": "Uncertain Attempts"
+          },
+          "failure_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Code"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "billable_inference_calls": {
+            "type": "integer",
+            "const": 0,
+            "title": "Billable Inference Calls",
+            "default": 0
+          },
+          "data_plane_cost_usd": {
+            "type": "null",
+            "title": "Data Plane Cost Usd"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "namespace_id",
+          "state",
+          "approval_hash",
+          "specification",
+          "received_cases",
+          "received_bytes",
+          "dataset_id",
+          "attempts",
+          "uncertain_attempts",
+          "failure_code",
+          "expires_at"
+        ],
+        "title": "SemanticUploadReceipt"
+      },
+      "SemanticUploadSeal": {
+        "properties": {
+          "approval_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Approval Hash"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "approval_hash"
+        ],
+        "title": "SemanticUploadSeal"
       },
       "SessionPage": {
         "properties": {

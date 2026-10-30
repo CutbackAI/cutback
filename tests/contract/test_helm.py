@@ -68,6 +68,31 @@ def test_quality_only_execution_mounts_selected_native_keys_on_worker():
             assert ("openai_experiment_key" in str(container)) == (container["name"] == "worker")
 
 
+def test_semantic_local_worker_needs_no_native_key_and_batches_mount_only_selected_worker_key():
+    rows = render(
+        "--set",
+        "semanticCache.enabled=true,execution.semanticCache=true,payloads.enabled=true,payloads.bucket=synthetic",
+    )
+    config = next(row for row in rows if row["kind"] == "ConfigMap")["data"]
+    assert (
+        config["CUTBACK_SEMANTIC_CACHE_ENABLED"]
+        == config["CUTBACK_SEMANTIC_CACHE_EXECUTION"]
+        == "true"
+    )
+    assert config["CUTBACK_BATCH_EXECUTION"] == "false"
+    assert "experiment_key" not in str(rows)
+    batch = render(
+        "--set",
+        "execution.batches=true,payloads.enabled=true,payloads.bucket=synthetic",
+        "--set",
+        "execution.providers[0]=openai",
+    )
+    for row in batch:
+        if row["kind"] == "Deployment":
+            container = row["spec"]["template"]["spec"]["containers"][0]
+            assert ("openai_experiment_key" in str(container)) == (container["name"] == "worker")
+
+
 def helm_binary():
     value = os.getenv("CUTBACK_HELM_BIN") or shutil.which("helm")
     local = ROOT / "artifacts/tools/helm-4.3.1/helm.exe"
@@ -118,6 +143,9 @@ def test_chart_private_defaults_nonroot_secret_scoping_and_external_db():
         "CUTBACK_ALLOW_PAYLOADS",
         "CUTBACK_EXPERIMENT_EXECUTION",
         "CUTBACK_CACHE_ENABLED",
+        "CUTBACK_SEMANTIC_CACHE_ENABLED",
+        "CUTBACK_SEMANTIC_CACHE_EXECUTION",
+        "CUTBACK_BATCH_EXECUTION",
         "CUTBACK_BILLING_ENABLED",
         "CUTBACK_TRAINING_EXECUTION",
         "CUTBACK_ONLINE_EXECUTION",
@@ -151,6 +179,9 @@ def test_chart_private_defaults_nonroot_secret_scoping_and_external_db():
 
 
 def test_chart_refuses_unsafe_or_incomplete_opt_ins_and_mounts_only_selected_worker_keys():
+    render("--set", "semanticCache.enabled=true", expect_ok=False)
+    render("--set", "execution.semanticCache=true", expect_ok=False)
+    render("--set", "execution.batches=true", expect_ok=False)
     render("--set", "cache.enabled=true", expect_ok=False)
     render("--set", "execution.schedules=true", expect_ok=False)
     render("--set", "ingress.enabled=true", expect_ok=False)

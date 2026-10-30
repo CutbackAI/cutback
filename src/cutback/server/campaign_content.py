@@ -16,6 +16,8 @@ def discard_unreferenced(sessions, store, project, refs):
     """After an uncertain commit, preserve every referenced or unreadable object."""
     for ref in refs:
         try:
+            from cutback.server.enterprise_db import CacheEntry
+
             with sessions() as reader:
                 payload = reader.scalar(
                     select(PayloadSample.id)
@@ -30,7 +32,12 @@ def discard_unreferenced(sessions, store, project, refs):
                     )
                     .limit(1)
                 )
-            if payload is None and plan is None:
+                cache = reader.scalar(
+                    select(CacheEntry.id)
+                    .where(CacheEntry.project_id == project, CacheEntry.object_ref == ref)
+                    .limit(1)
+                )
+            if payload is None and plan is None and cache is None:
                 store.delete(project, ref)
         except Exception:
             pass  # Keep an uncertain reference for offline orphan reconciliation.

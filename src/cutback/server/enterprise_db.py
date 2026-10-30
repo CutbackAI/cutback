@@ -145,7 +145,10 @@ class TrainingJob(Base):
 
 class CacheEntry(Base):
     __tablename__ = "cache_entries"
-    __table_args__ = (UniqueConstraint("project_id", "key_hash"),)
+    __table_args__ = (
+        UniqueConstraint("project_id", "key_hash"),
+        UniqueConstraint("id", "project_id", name="uq_cache_entry_project_scope"),
+    )
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     project_id: Mapped[UUID] = mapped_column(
         ForeignKey("projects.id", ondelete="CASCADE"), index=True

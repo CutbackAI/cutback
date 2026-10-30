@@ -58,3 +58,30 @@ def test_quality_is_independent_disabled_by_default_and_has_isolated_failures(mo
     assert calls == ["one"] and result["quality_backfill"]["status"] == "FAILED"
     assert result["quality_evaluations"]["status"] == "OK"
     assert "private source" not in capsys.readouterr().out
+
+
+def test_semantic_local_work_is_opt_in_and_finalizer_failure_cannot_starve_qualification(
+    monkeypatch, capsys
+):
+    monkeypatch.setattr(worker_boot, "configured_execution_enabled", lambda: False)
+    monkeypatch.setenv("CUTBACK_SEMANTIC_CACHE_EXECUTION", "false")
+    assert "semantic_qualifications" not in worker_boot.worker_cycle(
+        None, object(), maintenance_due=False
+    )
+    monkeypatch.setenv("CUTBACK_SEMANTIC_CACHE_EXECUTION", "true")
+    calls = []
+
+    def unavailable(*args, **kwargs):
+        raise OSError("synthetic private object details")
+
+    monkeypatch.setattr(
+        "cutback.server.semantic_upload_worker.run_semantic_upload_one", unavailable
+    )
+    monkeypatch.setattr(
+        "cutback.server.semantic_cache_worker.run_semantic_cache_one",
+        lambda *args, **kwargs: calls.append("qualified-local-work"),
+    )
+    result = worker_boot.worker_cycle(None, object(), maintenance_due=False)
+    assert result["semantic_dataset_uploads"]["status"] == "FAILED"
+    assert result["semantic_qualifications"]["status"] == "OK" and calls == ["qualified-local-work"]
+    assert "private object" not in capsys.readouterr().out

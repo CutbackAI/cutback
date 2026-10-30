@@ -24,6 +24,7 @@ services:
       CUTBACK_DB_PASSWORD_FILE: /run/secrets/db_password
       CUTBACK_ADMIN_TOKEN_FILE: /run/secrets/admin_token
       CUTBACK_DEV_HTTP: "true"
+      CUTBACK_SEMANTIC_CACHE_ENABLED: "${CUTBACK_SEMANTIC_CACHE_ENABLED:-false}"
     secrets: [db_password, admin_token]
     ports: ["127.0.0.1:8080:8080"]
     depends_on:
@@ -42,6 +43,8 @@ services:
       CUTBACK_DB_HOST: postgres
       CUTBACK_DB_PASSWORD_FILE: /run/secrets/db_password
       CUTBACK_PROCESS: worker
+      CUTBACK_SEMANTIC_CACHE_EXECUTION: "${CUTBACK_SEMANTIC_CACHE_EXECUTION:-false}"
+      CUTBACK_BATCH_EXECUTION: "${CUTBACK_BATCH_EXECUTION:-false}"
       CUTBACK_EXPERIMENT_EXECUTION: "false"
       CUTBACK_QUALITY_EXECUTION: "false"
       CUTBACK_ONLINE_EXECUTION: "${CUTBACK_ONLINE_EXECUTION:-false}"

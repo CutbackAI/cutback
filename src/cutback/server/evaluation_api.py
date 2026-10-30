@@ -46,6 +46,7 @@ from cutback.server.plan_artifacts import freeze_plan, load_plan
 def policy_object_count(session, policy_id):
     from cutback.server.enterprise_db import CacheEntry
     from cutback.server.quality_db import QualityEvaluation, QualityRule
+    from cutback.server.semantic_upload_db import SemanticDatasetUpload
 
     stored = sum(
         session.scalar(select(func.count()).select_from(cls).where(cls.policy_id == policy_id)) or 0
@@ -64,7 +65,21 @@ def policy_object_count(session, policy_id):
         )
         or 0
     )
-    return stored + reserved
+    uploads = (
+        session.scalar(
+            select(
+                func.sum(
+                    SemanticDatasetUpload.expected_cases - SemanticDatasetUpload.received_cases
+                )
+            ).where(
+                SemanticDatasetUpload.policy_id == policy_id,
+                SemanticDatasetUpload.state == "STAGING",
+                SemanticDatasetUpload.expires_at > datetime.now(UTC),
+            )
+        )
+        or 0
+    )
+    return stored + reserved + uploads
 
 
 class PlanInput(StrictModel):
@@ -172,7 +187,18 @@ def dataset_manifest(session, dataset):
     }
 
 
-def persist_dataset(session, store, project_id, body, actor, stored, *, provenance_extra=None):
+def persist_dataset(
+    session,
+    store,
+    project_id,
+    body,
+    actor,
+    stored,
+    *,
+    provenance_extra=None,
+    preexisting_payloads=None,
+    check=None,
+):
     from cutback.server.dataset_lineage import lock_lineage, register_groups
 
     lock_lineage(session, project_id)
@@ -186,13 +212,44 @@ def persist_dataset(session, store, project_id, body, actor, stored, *, provenan
     if body.source_type == "synthetic_fixture" and policy.rights_basis != "synthetic":
         raise HTTPException(422, "SYNTHETIC_PROVENANCE_POLICY_MISMATCH")
     session.get(CapturePolicyRecord, policy_id, with_for_update=True)
+    reused = {}
+    if preexisting_payloads is not None:
+        if set(preexisting_payloads) != {case.id for case in body.cases} or len(
+            set(preexisting_payloads.values())
+        ) != len(body.cases):
+            raise HTTPException(422, "DATASET_REUSABLE_PAYLOAD_IDENTITIES_INVALID")
+        rows = session.scalars(
+            select(PayloadSample)
+            .where(
+                PayloadSample.id.in_(preexisting_payloads.values()),
+                PayloadSample.project_id == project_id,
+                PayloadSample.policy_id == policy_id,
+            )
+            .with_for_update()
+        ).all()
+        by_id = {row.id: row for row in rows}
+        if len(rows) != len(body.cases) or session.scalar(
+            select(DatasetItem.id).where(DatasetItem.payload_id.in_(by_id)).limit(1)
+        ):
+            raise HTTPException(409, "DATASET_REUSABLE_PAYLOAD_MISSING_OR_ALREADY_ASSIGNED")
+        for case in body.cases:
+            payload = by_id[preexisting_payloads[case.id]]
+            if (
+                payload.metadata_safe.get("deleted")
+                or payload.expires_at <= datetime.now(UTC)
+                or payload.content_hash != digest(case.model_dump(mode="json"))
+            ):
+                raise HTTPException(409, "DATASET_REUSABLE_PAYLOAD_EXPIRED_OR_CHANGED")
+            reused[case.id] = payload
     existing = policy_object_count(session, policy_id)
-    if existing + len(body.cases) > policy.max_samples:
+    if existing + len(body.cases) - len(reused) > policy.max_samples:
         raise HTTPException(429, "CAPTURE_SAMPLE_QUOTA_EXCEEDED")
     # Serialize policy consumption across concurrent imports before checking quota.
     clean = DatasetImport.model_validate(
         redact(body.model_dump(mode="json"), policy.never_capture_fields)
     )
+    if reused and clean.model_dump(mode="json") != body.model_dump(mode="json"):
+        raise HTTPException(422, "DATASET_REUSABLE_CONTENT_REQUIRES_APPLICATION_DEIDENTIFICATION")
     lineage = register_groups(session, project_id, clean.cases, actor=actor)
     prepared = prepare_dataset(
         clean, lineage_groups={key: str(value) for key, value in lineage.items()}
@@ -239,29 +296,43 @@ def persist_dataset(session, store, project_id, body, actor, stored, *, provenan
     session.add(dataset)
     session.flush()
     for ordinal, item in enumerate(prepared["items"]):
+        if check:
+            check()
         blob = json.dumps(item["case"]).encode()
         if len(blob) > policy.max_payload_bytes:
             raise HTTPException(413, "SAMPLE_EXCEEDS_POLICY_BYTES")
-        ref = store.put(project_id, blob, policy.retention_days)
-        stored.append(ref)
-        payload = PayloadSample(
-            project_id=project_id,
-            policy_id=policy_id,
-            object_ref=ref,
-            content_hash=digest(item["case"]),
-            expires_at=min(
-                policy.expires_at, datetime.now(UTC) + timedelta(days=policy.retention_days)
-            ),
-            metadata_safe={
+        payload = reused.get(item["case"]["id"])
+        if payload is None:
+            ref = store.put(project_id, blob, policy.retention_days)
+            stored.append(ref)
+            payload = PayloadSample(
+                project_id=project_id,
+                policy_id=policy_id,
+                object_ref=ref,
+                content_hash=digest(item["case"]),
+                expires_at=min(
+                    policy.expires_at, datetime.now(UTC) + timedelta(days=policy.retention_days)
+                ),
+                metadata_safe={
+                    "redaction": policy.redaction_version,
+                    "ordinal": ordinal,
+                    **(
+                        {"episode_max_turns": item["case"]["episode"]["max_turns"]}
+                        if item["case"].get("episode")
+                        else {}
+                    ),
+                },
+            )
+        else:
+            payload.metadata_safe = {
+                **payload.metadata_safe,
                 "redaction": policy.redaction_version,
                 "ordinal": ordinal,
-                **(
-                    {"episode_max_turns": item["case"]["episode"]["max_turns"]}
-                    if item["case"].get("episode")
-                    else {}
-                ),
-            },
-        )
+                "kind": "dataset_case",
+            }
+            payload.expires_at = min(
+                policy.expires_at, datetime.now(UTC) + timedelta(days=policy.retention_days)
+            )
         session.add(payload)
         session.flush()
         session.add(
@@ -547,8 +618,9 @@ def install_evaluation(app, sessions, authorize, scope):
             with sessions.begin() as session:
                 return persist_dataset(session, store, project_id, body, auth["actor"], stored)
         except BaseException:
-            for ref in stored:
-                store.delete(project_id, ref)
+            from cutback.server.campaign_content import discard_unreferenced
+
+            discard_unreferenced(sessions, store, project_id, stored)
             raise
 
     @app.get("/v1/projects/{project_id}/datasets")

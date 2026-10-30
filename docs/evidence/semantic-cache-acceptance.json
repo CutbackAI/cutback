@@ -1,0 +1,218 @@
+{
+  "reviewed_head": "98e593462cec8a269cbfa0bbc4b31f824b06e90d",
+  "runs": [
+    {
+      "run_id": 41035487425,
+      "jobs": [
+        {
+          "name": "infrastructure",
+          "id": 123995710929,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 6,
+              "skipped": 0,
+              "seconds": 1.28
+            }
+          ]
+        },
+        {
+          "name": "verify (3.13.18)",
+          "id": 123995711062,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1364,
+              "skipped": 31,
+              "seconds": 1346.15
+            }
+          ]
+        },
+        {
+          "name": "legacy-sdk (3.11.18)",
+          "id": 123995711071,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 0.8
+            }
+          ]
+        },
+        {
+          "name": "verify (3.11.18)",
+          "id": 123995711166,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1365,
+              "skipped": 30,
+              "seconds": 1227.61
+            }
+          ]
+        },
+        {
+          "name": "legacy-sdk (3.13.18)",
+          "id": 123995711190,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 0.9
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.13.18)",
+          "id": 123995711300,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1131,
+              "skipped": 7,
+              "seconds": 302.0
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.11.18)",
+          "id": 123995711392,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1130,
+              "skipped": 8,
+              "seconds": 451.26
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": 41035487520,
+      "jobs": [
+        {
+          "name": "audit",
+          "id": 123995163240,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "codeql (javascript-typescript)",
+          "id": 123995163261,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "codeql (python)",
+          "id": 123995163354,
+          "conclusion": "success",
+          "tests": []
+        }
+      ]
+    }
+  ],
+  "identical_private_public_archives": {
+    "cutback-0.1.0.dev5-py3-none-any.whl": "6594b44caed9d180a24ad8bf1e778f83580b7a0f1519a54e6c8746ad332021a4",
+    "cutback-0.1.0.dev5.tar.gz": "300c08e6b848658c16bc25fea0a8456fd56b97f5c233ae8e0a47f1585da0e78b"
+  },
+  "status": "qualified_bounded_increment_public_merge_pending",
+  "qualified_source_tree": "9388db8ac31afc979c0c0f07e6f45bd655ff9c9b",
+  "installed_default": {
+    "passed": 1361,
+    "skipped": 34,
+    "seconds": 2891.19,
+    "includes": [
+      "real PostgreSQL",
+      "authenticated desktop/mobile/axe",
+      "owned Docker lifecycle",
+      "isolated CPU training",
+      "Helm"
+    ]
+  },
+  "installed_sdk3_selected": {
+    "passed": 862,
+    "skipped": 7,
+    "seconds": 359.81,
+    "scope": "all units and selected PostgreSQL/cache/migration/browser/infrastructure checks; not the entire default selection"
+  },
+  "installed_default_pre_security_fix": {
+    "passed": 1353,
+    "skipped": 36,
+    "seconds": 2862.62,
+    "final_artifact": false
+  },
+  "installed_identity": {
+    "wheel_sha256": "6594b44caed9d180a24ad8bf1e778f83580b7a0f1519a54e6c8746ad332021a4",
+    "application_files": 271,
+    "python_files": 254,
+    "metadata_files": 5,
+    "identical": true,
+    "openai": "2.29.0",
+    "pydantic": "2.14.1"
+  },
+  "installed_sdk3_identity": {
+    "wheel_sha256": "6594b44caed9d180a24ad8bf1e778f83580b7a0f1519a54e6c8746ad332021a4",
+    "application_files": 271,
+    "python_files": 254,
+    "metadata_files": 5,
+    "identical": true,
+    "openai": "3.35.1",
+    "pydantic": "2.14.1"
+  },
+  "image_acceptance": {
+    "image": "cutback-qualification:semantic-final",
+    "image_id": "sha256:29e076b6e73939da877cc103aebb9bf5a4e16757f0da25826effaf0230fc1407",
+    "uid": 10001,
+    "python": "3.11.18",
+    "migration": "0023",
+    "sample_application_calls": 19,
+    "source_linked_support_desk_calls": 12,
+    "source_workflows": 2,
+    "application_workflows": 3,
+    "paid_provider_calls": 0,
+    "native_batch_fixture_restored": true,
+    "restored_tables": 91,
+    "row_counts_match": true,
+    "restored_and_rekeyed_objects": 1442,
+    "restored_and_rekeyed_cache_objects": 1,
+    "restored_and_rekeyed_plans": 16,
+    "semantic_qualified_catalog_restored": true,
+    "database_pointers_preserved": true,
+    "production_changed": false,
+    "secret_delivery": "anonymous_stdin_pipes",
+    "independent_otel_producer_and_replay": "passed",
+    "concurrent_load": {
+      "tenants": 2,
+      "accepted": 2000,
+      "duplicates": 2000,
+      "seconds": 1.969,
+      "production_sla": false
+    }
+  },
+  "core_only_installed_smoke": "passed",
+  "twine_and_exact_payload": "passed",
+  "boundary": {
+    "files": 839,
+    "reachable_history_objects": 3465,
+    "archive_members": 1111,
+    "findings": 0,
+    "scope": "qualified pre-acceptance-record source and archives"
+  },
+  "superseded_trials": [
+    "Earlier SDK3 trial: 850 passed, seven skips, six Helm infrastructure dependency failures; corrected final installed selection passed 862/seven.",
+    "Initial CodeQL found reflected semantic-cache exception information; final implementation maps only explicit fixed public codes. Eight focused error/PG regressions and both final CodeQL jobs passed.",
+    "Earlier authenticated-browser selector trial was corrected to an exact combobox role; the final installed and hosted browser gates passed."
+  ],
+  "limits": [
+    "Supplied vectors and curated references; no hidden embedding request",
+    "Owner-declared labels and independence; no independent customer-quality claim",
+    "No full application economics or verified realized savings",
+    "Broader market baseline and tool/guardrail/modality work remain unfinished"
+  ],
+  "pypi_release": "0.1.0.dev5 unchanged",
+  "paid_provider_calls": 0,
+  "production_deployed": false
+}

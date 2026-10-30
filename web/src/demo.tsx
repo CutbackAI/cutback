@@ -132,6 +132,24 @@ export function SampleGuide({
           </p>
         </section>
       )}
+      {demo.semantic_cache_sample && (
+        <section aria-label="Qualified semantic cache sample">
+          <h2>Refuse a tempting wrong cached answer</h2>
+          <p>
+            Inspect validation-only threshold selection, a separate confirmation
+            set, and an activated encrypted catalog. These symbolic vector
+            controls test the workflow; real embedding quality, customer
+            outcomes and realized savings remain unverified.
+          </p>
+          <button onClick={() => navigate("Semantic caching")}>
+            Inspect semantic cache qualification
+          </button>
+          <p>
+            Selected threshold: {demo.semantic_cache_sample.selected_threshold}{" "}
+            · Paid provider calls: zero.
+          </p>
+        </section>
+      )}
       {demo.ticket_campaign_sample && (
         <section aria-label="Automatic ticket-routing task">
           <h3>Three labels. One automatic improvement.</h3>

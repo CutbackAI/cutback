@@ -29,6 +29,8 @@ migration:
     requests: {cpu: 100m, memory: 128Mi}
     limits: {cpu: 500m, memory: 512Mi}
 execution:
+  semanticCache: false
+  batches: false
   online: false
   quality: false
   experiments: false
@@ -50,6 +52,8 @@ payloads:
   region: ""
   existingClaim: ""
 cache:
+  enabled: false
+semanticCache:
   enabled: false
 billing:
   enabled: false

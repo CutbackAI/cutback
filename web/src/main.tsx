@@ -47,6 +47,11 @@ const ProviderBatches = React.lazy(() =>
     default: module.ProviderBatches,
   })),
 );
+const SemanticCache = React.lazy(() =>
+  import("./semantic-cache").then((module) => ({
+    default: module.SemanticCache,
+  })),
+);
 const ProviderBatchEvidence = React.lazy(() =>
   import("./provider-batches").then((module) => ({
     default: module.ProviderBatchEvidence,
@@ -95,7 +100,13 @@ async function request(token: string, path: string, options: RequestInit = {}) {
               ?.includes("application/octet-stream")
           ? await response.blob()
           : await response.text();
-  if (!response.ok) throw new Error(body?.code || "REQUEST_FAILED");
+  if (!response.ok) {
+    const detail =
+      typeof body?.detail === "string" && /^[A-Z0-9_]{1,120}$/.test(body.detail)
+        ? body.detail
+        : undefined;
+    throw new Error(body?.code || detail || "REQUEST_FAILED");
+  }
   return body;
 }
 
@@ -112,6 +123,7 @@ const views = [
   "Task economics",
   "Campaigns",
   "Provider batches",
+  "Semantic caching",
   "Retrieval",
   "Compression",
   "Opportunities",
@@ -839,6 +851,23 @@ function App() {
                       "analyst",
                       "editor",
                     ].includes(
+                      identity.project_roles?.[project] || identity.role,
+                    )}
+                  />
+                </React.Suspense>
+              </BudgetViewBoundary>
+            )}
+            {view === "Semantic caching" && project && (
+              <BudgetViewBoundary key={project}>
+                <React.Suspense
+                  fallback={<p role="status">Loading semantic caching…</p>}
+                >
+                  <SemanticCache
+                    key={project}
+                    api={api}
+                    project={project}
+                    canApprove={admin}
+                    canWrite={["admin", "project_admin", "analyst"].includes(
                       identity.project_roles?.[project] || identity.role,
                     )}
                   />

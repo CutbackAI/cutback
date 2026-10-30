@@ -28,7 +28,9 @@ from cutback.server.db import (
 from cutback.server.plan_artifacts import load_plan, public_config
 
 
-def load_dataset(session, dataset, store, *, now=None):
+def load_dataset(
+    session, dataset, store, *, now=None, check=None, max_cases=None, max_content_bytes=None
+):
     require_payloads_enabled()
     now = now or datetime.now(UTC)
     policy_row = session.get(CapturePolicyRecord, dataset.provenance["policy_id"])
@@ -37,14 +39,28 @@ def load_dataset(session, dataset, store, *, now=None):
     policy = CapturePolicy.model_validate(policy_row.policy)
     if not policy.permits(dataset.provenance["environment"], dataset.workflow_id):
         raise ValueError("CAPTURE_POLICY_EXPIRED_OR_OUT_OF_SCOPE")
-    items = session.scalars(select(DatasetItem).where(DatasetItem.dataset_id == dataset.id)).all()
+    query = select(DatasetItem).where(DatasetItem.dataset_id == dataset.id)
+    if max_cases is not None:
+        query = query.limit(max_cases + 1)
+    items = session.scalars(query).all()
+    if max_cases is not None and len(items) > max_cases:
+        raise ValueError("DATASET_READ_CASE_BOUND")
     ordered = []
     expiries = []
+    content_bytes = 0
     for item in items:
+        if check:
+            check()
         payload = session.get(PayloadSample, item.payload_id)
         if payload.project_id != dataset.project_id or payload.expires_at <= now:
             raise ValueError("PAYLOAD_EXPIRED_OR_OUT_OF_SCOPE")
-        case = json.loads(store.get(dataset.project_id, payload.object_ref))
+        raw = store.get(dataset.project_id, payload.object_ref)
+        content_bytes += len(raw)
+        if max_content_bytes is not None and content_bytes > max_content_bytes:
+            raise ValueError("DATASET_READ_CONTENT_BOUND")
+        if check:
+            check()
+        case = json.loads(raw)
         expiries.append(payload.expires_at)
         if digest(case) != payload.content_hash:
             raise ValueError("PAYLOAD_INTEGRITY_FAILURE")

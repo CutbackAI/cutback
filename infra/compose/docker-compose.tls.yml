@@ -18,12 +18,13 @@ services:
     build:
       context: ../..
       dockerfile: infra/compose/Dockerfile
-    environment: &runtime
+    environment:
       CUTBACK_DB_HOST: postgres
       CUTBACK_DB_PASSWORD_FILE: /run/secrets/db_password
       CUTBACK_ADMIN_TOKEN_FILE: /run/secrets/admin_token
       CUTBACK_TRUSTED_PROXIES: 172.31.243.2
       CUTBACK_EXPERIMENT_EXECUTION: "false"
+      CUTBACK_SEMANTIC_CACHE_ENABLED: "${CUTBACK_SEMANTIC_CACHE_ENABLED:-false}"
     secrets: [db_password, admin_token]
     networks: [backend, edge]
     depends_on:
@@ -39,9 +40,12 @@ services:
       context: ../..
       dockerfile: infra/compose/Dockerfile
     environment:
-      <<: *runtime
+      CUTBACK_DB_HOST: postgres
+      CUTBACK_DB_PASSWORD_FILE: /run/secrets/db_password
       CUTBACK_PROCESS: worker
-    secrets: [db_password, admin_token]
+      CUTBACK_SEMANTIC_CACHE_EXECUTION: "${CUTBACK_SEMANTIC_CACHE_EXECUTION:-false}"
+      CUTBACK_BATCH_EXECUTION: "${CUTBACK_BATCH_EXECUTION:-false}"
+    secrets: [db_password]
     networks: [backend]
     depends_on:
       postgres:

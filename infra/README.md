@@ -29,6 +29,8 @@ helm template reviewed infra/helm/cutback --values reviewed-values.yaml
 
 ## Optional services
 
+Supplied-vector semantic caching has separate disabled defaults: `semanticCache.enabled` authorizes its API and `execution.semanticCache` enables bounded local finalization/qualification. Both require approved encrypted payload storage; local qualification needs no model credential. `execution.batches` additionally requires an enabled worker and explicitly selected OpenAI key, mounted only on the worker. Network egress remains explicitly configured. Compose exposes equivalent disabled `CUTBACK_SEMANTIC_CACHE_ENABLED`, `CUTBACK_SEMANTIC_CACHE_EXECUTION` and `CUTBACK_BATCH_EXECUTION` flags; configure the approved store and separate worker-only provider references in a private overlay before opting in. The TLS Compose worker does not mount the installation administrator credential.
+
 Payload storage remains disabled until approved. Enabling it requires `payload_key` in the runtime Secret and a permitted S3 bucket/workload identity, or an existing shared file PVC. File storage across collector/worker/training pods requires suitable shared access and ownership; the chart does not infer that an RWO claim is safe for a replicated deployment. Configure object version/backup expiry, encryption-key recovery and orphan reconciliation separately.
 
 Experiment execution and schedules are off. Enable them only with frozen data/vendor/budget approvals. Only selected provider credentials from the separate experiment Secret mount on the ordinary worker. The collector gets none. Native SDK retries remain off for billable experiment calls.
