@@ -161,6 +161,7 @@ test("routing training, private fitting, independent validation and confirmation
     exact: true,
   });
   await expect(evidence).toContainText("Fresh held-out groups recorded");
+  await expect(evidence).toContainText("Fixture responses and usage");
   await expect(evidence).toContainText("Verified at completion");
   await expect(evidence).toContainText("Count once using setup key");
   await expect(evidence).toContainText("Unknown");

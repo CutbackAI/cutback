@@ -851,9 +851,17 @@ export function LearnedRouting({
 function RoutingResult({ report }: { report: Data }) {
   const result = report.results || {};
   const setup = result.routing_setup_cost;
+  const transport = report.specification?.routing_execution?.transport;
   return (
     <section aria-label="Routing run evidence">
       <h3>Routing run evidence</h3>
+      <p className="notice">
+        {transport === "scripted_test_only"
+          ? "Fixture responses and usage: these costs and checks are a synthetic demonstration, not real-model performance or customer savings."
+          : transport === "native_provider"
+            ? "Native provider responses. Recorded usage and modeled prices are not invoice reconciliation or independent customer-quality verification."
+            : "Response provenance is not established for this retained result."}
+      </p>
       <p>
         <code>{report.id}</code> · {report.status} · {report.requests} native
         requests.
