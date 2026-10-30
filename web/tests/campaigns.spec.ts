@@ -72,6 +72,7 @@ test("inspect canonical campaign evidence, approve exact bounds and cancel witho
     .getByLabel("Conservative savings per successful task (USD)")
     .fill("0.01");
   await page.getByLabel("Forecast successful tasks").fill("10000");
+  await page.getByLabel("Total request ceiling").fill("32");
   await page
     .getByRole("button", {
       name: "Prepare campaign without inference",
@@ -82,6 +83,18 @@ test("inspect canonical campaign evidence, approve exact bounds and cancel witho
     "READY_FOR_APPROVAL",
   );
   await expect(selected).toContainText("Search order: static alternative");
+  await expect(
+    selected.getByRole("region", { name: "Frozen static portfolio" }),
+  ).toBeVisible();
+  await expect(
+    selected.getByText("Model and output limits frozen before approval"),
+  ).toBeVisible();
+  await expect(selected).toContainText("Preparation omitted 3 alternatives");
+  await expect(
+    selected
+      .getByRole("region", { name: "Frozen static portfolio" })
+      .getByRole("row"),
+  ).toHaveCount(2);
   await expect(selected).toContainText(
     "other optimization overhead is unmeasured",
   );

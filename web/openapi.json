@@ -13186,7 +13186,8 @@
             "type": "string",
             "enum": [
               "cutback.improvement-campaign.v1",
-              "cutback.improvement-campaign.v2"
+              "cutback.improvement-campaign.v2",
+              "cutback.improvement-campaign.v3"
             ],
             "title": "Version",
             "default": "cutback.improvement-campaign.v1"
@@ -17059,7 +17060,8 @@
             "type": "string",
             "enum": [
               "cutback.improvement-campaign.v1",
-              "cutback.improvement-campaign.v2"
+              "cutback.improvement-campaign.v2",
+              "cutback.improvement-campaign.v3"
             ],
             "title": "Version",
             "default": "cutback.improvement-campaign.v1"
@@ -17097,6 +17099,21 @@
                 "type": "null"
               }
             ]
+          },
+          "static_portfolio": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ModelSpec-Input"
+                },
+                "type": "array",
+                "maxItems": 4
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Static Portfolio"
           },
           "conservative_savings_per_success_usd": {
             "anyOf": [

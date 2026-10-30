@@ -2,7 +2,6 @@
 
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
-from typing import Literal
 from uuid import UUID, uuid4
 
 from fastapi import Depends, HTTPException, Query
@@ -12,7 +11,13 @@ from sqlalchemy import func, select
 from cutback.core.instruction_edits import LiteralInstructionEdit
 from cutback.core.models import Identifier, StrictModel
 from cutback.evals.campaign_budget import compile_campaign
-from cutback.evals.campaigns import CampaignBudget, ImprovementCampaign, generation_input
+from cutback.evals.campaigns import (
+    CampaignBudget,
+    CampaignVersion,
+    ImprovementCampaign,
+    automatic_static_portfolio,
+    generation_input,
+)
 from cutback.evals.experiments import ExperimentPlan, ModelSpec, upper_cost
 from cutback.server.campaign_content import (
     content_transaction,
@@ -87,9 +92,7 @@ class CampaignSelectedContent(StrictModel):
 
 
 class CampaignDraft(StrictModel):
-    version: Literal["cutback.improvement-campaign.v1", "cutback.improvement-campaign.v2"] = (
-        "cutback.improvement-campaign.v1"
-    )
+    version: CampaignVersion = "cutback.improvement-campaign.v1"
     request_id: UUID
     template_plan_id: UUID
     baseline_snapshot_id: UUID
@@ -344,17 +347,28 @@ def install_campaigns(app, sessions, authorize, scope):
                 require_source_registered(session, project_id, campaign.template)
                 loaded, _ = load_dataset(session, dataset, store)
                 training_lineage(session, project_id, loaded)
-                generation_input(campaign, loaded["items"])
+                if campaign.version != "cutback.improvement-campaign.v3":
+                    generation_input(campaign, loaded["items"])
                 snapshot = session.get(TaskCostSnapshot, campaign.baseline_snapshot_id)
                 cost = snapshot_cost(snapshot, project_id, env.id, campaign.template.workflow)
                 envelope = compile_campaign(campaign, loaded, cost)
                 envelope["baseline_snapshot_sha256"] = snapshot.evidence_sha256
-                if envelope["eligible"] and envelope["rounds"]:
+                if envelope["eligible"]:
                     raw = campaign.model_dump(mode="json")
-                    raw["generator"].update(
-                        rounds=envelope["rounds"], variants_per_round=envelope["variants_per_round"]
-                    )
+                    if campaign.version == "cutback.improvement-campaign.v3":
+                        raw["static_portfolio"] = [
+                            m.model_dump(mode="json")
+                            for m in campaign.static_portfolio or []
+                            if m.key in envelope["selected_static_keys"]
+                        ]
+                    if envelope["rounds"]:
+                        raw["generator"].update(
+                            rounds=envelope["rounds"],
+                            variants_per_round=envelope["variants_per_round"],
+                        )
                     campaign = ImprovementCampaign.model_validate(raw)
+                    if campaign.version == "cutback.improvement-campaign.v3" and envelope["rounds"]:
+                        generation_input(campaign, loaded["items"])
                 identity = uuid4()
                 expiry = min(
                     policy.expires_at,
@@ -490,6 +504,18 @@ def install_campaigns(app, sessions, authorize, scope):
                         "baseline_snapshot_id": str(body.baseline_snapshot_id),
                         "environment": dataset.provenance["environment"],
                         "template": raw,
+                        **(
+                            {
+                                "static_portfolio": [
+                                    m.model_dump(mode="json")
+                                    for m in automatic_static_portfolio(
+                                        ExperimentPlan.model_validate(raw)
+                                    )
+                                ]
+                            }
+                            if body.version == "cutback.improvement-campaign.v3"
+                            else {}
+                        ),
                         "instruction_edit": instruction_edit.model_dump(mode="json")
                         if instruction_edit
                         else None,

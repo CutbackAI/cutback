@@ -12,7 +12,7 @@ from unittest.mock import patch
 from uuid import uuid4
 
 
-def synthetic_executor(*, seeds_from_scope=False):
+def synthetic_executor(*, seeds_from_scope=False, reject_static_portfolio=False):
     import httpx
 
     from cutback.evals.executors import OpenAIExecutor
@@ -28,11 +28,11 @@ def synthetic_executor(*, seeds_from_scope=False):
         requests.append(body)
         proposer = "text" in body
         if proposer:
-            seeds = (
-                [seed["key"] for seed in json.loads(body["input"])["seeds"]]
-                if seeds_from_scope
-                else ("baseline", "simple-downgrade")
-            )
+            if seeds_from_scope:
+                scope = json.loads(body["input"])
+                seeds = [seed["key"] for seed in scope["seeds"][: scope["variants"]]]
+            else:
+                seeds = ["baseline", "simple-downgrade"]
             output = json.dumps(
                 {
                     "proposals": [
@@ -47,7 +47,19 @@ def synthetic_executor(*, seeds_from_scope=False):
             )
         else:
             output = (
-                "B" if body["model"] == "gpt-4.1-mini" and body["max_output_tokens"] == 256 else "A"
+                (
+                    "A"
+                    if body.get("instructions") == "Answer A only."
+                    or body["model"] in {"gpt-4.1", "gpt-6-luna"}
+                    and body["max_output_tokens"] == 256
+                    else "B"
+                )
+                if reject_static_portfolio
+                else (
+                    "B"
+                    if body["model"] == "gpt-4.1-mini" and body["max_output_tokens"] == 256
+                    else "A"
+                )
             )
         tokens = 160 if proposer else 50 if body["max_output_tokens"] == 256 else 4
         return httpx.Response(

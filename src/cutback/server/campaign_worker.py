@@ -7,12 +7,14 @@ from uuid import UUID, uuid4
 from sqlalchemy import func, or_, select
 
 from cutback.evals.campaigns import (
+    SIMPLE_FIRST_VERSIONS,
     GenerationFeedback,
     ProposalOnlyPlan,
     decode_proposals,
     generation_input,
     proposal_model,
     static_alternative_available,
+    static_candidates,
 )
 from cutback.evals.datasets import digest
 from cutback.evals.experiments import Budget, ExperimentPlan, plan_summary, upper_cost
@@ -445,11 +447,10 @@ def advance_one(
             )
             dataset, _ = load_dataset(session, row, store)
             if parent.status == "RUNNING":
-                for ordinal, seed in enumerate(campaign.template.candidates, 1):
+                for ordinal, seed in enumerate(static_candidates(campaign), 1):
                     freeze_candidate(session, store, parent, seed, "seed", policy, refs, ordinal)
-                if (
-                    campaign.version == "cutback.improvement-campaign.v2"
-                    and static_alternative_available(campaign)
+                if campaign.version in SIMPLE_FIRST_VERSIONS and static_alternative_available(
+                    campaign
                 ):
                     parent.summary = {
                         **parent.summary,
@@ -458,7 +459,7 @@ def advance_one(
                             "validate_static_alternative_before_instruction_generation"
                         ),
                     }
-                    plan = target_plan(parent, campaign, dataset, campaign.template.candidates)
+                    plan = target_plan(parent, campaign, dataset, static_candidates(campaign))
                     child_run(
                         session,
                         store,
@@ -468,10 +469,15 @@ def advance_one(
                         policy,
                         refs,
                         static=True,
-                        derivation={"strategy": "static_native_alternative", "proposer_calls": 0},
+                        derivation={
+                            "strategy": "static_native_portfolio"
+                            if campaign.version == "cutback.improvement-campaign.v3"
+                            else "static_native_alternative",
+                            "proposer_calls": 0,
+                        },
                     )
                 else:
-                    if campaign.version == "cutback.improvement-campaign.v2":
+                    if campaign.version in SIMPLE_FIRST_VERSIONS:
                         parent.summary = {
                             **parent.summary,
                             "static_stage": "not_available",
@@ -481,7 +487,7 @@ def advance_one(
             else:
                 phase = parent.status.removeprefix("WAITING_").lower()
                 static_stage = (
-                    campaign.version == "cutback.improvement-campaign.v2"
+                    campaign.version in SIMPLE_FIRST_VERSIONS
                     and phase == "validation"
                     and parent.summary.get("static_stage") == "waiting"
                 )

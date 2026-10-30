@@ -78,7 +78,8 @@ def test_agent_campaign_reconciles_lost_prepare_and_approval_without_new_identit
     assert advance(root, intermittent)["status"] == "QUEUED"
     current = status(root, control)
     assert current["id"] == row["id"] and current["requests"] == 0
-    assert current["specification"]["version"] == "cutback.improvement-campaign.v2"
+    assert current["specification"]["version"] == "cutback.improvement-campaign.v3"
+    assert len(current["economic_envelope"]["static_portfolio"]) > 1
     saved = (root / ".cutback/agent/campaign.json").read_text(encoding="utf-8")
     assert (
         "Owned synthetic classification task" not in saved
