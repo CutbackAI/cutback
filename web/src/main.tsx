@@ -52,6 +52,11 @@ const GatewayBudgets = React.lazy(() =>
     default: module.GatewayBudgets,
   })),
 );
+const RuntimeGuardrails = React.lazy(() =>
+  import("./guardrails").then((module) => ({
+    default: module.RuntimeGuardrails,
+  })),
+);
 const Retrieval = React.lazy(() =>
   import("./retrieval").then((module) => ({ default: module.Retrieval })),
 );
@@ -148,6 +153,7 @@ const views = [
   "Prompts",
   "Monitoring",
   "Application budgets",
+  "Runtime guardrails",
   "Changes",
   "Integrations",
   "Security",
@@ -942,6 +948,20 @@ function App() {
                   fallback={<p role="status">Loading application budgets…</p>}
                 >
                   <GatewayBudgets
+                    key={project}
+                    api={api}
+                    project={project}
+                    canApprove={admin}
+                  />
+                </React.Suspense>
+              </BudgetViewBoundary>
+            )}
+            {view === "Runtime guardrails" && project && (
+              <BudgetViewBoundary key={project}>
+                <React.Suspense
+                  fallback={<p role="status">Loading runtime guardrails…</p>}
+                >
+                  <RuntimeGuardrails
                     key={project}
                     api={api}
                     project={project}

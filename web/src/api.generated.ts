@@ -2330,6 +2330,126 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/runtime-guardrails": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listing */
+        get: operations["listing_v1_projects__project_id__runtime_guardrails_get"];
+        put?: never;
+        /** Create */
+        post: operations["create_v1_projects__project_id__runtime_guardrails_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/runtime-guardrails/{policy_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Detail */
+        get: operations["detail_v1_projects__project_id__runtime_guardrails__policy_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/runtime-guardrails/{policy_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve */
+        post: operations["approve_v1_projects__project_id__runtime_guardrails__policy_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/runtime-guardrails/{policy_id}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Turn Off */
+        post: operations["turn_off_v1_projects__project_id__runtime_guardrails__policy_id__disable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/runtime-guardrails/{policy_id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Content */
+        post: operations["content_v1_projects__project_id__runtime_guardrails__policy_id__content_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/runtime-guardrails/{policy_id}/operations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Operations */
+        get: operations["operations_v1_projects__project_id__runtime_guardrails__policy_id__operations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/runtime-guardrails/{policy_id}/operations/{operation_id}/{stage}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Operation */
+        get: operations["operation_v1_projects__project_id__runtime_guardrails__policy_id__operations__operation_id___stage__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/export": {
         parameters: {
             query?: never;
@@ -5466,7 +5586,7 @@ export interface components {
              * @default cutback.gateway-policy.v1
              * @enum {string}
              */
-            version: "cutback.gateway-policy.v1" | "cutback.gateway-policy.v2";
+            version: "cutback.gateway-policy.v1" | "cutback.gateway-policy.v2" | "cutback.gateway-policy.v3";
             /**
              * Policy Id
              * Format: uuid
@@ -5489,6 +5609,7 @@ export interface components {
             teams: components["schemas"]["TeamLimit-Input"][];
             /** Models */
             models: components["schemas"]["ModelLimit-Input"][];
+            runtime_guardrails?: components["schemas"]["GuardrailBinding"] | null;
         };
         /** GatewayPolicy */
         "GatewayPolicy-Output": {
@@ -5497,7 +5618,7 @@ export interface components {
              * @default cutback.gateway-policy.v1
              * @enum {string}
              */
-            version: "cutback.gateway-policy.v1" | "cutback.gateway-policy.v2";
+            version: "cutback.gateway-policy.v1" | "cutback.gateway-policy.v2" | "cutback.gateway-policy.v3";
             /**
              * Policy Id
              * Format: uuid
@@ -5520,6 +5641,7 @@ export interface components {
             teams: components["schemas"]["TeamLimit-Output"][];
             /** Models */
             models: components["schemas"]["ModelLimit-Output"][];
+            runtime_guardrails?: components["schemas"]["GuardrailBinding"] | null;
         };
         /** GatewayPolicyDetail */
         GatewayPolicyDetail: {
@@ -5580,6 +5702,310 @@ export interface components {
              * @enum {string}
              */
             role: "viewer" | "analyst" | "editor" | "project_admin" | "prompt_reader";
+        };
+        /** GuardrailActivation */
+        GuardrailActivation: {
+            /** Approval Hash */
+            approval_hash: string;
+            /**
+             * Approval Ref
+             * Format: uuid
+             */
+            approval_ref: string;
+            /** Expected State Version */
+            expected_state_version: number;
+        };
+        /**
+         * GuardrailBinding
+         * @description Public, approved execution scope; contains no rule literals or content nonce.
+         */
+        GuardrailBinding: {
+            /**
+             * Binding Version
+             * @default cutback.guardrail-binding.v1
+             * @constant
+             */
+            binding_version: "cutback.guardrail-binding.v1";
+            /**
+             * Version
+             * @default cutback.guardrail-policy.v1
+             * @constant
+             */
+            version: "cutback.guardrail-policy.v1";
+            /**
+             * Service Id
+             * Format: uuid
+             */
+            service_id: string;
+            /**
+             * Policy Id
+             * Format: uuid
+             */
+            policy_id: string;
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /**
+             * Principal Id
+             * Format: uuid
+             */
+            principal_id: string;
+            /** Policy Sha256 */
+            policy_sha256: string;
+            /** Environment */
+            environment: string;
+            /** Workflows */
+            workflows: string[];
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Protected Stages */
+            protected_stages: ("input" | "output" | "tool_input" | "tool_output")[];
+            /** Rule Count */
+            rule_count: number;
+            /** Stage Rule Counts */
+            stage_rule_counts: {
+                [key: string]: number;
+            };
+            /**
+             * On Unavailable
+             * @default fail_closed
+             * @enum {string}
+             */
+            on_unavailable: "fail_closed" | "fail_open";
+            /** Max Content Bytes */
+            max_content_bytes: number;
+            /** Max Evaluation Ms */
+            max_evaluation_ms: number;
+        };
+        /** GuardrailControlReceipt */
+        GuardrailControlReceipt: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            binding: components["schemas"]["GuardrailBinding"];
+            /**
+             * Capture Policy Id
+             * Format: uuid
+             */
+            capture_policy_id: string;
+            /** Approval Hash */
+            approval_hash: string;
+            /** State */
+            state: string;
+            /** State Version */
+            state_version: number;
+            /** Max Checks */
+            max_checks: number;
+            /** Checks Used */
+            checks_used: number;
+            /** Approved At */
+            approved_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Execution Authority */
+            execution_authority: string;
+        };
+        /** GuardrailDecision */
+        GuardrailDecision: {
+            /**
+             * Version
+             * @default cutback.guardrail-decision.v1
+             * @constant
+             */
+            version: "cutback.guardrail-decision.v1";
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /**
+             * Policy Id
+             * Format: uuid
+             */
+            policy_id: string;
+            /** Policy Sha256 */
+            policy_sha256: string;
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "input" | "output" | "tool_input" | "tool_output";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "allowed" | "blocked" | "unavailable";
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "allow" | "deny";
+            /**
+             * Code
+             * @enum {string}
+             */
+            code: "GUARDRAIL_ALLOWED" | "GUARDRAIL_LITERAL_DENIED" | "GUARDRAIL_SHAPE_DENIED" | "GUARDRAIL_TOOL_DENIED" | "GUARDRAIL_SCOPE_DENIED" | "GUARDRAIL_EXPIRED" | "GUARDRAIL_CHECK_UNAVAILABLE" | "GUARDRAIL_CONTENT_BOUND" | "GUARDRAIL_OPERATION_CONFLICT";
+            /**
+             * Rule Refs
+             * @default []
+             */
+            rule_refs: string[];
+            /** Checks Completed */
+            checks_completed: number;
+            /** Checks Expected */
+            checks_expected: number;
+            /** Coverage Complete */
+            coverage_complete: boolean;
+            /** Duration Ms */
+            duration_ms?: number | null;
+        };
+        /** GuardrailDisable */
+        GuardrailDisable: {
+            /** Approval Hash */
+            approval_hash: string;
+            /** Expected State Version */
+            expected_state_version: number;
+        };
+        /** GuardrailOperationPage */
+        GuardrailOperationPage: {
+            /** Items */
+            items: components["schemas"]["GuardrailOperationReceipt"][];
+            /** Next After */
+            next_after: string | null;
+        };
+        /** GuardrailOperationReceipt */
+        GuardrailOperationReceipt: {
+            /**
+             * Policy Id
+             * Format: uuid
+             */
+            policy_id: string;
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /** Stage */
+            stage: string;
+            /** State */
+            state: string;
+            decision: components["schemas"]["GuardrailDecision"] | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Completed At */
+            completed_at: string | null;
+        };
+        /** GuardrailPolicy */
+        GuardrailPolicy: {
+            /**
+             * Version
+             * @default cutback.guardrail-policy.v1
+             * @constant
+             */
+            version: "cutback.guardrail-policy.v1";
+            /**
+             * Policy Id
+             * Format: uuid
+             */
+            policy_id: string;
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /**
+             * Principal Id
+             * Format: uuid
+             */
+            principal_id: string;
+            /** Environment */
+            environment: string;
+            /** Workflows */
+            workflows: string[];
+            /**
+             * Content Nonce
+             * Format: uuid
+             */
+            content_nonce?: string;
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Protected Stages */
+            protected_stages: ("input" | "output" | "tool_input" | "tool_output")[];
+            /** Rules */
+            rules: (components["schemas"]["LiteralDenyRule"] | components["schemas"]["JSONShapeRule"] | components["schemas"]["ToolAllowlistRule"])[];
+            /**
+             * On Unavailable
+             * @default fail_closed
+             * @enum {string}
+             */
+            on_unavailable: "fail_closed" | "fail_open";
+            /**
+             * Max Content Bytes
+             * @default 64000
+             */
+            max_content_bytes: number;
+            /**
+             * Max Evaluation Ms
+             * @default 50
+             */
+            max_evaluation_ms: number;
+            /**
+             * Content Use Approved
+             * @constant
+             */
+            content_use_approved: true;
+        };
+        /** GuardrailPolicyPage */
+        GuardrailPolicyPage: {
+            /** Items */
+            items: components["schemas"]["GuardrailControlReceipt"][];
+            /** Next After */
+            next_after: string | null;
+        };
+        /** GuardrailRegistration */
+        GuardrailRegistration: {
+            /**
+             * Service Id
+             * Format: uuid
+             */
+            service_id: string;
+            /**
+             * Capture Policy Id
+             * Format: uuid
+             */
+            capture_policy_id: string;
+            policy: components["schemas"]["GuardrailPolicy"];
+            /**
+             * Max Checks
+             * @default 10000
+             */
+            max_checks: number;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -6083,6 +6509,22 @@ export interface components {
              */
             max_total_tool_calls: number;
         };
+        /** JSONShapeRule */
+        JSONShapeRule: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "json_shape";
+            /** Key */
+            key: string;
+            /** Stages */
+            stages: ("input" | "output" | "tool_input" | "tool_output")[];
+            /** Schema Definition */
+            schema_definition: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+        };
         JsonValue: unknown;
         /** KeyInput */
         KeyInput: {
@@ -6239,6 +6681,26 @@ export interface components {
             purpose: string;
             /** Immutable Hash */
             immutable_hash: string;
+        };
+        /** LiteralDenyRule */
+        LiteralDenyRule: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "literal_deny";
+            /** Key */
+            key: string;
+            /** Stages */
+            stages: ("input" | "output" | "tool_input" | "tool_output")[];
+            /** Terms */
+            terms: string[];
+            /**
+             * Normalization
+             * @default exact
+             * @enum {string}
+             */
+            normalization: "exact" | "nfkc_casefold";
         };
         /** LiteralInstructionEdit */
         LiteralInstructionEdit: {
@@ -9305,6 +9767,25 @@ export interface components {
              */
             team_id: string;
             limit: components["schemas"]["SpendLimit-Output"];
+        };
+        /** ToolAllowlistRule */
+        ToolAllowlistRule: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "tool_allowlist";
+            /** Key */
+            key: string;
+            /**
+             * Stages
+             * @default [
+             *       "tool_input"
+             *     ]
+             */
+            stages: "tool_input"[];
+            /** Names */
+            names: string[];
         };
         /** ToolArgumentCheck */
         ToolArgumentCheck: {
@@ -15471,6 +15952,284 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GatewayCallPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listing_v1_projects__project_id__runtime_guardrails_get: {
+        parameters: {
+            query?: {
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardrailPolicyPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_v1_projects__project_id__runtime_guardrails_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuardrailRegistration"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardrailControlReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    detail_v1_projects__project_id__runtime_guardrails__policy_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardrailControlReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_v1_projects__project_id__runtime_guardrails__policy_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuardrailActivation"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardrailControlReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    turn_off_v1_projects__project_id__runtime_guardrails__policy_id__disable_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuardrailDisable"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardrailControlReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    content_v1_projects__project_id__runtime_guardrails__policy_id__content_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentPurpose"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardrailPolicy"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    operations_v1_projects__project_id__runtime_guardrails__policy_id__operations_get: {
+        parameters: {
+            query?: {
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardrailOperationPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    operation_v1_projects__project_id__runtime_guardrails__policy_id__operations__operation_id___stage__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                policy_id: string;
+                operation_id: string;
+                stage: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardrailOperationReceipt"];
                 };
             };
             /** @description Validation Error */

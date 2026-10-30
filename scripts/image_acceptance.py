@@ -127,7 +127,7 @@ def seed_owned_isolated_records(
                 os.environ["CUTBACK_ALLOW_PAYLOADS"] = prior
 
 
-def main(image, *, isolated_tools=False, security_suite=False):
+def main(image, *, isolated_tools=False, security_suite=False, runtime_guardrails=False):
     from cutback.server.migrate import CURRENT_REVISION
 
     if security_suite and not isolated_tools:
@@ -237,20 +237,26 @@ assert os.getuid()==10001 and sys.version_info[:3]==(3,11,18)
 app=create_app(allow_insecure_http=True)
 app.state.artifact_store=configured_store()
 os.environ["CUTBACK_SEMANTIC_CACHE_ENABLED"]="true"
-manifest=seed_support_desk(app,"http://127.0.0.1:8080",os.environ["CUTBACK_ADMIN_TOKEN"],Path("/tmp/owned-support-desk"),provider_batch=True,semantic_cache=True)
+manifest=seed_support_desk(app,"http://127.0.0.1:8080",os.environ["CUTBACK_ADMIN_TOKEN"],Path("/tmp/owned-support-desk"),provider_batch=True,semantic_cache=True,runtime_guardrails=RUNTIME_GUARDS)
 assert manifest["provider_batch_sample"]["status"]=="COMPLETED"
 assert manifest["provider_batch_sample"]["vendor_files_deleted"] is True
 assert manifest["semantic_cache_sample"]["status"]=="PASSED"
 assert manifest["semantic_cache_sample"]["served_authorized_hit"] is True
 assert manifest["semantic_cache_sample"]["rejected_unsafe_match"] is True
+if RUNTIME_GUARDS:
+ assert manifest["runtime_guardrail_sample"]["status"]=="PASSED"
+ assert manifest["runtime_guardrail_sample"]["native_fixture_calls"]==4
+ assert manifest["runtime_guardrail_sample"]["complete_application_cost_usd"] is None
 print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":manifest["paid_provider_calls"]}))
 """
+                code = code.replace("RUNTIME_GUARDS", repr(runtime_guardrails))
                 manifest = json.loads(inside(container, code, values).strip().splitlines()[-1])
                 base = "/v1/projects/" + manifest["project_id"]
                 usage = client.get(
                     base + "/usage?traffic_kind=application&group_by=workflow"
                 ).json()
-                assert usage["summary"]["observed_attempts"] == 19 and len(usage["groups"]) == 3
+                assert usage["summary"]["observed_attempts"] == 19 + 4 * runtime_guardrails
+                assert len(usage["groups"]) == 3 + runtime_guardrails
                 source_groups = [group for group in usage["groups"] if "app.py" in group["label"]]
                 assert len(source_groups) == 2
                 assert sum(group["observed_attempts"] for group in source_groups) == 12
@@ -352,6 +358,23 @@ with sessions() as session:
   assert len(security_datasets)==1
   loaded,_=load_dataset(session,security_datasets[0],new_only)
   assert loaded["security_suite"]==reports[0]["suite"] and len(loaded["items"])==20
+ if RUNTIME_GUARDS:
+  from cutback.server.guardrail_db import GuardrailPolicyRow,GuardrailOperationRow
+  from cutback.server.guardrail_controls import load_private_policy,binding_for
+  from cutback.server.gateway_db import GatewayCallRow,GatewayKeyRow,GatewayPolicyRow
+  runtime_policies=session.scalars(select(GuardrailPolicyRow)).all()
+  runtime_checks=session.scalars(select(GuardrailOperationRow)).all()
+  native_calls=session.scalars(select(GatewayCallRow)).all()
+  assert len(runtime_policies)==1 and runtime_policies[0].state=="DISABLED"
+  assert runtime_policies[0].checks_used==9 and len(runtime_checks)==9
+  assert all(row.state=="COMPLETED" and row.decision for row in runtime_checks)
+  assert sum(row.decision["action"]=="deny" for row in runtime_checks)==3
+  assert len(native_calls)==4
+  assert all(row.state=="SETTLED" and row.cost_usd is not None for row in native_calls)
+  assert all(row.revoked_at is not None for row in session.scalars(select(GatewayKeyRow)).all())
+  assert all(row.state=="DISABLED" for row in session.scalars(select(GatewayPolicyRow)).all())
+  restored_policy=load_private_policy(session,new_only,runtime_policies[0],"bootstrap_admin","owned-recovery-check")
+  assert restored_policy.policy_sha256==binding_for(runtime_policies[0]).policy_sha256
  assert plans
  for row in plans:
   before=original.get(row.project_id,row.specification["artifact_ref"])
@@ -359,11 +382,12 @@ with sessions() as session:
   rotating.rekey(row.project_id,row.specification["artifact_ref"])
   after=new_only.get(row.project_id,row.specification["artifact_ref"])
   assert before==after
-print(json.dumps({"restored_and_rekeyed_objects":len(rows)+len(caches),"restored_and_rekeyed_cache_objects":len(caches),"restored_and_rekeyed_plans":len(plans),"semantic_qualified_catalog_restored":True,"isolated_tool_receipts_restored":bool(TOOLS_EXPECTED),"paired_security_suite_restored":bool(SECURITY_EXPECTED),"database_pointers_preserved":True}))
+print(json.dumps({"restored_and_rekeyed_objects":len(rows)+len(caches),"restored_and_rekeyed_cache_objects":len(caches),"restored_and_rekeyed_plans":len(plans),"semantic_qualified_catalog_restored":True,"isolated_tool_receipts_restored":bool(TOOLS_EXPECTED),"paired_security_suite_restored":bool(SECURITY_EXPECTED),"runtime_guardrail_receipts_restored":bool(RUNTIME_GUARDS),"database_pointers_preserved":True}))
 engine.dispose()
 """.replace("RECOVERED", repr(names[1]))
                     .replace("TOOLS_EXPECTED", repr(isolated_tools))
                     .replace("SECURITY_EXPECTED", repr(security_suite))
+                    .replace("RUNTIME_GUARDS", repr(runtime_guardrails))
                 )
                 recovered = json.loads(inside(container, recovery, values).strip().splitlines()[-1])
 
@@ -481,10 +505,10 @@ engine.dispose()
                     "uid": 10001,
                     "python": "3.11.18",
                     "migration": revision,
-                    "sample_application_calls": 19,
+                    "sample_application_calls": 19 + 4 * runtime_guardrails,
                     "source_linked_support_desk_calls": 12,
                     "source_workflows": 2,
-                    "application_workflows": 3,
+                    "application_workflows": 3 + runtime_guardrails,
                     "paid_provider_calls": 0,
                     "native_batch_fixture_restored": True,
                     "restored_tables": len(after),
@@ -492,7 +516,7 @@ engine.dispose()
                     **recovered,
                     "production_changed": False,
                     "secret_delivery": "anonymous_stdin_pipes_and_scoped_memory_clients"
-                    if isolated_tools
+                    if isolated_tools or runtime_guardrails
                     else "anonymous_stdin_pipes",
                     "independent_otel_producer_and_replay": "passed",
                     "concurrent_load": {
@@ -525,5 +549,11 @@ if __name__ == "__main__":
     parser.add_argument("--image", required=True)
     parser.add_argument("--isolated-tools", action="store_true")
     parser.add_argument("--security-suite", action="store_true")
+    parser.add_argument("--runtime-guardrails", action="store_true")
     args = parser.parse_args()
-    main(args.image, isolated_tools=args.isolated_tools, security_suite=args.security_suite)
+    main(
+        args.image,
+        isolated_tools=args.isolated_tools,
+        security_suite=args.security_suite,
+        runtime_guardrails=args.runtime_guardrails,
+    )

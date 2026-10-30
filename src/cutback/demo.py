@@ -104,6 +104,7 @@ def seed_support_desk(
     semantic_cache=False,
     tool_image_id=None,
     security_suite=False,
+    runtime_guardrails=False,
 ):
     """Use actual scoped HTTP APIs and the durable worker, retaining the sample project."""
     require_demo_git()
@@ -400,6 +401,11 @@ def seed_support_desk(
                 semantic_sample = seed_semantic_cache(app, control, project["id"])
             isolated_sample = None
             security_sample = None
+            runtime_sample = None
+            if runtime_guardrails:
+                from cutback.demo_runtime_guardrails import seed_runtime_guardrails
+
+                runtime_sample = seed_runtime_guardrails(app, control, project["id"])
             if security_suite:
                 from cutback.demo_security_suites import seed_security_suite
 
@@ -426,6 +432,7 @@ def seed_support_desk(
                 "paid_provider_calls": 0,
                 **({"isolated_tool_sample": isolated_sample} if isolated_sample else {}),
                 **({"security_suite_sample": security_sample} if security_sample else {}),
+                **({"runtime_guardrail_sample": runtime_sample} if runtime_sample else {}),
                 **({"semantic_cache_sample": semantic_sample} if semantic_sample else {}),
                 **(
                     {
@@ -546,6 +553,7 @@ def launch_demo(
     semantic_cache=False,
     tool_image_id=None,
     security_suite=False,
+    runtime_guardrails=False,
 ):
     """Own one temporary Docker database. Never connect to production or reuse app keys."""
     require_demo_git()
@@ -672,6 +680,7 @@ def launch_demo(
                 semantic_cache=semantic_cache,
                 tool_image_id=tool_image_id,
                 security_suite=security_suite,
+                runtime_guardrails=runtime_guardrails,
             )
             print(
                 f"Ready: {endpoint}/dashboard/\n"

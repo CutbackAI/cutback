@@ -174,6 +174,25 @@ export function SampleGuide({
           </p>
         </section>
       )}
+      {demo.runtime_guardrail_sample && (
+        <section aria-label="Runtime guardrail sample">
+          <h2>Block delivery without hiding a charge</h2>
+          <p>
+            A separate checker and the native gateway block an input before
+            dispatch, withhold a denied response, and catch a canary split
+            across stream deltas. Four native synthetic calls retain known
+            modeled usage; complete application cost remains unknown.
+          </p>
+          <button onClick={() => navigate("Runtime guardrails")}>
+            Inspect runtime guardrail receipts
+          </button>
+          <p>
+            The sample closes its checker, revokes its key and disables its
+            policies. Its retained receipts demonstrate the mechanism; they do
+            not authorize production traffic.
+          </p>
+        </section>
+      )}
       {demo.semantic_cache_sample && (
         <section aria-label="Qualified semantic cache sample">
           <h2>Refuse a tempting wrong cached answer</h2>

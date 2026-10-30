@@ -12,8 +12,9 @@ from decimal import Decimal, localcontext
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BeforeValidator, Field, field_validator, model_validator
+from pydantic import BeforeValidator, Field, field_validator, model_serializer, model_validator
 
+from cutback.core.guardrails import GuardrailBinding
 from cutback.core.models import StrictModel
 from cutback.core.native_models import LunaEffort, NativeModelContract
 
@@ -82,9 +83,9 @@ class ModelLimit(StrictModel):
 
 
 class GatewayPolicy(StrictModel):
-    version: Literal["cutback.gateway-policy.v1", "cutback.gateway-policy.v2"] = (
-        "cutback.gateway-policy.v1"
-    )
+    version: Literal[
+        "cutback.gateway-policy.v1", "cutback.gateway-policy.v2", "cutback.gateway-policy.v3"
+    ] = "cutback.gateway-policy.v1"
     policy_id: UUID
     environment_ids: list[UUID] = Field(min_length=1, max_length=100)
     starts_at: datetime
@@ -92,6 +93,14 @@ class GatewayPolicy(StrictModel):
     project_limit: SpendLimit
     teams: list[TeamLimit] = Field(min_length=1, max_length=100)
     models: list[ModelLimit] = Field(min_length=1, max_length=5)
+    runtime_guardrails: GuardrailBinding | None = None
+
+    @model_serializer(mode="wrap")
+    def preserve_released_policy_hashes(self, handler):
+        value = handler(self)
+        if self.runtime_guardrails is None:
+            value.pop("runtime_guardrails", None)
+        return value
 
     _times = field_validator("starts_at", "expires_at")(aware)
 
@@ -102,8 +111,22 @@ class GatewayPolicy(StrictModel):
             if self.version == "cutback.gateway-policy.v1"
             else "openai-luna-responses-text-stream-v1"
         )
-        if any(model.key != expected for model in self.models):
+        if self.version != "cutback.gateway-policy.v3" and any(
+            model.key != expected for model in self.models
+        ):
             raise ValueError("GATEWAY_POLICY_VERSION_MODEL_CONTRACT_MISMATCH")
+        if (self.version == "cutback.gateway-policy.v3") != (self.runtime_guardrails is not None):
+            raise ValueError("GATEWAY_RUNTIME_GUARDS_REQUIRE_DISTINCT_V3_APPROVAL")
+        if self.runtime_guardrails is not None and (
+            len(self.models) != 1
+            or not {"input", "output"} <= set(self.runtime_guardrails.protected_stages)
+            or len(self.runtime_guardrails.workflows) != 1
+            or self.runtime_guardrails.starts_at > self.starts_at
+            or self.runtime_guardrails.expires_at < self.expires_at
+        ):
+            raise ValueError(
+                "GATEWAY_RUNTIME_GUARDS_REQUIRE_FULL_INPUT_OUTPUT_WINDOW_AND_ONE_WORKFLOW"
+            )
         if not timedelta(0) < self.expires_at - self.starts_at <= timedelta(days=31):
             raise ValueError("GATEWAY_FINITE_WINDOW_REQUIRED")
         identities: list[list[str]] = [

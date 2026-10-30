@@ -49,11 +49,23 @@ def create_gateway(
     allow_insecure_http=False,
     max_inflight=16,
     allowed_project_ids: frozenset[UUID] | None = None,
+    guardrail_clients=None,
 ):
     if type(max_inflight) is not int or not 1 <= max_inflight <= 100:
         raise ValueError("GATEWAY_PROCESS_CAPACITY_OUTSIDE_BOUNDS")
     engine, sessions, client = None, None, None
     projects = frozenset(allowed_project_ids or ())
+    guards = dict(guardrail_clients or {})
+    if guards:
+        from cutback.guardrail_client import AsyncGuardrailClient
+
+        if len(guards) > 100 or any(
+            not isinstance(value, AsyncGuardrailClient)
+            or value.binding.policy_id != key
+            or value.binding.project_id not in projects
+            for key, value in guards.items()
+        ):
+            raise ValueError("GATEWAY_EXPLICIT_SCOPED_GUARDRAIL_CLIENTS_REQUIRED")
     if enabled:
         if (
             not projects
@@ -88,6 +100,8 @@ def create_gateway(
         yield
         if client is not None:
             await client.aclose()
+        for guard in guards.values():
+            await guard.close()
         if engine is not None:
             engine.dispose()
 
@@ -170,19 +184,37 @@ def create_gateway(
             from fastapi import HTTPException
 
             from cutback.server.db import token_hash
+            from cutback.server.gateway_db import GatewayPolicyRow
+            from cutback.server.gateway_service import (
+                current_admin,
+                policy_spec,
+                runtime_guardrail_authority,
+            )
 
             with sessions() as session:
                 row = active_key(session, token, datetime.now(UTC))
                 project = row.project_id
                 if project not in projects:
                     raise GatewayError("GATEWAY_PROJECT_NOT_AUTHORIZED_BY_OPERATOR", 403)
+                policy = session.get(GatewayPolicyRow, row.policy_id)
+                now = datetime.now(UTC)
+                if (
+                    policy is None
+                    or policy.state != "APPROVED"
+                    or not policy.starts_at <= now < policy.expires_at
+                ):
+                    raise GatewayError("GATEWAY_ACTIVE_POLICY_REQUIRED", 403)
+                current_admin(session, project, policy.approved_by)
+                current_admin(session, project, row.issued_by)
+                binding = runtime_guardrail_authority(session, project, policy_spec(policy))
             try:
                 enforce_quota(sessions, token_hash("gateway:" + token), 600)
             except HTTPException:
                 raise GatewayError("GATEWAY_RATE_LIMITED", 429) from None
             recover_leases(sessions, project_id=project)
+            return project, binding
 
-        await asyncio.to_thread(authenticate)
+        project, guard_binding = await asyncio.to_thread(authenticate)
         try:
             operation_id = UUID(request.headers.get("x-cutback-operation-id", ""))
             if operation_id.int == 0 or request.headers.get("x-cutback-observation-delegate") != (
@@ -216,6 +248,19 @@ def create_gateway(
             raise GatewayError("GATEWAY_TEXT_REQUEST_CONTRACT_UNQUALIFIED", 422) from None
         except TimeoutError:
             raise GatewayError("GATEWAY_REQUEST_BODY_TIMEOUT", 408) from None
+        checker, input_guard = None, None
+        if guard_binding is not None:
+            from cutback.server.guardrail_execution import DurableGuardrailChecker
+
+            guard_client = guards.get(guard_binding.policy_id)
+            if guard_client is None or guard_client.binding != guard_binding:
+                raise GatewayError("GATEWAY_APPROVED_GUARD_SERVICE_NOT_CONFIGURED", 503)
+            checker = DurableGuardrailChecker(sessions, guard_client)
+            input_guard = await checker.check(
+                operation_id=operation_id, stage="input", content=body
+            )
+            if input_guard.action != "allow":
+                raise GatewayError("GATEWAY_INPUT_BLOCKED_BY_RUNTIME_GUARD", 403)
         signature = hmac.new(
             hmac_key.get_secret_value().encode(),
             b"cutback-gateway-request-v1:"
@@ -249,10 +294,35 @@ def create_gateway(
                     raise GatewayError("GATEWAY_CANONICAL_RECEIPT_UNAVAILABLE", 503)
                 return LLMEvent.model_validate(row.event)
 
+        settled = False
+        settlement = None
+
+        async def settle_guarded_stream(amount, code, event):
+            nonlocal settlement, settled
+            settlement = (amount, code, event)
+            await asyncio.to_thread(finish, sessions, reservation, amount, code=code, event=event)
+            settled = True
+
         try:
             before = await asyncio.to_thread(event_before)
             started = time.perf_counter()
             if specification.stream:
+                if checker is not None:
+                    from cutback.gateway.guarded_stream import guarded_stream
+
+                    return await guarded_stream(
+                        client,
+                        provider_key,
+                        bytes(raw),
+                        sessions,
+                        reservation,
+                        before,
+                        specification.max_output_tokens,
+                        strict_json,
+                        checker,
+                        input_guard,
+                        settle_guarded_stream,
+                    )
                 from cutback.gateway.streaming import open_stream
 
                 return await open_stream(
@@ -316,25 +386,56 @@ def create_gateway(
                 status,
                 output_cap=specification.max_output_tokens,
             )
+            settlement = (amount, code, event)
             await asyncio.to_thread(finish, sessions, reservation, amount, code=code, event=event)
+            settled = True
+            if checker is not None:
+                from cutback.gateway.guarded_stream import output_guard_content
+
+                if body is None:
+                    raise GatewayError("GATEWAY_GUARDED_OUTPUT_MUST_BE_QUALIFIED_JSON", 502)
+                decision = await checker.check(
+                    operation_id=operation_id,
+                    stage="output",
+                    content=output_guard_content(body),
+                )
+                if decision.action != "allow":
+                    raise GatewayError("GATEWAY_OUTPUT_BLOCKED_BY_RUNTIME_GUARD", 403)
+                headers["x-cutback-guardrail-coverage"] = (
+                    "complete"
+                    if input_guard is not None
+                    and input_guard.coverage_complete
+                    and decision.coverage_complete
+                    else "incomplete"
+                )
             return Response(content=bytes(raw_response), status_code=status, headers=headers)
         except asyncio.CancelledError:
-            await asyncio.shield(
-                asyncio.to_thread(
-                    finish, sessions, reservation, None, code="GATEWAY_CANCELLED_BILLING_UNCERTAIN"
+            if not settled:
+                await asyncio.shield(
+                    asyncio.to_thread(
+                        finish,
+                        sessions,
+                        reservation,
+                        settlement[0] if settlement else None,
+                        code=settlement[1] if settlement else "GATEWAY_CANCELLED_BILLING_UNCERTAIN",
+                        event=settlement[2] if settlement else None,
+                    )
                 )
-            )
             raise
         except Exception as exc:
-            await asyncio.to_thread(
-                finish,
-                sessions,
-                reservation,
-                None,
-                code=exc.code
-                if isinstance(exc, GatewayError)
-                else "GATEWAY_INTERRUPTED_BILLING_UNCERTAIN",
-            )
+            if not settled:
+                await asyncio.to_thread(
+                    finish,
+                    sessions,
+                    reservation,
+                    settlement[0] if settlement else None,
+                    event=settlement[2] if settlement else None,
+                    code=settlement[1]
+                    if settlement
+                    else exc.code
+                    if isinstance(exc, GatewayError)
+                    else "GATEWAY_INTERRUPTED_BILLING_UNCERTAIN",
+                )
             if isinstance(exc, GatewayError):
                 raise
             raise GatewayError("GATEWAY_UPSTREAM_OR_STORAGE_UNCERTAIN_NO_RETRY", 503) from None

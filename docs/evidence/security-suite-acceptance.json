@@ -1,0 +1,184 @@
+{
+  "version": "cutback.source-acceptance.v1",
+  "scope": "security-suite",
+  "reviewed_head": "23c7d179b818f105a9cb243adfbdcfba6f4cc6ee",
+  "merge_commit": "8bf09a728bbd0416cf4547a6fc9e3a75cc01470b",
+  "accepted_tree": "db1227fba73a4373f939084c5950c62bf83c6c7a",
+  "local_installed_default": {
+    "passed": 1435,
+    "skipped": 35,
+    "seconds": 3045.79
+  },
+  "local_installed_sdk3": {
+    "passed": 963,
+    "skipped": 7,
+    "seconds": 444.52
+  },
+  "hosted": [
+    {
+      "run_id": 41054208742,
+      "jobs": [
+        {
+          "name": "isolated-tools",
+          "id": 124058103361,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 6,
+              "skipped": 0,
+              "seconds": 46.53
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.13.18)",
+          "id": 124058103687,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1199,
+              "skipped": 7,
+              "seconds": 487.85
+            }
+          ]
+        },
+        {
+          "name": "legacy-sdk (3.11.18)",
+          "id": 124058103725,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 0.81
+            }
+          ]
+        },
+        {
+          "name": "legacy-sdk (3.13.18)",
+          "id": 124058103753,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 0.85
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.11.18)",
+          "id": 124058103761,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1198,
+              "skipped": 8,
+              "seconds": 485.79
+            }
+          ]
+        },
+        {
+          "name": "verify (3.13.18)",
+          "id": 124058103813,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1433,
+              "skipped": 37,
+              "seconds": 1336.05
+            }
+          ]
+        },
+        {
+          "name": "infrastructure",
+          "id": 124058103863,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 7,
+              "skipped": 0,
+              "seconds": 2.21
+            }
+          ]
+        },
+        {
+          "name": "verify (3.11.18)",
+          "id": 124058103967,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1434,
+              "skipped": 36,
+              "seconds": 1529.62
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": 41054208651,
+      "jobs": [
+        {
+          "name": "codeql (python)",
+          "id": 124057511724,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "codeql (javascript-typescript)",
+          "id": 124057512095,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "audit",
+          "id": 124057512156,
+          "conclusion": "success",
+          "tests": []
+        }
+      ]
+    }
+  ],
+  "archives": {
+    "cutback-0.1.0.dev5-py3-none-any.whl": "9865f4c4d78c7effb033d80bb43e7ccbcc50a879de587fe32f7d0402cffee453",
+    "cutback-0.1.0.dev5.tar.gz": "ca5329b8231e595ec6b306ebbb80506bf731b0cd997a7407f51603baa15bde46"
+  },
+  "linux_image": {
+    "image": "cutback-qualification:paired-security-final",
+    "image_id": "sha256:9b489fcfbd3e2c4207f303461b126048788725d10e00357f9de15cbcbb6a287f",
+    "uid": 10001,
+    "python": "3.11.18",
+    "migration": "0024",
+    "sample_application_calls": 19,
+    "source_linked_support_desk_calls": 12,
+    "source_workflows": 2,
+    "application_workflows": 3,
+    "paid_provider_calls": 0,
+    "native_batch_fixture_restored": true,
+    "restored_tables": 93,
+    "row_counts_match": true,
+    "restored_and_rekeyed_objects": 1490,
+    "restored_and_rekeyed_cache_objects": 1,
+    "restored_and_rekeyed_plans": 18,
+    "semantic_qualified_catalog_restored": true,
+    "isolated_tool_receipts_restored": true,
+    "paired_security_suite_restored": true,
+    "database_pointers_preserved": true,
+    "production_changed": false,
+    "secret_delivery": "anonymous_stdin_pipes_and_scoped_memory_clients",
+    "independent_otel_producer_and_replay": "passed",
+    "concurrent_load": {
+      "tenants": 2,
+      "accepted": 2000,
+      "duplicates": 2000,
+      "seconds": 2.297,
+      "production_sla": false
+    }
+  },
+  "synthetic_only": true,
+  "paid_provider_calls": 0,
+  "production_deployed": false,
+  "pypi_uploaded": false,
+  "product_complete": false
+}

@@ -115,6 +115,10 @@ jobs:
           tests/integration/test_gateway_streaming.py
           tests/integration/test_gateway_stream_controls.py
           tests/integration/test_gateway_policy_replay.py
+          tests/integration/test_guarded_gateway.py
+          tests/integration/test_runtime_guardrail_controls.py
+          tests/integration/test_runtime_guardrail_sample.py
+          tests/integration/test_guardrail_process.py
           tests/end_to_end/test_gateway_pipeline.py
           tests/integration/test_retrieval_workflow.py
           tests/end_to_end/test_retrieval_pipeline.py

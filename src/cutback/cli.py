@@ -16,6 +16,7 @@ from cutback.cli_batch import register_batch
 from cutback.cli_checks import register_checks
 from cutback.cli_compression import register_compression
 from cutback.cli_episodes import register_episodes
+from cutback.cli_guardrails import register_guardrails
 from cutback.cli_qualification import register_qualification
 from cutback.cli_retrieval import register_retrieval
 from cutback.cli_security import register_security
@@ -107,6 +108,7 @@ def demo(
     semantic_cache: bool = False,
     tool_image_id: str | None = None,
     security_suite: bool = False,
+    runtime_guardrails: bool = False,
 ):
     """Explore the complete sample. Requires Docker and Git; no API key or paid calls."""
     try:
@@ -120,6 +122,7 @@ def demo(
             semantic_cache=semantic_cache,
             tool_image_id=tool_image_id,
             security_suite=security_suite,
+            runtime_guardrails=runtime_guardrails,
         )
     except ImportError:
         fail(
@@ -530,6 +533,7 @@ register_qualification(app, output, fail)
 register_episodes(app, output, fail)
 register_tools(app, output, request, fail)
 register_security(app, output, request, fail)
+register_guardrails(app, output, request, fail)
 register_retrieval(app, output, request, fail)
 register_compression(app, output, request, fail)
 register_batch(app, output, request, fail)

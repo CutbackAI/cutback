@@ -587,6 +587,9 @@ def create_app(
     from cutback.server.gateway_api import install_gateway_controls
 
     install_gateway_controls(app, sessions, authorize, scope)
+    from cutback.server.guardrail_api import install_guardrail_controls
+
+    install_guardrail_controls(app, sessions, authorize, scope)
     from cutback.server.privacy_api import install_privacy
 
     install_privacy(app, sessions, authorize, scope)

@@ -1,9 +1,58 @@
 """Optional separate gateway process; secrets are never loaded by the collector."""
 
 import os
+from pathlib import Path
 from uuid import UUID
 
 from pydantic import SecretStr
+
+
+def configured_guardrail_clients(projects):
+    """One optional operator profile; public binding and separately delivered token."""
+    names = (
+        "CUTBACK_GATEWAY_GUARDRAIL_BINDING_FILE",
+        "CUTBACK_GATEWAY_GUARDRAIL_ORIGIN",
+        "CUTBACK_GATEWAY_GUARDRAIL_TOKEN",
+        "CUTBACK_GATEWAY_GUARDRAIL_TOKEN_FILE",
+    )
+    if not any(os.getenv(name) for name in names):
+        return {}
+    try:
+        from cutback.core.guardrails import GuardrailBinding
+        from cutback.guardrail_client import AsyncGuardrailClient
+        from cutback.guardrails import strict_json
+
+        path = Path(os.environ["CUTBACK_GATEWAY_GUARDRAIL_BINDING_FILE"])
+        if path.is_symlink() or not path.is_file() or path.stat().st_size > 65536:
+            raise ValueError("BOUND")
+        binding = GuardrailBinding.model_validate(strict_json(path.read_bytes()))
+        if binding.project_id not in projects or len(binding.workflows) != 1:
+            raise ValueError("SCOPE")
+        if os.getenv("CUTBACK_GATEWAY_GUARDRAIL_TOKEN") and os.getenv(
+            "CUTBACK_GATEWAY_GUARDRAIL_TOKEN_FILE"
+        ):
+            raise ValueError("SINGLE_CREDENTIAL_SOURCE")
+        token_file = os.getenv("CUTBACK_GATEWAY_GUARDRAIL_TOKEN_FILE")
+        if token_file:
+            source = Path(token_file)
+            if source.is_symlink() or not source.is_file() or source.stat().st_size > 512:
+                raise ValueError("CREDENTIAL_BOUND")
+            token = source.read_text(encoding="utf-8").strip()
+        else:
+            token = os.environ["CUTBACK_GATEWAY_GUARDRAIL_TOKEN"]
+        client = AsyncGuardrailClient(
+            os.environ["CUTBACK_GATEWAY_GUARDRAIL_ORIGIN"],
+            token,
+            binding=binding,
+            workflow=binding.workflows[0],
+            allow_insecure_loopback=os.getenv(
+                "CUTBACK_GATEWAY_GUARDRAIL_ALLOW_LOOPBACK_HTTP", "false"
+            )
+            == "true",
+        )
+        return {binding.policy_id: client}
+    except Exception:
+        raise ValueError("GATEWAY_SCOPED_GUARDRAIL_PROFILE_INVALID_OR_UNAVAILABLE") from None
 
 
 def application():
@@ -29,6 +78,7 @@ def application():
         provider_key=SecretStr(os.getenv("CUTBACK_GATEWAY_OPENAI_KEY", "")),
         hmac_key=SecretStr(os.getenv("CUTBACK_GATEWAY_HMAC_KEY", "")),
         allowed_project_ids=projects,
+        guardrail_clients=configured_guardrail_clients(projects),
     )
 
 

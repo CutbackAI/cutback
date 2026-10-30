@@ -379,12 +379,15 @@ requires-dist = [
     { name = "anthropic", marker = "extra == 'anthropic'", specifier = "==2.3.0" },
     { name = "boto3", marker = "extra == 'storage'", specifier = ">=1.43.118" },
     { name = "cryptography", marker = "extra == 'eval'", specifier = ">=50,<51" },
+    { name = "cutback", extras = ["eval"], marker = "extra == 'guardrails'" },
     { name = "cutback", extras = ["eval"], marker = "extra == 'server'" },
     { name = "cutback", extras = ["instrumentation"], marker = "extra == 'anthropic'" },
     { name = "cutback", extras = ["instrumentation"], marker = "extra == 'openai'" },
     { name = "cutback", extras = ["server", "instrumentation"], marker = "extra == 'gateway'" },
+    { name = "fastapi", marker = "extra == 'guardrails'", specifier = ">=0.120,<1" },
     { name = "fastapi", marker = "extra == 'server'", specifier = ">=0.120,<1" },
     { name = "httpcore", marker = "extra == 'server'", specifier = "==1.0.9" },
+    { name = "httpx", marker = "extra == 'guardrails'", specifier = ">=0.28,<1" },
     { name = "httpx", marker = "extra == 'instrumentation'", specifier = ">=0.28,<1" },
     { name = "httpx", marker = "extra == 'prompts'", specifier = ">=0.28,<1" },
     { name = "jsonschema", marker = "extra == 'eval'", specifier = ">=4.25,<5" },
@@ -401,9 +404,10 @@ requires-dist = [
     { name = "tree-sitter-javascript", marker = "extra == 'javascript'", specifier = "==0.25.0" },
     { name = "tree-sitter-typescript", marker = "extra == 'javascript'", specifier = "==0.23.2" },
     { name = "typer", specifier = ">=0.20,<1" },
+    { name = "uvicorn", marker = "extra == 'guardrails'", specifier = ">=0.38,<1" },
     { name = "uvicorn", marker = "extra == 'server'", specifier = ">=0.38,<1" },
 ]
-provides-extras = ["prompts", "instrumentation", "openai", "server", "gateway", "eval", "anthropic", "storage", "identity", "commercial", "javascript"]
+provides-extras = ["prompts", "instrumentation", "openai", "server", "gateway", "guardrails", "eval", "anthropic", "storage", "identity", "commercial", "javascript"]
 
 [package.metadata.requires-dev]
 dev = [

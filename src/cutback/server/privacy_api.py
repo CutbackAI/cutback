@@ -49,6 +49,7 @@ from cutback.server.gateway_db import (
     GatewayKeyRow,
     GatewayPolicyRow,
 )
+from cutback.server.guardrail_db import GuardrailOperationRow, GuardrailPolicyRow
 from cutback.server.lineage_db import DatasetAlias, DatasetExposure, DatasetFamily
 from cutback.server.monitoring_db import (
     AlertRule,
@@ -116,6 +117,8 @@ def install_privacy(app, sessions, authorize, scope):
         def records():
             with sessions() as session:
                 for cls in (
+                    GuardrailPolicyRow,
+                    GuardrailOperationRow,
                     SemanticCacheNamespace,
                     SemanticCacheMember,
                     SemanticCacheQualification,
@@ -348,6 +351,8 @@ def install_privacy(app, sessions, authorize, scope):
                 .values(state="REVOKED", active_qualification_id=None, active_approval_hash=None)
             )
             for cls in (
+                GuardrailOperationRow,
+                GuardrailPolicyRow,
                 SemanticUploadCase,
                 SemanticDatasetUpload,
                 SemanticCacheMember,

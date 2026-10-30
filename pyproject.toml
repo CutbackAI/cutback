@@ -33,6 +33,7 @@ instrumentation = ["httpx>=0.28,<1", "opentelemetry-api>=1.38,<2"]
 openai = ["cutback[instrumentation]", "openai==2.29.0"]
 server = ["cutback[eval]", "httpcore==1.0.9", "fastapi>=0.120,<1", "uvicorn>=0.38,<1", "sqlalchemy>=2.0.44,<3", "alembic>=1.17,<2", "psycopg[binary]>=3.2,<4"]
 gateway = ["cutback[server,instrumentation]"]
+guardrails = ["cutback[eval]", "httpx>=0.28,<1", "fastapi>=0.120,<1", "uvicorn>=0.38,<1"]
 eval = [
     "cryptography>=50,<51",
     "jsonschema>=4.25,<5",
@@ -86,6 +87,7 @@ include = [
   "/docs/agent-integration.md", "/docs/demo.md", "/docs/product-completion.md",
   "/docs/product-research.md", "/docs/optimization-search.md",
   "/docs/status.md",
+  "/docs/runtime-guardrails.md",
   "/docs/market-baseline.md", "/docs/differentiation.md", "/docs/implementation-roadmap.md", "/docs/research",
   "/docs/workflow-tracing.md", "/docs/imports-and-review.md",
   "/docs/prompt-releases.md", "/docs/application-checks.md",
@@ -153,6 +155,7 @@ select = ["E", "F", "I", "UP", "B"]
 "src/cutback/server/improvement_api.py" = ["B008"]
 "src/cutback/server/outcome_watch_api.py" = ["B008"]
 "src/cutback/server/gateway_api.py" = ["B008"]
+"src/cutback/server/guardrail_api.py" = ["B008"]
 "src/cutback/server/campaign_api.py" = ["B008"]
 "src/cutback/server/privacy_api.py" = ["B008"]
 "src/cutback/server/organization_api.py" = ["B008"]
