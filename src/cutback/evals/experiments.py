@@ -13,6 +13,7 @@ from pydantic import Field, JsonValue, PrivateAttr, model_serializer, model_vali
 from cutback.core.agent_turns import AgentTurnFrame
 from cutback.core.episode_judging import EpisodeJudgingSpec
 from cutback.core.episodes import EpisodeAssistant
+from cutback.core.evaluation_criteria import ReviewedCriteriaBinding
 from cutback.core.isolated_episodes import (
     GuardedRecordExecution,
     IsolatedRecordExecution,
@@ -312,6 +313,7 @@ class ExperimentPlan(StrictModel):
         "deterministic-v10",
         "deterministic-v11",
         "deterministic-v12",
+        "deterministic-v13",
     ] = "deterministic-v3"
     episode_execution: EpisodeExecutionSpec | None = None
     retrieval_execution: RetrievalExecutionSpec | None = None
@@ -321,6 +323,7 @@ class ExperimentPlan(StrictModel):
         default=None, min_length=1, max_length=6
     )
     content_nonce: UUID | None = None
+    criteria_binding: ReviewedCriteriaBinding | None = None
 
     @model_serializer(mode="wrap")
     def preserve_existing_plan_hashes(self, handler):
@@ -335,10 +338,32 @@ class ExperimentPlan(StrictModel):
             result.pop("compression_execution", None)
         if self.content_nonce is None:
             result.pop("content_nonce", None)
+        if self.criteria_binding is None:
+            result.pop("criteria_binding", None)
         return result
 
     @model_validator(mode="after")
     def eligibility(self):
+        if self.criteria_binding and (
+            self.evaluator_version != "deterministic-v13"
+            or self.episode_execution
+            or self.retrieval_execution
+            or self.compression_execution
+            or self.judge
+            or self.staged
+            or self.pilot_samples
+            or (self.split == "test" and not self.predecessor_run_id)
+            or not self.criteria
+            or self.content_nonce is None
+            or self.content_nonce.int == 0
+            or self.metric.kind
+            not in {"exact_label", "field_f1", "numeric_match", "json_schema", "nonempty"}
+            or any(
+                model.provider not in {"openai", "anthropic"} or model.routes
+                for model in [self.baseline, *self.candidates]
+            )
+        ):
+            raise ValueError("REVIEWED_CRITERIA_REQUIRES_EXPLICIT_NATIVE_V13_PLAN")
         if self.compression_execution:
             compression = self.compression_execution
             joint = isinstance(compression, JointModelContextExecutionSpec)
@@ -512,6 +537,8 @@ class ExperimentPlan(StrictModel):
                 if self.compression_execution
                 else "deterministic-v6"
                 if self.retrieval_execution
+                else "deterministic-v13"
+                if self.criteria_binding
                 else "deterministic-v3"
             )
             or self.metric.kind == "episode_contract"

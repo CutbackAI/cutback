@@ -334,6 +334,9 @@ def run_one(
                 from cutback.server.prompt_experiments import recheck_bindings
 
                 recheck_bindings(session, store, project_id, plan_row, plan)
+                from cutback.server.criteria_service import validate_binding as validate_criteria
+
+                validate_criteria(session, store, project_id, plan)
 
             def authorize_execution(session):
                 require_payloads_enabled()
@@ -369,6 +372,7 @@ def run_one(
                 from cutback.server.prompt_experiments import recheck_bindings
 
                 recheck_bindings(session, store, project_id, plan_row, plan)
+                validate_criteria(session, store, project_id, plan)
                 row = session.get(CapturePolicyRecord, provenance["policy_id"])
                 current_policy = CapturePolicy.model_validate(row.policy) if row else None
                 if (
@@ -547,6 +551,12 @@ def run_one(
                         "code": str(exc),
                     }
                 apply_lineage_result(results, lineage, plan.split)
+                from cutback.server.criteria_service import receipt as criteria_receipt
+
+                criteria_evidence = criteria_receipt(session, project_id, plan)
+                results.update(criteria_evidence)
+                for recommendation in results.get("recommendations", []):
+                    recommendation.update(criteria_evidence)
                 from cutback.evals.search import sample_frontier
 
                 results["search_frontier"] = sample_frontier(results)

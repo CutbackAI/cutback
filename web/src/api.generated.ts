@@ -799,6 +799,193 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/criteria/drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Draft */
+        post: operations["draft_v1_projects__project_id__criteria_drafts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/criteria": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Versions */
+        get: operations["list_versions_v1_projects__project_id__criteria_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/criteria/{criteria_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Status */
+        get: operations["status_v1_projects__project_id__criteria__criteria_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/criteria/{criteria_id}/approve-generation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve Generation */
+        post: operations["approve_generation_v1_projects__project_id__criteria__criteria_id__approve_generation_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/criteria/{criteria_id}/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Queue */
+        post: operations["queue_v1_projects__project_id__criteria__criteria_id__runs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/criteria/{criteria_id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Content */
+        post: operations["content_v1_projects__project_id__criteria__criteria_id__content_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/criteria/{criteria_id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Review */
+        post: operations["review_v1_projects__project_id__criteria__criteria_id__review_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/criteria/{criteria_id}/recommendations/{recommendation_id}/source-evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Source Evidence */
+        post: operations["source_evidence_v1_projects__project_id__criteria__criteria_id__recommendations__recommendation_id__source_evidence_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/criteria/{criteria_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel */
+        post: operations["cancel_v1_projects__project_id__criteria__criteria_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/criteria/{criteria_id}/evaluation-draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Evaluation Draft */
+        post: operations["evaluation_draft_v1_projects__project_id__criteria__criteria_id__evaluation_draft_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/criteria/{criteria_id}/confirmation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirmation */
+        post: operations["confirmation_v1_projects__project_id__criteria__criteria_id__confirmation_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/campaign-templates": {
         parameters: {
             query?: never;
@@ -4802,6 +4989,137 @@ export interface components {
              */
             all_labels_reviewed: boolean;
         };
+        /** CriteriaBudgetApproval */
+        CriteriaBudgetApproval: {
+            /** Plan Hash */
+            plan_hash: string;
+            /** Approval Ref */
+            approval_ref: string;
+        };
+        /** CriteriaCancelInput */
+        CriteriaCancelInput: {
+            /** Reason */
+            reason: string;
+        };
+        /** CriteriaConfirmationInput */
+        CriteriaConfirmationInput: {
+            /**
+             * Validation Run Id
+             * Format: uuid
+             */
+            validation_run_id: string;
+            /** Candidate Key */
+            candidate_key: string;
+            budget: components["schemas"]["Budget-Input"];
+        };
+        /** CriteriaDraftInput */
+        CriteriaDraftInput: {
+            /**
+             * Dataset Id
+             * Format: uuid
+             */
+            dataset_id: string;
+            requirements: components["schemas"]["CriteriaRequirements"];
+            generator: components["schemas"]["ModelSpec-Input"];
+            budget: components["schemas"]["Budget-Input"];
+            /**
+             * Max Training Examples
+             * @default 4
+             */
+            max_training_examples: number;
+            /**
+             * Transport
+             * @default native_provider
+             * @enum {string}
+             */
+            transport: "native_provider" | "scripted_test_only";
+        };
+        /** CriteriaEvaluationInput */
+        CriteriaEvaluationInput: {
+            /**
+             * Dataset Id
+             * Format: uuid
+             */
+            dataset_id: string;
+            criteria_binding: components["schemas"]["ReviewedCriteriaBinding"];
+            baseline: components["schemas"]["ModelSpec-Input"];
+            /** Candidates */
+            candidates: components["schemas"]["ModelSpec-Input"][];
+            budget: components["schemas"]["Budget-Input"];
+            /**
+             * Repeats
+             * @default 1
+             */
+            repeats: number;
+            /**
+             * Retain Case Outputs
+             * @default false
+             */
+            retain_case_outputs: boolean;
+            source_binding?: components["schemas"]["SourceBinding"] | null;
+            /**
+             * Name
+             * @default reviewed-criteria-validation
+             */
+            name: string;
+        };
+        /** CriteriaQueueInput */
+        CriteriaQueueInput: {
+            /** Plan Hash */
+            plan_hash: string;
+        };
+        /** CriteriaRequirements */
+        CriteriaRequirements: {
+            /** Task Brief */
+            task_brief: string;
+            /** Minimum */
+            minimum: number;
+            /**
+             * Max Regression
+             * @default 0
+             */
+            max_regression: number;
+            /**
+             * Min Test Samples
+             * @default 30
+             */
+            min_test_samples: number;
+            /**
+             * Min Test Groups
+             * @default 3
+             */
+            min_test_groups: number;
+            /**
+             * Max Criteria
+             * @default 4
+             */
+            max_criteria: number;
+            /**
+             * Allowed Metrics
+             * @default [
+             *       "exact_label",
+             *       "field_f1",
+             *       "numeric_match",
+             *       "json_schema",
+             *       "nonempty"
+             *     ]
+             */
+            allowed_metrics: ("exact_label" | "field_f1" | "numeric_match" | "json_schema" | "nonempty")[];
+        };
+        /** CriteriaReviewInput */
+        CriteriaReviewInput: {
+            /** Version Sha256 */
+            version_sha256: string;
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approve" | "reject";
+            /** Approval Ref */
+            approval_ref: string;
+            /** Expected Review Approval Id */
+            expected_review_approval_id?: string | null;
+        };
         /** CriterionSpec */
         CriterionSpec: {
             /** Key */
@@ -5294,7 +5612,7 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
             retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Input"] | null;
             /** Compression Execution */
@@ -5304,6 +5622,7 @@ export interface components {
             prompt_bindings?: components["schemas"]["PromptModelBinding"][] | null;
             /** Content Nonce */
             content_nonce?: string | null;
+            criteria_binding?: components["schemas"]["ReviewedCriteriaBinding"] | null;
         };
         /** ExperimentPlan */
         "ExperimentPlan-Output": {
@@ -5393,7 +5712,7 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
             retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Output"] | null;
             /** Compression Execution */
@@ -5403,6 +5722,7 @@ export interface components {
             prompt_bindings?: components["schemas"]["PromptModelBinding"][] | null;
             /** Content Nonce */
             content_nonce?: string | null;
+            criteria_binding?: components["schemas"]["ReviewedCriteriaBinding"] | null;
         };
         /** FieldTransition */
         FieldTransition: {
@@ -8945,6 +9265,27 @@ export interface components {
             lease_id: string;
             /** Queue Hash */
             queue_hash: string;
+        };
+        /** ReviewedCriteriaBinding */
+        ReviewedCriteriaBinding: {
+            /**
+             * Version
+             * @default cutback.reviewed-criteria.v1
+             * @constant
+             */
+            version: "cutback.reviewed-criteria.v1";
+            /**
+             * Criteria Id
+             * Format: uuid
+             */
+            criteria_id: string;
+            /**
+             * Review Approval Id
+             * Format: uuid
+             */
+            review_approval_id: string;
+            /** Version Sha256 */
+            version_sha256: string;
         };
         /** RolloutInput */
         RolloutInput: {
@@ -12533,6 +12874,396 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["JointContextProposal"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    draft_v1_projects__project_id__criteria_drafts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CriteriaDraftInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_versions_v1_projects__project_id__criteria_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    status_v1_projects__project_id__criteria__criteria_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                criteria_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_generation_v1_projects__project_id__criteria__criteria_id__approve_generation_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                criteria_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CriteriaBudgetApproval"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    queue_v1_projects__project_id__criteria__criteria_id__runs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                criteria_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CriteriaQueueInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    content_v1_projects__project_id__criteria__criteria_id__content_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                criteria_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentPurpose"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_v1_projects__project_id__criteria__criteria_id__review_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                criteria_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CriteriaReviewInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    source_evidence_v1_projects__project_id__criteria__criteria_id__recommendations__recommendation_id__source_evidence_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                criteria_id: string;
+                recommendation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentPurpose"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_v1_projects__project_id__criteria__criteria_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                criteria_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CriteriaCancelInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    evaluation_draft_v1_projects__project_id__criteria__criteria_id__evaluation_draft_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                criteria_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CriteriaEvaluationInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirmation_v1_projects__project_id__criteria__criteria_id__confirmation_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                criteria_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CriteriaConfirmationInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

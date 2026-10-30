@@ -7,7 +7,7 @@ from sqlalchemy import select
 from cutback.evals.compression import JointModelContextExecutionSpec
 from cutback.evals.datasets import digest
 from cutback.server.db import DatasetRecord, ExperimentPlanRecord, ExperimentRunRecord
-from cutback.server.plan_artifacts import load_plan
+from cutback.server.plan_artifacts import load_plan, target_evaluation_clause
 
 
 def stage_contract(plan):
@@ -99,9 +99,7 @@ def validate_confirmation(session, store, project_id, plan, *, run_id=None):
         )
         .where(
             ExperimentPlanRecord.dataset_id == dataset.id,
-            ExperimentPlanRecord.specification["public_specification"]["operation"]
-            .as_string()
-            .is_distinct_from("candidate-generation-v1"),
+            target_evaluation_clause(),
         )
     ).all()
     for other_run, other_plan in prior_runs:
@@ -136,9 +134,7 @@ def validate_stage(session, store, project_id, plan, *, run_id=None):
                 )
                 .where(
                     ExperimentPlanRecord.dataset_id == dataset.id,
-                    ExperimentPlanRecord.specification["public_specification"]["operation"]
-                    .as_string()
-                    .is_distinct_from("candidate-generation-v1"),
+                    target_evaluation_clause(),
                 )
             ).all()
             if any(

@@ -74,7 +74,9 @@ def _request_patch(
     ):
         raise ValueError("RECOMMENDATION_REQUIRES_REVIEW")
     evidence = recommendation["evidence"]
-    if evidence.get("evaluator_version") != "deterministic-v3":
+    from cutback.core.evaluation_criteria import source_evaluator_eligible
+
+    if not source_evaluator_eligible(evidence):
         raise ValueError("EVALUATOR_REAPPROVAL_REQUIRED")
     if not evidence.get("quality_gate_passed") or not evidence.get("cheaper_on_sample"):
         raise ValueError("CANDIDATE_DID_NOT_PASS_COST_AND_QUALITY_GATES")

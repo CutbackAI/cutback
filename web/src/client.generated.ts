@@ -189,6 +189,41 @@ export function createSDK(request:Request) {return {
   proposal_v1_projects__project_id__model_context__run_id__proposal_post: (args:{project_id:string;run_id:string;body:components["schemas"]["ContentPurpose"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/model-context/${encodeURIComponent(String(args.run_id))}/proposal`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  draft_v1_projects__project_id__criteria_drafts_post: (args:{project_id:string;body:components["schemas"]["CriteriaDraftInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/criteria/drafts`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  list_versions_v1_projects__project_id__criteria_get: (args:{project_id:string;limit?:number;offset?:number}) => {
+    const query=new URLSearchParams();
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    if(args.offset!==undefined && args.offset!==null) query.set("offset",String(args.offset));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/criteria`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  status_v1_projects__project_id__criteria__criteria_id__get: (args:{project_id:string;criteria_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/criteria/${encodeURIComponent(String(args.criteria_id))}`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  approve_generation_v1_projects__project_id__criteria__criteria_id__approve_generation_post: (args:{project_id:string;criteria_id:string;body:components["schemas"]["CriteriaBudgetApproval"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/criteria/${encodeURIComponent(String(args.criteria_id))}/approve-generation`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  queue_v1_projects__project_id__criteria__criteria_id__runs_post: (args:{project_id:string;criteria_id:string;body:components["schemas"]["CriteriaQueueInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/criteria/${encodeURIComponent(String(args.criteria_id))}/runs`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  content_v1_projects__project_id__criteria__criteria_id__content_post: (args:{project_id:string;criteria_id:string;body:components["schemas"]["ContentPurpose"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/criteria/${encodeURIComponent(String(args.criteria_id))}/content`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  review_v1_projects__project_id__criteria__criteria_id__review_post: (args:{project_id:string;criteria_id:string;body:components["schemas"]["CriteriaReviewInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/criteria/${encodeURIComponent(String(args.criteria_id))}/review`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  source_evidence_v1_projects__project_id__criteria__criteria_id__recommendations__recommendation_id__source_evidence_post: (args:{project_id:string;criteria_id:string;recommendation_id:string;body:components["schemas"]["ContentPurpose"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/criteria/${encodeURIComponent(String(args.criteria_id))}/recommendations/${encodeURIComponent(String(args.recommendation_id))}/source-evidence`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  cancel_v1_projects__project_id__criteria__criteria_id__cancel_post: (args:{project_id:string;criteria_id:string;body:components["schemas"]["CriteriaCancelInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/criteria/${encodeURIComponent(String(args.criteria_id))}/cancel`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  evaluation_draft_v1_projects__project_id__criteria__criteria_id__evaluation_draft_post: (args:{project_id:string;criteria_id:string;body:components["schemas"]["CriteriaEvaluationInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/criteria/${encodeURIComponent(String(args.criteria_id))}/evaluation-draft`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  confirmation_v1_projects__project_id__criteria__criteria_id__confirmation_post: (args:{project_id:string;criteria_id:string;body:components["schemas"]["CriteriaConfirmationInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/criteria/${encodeURIComponent(String(args.criteria_id))}/confirmation`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   templates_v1_projects__project_id__campaign_templates_get: (args:{project_id:string;after?:string | null;limit?:number}) => {
     const query=new URLSearchParams();
     if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));

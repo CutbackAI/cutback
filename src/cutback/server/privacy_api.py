@@ -15,6 +15,7 @@ from cutback.server.campaign_db import (
     CampaignRun,
     CampaignSelection,
 )
+from cutback.server.criteria_db import CriteriaExperimentUse, CriteriaVersionRecord
 from cutback.server.db import (
     AccessKey,
     AuditEvent,
@@ -117,6 +118,8 @@ def install_privacy(app, sessions, authorize, scope):
         def records():
             with sessions() as session:
                 for cls in (
+                    CriteriaExperimentUse,
+                    CriteriaVersionRecord,
                     GuardrailPolicyRow,
                     GuardrailOperationRow,
                     SemanticCacheNamespace,
@@ -351,6 +354,8 @@ def install_privacy(app, sessions, authorize, scope):
                 .values(state="REVOKED", active_qualification_id=None, active_approval_hash=None)
             )
             for cls in (
+                CriteriaExperimentUse,
+                CriteriaVersionRecord,
                 SemanticUploadCase,
                 SemanticDatasetUpload,
                 SemanticCacheMember,

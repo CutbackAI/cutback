@@ -63,6 +63,9 @@ const Retrieval = React.lazy(() =>
 const Compression = React.lazy(() =>
   import("./compression").then((module) => ({ default: module.Compression })),
 );
+const ReviewedCriteria = React.lazy(() =>
+  import("./criteria").then((module) => ({ default: module.ReviewedCriteria })),
+);
 const ProviderBatches = React.lazy(() =>
   import("./provider-batches").then((module) => ({
     default: module.ProviderBatches,
@@ -1711,6 +1714,18 @@ function Experiments({
           datasets={data.datasets}
         />
       )}
+      <React.Suspense fallback={<p>Loading reviewed criteria…</p>}>
+        <ReviewedCriteria
+          key={base}
+          api={api}
+          base={base}
+          datasets={data.datasets}
+          runs={data.runs || []}
+          admin={admin}
+          analyst={analyst}
+          reload={reload}
+        />
+      </React.Suspense>
       <h2>Experiment plans</h2>
       <label htmlFor="approval">
         Approval reference (required to approve a budget)
@@ -1923,6 +1938,16 @@ function RunEvidence({ detail }: { detail: RecordData }) {
           ? "Complete modeled call accounting"
           : "Cost completeness unknown"}
       </p>
+      {result.criteria_generation_cost && (
+        <p className="notice">
+          These checks were generated from training examples and reviewed by an
+          owner. This is not independent judge calibration. One-time generation
+          cost:{" "}
+          {money(result.criteria_generation_cost.known_spend_subtotal_usd)}{" "}
+          known subtotal. It is separate from target evaluation spend. Amortized
+          task cost and production savings remain unknown.
+        </p>
+      )}
       {result.search_frontier?.candidates?.length > 0 && (
         <section aria-label="Optimization trade-offs">
           <h3>Cost, quality and latency trade-offs</h3>

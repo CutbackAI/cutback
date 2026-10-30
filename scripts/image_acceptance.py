@@ -158,6 +158,7 @@ def main(
     guarded_tools=False,
     guarded_security=False,
     joint_model_context=False,
+    reviewed_criteria=False,
 ):
     from cutback.server.migrate import CURRENT_REVISION
 
@@ -273,7 +274,11 @@ assert os.getuid()==10001 and sys.version_info[:3]==(3,11,18)
 app=create_app(allow_insecure_http=True)
 app.state.artifact_store=configured_store()
 os.environ["CUTBACK_SEMANTIC_CACHE_ENABLED"]="true"
-manifest=seed_support_desk(app,"http://127.0.0.1:8080",os.environ["CUTBACK_ADMIN_TOKEN"],Path("/tmp/owned-support-desk"),provider_batch=True,semantic_cache=True,runtime_guardrails=RUNTIME_GUARDS,joint_model_context=JOINT_EXPECTED)
+manifest=seed_support_desk(app,"http://127.0.0.1:8080",os.environ["CUTBACK_ADMIN_TOKEN"],Path("/tmp/owned-support-desk"),provider_batch=True,semantic_cache=True,runtime_guardrails=RUNTIME_GUARDS,joint_model_context=JOINT_EXPECTED,reviewed_criteria=CRITERIA_EXPECTED)
+if CRITERIA_EXPECTED:
+ assert manifest["reviewed_criteria_sample"]["native_sdk_calls"]>1
+ assert manifest["reviewed_criteria_sample"]["paid_provider_calls"]==0
+ assert manifest["reviewed_criteria_sample"]["source_change"]["production_deployed"] is False
 if JOINT_EXPECTED:
  assert manifest["joint_model_context_sample"]["native_sdk_calls"]>0
  assert manifest["joint_model_context_sample"]["paid_provider_calls"]==0
@@ -289,6 +294,7 @@ if RUNTIME_GUARDS:
 print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":manifest["paid_provider_calls"]}))
 """
                 code = code.replace("RUNTIME_GUARDS", repr(runtime_guardrails))
+                code = code.replace("CRITERIA_EXPECTED", repr(reviewed_criteria))
                 code = code.replace("JOINT_EXPECTED", repr(joint_model_context))
                 manifest = json.loads(inside(container, code, values).strip().splitlines()[-1])
                 base = "/v1/projects/" + manifest["project_id"]
@@ -460,6 +466,34 @@ with sessions() as session:
   assert confirmed.results["lineage"]["fresh_test_claim"] is True
   decision=confirmed.results["recommendations"][0]
   assert decision["joint_model_context_confirmation_eligible"] is True
+ if CRITERIA_EXPECTED:
+  from cutback.server.criteria_db import CriteriaVersionRecord,CriteriaExperimentUse
+  from cutback.server.criteria_service import (
+   load_generation,reviewed_content,validate_binding,receipt)
+  from cutback.server.plan_artifacts import load_plan
+  versions=session.scalars(select(CriteriaVersionRecord)).all()
+  assert len(versions)==1
+  version=versions[0]
+  assert version.state=="COMPLETED" and version.review_status=="APPROVED"
+  generated=session.get(ExperimentPlanRecord,version.generation_plan_id)
+  generation=load_generation(new_only,version.project_id,generated.specification)
+  assert generation.criteria_id==version.id
+  requirements,proposal,_=reviewed_content(session,new_only,version)
+  assert requirements.minimum==0.9 and len(proposal.criteria)==1
+  uses=session.scalars(select(CriteriaExperimentUse)).all()
+  assert len(uses)==2
+  for use in uses:
+   planned=session.get(ExperimentPlanRecord,use.plan_id)
+   restored=load_plan(new_only,use.project_id,planned.specification)
+   assert validate_binding(session,new_only,use.project_id,restored).id==version.id
+   assert restored.criteria_binding.review_approval_id==use.review_approval_id
+   assert restored.source_binding is not None
+   executed=session.scalar(select(ExperimentRunRecord).where(ExperimentRunRecord.plan_id==planned.id))
+   assert executed.status=="COMPLETED"
+   expected=receipt(session,use.project_id,restored)
+   assert all(executed.results.get(key)==value for key,value in expected.items())
+   if restored.split=="test":
+    assert executed.results["lineage"]["fresh_test_claim"] is True
 print(json.dumps({"restored_and_rekeyed_objects":len(rows)+len(caches),"restored_and_rekeyed_cache_objects":len(caches),"restored_and_rekeyed_plans":len(plans),"semantic_qualified_catalog_restored":True,"isolated_tool_receipts_restored":bool(TOOLS_EXPECTED),"paired_security_suite_restored":bool(SECURITY_EXPECTED),"runtime_guardrail_receipts_restored":bool(RUNTIME_GUARDS),"database_pointers_preserved":True}))
 engine.dispose()
 """.replace("RECOVERED", repr(names[1]))
@@ -469,6 +503,7 @@ engine.dispose()
                     .replace("GUARDED_TOOLS", repr(guarded_tools))
                     .replace("GUARDED_SECURITY", repr(guarded_security))
                     .replace("JOINT_EXPECTED", repr(joint_model_context))
+                    .replace("CRITERIA_EXPECTED", repr(reviewed_criteria))
                 )
                 recovered = json.loads(inside(container, recovery, values).strip().splitlines()[-1])
 
@@ -597,6 +632,7 @@ engine.dispose()
                     "joint_model_context_confirmation_and_source_binding_restored": (
                         joint_model_context
                     ),
+                    "reviewed_criteria_versions_and_confirmation_restored": reviewed_criteria,
                     "restored_tables": len(after),
                     "row_counts_match": True,
                     **recovered,
@@ -639,6 +675,7 @@ if __name__ == "__main__":
     parser.add_argument("--guarded-tools", action="store_true")
     parser.add_argument("--guarded-security", action="store_true")
     parser.add_argument("--joint-model-context", action="store_true")
+    parser.add_argument("--reviewed-criteria", action="store_true")
     args = parser.parse_args()
     main(
         args.image,
@@ -648,4 +685,5 @@ if __name__ == "__main__":
         guarded_tools=args.guarded_tools,
         guarded_security=args.guarded_security,
         joint_model_context=args.joint_model_context,
+        reviewed_criteria=args.reviewed_criteria,
     )

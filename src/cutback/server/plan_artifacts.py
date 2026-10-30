@@ -12,16 +12,38 @@ from cutback.evals.experiments import ExperimentPlan
 from cutback.server.content_policy import policy_content
 
 
-def public_config(value, *, redact_content_hashes=False):
+def target_evaluation_clause():
+    """Generation receipts have no test split and are never target-quality runs."""
+    from sqlalchemy import and_
+
+    from cutback.server.db import ExperimentPlanRecord
+
+    operation = ExperimentPlanRecord.specification["public_specification"]["operation"].as_string()
+    return and_(
+        operation.is_distinct_from("candidate-generation-v1"),
+        operation.is_distinct_from("criteria-generation-v1"),
+    )
+
+
+def public_config(value, *, redact_content_hashes=False, redact_criteria=False):
     if isinstance(value, list):
-        return [public_config(item, redact_content_hashes=redact_content_hashes) for item in value]
+        return [
+            public_config(
+                item, redact_content_hashes=redact_content_hashes, redact_criteria=redact_criteria
+            )
+            for item in value
+        ]
     if not isinstance(value, dict):
         return value
     redact_content_hashes = redact_content_hashes or bool(
         value.get("prompt_bindings") or value.get("content_nonce")
     )
+    redact_criteria = redact_criteria or bool(value.get("criteria_binding"))
     result: dict[str, Any] = {}
     for key, item in value.items():
+        if key == "output_field" and redact_criteria:
+            result[key] = None
+            continue
         if key == "retrieval_execution":
             if item is None:
                 result[key] = None
@@ -48,7 +70,9 @@ def public_config(value, *, redact_content_hashes=False):
             if not redact_content_hashes:
                 result[key + "_sha256"] = digest(item)
         else:
-            result[key] = public_config(item, redact_content_hashes=redact_content_hashes)
+            result[key] = public_config(
+                item, redact_content_hashes=redact_content_hashes, redact_criteria=redact_criteria
+            )
     return result
 
 

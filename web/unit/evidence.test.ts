@@ -6,6 +6,40 @@ import {
   experimentTitle,
 } from "../src/evidence.ts";
 
+test("reviewed criteria distinguish validation from confirmation without a calibration claim", () => {
+  const reviewed = {
+    evaluator_version: "deterministic-v13",
+    quality_gate_passed: true,
+    evidence_tier: 4,
+    status: "VERIFIED_ON_HELDOUT_DATASET",
+    criteria_binding: {
+      version_sha256: "a".repeat(64),
+      review_approval_id: "owned-epoch",
+    },
+    criteria_review_assurance: "owner_review_not_independent_judge_calibration",
+    criteria_generation_cost: { billing_complete: true },
+  };
+  assert.match(decisionLabel(reviewed), /untouched-test confirmation required/);
+  assert.match(
+    decisionLabel({
+      ...reviewed,
+      criteria_confirmation_predecessor_run_id: "owned-validation",
+    }),
+    /against reviewed checks/,
+  );
+  assert.match(
+    decisionLabel({
+      ...reviewed,
+      criteria_generation_cost: { billing_complete: false },
+    }),
+    /new comparison/,
+  );
+  assert.match(
+    decisionLabel({ ...reviewed, evidence_tier: 1 }),
+    /semantic quality unknown/,
+  );
+});
+
 test("technical or insufficient evidence never becomes a verified quality claim", () => {
   assert.match(
     decisionLabel({

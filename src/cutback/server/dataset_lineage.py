@@ -15,6 +15,7 @@ from cutback.server.db import (
     ExperimentRunRecord,
 )
 from cutback.server.lineage_db import DatasetAlias, DatasetExposure, DatasetFamily
+from cutback.server.plan_artifacts import target_evaluation_clause
 
 
 class LineageViolation(ValueError):
@@ -203,9 +204,7 @@ def legacy_test_history(session, project):
                     .where(
                         DatasetRecord.project_id == project,
                         DatasetItem.lineage_group_id.is_(None),
-                        ExperimentPlanRecord.specification["public_specification"]["operation"]
-                        .as_string()
-                        .is_distinct_from("candidate-generation-v1"),
+                        target_evaluation_clause(),
                         ExperimentPlanRecord.specification["public_specification"]["split"]
                         .as_string()
                         .is_distinct_from("validation"),
@@ -346,6 +345,19 @@ def require_current_test_evidence(session, store, recommendation):
     if not row or row.project_id != project or run.status != "COMPLETED":
         raise LineageViolation("COMPLETED_TEST_EVIDENCE_REQUIRED")
     plan = load_plan(store, project, row.specification)
+    if plan.criteria_binding:
+        from cutback.server.criteria_service import receipt as criteria_receipt
+        from cutback.server.criteria_service import validate_binding
+        from cutback.server.stages import validate_confirmation
+
+        validate_binding(session, store, project, plan)
+        validate_confirmation(session, store, project, plan, run_id=run.id)
+        expected = criteria_receipt(session, project, plan)
+        if any(
+            recommendation.evidence.get(key) != value or run.results.get(key) != value
+            for key, value in expected.items()
+        ):
+            raise LineageViolation("CURRENT_REVIEWED_CRITERIA_RECEIPT_REQUIRED")
     from cutback.evals.input_groups import effective_input_groups, requires_projection
 
     if requires_projection(plan):

@@ -210,7 +210,8 @@ class ExecutionLedger:
         amount = money(amount)
         if purpose not in PURPOSES or self.plan.price_sha256 != Catalog().sha256:
             raise ValueError("EXECUTION_PURPOSE_OR_PRICE_CONTRACT_NOT_APPROVED")
-        proposal = getattr(self.plan, "operation", None) == "candidate-generation-v1"
+        operation = getattr(self.plan, "operation", None)
+        proposal = operation in {"candidate-generation-v1", "criteria-generation-v1"}
         if (purpose == "optimization") != proposal:
             raise ValueError("EXECUTION_PURPOSE_OUTSIDE_APPROVED_OPERATION")
         targets = [
@@ -320,6 +321,7 @@ class ExecutionLedger:
                 digest(self.plan.model_dump(mode="json")),
                 purpose,
                 amount,
+                operation=operation,
             )
             if self.episode_id:
                 episode = session.get(ExecutionEpisode, self.episode_id, with_for_update=True)
