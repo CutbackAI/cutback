@@ -125,3 +125,7 @@ psycopg/binary LGPL obligations and image OS packages before publishing images.
 | urllib3 | 2.8.0 | MIT |
 | uvicorn | 0.54.0 | BSD-3-Clause |
 | zipp | 4.1.2 | MIT |
+
+## Publication snapshot check
+
+Before building publication archives, CI runs the stdlib-only `scripts/check_source_snapshot.py`. It compares raw checkout bytes with the committed Git blobs, requires no staged or untracked publication inputs, and rejects redirected filesystem links. This catches CRLF drift that Git text filters can hide from a normal diff. It reports counts without source, filenames or Git stderr, disables lazy fetching and ignores ambient Git repository overrides. OpenAPI/client generation writes explicit LF bytes on every platform. This is a release-integrity check, not an application execution sandbox or a privacy-policy replacement; the source/history/archive boundary check remains separate.

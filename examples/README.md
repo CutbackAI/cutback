@@ -6,6 +6,8 @@ The examples below are supplementary compatibility and integration references.
 
 For the agent's automatic model/output-cap portfolio, start with the [independent campaign example](automatic-portfolio/README.md). It explains the reference, static alternatives, reserved prompt-search fallback, untouched confirmation, exact diff and application-check review. Every synthetic transport remains explicit; none is a real-model benchmark.
 
+`uv run cutback demo --ticket-router` exposes its three-label task without copying a dashboard key. Use **Explore sample → Inspect ticket-routing failures** and read the authorized paired outputs. It uses independent synthetic source and declared related-case families.
+
 For original-versus-compressed input comparisons, use the [context application](context-compression/README.md). It includes distinct synthetic policy facts, native request execution, an intentionally harmful aggressive transform, untouched confirmation and exact settings/check/rollback review. The source-built demo exposes these runs on **Compression**; this feature is separate from PyPI dev5.
 
 For native function conversations, final synthetic state and cited retrieval, use the [support-agent and RAG applications](agent-evaluation/README.md). `uv run cutback demo` includes their PostgreSQL/worker/dashboard journey under **Inspect agent and retrieval tasks**; the standalone script needs no Docker or provider key. This source feature is separate from PyPI dev5.

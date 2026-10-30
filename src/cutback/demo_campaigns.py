@@ -12,12 +12,16 @@ from unittest.mock import patch
 from uuid import uuid4
 
 
-def synthetic_executor(*, seeds_from_scope=False, reject_static_portfolio=False):
+def synthetic_executor(
+    *, seeds_from_scope=False, reject_static_portfolio=False, ticket_router=False
+):
     import httpx
 
     from cutback.evals.executors import OpenAIExecutor
 
     requests = []
+    if ticket_router:
+        from cutback.sample_app.ticket_fixture import INSTRUCTION, expected
 
     def respond(request):
         if str(request.url) != "https://api.openai.com/v1/responses":
@@ -38,7 +42,7 @@ def synthetic_executor(*, seeds_from_scope=False, reject_static_portfolio=False)
                     "proposals": [
                         {
                             "seed_key": key,
-                            "instruction": "Answer A only.",
+                            "instruction": INSTRUCTION if ticket_router else "Answer A only.",
                             "max_output_tokens": 64 + index * 16 if seeds_from_scope else 64,
                         }
                         for index, key in enumerate(seeds)
@@ -46,21 +50,34 @@ def synthetic_executor(*, seeds_from_scope=False, reject_static_portfolio=False)
                 }
             )
         else:
-            output = (
-                (
-                    "A"
-                    if body.get("instructions") == "Answer A only."
-                    or body["model"] in {"gpt-4.1", "gpt-6-luna"}
-                    and body["max_output_tokens"] == 256
-                    else "B"
+            if ticket_router:
+                # Explicit owned provider simulation: a constant cheap answer must fail.
+                # Never used as an oracle for a real provider or a customer result.
+                output = (
+                    expected(body["input"])
+                    if (
+                        body.get("instructions") == INSTRUCTION
+                        or body["model"] == "gpt-4.1"
+                        and body["max_output_tokens"] == 256
+                    )
+                    else "billing"
                 )
-                if reject_static_portfolio
-                else (
-                    "B"
-                    if body["model"] == "gpt-4.1-mini" and body["max_output_tokens"] == 256
-                    else "A"
+            else:
+                output = (
+                    (
+                        "A"
+                        if body.get("instructions") == "Answer A only."
+                        or body["model"] in {"gpt-4.1", "gpt-6-luna"}
+                        and body["max_output_tokens"] == 256
+                        else "B"
+                    )
+                    if reject_static_portfolio
+                    else (
+                        "B"
+                        if body["model"] == "gpt-4.1-mini" and body["max_output_tokens"] == 256
+                        else "A"
+                    )
                 )
-            )
         tokens = 160 if proposer else 50 if body["max_output_tokens"] == 256 else 4
         return httpx.Response(
             200,

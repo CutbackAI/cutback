@@ -12,7 +12,9 @@ application = create_app(
     admin_token="synthetic-schema-only-" + "x" * 32,
 )
 destination = Path(__file__).resolve().parents[1] / "web/openapi.json"
-destination.write_text(json.dumps(application.openapi(), indent=2) + "\n", encoding="utf-8")
+destination.write_text(
+    json.dumps(application.openapi(), indent=2) + "\n", encoding="utf-8", newline="\n"
+)
 application.state.engine.dispose()
 print("Versioned OpenAPI contract exported; no network connection made.")
 

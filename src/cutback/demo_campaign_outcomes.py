@@ -122,6 +122,7 @@ def run_sample(
     *,
     watch=False,
     modern_model=False,
+    ticket_router=False,
 ):
     from cutback.agent import analyze, load_session, prepare, selected_profile
     from cutback.agent_campaign import advance, proposal, review, status
@@ -133,11 +134,15 @@ def run_sample(
     from cutback.campaign_outcomes import record_outcomes
     from cutback.demo_campaigns import synthetic_executor
 
+    if ticket_router and modern_model:
+        raise ValueError("TICKET_ROUTER_MODERN_SAMPLE_NOT_QUALIFIED")
+
     control = Control(endpoint, admin, client=client)
     writer = Control(endpoint, ingest_token, client=client)
     owned = private_directory(workspace, "outcome-" + uuid4().hex)
     application = private_directory(owned, "application")
-    shutil.copyfile(Path(__file__).parent / "sample_app/campaign.py", application / "app.py")
+    source_name = "ticket_campaign.py" if ticket_router else "campaign.py"
+    shutil.copyfile(Path(__file__).parent / "sample_app" / source_name, application / "app.py")
     if modern_model:
         application_source = application / "app.py"
         application_source.write_text(
@@ -152,18 +157,24 @@ def run_sample(
         if modern_model
         else APPLICATION_CHECK
     )
+    if ticket_router:
+        from cutback.sample_app.ticket_fixture import APPLICATION_CHECK as ticket_check
+        from cutback.sample_app.ticket_fixture import cases
+
+        application_check = ticket_check
+        records = cases()
+    else:
+        records = [
+            {
+                "id": f"case-{i}",
+                "input": f"Owned synthetic {chr(65 + i // 26)}{chr(65 + i % 26)} fruit",
+                "gold": "A",
+            }
+            for i in range(200)
+        ]
     (application / "check_application.py").write_text(application_check, encoding="utf-8")
     (application / "cases.jsonl").write_text(
-        "\n".join(
-            json.dumps(
-                {
-                    "id": f"case-{i}",
-                    "input": f"Owned synthetic {chr(65 + i // 26)}{chr(65 + i % 26)} fruit",
-                    "gold": "A",
-                }
-            )
-            for i in range(200)
-        ),
+        "\n".join(json.dumps(record) for record in records),
         encoding="utf-8",
     )
     git(application, "init")
@@ -191,9 +202,10 @@ def run_sample(
         max_usd="10",
         max_requests=1000,
         workflow=workflow,
-        minimum=0.7,
+        minimum=0.9 if ticket_router else 0.7,
         independent_labels=True,
         for_campaign=True,
+        retain_case_outputs=ticket_router,
     )
     baseline = frozen_tasks(
         control,
@@ -222,7 +234,7 @@ def run_sample(
     )
     sessions, store = app.state.sessions, app.state.artifact_store
     executor, requests = synthetic_executor(
-        seeds_from_scope=True, reject_static_portfolio=not modern_model
+        seeds_from_scope=True, reject_static_portfolio=not modern_model, ticket_router=ticket_router
     )
     try:
 
@@ -377,7 +389,16 @@ def run_sample(
             "campaign_id": campaign["id"],
             "report": status(application, control),
             "native_calls": len(requests),
-            "application_check_native_calls": 2,
+            "application_check_native_calls": 6 if ticket_router else 2,
+            **(
+                {
+                    "scenario": "synthetic-ticket-routing.v1",
+                    "reference_labels": 3,
+                    "retained_cases_authorized": True,
+                }
+                if ticket_router
+                else {}
+            ),
             "application_check_discovery": {
                 "hash": discovered["discovery_hash"],
                 "commands": [command.key for command in contract.commands],
