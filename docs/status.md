@@ -26,6 +26,13 @@ receipts. Full installed, image recovery and public acceptance are pending. The
 [independent sample](../examples/guarded-tools/README.md) uses synthetic native
 replies and actual contained SQL; it does not establish semantic safety.
 
+The [combined guarded security suite](guarded-security.md), under source
+qualification, evaluates actual tool policy decisions alongside paired attack
+and useful-task results. Its independent sample uses separate checker/broker
+processes and actual contained SQL. Known early denials preserve incomplete check
+coverage; detector outages cannot pass joint qualification. Installed, image
+recovery and publication gates remain pending.
+
 The context-compression follow-up adds actual original-versus-compressed native input comparisons, encrypted input review and checked settings proposals. Its current qualification and remaining gates are recorded in [progress](progress.md); [the independent application](../examples/context-compression/README.md) provides the source-checkout walkthrough.
 
 The [PR 42](https://github.com/CutbackAI/cutback/pull/42) source increment extends new agent/dashboard campaigns to a frozen portfolio of up to four qualified model/output-limit alternatives, sharing one parent budget and one independent confirmation. It passed installed and all ten hosted gates recorded in [progress](progress.md). Existing saved campaigns keep their exact contracts; this does not update PyPI or combine every optimizer into one automatic system.

@@ -55,6 +55,7 @@ def seed_owned_isolated_records(
     *,
     security_suite=False,
     guarded_tools=False,
+    guarded_security=False,
 ):
     """A separate host worker/broker; the image receives no Docker socket."""
     import uvicorn
@@ -114,7 +115,9 @@ def seed_owned_isolated_records(
                 if security_suite:
                     from cutback.demo_security_suites import seed_security_suite
 
-                    security = seed_security_suite(app, control, project, image_id)
+                    security = seed_security_suite(
+                        app, control, project, image_id, guarded=guarded_security
+                    )
                     assert security["sessions"] == 4 and security["cleanup_confirmed"]
             assert (
                 receipt["sessions"] == receipt["state_changes"] == 4
@@ -153,11 +156,14 @@ def main(
     security_suite=False,
     runtime_guardrails=False,
     guarded_tools=False,
+    guarded_security=False,
 ):
     from cutback.server.migrate import CURRENT_REVISION
 
     if guarded_tools and not (isolated_tools and runtime_guardrails):
         raise ValueError("GUARDED_TOOL_RECOVERY_REQUIRES_BOTH_OWNED_SERVICE_GATES")
+    if guarded_security and not (isolated_tools and security_suite and runtime_guardrails):
+        raise ValueError("GUARDED_SECURITY_RECOVERY_REQUIRES_ALL_OWNED_SERVICE_GATES")
 
     if security_suite and not isolated_tools:
         raise ValueError("SECURITY_IMAGE_GATE_REQUIRES_ACTUAL_ISOLATED_TOOLS")
@@ -301,6 +307,7 @@ print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":mani
                         names[0],
                         security_suite=security_suite,
                         guarded_tools=guarded_tools,
+                        guarded_security=guarded_security,
                     )
                 with psycopg.connect(**kwargs, autocommit=True) as conn:
                     key = os.urandom(32)
@@ -376,13 +383,20 @@ with sessions() as session:
   assert sum(row.state_changed is True for row in operations)==(7 if SECURITY_EXPECTED else 4)
  if SECURITY_EXPECTED:
   from cutback.server.worker import load_dataset
+  expected_version=("native-isolated-record-guarded-security-v1" if GUARDED_SECURITY
+                    else "native-isolated-record-security-v1")
   security_runs=[row for row in session.scalars(select(ExperimentRunRecord)).all()
-                 if (row.results or {}).get("execution_version")==
-                 "native-isolated-record-security-v1"]
+                 if (row.results or {}).get("execution_version")==expected_version]
   assert len(security_runs)==1 and security_runs[0].status=="COMPLETED"
   reports=[row["security_evaluation"] for row in security_runs[0].results["models"]]
   assert reports[0]["attacked_utility"]["value"]==0 and reports[1]["attacked_utility"]["value"]==1
   assert all(row["gate"]=="insufficient_evidence" for row in reports)
+  if GUARDED_SECURITY:
+   assert all(row["runtime_guardrails"]["policy_decisions_known"] is True for row in reports)
+   assert all(row["runtime_guardrails"]["coverage_complete"] is True for row in reports)
+   assert all(row["runtime_guardrails"]["benign_family_interruption"]["value"]==0
+              for row in reports)
+   assert all(row["guardrail_false_positive_rate"] is None for row in reports)
   security_datasets=[row for row in session.scalars(select(DatasetRecord)).all()
                      if row.provenance.get("security_suite")]
   assert len(security_datasets)==1
@@ -395,18 +409,20 @@ with sessions() as session:
   runtime_policies=session.scalars(select(GuardrailPolicyRow)).all()
   runtime_checks=session.scalars(select(GuardrailOperationRow)).all()
   native_calls=session.scalars(select(GatewayCallRow)).all()
-  assert len(runtime_policies)==1+int(GUARDED_TOOLS)
+  assert len(runtime_policies)==1+int(GUARDED_TOOLS)+int(GUARDED_SECURITY)
   assert all(row.state=="DISABLED" for row in runtime_policies)
-  assert sum(row.checks_used for row in runtime_policies)==9+16*GUARDED_TOOLS
-  assert len(runtime_checks)==9+16*GUARDED_TOOLS
+  assert sum(row.checks_used for row in runtime_policies)==9+16*GUARDED_TOOLS+14*GUARDED_SECURITY
+  assert len(runtime_checks)==9+16*GUARDED_TOOLS+14*GUARDED_SECURITY
   assert all(row.state=="COMPLETED" and row.decision for row in runtime_checks)
   assert sum(row.decision["action"]=="deny" for row in runtime_checks)==3+4*GUARDED_TOOLS
-  if GUARDED_TOOLS:
+  if GUARDED_TOOLS or GUARDED_SECURITY:
    guarded=[row for row in operations if row.guardrail_policy_id is not None]
-   assert len(guarded)==8 and all(row.broker_intent=="STARTED" for row in guarded)
-   assert sum(row.result_delivery=="WITHHELD" for row in guarded)==4
+   assert len(guarded)==8*GUARDED_TOOLS+7*GUARDED_SECURITY
+   assert all(row.broker_intent=="STARTED" for row in guarded)
+   assert sum(row.result_delivery=="WITHHELD" for row in guarded)==4*GUARDED_TOOLS
    assert all(row.state_changed is True for row in guarded if row.result_delivery=="WITHHELD")
-   assert sum(row.result_delivery=="AUTHORIZED" for row in guarded)==4
+   assert sum(row.result_delivery=="AUTHORIZED" for row in guarded)==(
+       4*GUARDED_TOOLS+7*GUARDED_SECURITY)
   assert len(native_calls)==4
   assert all(row.state=="SETTLED" and row.cost_usd is not None for row in native_calls)
   assert all(row.revoked_at is not None for row in session.scalars(select(GatewayKeyRow)).all())
@@ -428,6 +444,7 @@ engine.dispose()
                     .replace("SECURITY_EXPECTED", repr(security_suite))
                     .replace("RUNTIME_GUARDS", repr(runtime_guardrails))
                     .replace("GUARDED_TOOLS", repr(guarded_tools))
+                    .replace("GUARDED_SECURITY", repr(guarded_security))
                 )
                 recovered = json.loads(inside(container, recovery, values).strip().splitlines()[-1])
 
@@ -552,6 +569,7 @@ engine.dispose()
                     "paid_provider_calls": 0,
                     "native_batch_fixture_restored": True,
                     "guarded_tool_effects_and_delivery_restored": guarded_tools,
+                    "guarded_security_utility_and_policy_decisions_restored": guarded_security,
                     "restored_tables": len(after),
                     "row_counts_match": True,
                     **recovered,
@@ -592,6 +610,7 @@ if __name__ == "__main__":
     parser.add_argument("--security-suite", action="store_true")
     parser.add_argument("--runtime-guardrails", action="store_true")
     parser.add_argument("--guarded-tools", action="store_true")
+    parser.add_argument("--guarded-security", action="store_true")
     args = parser.parse_args()
     main(
         args.image,
@@ -599,4 +618,5 @@ if __name__ == "__main__":
         security_suite=args.security_suite,
         runtime_guardrails=args.runtime_guardrails,
         guarded_tools=args.guarded_tools,
+        guarded_security=args.guarded_security,
     )

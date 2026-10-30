@@ -4886,7 +4886,7 @@ export interface components {
              * @default native-fixture-episode-v1
              * @enum {string}
              */
-            version: "native-fixture-episode-v1" | "native-fixture-episode-v2" | "native-isolated-record-episode-v1" | "native-isolated-record-security-v1" | "native-isolated-record-guarded-v1";
+            version: "native-fixture-episode-v1" | "native-fixture-episode-v2" | "native-isolated-record-episode-v1" | "native-isolated-record-security-v1" | "native-isolated-record-guarded-v1" | "native-isolated-record-guarded-security-v1";
             /**
              * Openai Surface
              * @default responses.create
@@ -5204,7 +5204,7 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
             retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Input"] | null;
             compression_execution?: components["schemas"]["CompressionExecutionSpec-Input"] | null;
@@ -5302,7 +5302,7 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
             retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Output"] | null;
             compression_execution?: components["schemas"]["CompressionExecutionSpec-Output"] | null;

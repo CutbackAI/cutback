@@ -168,6 +168,49 @@ export function SecuritySuiteEvidence({
         {evidence.tool_legitimacy_unknown} responses uncertain. General
         guardrail false-positive rate: Unknown.
       </p>
+      {evidence.runtime_guardrails && (
+        <section aria-label={`Runtime tool guard coverage for ${modelKey}`}>
+          <h4>Did the tool guard complete its checks?</h4>
+          <p>
+            Coverage:{" "}
+            {evidence.runtime_guardrails.coverage_complete === true
+              ? "Complete for observed tool checks"
+              : evidence.runtime_guardrails.coverage_complete === false
+                ? "Some configured checks did not complete"
+                : "Unknown"}
+            . Checks: {evidence.runtime_guardrails.checks ?? "Unknown"}. Case
+            executions without complete check coverage:{" "}
+            {evidence.runtime_guardrails
+              .incomplete_or_unknown_case_executions ?? "Unknown"}
+            .
+          </p>
+          <p>
+            Policy decisions:{" "}
+            {evidence.runtime_guardrails.policy_decisions_known === true
+              ? "Known for observed tool checks"
+              : "Unknown; joint guard qualification cannot pass"}
+            . Case executions with unknown policy decisions:{" "}
+            {evidence.runtime_guardrails.unknown_policy_case_executions ??
+              "Unknown"}
+            . A known denial may stop remaining checks early; their coverage
+            stays incomplete.
+          </p>
+          <p>
+            Benign families interrupted by the guard:{" "}
+            {percent(
+              evidence.runtime_guardrails.benign_family_interruption?.value,
+            )}
+            . Known families:{" "}
+            {evidence.runtime_guardrails.benign_family_interruption
+              ?.known_families ?? "Unknown"}
+            ; unknown families:{" "}
+            {evidence.runtime_guardrails.benign_family_interruption
+              ?.unknown_families ?? "Unknown"}
+            . Repeats share their family denominator. This observed interruption
+            rate is separate from general classifier false positives.
+          </p>
+        </section>
+      )}
       <p className="hint">
         These results cover exact output canaries and scoped record effects in
         the declared suite. Refusal alone is not task success. Intervals require

@@ -141,6 +141,7 @@ def register_security(app, output, request, fail):
         """Freeze explicit evaluation/containment bounds; zero budget by default."""
         from cutback.cli_checks import read
         from cutback.core.isolated_episodes import (
+            GuardedRecordExecution,
             IsolatedRecordExecution,
             IsolatedSecurityExecution,
         )
@@ -149,8 +150,12 @@ def register_security(app, output, request, fail):
 
         try:
             raw_contract = read(contract_file)
-            contract: IsolatedRecordExecution | IsolatedSecurityExecution
-            if raw_contract.get("version") == "isolated-record-security-tools-v1":
+            if not isinstance(raw_contract, dict):
+                raise ValueError("OBJECT")
+            contract: IsolatedRecordExecution | IsolatedSecurityExecution | GuardedRecordExecution
+            if raw_contract.get("version") == "isolated-record-guarded-tools-v1":
+                contract = GuardedRecordExecution.model_validate(raw_contract)
+            elif raw_contract.get("version") == "isolated-record-security-tools-v1":
                 contract = IsolatedSecurityExecution.model_validate(raw_contract)
             else:
                 contract = IsolatedRecordExecution.model_validate(raw_contract)

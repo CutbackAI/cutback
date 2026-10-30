@@ -32,15 +32,17 @@ def test_missing_git_is_actionable_before_workspace_database_or_http_setup(
     assert not list(tmp_path.iterdir())
 
 
+@pytest.mark.parametrize("kind", ["tools", "security"])
 def test_guarded_tool_demo_requires_a_local_image_before_creating_any_workspace(
-    tmp_path, monkeypatch
+    tmp_path, monkeypatch, kind
 ):
     from cutback.demo import launch_demo
 
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr("cutback.demo.require_demo_git", lambda: None)
+    expected = "GUARDED_TOOL" if kind == "tools" else "GUARDED_SECURITY"
     with pytest.raises(
-        ValueError, match="^GUARDED_TOOL_DEMO_REQUIRES_EXPLICIT_LOCAL_TOOL_IMAGE_ID$"
+        ValueError, match="^" + expected + "_DEMO_REQUIRES_EXPLICIT_LOCAL_TOOL_IMAGE_ID$"
     ):
-        launch_demo(open_browser=False, guarded_tools=True)
+        launch_demo(open_browser=False, **{"guarded_" + kind: True})
     assert not list(tmp_path.iterdir())
