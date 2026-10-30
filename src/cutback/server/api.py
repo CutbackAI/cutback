@@ -602,6 +602,12 @@ def create_app(
     from cutback.server.cache_api import install_cache
 
     install_cache(app, sessions, authorize, scope)
+    from cutback.server.semantic_cache_api import install_semantic_cache
+
+    install_semantic_cache(app, sessions, authorize, scope)
+    from cutback.server.semantic_upload_api import install_semantic_upload
+
+    install_semantic_upload(app, sessions, authorize, scope)
     from cutback.server.training_api import install_training
 
     install_training(app, sessions, authorize, scope)

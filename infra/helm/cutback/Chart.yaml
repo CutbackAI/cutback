@@ -2,8 +2,8 @@ apiVersion: v2
 name: cutback
 description: Customer-owned Cutback collector and worker with external PostgreSQL
 type: application
-version: 0.1.0-dev.2
-appVersion: 0.1.0.dev2
+version: 0.1.0-dev.5
+appVersion: 0.1.0.dev5
 home: https://github.com/CutbackAI/cutback
 sources: [https://github.com/CutbackAI/cutback]
 annotations:

@@ -93,7 +93,14 @@ def fixture_response(request):
 
 
 def seed_support_desk(
-    app, endpoint, admin, workspace: Path, *, ticket_router=False, provider_batch=False
+    app,
+    endpoint,
+    admin,
+    workspace: Path,
+    *,
+    ticket_router=False,
+    provider_batch=False,
+    semantic_cache=False,
 ):
     """Use actual scoped HTTP APIs and the durable worker, retaining the sample project."""
     require_demo_git()
@@ -383,6 +390,11 @@ def seed_support_desk(
                 from cutback.demo_provider_batches import seed_provider_batch
 
                 batch_sample = seed_provider_batch(app, control, project["id"])
+            semantic_sample = None
+            if semantic_cache:
+                from cutback.demo_semantic_cache import seed_semantic_cache
+
+                semantic_sample = seed_semantic_cache(app, control, project["id"])
             manifest = {
                 "available": True,
                 "title": "Support-desk triage",
@@ -399,6 +411,7 @@ def seed_support_desk(
                 "sample_source": "cutback/sample_app/app.py",
                 "source_diff": patch,
                 "paid_provider_calls": 0,
+                **({"semantic_cache_sample": semantic_sample} if semantic_sample else {}),
                 **(
                     {
                         "provider_batch_sample": {
@@ -509,7 +522,9 @@ def install_demo_routes(app, manifest, token, endpoint):
         )
 
 
-def launch_demo(port=8766, open_browser=True, *, ticket_router=False, provider_batch=False):
+def launch_demo(
+    port=8766, open_browser=True, *, ticket_router=False, provider_batch=False, semantic_cache=False
+):
     """Own one temporary Docker database. Never connect to production or reuse app keys."""
     require_demo_git()
 
@@ -564,6 +579,7 @@ def launch_demo(port=8766, open_browser=True, *, ticket_router=False, provider_b
         server = None
         old_url = os.environ.get("CUTBACK_DATABASE_URL")
         old_payload = os.environ.get("CUTBACK_ALLOW_PAYLOADS")
+        old_semantic = os.environ.get("CUTBACK_SEMANTIC_CACHE_ENABLED")
         try:
             result = subprocess.run(command, capture_output=True, timeout=180)
             if result.returncode:
@@ -591,6 +607,8 @@ def launch_demo(port=8766, open_browser=True, *, ticket_router=False, provider_b
                         raise ValueError("DEMO_DATABASE_NOT_READY") from None
                     time.sleep(0.5)
             os.environ.update(CUTBACK_DATABASE_URL=database_url, CUTBACK_ALLOW_PAYLOADS="true")
+            if semantic_cache:
+                os.environ["CUTBACK_SEMANTIC_CACHE_ENABLED"] = "true"
             migrate()
             admin = secrets.token_urlsafe(48)
             app = create_app(database_url=database_url, admin_token=admin, allow_insecure_http=True)
@@ -625,6 +643,7 @@ def launch_demo(port=8766, open_browser=True, *, ticket_router=False, provider_b
                 workspace,
                 ticket_router=ticket_router,
                 provider_batch=provider_batch,
+                semantic_cache=semantic_cache,
             )
             print(
                 f"Ready: {endpoint}/dashboard/\n"
@@ -655,6 +674,7 @@ def launch_demo(port=8766, open_browser=True, *, ticket_router=False, provider_b
             for name, old in (
                 ("CUTBACK_DATABASE_URL", old_url),
                 ("CUTBACK_ALLOW_PAYLOADS", old_payload),
+                ("CUTBACK_SEMANTIC_CACHE_ENABLED", old_semantic),
             ):
                 if old is None:
                     os.environ.pop(name, None)

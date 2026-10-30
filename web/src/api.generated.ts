@@ -2743,6 +2743,331 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/semantic-cache/namespaces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Namespaces */
+        get: operations["namespaces_v1_projects__project_id__semantic_cache_namespaces_get"];
+        put?: never;
+        /** Create */
+        post: operations["create_v1_projects__project_id__semantic_cache_namespaces_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/semantic-cache/namespaces/{namespace_id}/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Entries */
+        get: operations["entries_v1_projects__project_id__semantic_cache_namespaces__namespace_id__entries_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/semantic-cache/namespaces/{namespace_id}/entries/{entry_id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Entry Content */
+        post: operations["entry_content_v1_projects__project_id__semantic_cache_namespaces__namespace_id__entries__entry_id__content_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/semantic-cache/namespaces/{namespace_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Inspect Namespace */
+        get: operations["inspect_namespace_v1_projects__project_id__semantic_cache_namespaces__namespace_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Namespace */
+        delete: operations["delete_namespace_v1_projects__project_id__semantic_cache_namespaces__namespace_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/semantic-cache/namespaces/{namespace_id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke */
+        post: operations["revoke_v1_projects__project_id__semantic_cache_namespaces__namespace_id__revoke_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ingest/semantic-cache/put": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Put */
+        post: operations["put_v1_ingest_semantic_cache_put_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ingest/semantic-cache/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Lookup */
+        post: operations["lookup_v1_ingest_semantic_cache_lookup_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/semantic-cache/namespaces/{namespace_id}/qualifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Prepare */
+        post: operations["prepare_v1_projects__project_id__semantic_cache_namespaces__namespace_id__qualifications_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/semantic-cache/qualifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Qualifications */
+        get: operations["qualifications_v1_projects__project_id__semantic_cache_qualifications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/semantic-cache/qualifications/{qualification_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Inspect Qualification */
+        get: operations["inspect_qualification_v1_projects__project_id__semantic_cache_qualifications__qualification_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/semantic-cache/qualifications/{qualification_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve */
+        post: operations["approve_v1_projects__project_id__semantic_cache_qualifications__qualification_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/semantic-cache/qualifications/{qualification_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel */
+        post: operations["cancel_v1_projects__project_id__semantic_cache_qualifications__qualification_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/semantic-cache/qualifications/{qualification_id}/activation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Activation */
+        get: operations["activation_v1_projects__project_id__semantic_cache_qualifications__qualification_id__activation_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/semantic-cache/qualifications/{qualification_id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Activate */
+        post: operations["activate_v1_projects__project_id__semantic_cache_qualifications__qualification_id__activate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/semantic-cache/namespaces/{namespace_id}/dataset-uploads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Prepare */
+        post: operations["prepare_v1_projects__project_id__semantic_cache_namespaces__namespace_id__dataset_uploads_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/semantic-cache/dataset-uploads/{upload_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Show */
+        get: operations["show_v1_projects__project_id__semantic_cache_dataset_uploads__upload_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/semantic-cache/dataset-uploads/{upload_id}/append": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Append */
+        post: operations["append_v1_projects__project_id__semantic_cache_dataset_uploads__upload_id__append_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/semantic-cache/dataset-uploads/{upload_id}/finalize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Finalize */
+        post: operations["finalize_v1_projects__project_id__semantic_cache_dataset_uploads__upload_id__finalize_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/semantic-cache/dataset-uploads/{upload_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel */
+        post: operations["cancel_v1_projects__project_id__semantic_cache_dataset_uploads__upload_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/training/config": {
         parameters: {
             query?: never;
@@ -3402,6 +3727,36 @@ export interface components {
              * @constant
              */
             immutable_or_safely_invalidated: true;
+        };
+        /** CacheQualificationSpec */
+        CacheQualificationSpec: {
+            /**
+             * Version
+             * @default cutback.semantic-cache-qualification.v1
+             */
+            version: string;
+            rule: components["schemas"]["SemanticCacheRule"];
+            /** Thresholds */
+            thresholds: number[];
+            /** Maximum False Positive Group Upper95 */
+            maximum_false_positive_group_upper95: number;
+            /** Minimum Useful Hit Group Ratio */
+            minimum_useful_hit_group_ratio: number;
+            /**
+             * Maximum Utility Regression
+             * @default 0
+             */
+            maximum_utility_regression: number;
+            /**
+             * Minimum Negative Groups
+             * @default 30
+             */
+            minimum_negative_groups: number;
+            /**
+             * Minimum Positive Groups
+             * @default 10
+             */
+            minimum_positive_groups: number;
         };
         /** CallPage */
         CallPage: {
@@ -4292,6 +4647,15 @@ export interface components {
              * @default 300
              */
             max_wall_seconds: number;
+        };
+        /** EmbeddingContract */
+        EmbeddingContract: {
+            /** Adapter */
+            adapter: string;
+            /** Revision Sha256 */
+            revision_sha256: string;
+            /** Dimensions */
+            dimensions: number;
         };
         /** EnvironmentInput */
         EnvironmentInput: {
@@ -5934,6 +6298,91 @@ export interface components {
             request_contract?: components["schemas"]["RequestContract"] | null;
             native_contract?: components["schemas"]["NativeModelContract"] | null;
         };
+        /** NamespaceInput */
+        NamespaceInput: {
+            /**
+             * Policy Id
+             * Format: uuid
+             */
+            policy_id: string;
+            /**
+             * Serving Key Id
+             * Format: uuid
+             */
+            serving_key_id: string;
+            /** Workflow */
+            workflow: string;
+            /** Environment */
+            environment: string;
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "openai" | "anthropic" | "local";
+            /** Model */
+            model: string;
+            /** Prompt Revision */
+            prompt_revision: string;
+            /** Freshness Ref */
+            freshness_ref: string;
+            /** Access Context Sha256 */
+            access_context_sha256: string;
+            rule: components["schemas"]["SemanticCacheRule"];
+            /**
+             * Max Entries
+             * @default 128
+             */
+            max_entries: number;
+            /**
+             * Max Lookups Per Minute
+             * @default 30
+             */
+            max_lookups_per_minute: number;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Curated Catalog Approved
+             * @constant
+             */
+            curated_catalog_approved: true;
+            /**
+             * Encrypted Storage Approved
+             * @constant
+             */
+            encrypted_storage_approved: true;
+        };
+        /** NamespaceReceipt */
+        NamespaceReceipt: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** State */
+            state: string;
+            /** Specification */
+            specification: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Specification Hash */
+            specification_hash: string;
+            /** Embedding Contract Sha256 */
+            embedding_contract_sha256: string;
+            /** Entry Count */
+            entry_count: number;
+            /** Active Qualification Id */
+            active_qualification_id: string | null;
+            /** Active Approval Hash */
+            active_approval_hash: string | null;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+        };
         /** NativeGeneratorSpec */
         NativeGeneratorSpec: {
             /**
@@ -6819,6 +7268,65 @@ export interface components {
             /** Held Active Processing Us */
             held_active_processing_us: number;
         };
+        /** QualificationPrepare */
+        QualificationPrepare: {
+            /**
+             * Dataset Id
+             * Format: uuid
+             */
+            dataset_id: string;
+            specification: components["schemas"]["CacheQualificationSpec"];
+            /**
+             * Max Wall Seconds
+             * @default 60
+             */
+            max_wall_seconds: number;
+        };
+        /** QualificationReceipt */
+        QualificationReceipt: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Namespace Id
+             * Format: uuid
+             */
+            namespace_id: string;
+            /**
+             * Dataset Id
+             * Format: uuid
+             */
+            dataset_id: string;
+            /** State */
+            state: string;
+            /** Approval Hash */
+            approval_hash: string;
+            /** Specification */
+            specification: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Selected Threshold */
+            selected_threshold: number | null;
+            /** Catalog Entries */
+            catalog_entries: number;
+            /** Report */
+            report: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Accounted Active Processing Us */
+            accounted_active_processing_us: number;
+            /** Uncertain Active Processing Us */
+            uncertain_active_processing_us: number;
+            /** Held Active Processing Us */
+            held_active_processing_us: number;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+        };
         /** QualityComparison */
         QualityComparison: {
             /**
@@ -7616,6 +8124,231 @@ export interface components {
             paid_calls_authorized: boolean;
             /** Provider Calls */
             provider_calls: number;
+        };
+        /** SemanticApproval */
+        SemanticApproval: {
+            /** Approval Hash */
+            approval_hash: string;
+            /** Approval Ref */
+            approval_ref: string;
+        };
+        /** SemanticCacheLookupReceipt */
+        SemanticCacheLookupReceipt: {
+            /** Hit */
+            hit: boolean;
+            /** Reason */
+            reason: string;
+            /** Response */
+            response?: string | null;
+            /** Cache Id */
+            cache_id?: string | null;
+            /** Similarity */
+            similarity?: number | null;
+            /** Lookup Processing Ms */
+            lookup_processing_ms: number;
+            /** Embedding Cost Usd */
+            embedding_cost_usd?: null;
+            /** Complete Task Cost Usd */
+            complete_task_cost_usd?: null;
+            /** Realized Savings Usd */
+            realized_savings_usd?: null;
+        };
+        /** SemanticCacheRule */
+        SemanticCacheRule: {
+            /**
+             * Version
+             * @default cutback.supplied-embedding-cache.v1
+             * @constant
+             */
+            version: "cutback.supplied-embedding-cache.v1";
+            /**
+             * Contract Sha256
+             * @default d4a625b3c6b58571c0b4554447401db26de0172bf4873f6b2d5edaaf2164d4f9
+             */
+            contract_sha256: string;
+            embedding: components["schemas"]["EmbeddingContract"];
+            /** Threshold */
+            threshold: number;
+            /**
+             * Minimum Distinct Answer Margin
+             * @default 0.01
+             */
+            minimum_distinct_answer_margin: number;
+        };
+        /** SemanticControl */
+        SemanticControl: Record<string, never>;
+        /** SemanticDatasetEnvelope */
+        SemanticDatasetEnvelope: {
+            /** Workflow */
+            workflow: string;
+            /**
+             * Environment
+             * @default staging
+             */
+            environment: string;
+            /**
+             * Policy Id
+             * Format: uuid
+             */
+            policy_id: string;
+            /**
+             * Source Type
+             * @enum {string}
+             */
+            source_type: "synthetic_fixture" | "human_labeled" | "application_records" | "sdk_capture";
+            /**
+             * Independent Labels
+             * @default false
+             */
+            independent_labels: boolean;
+            /**
+             * Representative
+             * @default false
+             */
+            representative: boolean;
+            /** Provenance Ref */
+            provenance_ref: string;
+            /**
+             * Split Seed
+             * @default 17
+             */
+            split_seed: number;
+            /** Split Policy */
+            split_policy?: "task-aware-v2" | null;
+        };
+        /** SemanticLookup */
+        SemanticLookup: {
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /**
+             * Namespace Id
+             * Format: uuid
+             */
+            namespace_id: string;
+            /** Access Context Sha256 */
+            access_context_sha256: string;
+            /** Embedding Contract Sha256 */
+            embedding_contract_sha256: string;
+            /** Vector */
+            vector: number[];
+        };
+        /** SemanticPut */
+        SemanticPut: {
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /**
+             * Namespace Id
+             * Format: uuid
+             */
+            namespace_id: string;
+            /** Access Context Sha256 */
+            access_context_sha256: string;
+            /** Embedding Contract Sha256 */
+            embedding_contract_sha256: string;
+            /** Vector */
+            vector: number[];
+            /** Query */
+            query: string;
+            /** Response */
+            response: string;
+            /** Source Group */
+            source_group?: string | null;
+            /** Ttl Seconds */
+            ttl_seconds: number;
+        };
+        /** SemanticUploadAppend */
+        SemanticUploadAppend: {
+            /** Approval Hash */
+            approval_hash: string;
+            /** Offset */
+            offset: number;
+            /** Cases */
+            cases: components["schemas"]["Case"][];
+        };
+        /** SemanticUploadPrepare */
+        SemanticUploadPrepare: {
+            metadata: components["schemas"]["SemanticDatasetEnvelope"];
+            /** Expected Cases */
+            expected_cases: number;
+            /** Expected Cases Sha256 */
+            expected_cases_sha256: string;
+            /**
+             * Max Bytes
+             * @default 33554432
+             */
+            max_bytes: number;
+            /**
+             * Max Finalize Seconds
+             * @default 60
+             */
+            max_finalize_seconds: number;
+            /**
+             * Max Finalize Attempts
+             * @default 1
+             */
+            max_finalize_attempts: number;
+            /**
+             * Content Upload Approved
+             * @constant
+             */
+            content_upload_approved: true;
+        };
+        /** SemanticUploadReceipt */
+        SemanticUploadReceipt: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Namespace Id
+             * Format: uuid
+             */
+            namespace_id: string;
+            /** State */
+            state: string;
+            /** Approval Hash */
+            approval_hash: string;
+            /** Specification */
+            specification: {
+                [key: string]: unknown;
+            };
+            /** Received Cases */
+            received_cases: number;
+            /** Received Bytes */
+            received_bytes: number;
+            /** Dataset Id */
+            dataset_id: string | null;
+            /** Attempts */
+            attempts: number;
+            /** Uncertain Attempts */
+            uncertain_attempts: number;
+            /** Failure Code */
+            failure_code: string | null;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Billable Inference Calls
+             * @default 0
+             * @constant
+             */
+            billable_inference_calls: 0;
+            /** Data Plane Cost Usd */
+            data_plane_cost_usd?: null;
+        };
+        /** SemanticUploadSeal */
+        SemanticUploadSeal: {
+            /** Approval Hash */
+            approval_hash: string;
         };
         /** SessionPage */
         SessionPage: {
@@ -15142,6 +15875,732 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    namespaces_v1_projects__project_id__semantic_cache_namespaces_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NamespaceReceipt"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_v1_projects__project_id__semantic_cache_namespaces_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NamespaceInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NamespaceReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    entries_v1_projects__project_id__semantic_cache_namespaces__namespace_id__entries_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                namespace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    entry_content_v1_projects__project_id__semantic_cache_namespaces__namespace_id__entries__entry_id__content_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                namespace_id: string;
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentPurpose"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    inspect_namespace_v1_projects__project_id__semantic_cache_namespaces__namespace_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                namespace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NamespaceReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_namespace_v1_projects__project_id__semantic_cache_namespaces__namespace_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                namespace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SemanticApproval"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_v1_projects__project_id__semantic_cache_namespaces__namespace_id__revoke_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                namespace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SemanticControl"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NamespaceReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_v1_ingest_semantic_cache_put_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SemanticPut"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    lookup_v1_ingest_semantic_cache_lookup_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SemanticLookup"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SemanticCacheLookupReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    prepare_v1_projects__project_id__semantic_cache_namespaces__namespace_id__qualifications_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                namespace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QualificationPrepare"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualificationReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    qualifications_v1_projects__project_id__semantic_cache_qualifications_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualificationReceipt"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    inspect_qualification_v1_projects__project_id__semantic_cache_qualifications__qualification_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                qualification_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualificationReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_v1_projects__project_id__semantic_cache_qualifications__qualification_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                qualification_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SemanticApproval"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualificationReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_v1_projects__project_id__semantic_cache_qualifications__qualification_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                qualification_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SemanticControl"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualificationReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    activation_v1_projects__project_id__semantic_cache_qualifications__qualification_id__activation_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                qualification_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    activate_v1_projects__project_id__semantic_cache_qualifications__qualification_id__activate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                qualification_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SemanticApproval"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NamespaceReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    prepare_v1_projects__project_id__semantic_cache_namespaces__namespace_id__dataset_uploads_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                namespace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SemanticUploadPrepare"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SemanticUploadReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    show_v1_projects__project_id__semantic_cache_dataset_uploads__upload_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                upload_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SemanticUploadReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    append_v1_projects__project_id__semantic_cache_dataset_uploads__upload_id__append_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                upload_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SemanticUploadAppend"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SemanticUploadReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    finalize_v1_projects__project_id__semantic_cache_dataset_uploads__upload_id__finalize_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                upload_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SemanticUploadSeal"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SemanticUploadReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_v1_projects__project_id__semantic_cache_dataset_uploads__upload_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                upload_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SemanticUploadSeal"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SemanticUploadReceipt"];
                 };
             };
             /** @description Validation Error */

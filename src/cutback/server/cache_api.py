@@ -9,11 +9,11 @@ from uuid import UUID
 from cryptography.exceptions import InvalidTag
 from fastapi import Depends, HTTPException
 from pydantic import Field
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, select
 
 from cutback.core.models import Identifier, StrictModel
 from cutback.evals.datasets import CapturePolicy, digest, redact
-from cutback.server.db import AuditEvent, CapturePolicyRecord, Environment, PayloadSample
+from cutback.server.db import AuditEvent, CapturePolicyRecord, Environment
 from cutback.server.enterprise_db import CacheEntry
 
 
@@ -115,23 +115,9 @@ def install_cache(app, sessions, authorize, scope):
                 )
                 if existing:
                     raise HTTPException(409, "CACHE_KEY_IMMUTABLE_INVALIDATE_OR_CHANGE_REVISION")
-                payload_count = (
-                    session.scalar(
-                        select(func.count())
-                        .select_from(PayloadSample)
-                        .where(PayloadSample.policy_id == body.policy_id)
-                    )
-                    or 0
-                )
-                cache_count = (
-                    session.scalar(
-                        select(func.count())
-                        .select_from(CacheEntry)
-                        .where(CacheEntry.policy_id == body.policy_id)
-                    )
-                    or 0
-                )
-                if payload_count + cache_count >= min(policy.max_samples, 10000):
+                from cutback.server.evaluation_api import policy_object_count
+
+                if policy_object_count(session, body.policy_id) >= min(policy.max_samples, 10000):
                     raise HTTPException(429, "CAPTURE_POLICY_QUOTA_EXHAUSTED")
                 redacted = redact(body.response, policy.never_capture_fields)
                 try:
@@ -185,7 +171,9 @@ def install_cache(app, sessions, authorize, scope):
             }
         finally:
             if object_ref and not committed:
-                store.delete(body.project_id, object_ref)
+                from cutback.server.campaign_content import discard_unreferenced
+
+                discard_unreferenced(sessions, store, body.project_id, [object_ref])
 
     @app.get("/v1/projects/{project_id}/cache")
     def entries(project_id: UUID, auth=Depends(authorize)):

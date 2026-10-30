@@ -1,6 +1,15 @@
 {{- if and .Values.cache.enabled (not .Values.payloads.enabled) -}}
 {{- fail "Application caching requires explicitly authorized encrypted payload storage" -}}
 {{- end -}}
+{{- if and .Values.semanticCache.enabled (not .Values.payloads.enabled) -}}
+{{- fail "Semantic caching requires explicitly authorized encrypted payload storage" -}}
+{{- end -}}
+{{- if and .Values.execution.semanticCache (or (not .Values.semanticCache.enabled) (not .Values.worker.enabled)) -}}
+{{- fail "Semantic qualification requires an enabled semantic cache and worker" -}}
+{{- end -}}
+{{- if and .Values.execution.batches (or (not .Values.payloads.enabled) (not .Values.worker.enabled) (not (has "openai" .Values.execution.providers))) -}}
+{{- fail "Provider batches require encrypted payloads, an enabled worker and a selected OpenAI key" -}}
+{{- end -}}
 {{- if and .Values.execution.quality (or (not .Values.payloads.enabled) (not .Values.execution.online) (not .Values.worker.enabled)) -}}
 {{- fail "Online content quality requires encrypted payloads, metadata online processing and an enabled worker" -}}
 {{- end -}}
@@ -60,6 +69,9 @@ metadata:
 data:
   CUTBACK_ALLOW_PAYLOADS: {{ .Values.payloads.enabled | quote }}
   CUTBACK_CACHE_ENABLED: {{ .Values.cache.enabled | quote }}
+  CUTBACK_SEMANTIC_CACHE_ENABLED: {{ .Values.semanticCache.enabled | quote }}
+  CUTBACK_SEMANTIC_CACHE_EXECUTION: {{ .Values.execution.semanticCache | quote }}
+  CUTBACK_BATCH_EXECUTION: {{ .Values.execution.batches | quote }}
   CUTBACK_EXPERIMENT_EXECUTION: {{ .Values.execution.experiments | quote }}
   CUTBACK_SCHEDULE_EXECUTION: {{ .Values.execution.schedules | quote }}
   CUTBACK_ONLINE_EXECUTION: {{ .Values.execution.online | quote }}

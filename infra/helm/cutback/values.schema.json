@@ -214,6 +214,8 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "semanticCache": {"type": "boolean"},
+        "batches": {"type": "boolean"},
         "experiments": {
           "type": "boolean"
         },
@@ -280,6 +282,11 @@
           "type": "boolean"
         }
       }
+    },
+    "semanticCache": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {"enabled": {"type": "boolean"}}
     },
     "billing": {
       "type": "object",

@@ -685,6 +685,73 @@ export function createSDK(request:Request) {return {
   invalidate_v1_projects__project_id__cache__cache_id__delete: (args:{project_id:string;cache_id:string}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/cache/${encodeURIComponent(String(args.cache_id))}`+(query.size?"?"+query.toString():""),{method:"DELETE"});},
+  create_v1_projects__project_id__semantic_cache_namespaces_post: (args:{project_id:string;body:components["schemas"]["NamespaceInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/semantic-cache/namespaces`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  namespaces_v1_projects__project_id__semantic_cache_namespaces_get: (args:{project_id:string;limit?:number;offset?:number}) => {
+    const query=new URLSearchParams();
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    if(args.offset!==undefined && args.offset!==null) query.set("offset",String(args.offset));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/semantic-cache/namespaces`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  entries_v1_projects__project_id__semantic_cache_namespaces__namespace_id__entries_get: (args:{project_id:string;namespace_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/semantic-cache/namespaces/${encodeURIComponent(String(args.namespace_id))}/entries`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  entry_content_v1_projects__project_id__semantic_cache_namespaces__namespace_id__entries__entry_id__content_post: (args:{project_id:string;namespace_id:string;entry_id:string;body:components["schemas"]["ContentPurpose"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/semantic-cache/namespaces/${encodeURIComponent(String(args.namespace_id))}/entries/${encodeURIComponent(String(args.entry_id))}/content`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  delete_namespace_v1_projects__project_id__semantic_cache_namespaces__namespace_id__delete: (args:{project_id:string;namespace_id:string;body:components["schemas"]["SemanticApproval"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/semantic-cache/namespaces/${encodeURIComponent(String(args.namespace_id))}`+(query.size?"?"+query.toString():""),{method:"DELETE",body:JSON.stringify(args.body)});},
+  inspect_namespace_v1_projects__project_id__semantic_cache_namespaces__namespace_id__get: (args:{project_id:string;namespace_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/semantic-cache/namespaces/${encodeURIComponent(String(args.namespace_id))}`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  revoke_v1_projects__project_id__semantic_cache_namespaces__namespace_id__revoke_post: (args:{project_id:string;namespace_id:string;body:components["schemas"]["SemanticControl"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/semantic-cache/namespaces/${encodeURIComponent(String(args.namespace_id))}/revoke`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  put_v1_ingest_semantic_cache_put_post: (args:{body:components["schemas"]["SemanticPut"]}) => {
+    const query=new URLSearchParams();
+    return request(`/ingest/semantic-cache/put`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  lookup_v1_ingest_semantic_cache_lookup_post: (args:{body:components["schemas"]["SemanticLookup"]}) => {
+    const query=new URLSearchParams();
+    return request(`/ingest/semantic-cache/lookup`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  prepare_v1_projects__project_id__semantic_cache_namespaces__namespace_id__qualifications_post: (args:{project_id:string;namespace_id:string;body:components["schemas"]["QualificationPrepare"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/semantic-cache/namespaces/${encodeURIComponent(String(args.namespace_id))}/qualifications`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  qualifications_v1_projects__project_id__semantic_cache_qualifications_get: (args:{project_id:string;limit?:number;offset?:number}) => {
+    const query=new URLSearchParams();
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    if(args.offset!==undefined && args.offset!==null) query.set("offset",String(args.offset));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/semantic-cache/qualifications`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  inspect_qualification_v1_projects__project_id__semantic_cache_qualifications__qualification_id__get: (args:{project_id:string;qualification_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/semantic-cache/qualifications/${encodeURIComponent(String(args.qualification_id))}`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  approve_v1_projects__project_id__semantic_cache_qualifications__qualification_id__approve_post: (args:{project_id:string;qualification_id:string;body:components["schemas"]["SemanticApproval"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/semantic-cache/qualifications/${encodeURIComponent(String(args.qualification_id))}/approve`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  cancel_v1_projects__project_id__semantic_cache_qualifications__qualification_id__cancel_post: (args:{project_id:string;qualification_id:string;body:components["schemas"]["SemanticControl"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/semantic-cache/qualifications/${encodeURIComponent(String(args.qualification_id))}/cancel`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  activation_v1_projects__project_id__semantic_cache_qualifications__qualification_id__activation_get: (args:{project_id:string;qualification_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/semantic-cache/qualifications/${encodeURIComponent(String(args.qualification_id))}/activation`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  activate_v1_projects__project_id__semantic_cache_qualifications__qualification_id__activate_post: (args:{project_id:string;qualification_id:string;body:components["schemas"]["SemanticApproval"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/semantic-cache/qualifications/${encodeURIComponent(String(args.qualification_id))}/activate`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  prepare_v1_projects__project_id__semantic_cache_namespaces__namespace_id__dataset_uploads_post: (args:{project_id:string;namespace_id:string;body:components["schemas"]["SemanticUploadPrepare"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/semantic-cache/namespaces/${encodeURIComponent(String(args.namespace_id))}/dataset-uploads`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  show_v1_projects__project_id__semantic_cache_dataset_uploads__upload_id__get: (args:{project_id:string;upload_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/semantic-cache/dataset-uploads/${encodeURIComponent(String(args.upload_id))}`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  append_v1_projects__project_id__semantic_cache_dataset_uploads__upload_id__append_post: (args:{project_id:string;upload_id:string;body:components["schemas"]["SemanticUploadAppend"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/semantic-cache/dataset-uploads/${encodeURIComponent(String(args.upload_id))}/append`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  finalize_v1_projects__project_id__semantic_cache_dataset_uploads__upload_id__finalize_post: (args:{project_id:string;upload_id:string;body:components["schemas"]["SemanticUploadSeal"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/semantic-cache/dataset-uploads/${encodeURIComponent(String(args.upload_id))}/finalize`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  cancel_v1_projects__project_id__semantic_cache_dataset_uploads__upload_id__cancel_post: (args:{project_id:string;upload_id:string;body:components["schemas"]["SemanticUploadSeal"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/semantic-cache/dataset-uploads/${encodeURIComponent(String(args.upload_id))}/cancel`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   configuration_v1_projects__project_id__training_config_get: (args:{project_id:string}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/training/config`+(query.size?"?"+query.toString():""),{method:"GET"});},

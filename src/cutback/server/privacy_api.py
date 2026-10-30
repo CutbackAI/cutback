@@ -6,7 +6,7 @@ from uuid import UUID
 
 from fastapi import Depends, HTTPException
 from fastapi.responses import StreamingResponse
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 
 from cutback.server.campaign_db import (
     CampaignCandidate,
@@ -82,6 +82,12 @@ from cutback.server.review_db import (
     ReviewResolution,
     ReviewVote,
 )
+from cutback.server.semantic_cache_db import (
+    SemanticCacheMember,
+    SemanticCacheNamespace,
+    SemanticCacheQualification,
+)
+from cutback.server.semantic_upload_db import SemanticDatasetUpload, SemanticUploadCase
 from cutback.server.trace_db import (
     ExecutionSession,
     ExecutionSpan,
@@ -109,6 +115,11 @@ def install_privacy(app, sessions, authorize, scope):
         def records():
             with sessions() as session:
                 for cls in (
+                    SemanticCacheNamespace,
+                    SemanticCacheMember,
+                    SemanticCacheQualification,
+                    SemanticDatasetUpload,
+                    SemanticUploadCase,
                     ProviderBatchRecord,
                     GatewayPolicyRow,
                     GatewayKeyRow,
@@ -317,7 +328,17 @@ def install_privacy(app, sessions, authorize, scope):
             # Deletion order follows restrictive FKs. Project cascades remove the remaining records.
             from cutback.server.db import ChangeProposal, DatasetItem, RecommendationRecord
 
+            session.execute(
+                update(SemanticCacheNamespace)
+                .where(SemanticCacheNamespace.project_id == project_id)
+                .values(state="REVOKED", active_qualification_id=None, active_approval_hash=None)
+            )
             for cls in (
+                SemanticUploadCase,
+                SemanticDatasetUpload,
+                SemanticCacheMember,
+                SemanticCacheQualification,
+                SemanticCacheNamespace,
                 ProviderBatchRecord,
                 GatewayCallRow,
                 GatewayKeyRow,

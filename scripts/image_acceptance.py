@@ -83,6 +83,7 @@ def main(image):
         with tempfile.TemporaryDirectory(prefix="cutback-image-acceptance-") as temporary:
             directory = Path(temporary)
             values = {
+                "CUTBACK_SEMANTIC_CACHE_ENABLED": "true",
                 "CUTBACK_DATABASE_URL": (
                     f"postgresql+psycopg://cutback:{quote(password, safe='')}"
                     f"@postgres:5432/{names[0]}"
@@ -148,9 +149,13 @@ configure_secrets()
 assert os.getuid()==10001 and sys.version_info[:3]==(3,11,18)
 app=create_app(allow_insecure_http=True)
 app.state.artifact_store=configured_store()
-manifest=seed_support_desk(app,"http://127.0.0.1:8080",os.environ["CUTBACK_ADMIN_TOKEN"],Path("/tmp/owned-support-desk"),provider_batch=True)
+os.environ["CUTBACK_SEMANTIC_CACHE_ENABLED"]="true"
+manifest=seed_support_desk(app,"http://127.0.0.1:8080",os.environ["CUTBACK_ADMIN_TOKEN"],Path("/tmp/owned-support-desk"),provider_batch=True,semantic_cache=True)
 assert manifest["provider_batch_sample"]["status"]=="COMPLETED"
 assert manifest["provider_batch_sample"]["vendor_files_deleted"] is True
+assert manifest["semantic_cache_sample"]["status"]=="PASSED"
+assert manifest["semantic_cache_sample"]["served_authorized_hit"] is True
+assert manifest["semantic_cache_sample"]["rejected_unsafe_match"] is True
 print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":manifest["paid_provider_calls"]}))
 """
                 manifest = json.loads(inside(container, code, values).strip().splitlines()[-1])
@@ -179,6 +184,11 @@ from sqlalchemy.engine import make_url
 from cutback.server.runtime import configure_secrets
 from cutback.server.db import database,PayloadSample,ExperimentPlanRecord
 from cutback.server.provider_batch_db import ProviderBatchRecord
+from cutback.server.enterprise_db import CacheEntry
+from cutback.server.semantic_cache_db import SemanticCacheNamespace,SemanticCacheQualification
+from cutback.server.semantic_upload_db import SemanticDatasetUpload
+from cutback.server.semantic_cache_service import read_catalog
+from cutback.core.semantic_cache import SemanticCacheIndex
 from cutback.evals.datasets import digest
 from cutback.evals.artifacts import configured_store,EncryptedFileStore
 configure_secrets()
@@ -198,6 +208,22 @@ with sessions() as session:
   before=original.get(row.project_id,row.object_ref)
   rotating.rekey(row.project_id,row.object_ref)
   assert new_only.get(row.project_id,row.object_ref)==before
+ caches=session.scalars(select(CacheEntry)).all()
+ assert caches
+ for row in caches:
+  before=original.get(row.project_id,row.object_ref)
+  rotating.rekey(row.project_id,row.object_ref)
+  assert new_only.get(row.project_id,row.object_ref)==before
+ namespaces=session.scalars(select(SemanticCacheNamespace)).all()
+ assert len(namespaces)==1 and namespaces[0].state=="ACTIVE"
+ os.environ["CUTBACK_ALLOW_PAYLOADS"]="true"
+ anchors,_,spec=read_catalog(session,new_only,namespaces[0])
+ qualification=session.get(SemanticCacheQualification,namespaces[0].active_qualification_id)
+ assert qualification.state=="PASSED" and qualification.report["confirmation"]["passed"] is True
+ index=SemanticCacheIndex(spec.rule.model_copy(update={"threshold":qualification.selected_threshold}),anchors)
+ assert index.lookup([1.0,0.0]).hit and not index.lookup([0.8,0.6]).hit
+ uploads=session.scalars(select(SemanticDatasetUpload)).all()
+ assert len(uploads)==1 and uploads[0].state=="FINALIZED"
  batches=session.scalars(select(ProviderBatchRecord)).all()
  assert len(batches)==1 and batches[0].state=="COMPLETED"
  assert batches[0].report["billing_complete"] is True
@@ -210,7 +236,7 @@ with sessions() as session:
   rotating.rekey(row.project_id,row.specification["artifact_ref"])
   after=new_only.get(row.project_id,row.specification["artifact_ref"])
   assert before==after
-print(json.dumps({"restored_and_rekeyed_objects":len(rows),"restored_and_rekeyed_plans":len(plans),"database_pointers_preserved":True}))
+print(json.dumps({"restored_and_rekeyed_objects":len(rows)+len(caches),"restored_and_rekeyed_cache_objects":len(caches),"restored_and_rekeyed_plans":len(plans),"semantic_qualified_catalog_restored":True,"database_pointers_preserved":True}))
 engine.dispose()
 """.replace("RECOVERED", repr(names[1]))
                 recovered = json.loads(inside(container, recovery, values).strip().splitlines()[-1])

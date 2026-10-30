@@ -62,6 +62,11 @@ class Environment(Base):
 
 class AccessKey(Base):
     __tablename__ = "access_keys"
+    __table_args__ = (
+        UniqueConstraint(
+            "id", "project_id", "environment_id", name="uq_access_key_project_environment"
+        ),
+    )
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
     project_id: Mapped[UUID] = mapped_column(
         ForeignKey("projects.id", ondelete="CASCADE"), index=True
@@ -396,3 +401,5 @@ importlib.import_module("cutback.server.campaign_db")
 importlib.import_module("cutback.server.outcome_watch_db")
 importlib.import_module("cutback.server.gateway_db")
 importlib.import_module("cutback.server.provider_batch_db")
+importlib.import_module("cutback.server.semantic_cache_db")
+importlib.import_module("cutback.server.semantic_upload_db")

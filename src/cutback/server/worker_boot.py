@@ -64,6 +64,18 @@ def worker_cycle(sessions, store, *, maintenance_due=True):
         from cutback.server.provider_batch_worker import run_batch_one
 
         attempt("provider_batches", lambda: run_batch_one(sessions, store, execution_enabled=True))
+    if store and os.getenv("CUTBACK_SEMANTIC_CACHE_EXECUTION", "false").lower() == "true":
+        from cutback.server.semantic_cache_worker import run_semantic_cache_one
+        from cutback.server.semantic_upload_worker import run_semantic_upload_one
+
+        attempt(
+            "semantic_dataset_uploads",
+            lambda: run_semantic_upload_one(sessions, store, execution_enabled=True),
+        )
+        attempt(
+            "semantic_qualifications",
+            lambda: run_semantic_cache_one(sessions, store, execution_enabled=True),
+        )
     if os.getenv("CUTBACK_OUTCOME_WATCH_EXECUTION", "false").lower() == "true":
         from cutback.server.outcome_watches import run_outcome_watch_one
 
