@@ -483,6 +483,7 @@ def run_episodes(
                 "population_coverage": "unknown",
                 "cost_evidence": "scripted_fixture_usage"
                 if plan.episode_execution.transport == "scripted_test_only"
+                or getattr(executor, "synthetic_transport", False) is True
                 else "provider_usage_with_pinned_public_rate",
             }
             if semantic:

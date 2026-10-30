@@ -11,7 +11,7 @@ from support_native_agent import native_executor, response_body
 
 from cutback.core.evaluation_criteria import source_evaluator_eligible
 from cutback.server.criteria_worker import run_criteria_one
-from cutback.server.db import DatasetRecord, ExperimentRunRecord
+from cutback.server.db import CapturePolicyRecord, DatasetRecord, ExperimentRunRecord
 from cutback.server.execution_db import ExecutionCall
 from cutback.server.worker import run_one
 
@@ -21,13 +21,26 @@ pytestmark = pytest.mark.postgres
 @pytest.mark.parametrize(
     "mode", ["complete", "invalid_judge", "withdraw_during_target", "generation_outage"]
 )
+@pytest.mark.parametrize(
+    "surface", ["responses.create", "chat.completions.create", "messages.create"]
+)
 def test_generated_rubrics_freeze_owner_thresholds_and_use_real_separately_reserved_native_judges(
-    api, tenant, tmp_path, monkeypatch, mode
+    api, tenant, tmp_path, monkeypatch, mode, surface
 ):
     client, admin, app = api
     base, store, initial, _ = authorized_dataset(api, tenant, tmp_path, monkeypatch)
     with app.state.sessions() as session:
         policy = session.get(DatasetRecord, UUID(initial["id"])).provenance["policy_id"]
+    provider = "anthropic" if surface == "messages.create" else "openai"
+    baseline_model = "claude-sonnet-4-6" if provider == "anthropic" else "gpt-4.1"
+    candidate_model = "claude-haiku-4-5" if provider == "anthropic" else "gpt-4.1-mini"
+    if provider == "anthropic":
+        with app.state.sessions.begin() as session:
+            captured = session.get(CapturePolicyRecord, UUID(policy))
+            captured.policy = {
+                **captured.policy,
+                "allowed_providers": ["openai", "anthropic", "local"],
+            }
     data = dataset_body(30).model_dump(mode="json")
     data["policy_id"] = policy
     data["cases"] = [
@@ -92,11 +105,19 @@ def test_generated_rubrics_freeze_owner_thresholds_and_use_real_separately_reser
         import httpx
 
         body = json.loads(request.content)
-        assert (
-            str(request.url) == "https://api.openai.com/v1/responses" and body.get("store") is False
-        )
+        generating = "Propose one evaluation rubric" in body.get("instructions", "")
+        judging = body.get("text", {}).get("format", {}).get("name") == "cutback_episode_judgments"
+        target_surface = "responses.create" if generating or judging else surface
+        expected_url = {
+            "responses.create": "https://api.openai.com/v1/responses",
+            "chat.completions.create": "https://api.openai.com/v1/chat/completions",
+            "messages.create": "https://api.anthropic.com/v1/messages",
+        }[target_surface]
+        assert str(request.url) == expected_url
+        if target_surface != "messages.create":
+            assert body.get("store") is False
         calls.append(body)
-        response = response_body("responses.create")
+        response = response_body(target_surface)
         response["model"] = body["model"]
         if "Propose one evaluation rubric" in body.get("instructions", ""):
             if mode == "generation_outage":
@@ -134,9 +155,25 @@ def test_generated_rubrics_freeze_owner_thresholds_and_use_real_separately_reser
                 ).status_code
                 == 200
             )
+        if target_surface == "messages.create":
+            import httpx2
+
+            return httpx2.Response(200, json=response)
         return httpx.Response(200, json=response)
 
-    executor = native_executor("responses.create", monkeypatch, handler)
+    executor = native_executor(surface, monkeypatch, handler)
+    if provider == "anthropic":
+        import httpx
+
+        from cutback.evals.executors import OpenAIExecutor
+
+        monkeypatch.setenv("CUTBACK_EXPERIMENT_OPENAI_KEY", "owned-never-sent")
+        executor.clients["openai"] = OpenAIExecutor(
+            http_client=httpx.Client(
+                transport=httpx.MockTransport(handler),
+                trust_env=False,
+            )
+        )
     executor.synthetic_transport = True
     try:
         generation = run_criteria_one(
@@ -200,22 +237,26 @@ def test_generated_rubrics_freeze_owner_thresholds_and_use_real_separately_reser
                 "criteria_binding": binding,
                 "baseline": {
                     "key": "baseline",
-                    "provider": "openai",
-                    "model": "gpt-4.1",
+                    "provider": provider,
+                    "model": baseline_model,
                     "max_input_tokens": 24000,
                     "max_output_tokens": 1024,
                 },
                 "candidates": [
                     {
                         "key": "candidate",
-                        "provider": "openai",
-                        "model": "gpt-4.1-mini",
+                        "provider": provider,
+                        "model": candidate_model,
                         "max_input_tokens": 24000,
                         "max_output_tokens": 1024,
                     }
                 ],
                 "budget": {"max_usd": "3", "max_requests": 100},
-                "episode_execution": {"max_turns": 1, "transport": "scripted_test_only"},
+                "episode_execution": {
+                    "max_turns": 1,
+                    "transport": "scripted_test_only",
+                    "openai_surface": surface if provider == "openai" else "responses.create",
+                },
             },
         )
         assert planned.status_code == 201

@@ -174,6 +174,12 @@ test("reviewed criteria use distinct budget, content, validation and confirmatio
     /[a-f0-9-]{36}/,
   )![0];
   const confirmed = await executePlan(confirmationId);
+  if (semantic)
+    expect(
+      confirmed.result.results.models.every(
+        (row: any) => row.cost_evidence === "scripted_fixture_usage",
+      ),
+    ).toBe(true);
   expect(confirmed.result.results.lineage.fresh_test_claim).toBe(true);
   expect(
     confirmed.result.results.criteria_generation_cost.amortized_per_task_usd,

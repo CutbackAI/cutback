@@ -1113,10 +1113,10 @@ def install_evaluation(app, sessions, authorize, scope):
             row = session.get(ExperimentPlanRecord, plan_id, with_for_update=True)
             if not row or row.project_id != project_id:
                 raise HTTPException(404, "PLAN_NOT_FOUND")
-            if (
-                row.specification.get("public_specification", {}).get("operation")
-                in {"criteria-generation-v1", "criteria-generation-v2"}
-            ):
+            if row.specification.get("public_specification", {}).get("operation") in {
+                "criteria-generation-v1",
+                "criteria-generation-v2",
+            }:
                 raise HTTPException(409, "CRITERIA_REQUIRES_ITS_SCOPED_GENERATION_APPROVAL")
             if row.approval_status != "pending":
                 raise HTTPException(409, "PLAN_ALREADY_DECIDED")
