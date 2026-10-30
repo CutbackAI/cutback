@@ -131,6 +131,32 @@ export function SampleGuide({
           </button>
         </section>
       )}
+      {demo.learned_routing_sample && (
+        <section aria-label="Train-fitted routing sample">
+          <h2>
+            One cheap model fails. A fitted routing policy passes the declared
+            checks.
+          </h2>
+          <p>
+            The sample compares short and long tickets with urgent and normal
+            labels. A training-only fit sends requests to one target at a time,
+            keeps a bounded baseline fallback and goes through separate
+            validation and untouched confirmation. Native SDK replies and usage
+            are synthetic; these results establish no real model quality or
+            customer savings.
+          </p>
+          <button onClick={() => navigate("Routing")}>
+            Inspect the trained routing policy
+          </button>
+          <button
+            onClick={() =>
+              inspect(demo.learned_routing_sample.confirmation_run_id)
+            }
+          >
+            Inspect routing confirmation
+          </button>
+        </section>
+      )}
       {demo.provider_batch_sample && (
         <section aria-label="Native batch ticket sample">
           <h2>Process a three-label task asynchronously</h2>

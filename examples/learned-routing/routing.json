@@ -1,0 +1,29 @@
+{
+  "key": "synthetic-size-router",
+  "provider": "router",
+  "model": "input-size-v1",
+  "routes": [
+    {
+      "max_input_bytes": 100,
+      "target": {
+        "key": "synthetic-short",
+        "provider": "openai",
+        "model": "gpt-4.1-mini",
+        "instruction": "Classify the declared ticket priority. Return only Urgent or Normal.",
+        "max_input_tokens": 8192,
+        "max_output_tokens": 64
+      }
+    },
+    {
+      "max_input_bytes": 4000,
+      "target": {
+        "key": "synthetic-baseline",
+        "provider": "openai",
+        "model": "gpt-4.1",
+        "instruction": "Classify the declared ticket priority. Return only Urgent or Normal.",
+        "max_input_tokens": 8192,
+        "max_output_tokens": 64
+      }
+    }
+  ]
+}

@@ -895,6 +895,13 @@ def install_evaluation(app, sessions, authorize, scope):
 
     @app.post("/v1/projects/{project_id}/experiments/plans", status_code=201)
     def create_plan(project_id: UUID, body: PlanInput, auth=Depends(authorize)):
+        if body.specification.routing_execution is not None:
+            scope(auth, project_id, ("admin",))
+            if (
+                getattr(app.state, "demo_routing_project", None) == str(project_id)
+                and body.specification.routing_execution.transport != "scripted_test_only"
+            ):
+                raise HTTPException(409, "ROUTING_DEMO_REQUIRES_FIXTURE_RESPONSES")
         scope(auth, project_id, ("analyst",))
         from cutback.server.campaign_content import content_transaction
 
@@ -925,6 +932,14 @@ def install_evaluation(app, sessions, authorize, scope):
             if not dataset or dataset.project_id != project_id:
                 raise HTTPException(404, "DATASET_NOT_FOUND")
             binding = body.specification.source_binding
+            from cutback.server.routing_service import validate_binding as validate_routing
+
+            try:
+                routing_source = validate_routing(
+                    session, store, project_id, body.specification, dataset_id=dataset.id
+                )
+            except ValueError:
+                raise HTTPException(409, "EXACT_CURRENT_ROUTING_TRAINING_OR_FIT_REQUIRED") from None
             if binding:
                 registered = session.scalars(
                     select(ScanRun)
@@ -1019,6 +1034,11 @@ def install_evaluation(app, sessions, authorize, scope):
                 if reviewed_criteria is not None:
                     frozen["expires_at"] = min(
                         datetime.fromisoformat(frozen["expires_at"]), reviewed_criteria.expires_at
+                    ).isoformat()
+                if routing_source is not None:
+                    frozen["expires_at"] = min(
+                        datetime.fromisoformat(frozen["expires_at"]),
+                        routing_source[0].expires_at,
                     ).isoformat()
             except ValueError:
                 raise HTTPException(422, "PLAN_CONTENT_POLICY_DENIED") from None
@@ -1420,4 +1440,7 @@ def install_evaluation(app, sessions, authorize, scope):
     from cutback.server.criteria_api import install_criteria
 
     install_criteria(app, sessions, authorize, scope, create_plan)
+    from cutback.server.routing_api import install_routing
+
+    install_routing(app, sessions, authorize, scope, create_plan)
     return import_dataset

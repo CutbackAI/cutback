@@ -47,7 +47,7 @@ def lock_lineage(session, project):
 
 def lock_preparation_identity(session, kind, identity):
     """Serialize client-chosen global row identities, including across project locks."""
-    if kind not in {"criteria-draft", "experiment-plan"}:
+    if kind not in {"criteria-draft", "experiment-plan", "learned-routing-fit"}:
         raise ValueError("PREPARATION_IDENTITY_KIND_INVALID")
     key = int.from_bytes(
         hashlib.sha256(b"cutback-prepare-v1:" + kind.encode() + b":" + identity.bytes).digest()[:8],

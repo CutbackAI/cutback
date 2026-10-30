@@ -29,6 +29,13 @@ def reserve_campaign_call(
     session, run, environment, plan_sha256, purpose, amount, *, operation=None
 ):
     parent, link = campaign_for_run(session, run)
+    if operation == "routing-training-v1":
+        if parent is not None or purpose != "optimization":
+            raise ValueError("ROUTING_TRAINING_REQUIRES_SEPARATE_APPROVED_RUN")
+        from cutback.server.routing_service import reserve_training
+
+        reserve_training(session, run, environment, plan_sha256)
+        return
     if parent is None:
         if purpose == "optimization":
             if operation not in {"criteria-generation-v1", "criteria-generation-v2"}:

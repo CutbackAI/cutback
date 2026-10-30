@@ -117,6 +117,17 @@ def check(directory: Path):
                         "source archive contains non-UTF8 text: " + member.name
                     ) from None
         for required in (
+            "docs/learned-routing.md",
+            "examples/learned-routing/README.md",
+            "examples/learned-routing/app.py",
+            "examples/learned-routing/check_application.py",
+            "examples/learned-routing/routing.json",
+            "src/cutback/core/input_routing.py",
+            "src/cutback/server/routing_api.py",
+            "src/cutback/server/routing_service.py",
+            "src/cutback/demo_routing.py",
+            "tests/end_to_end/test_learned_routing_sample.py",
+            "web/tests/routing.spec.ts",
             ".dockerignore",
             "scripts/image_acceptance.py",
             "examples/model-context-search/README.md",

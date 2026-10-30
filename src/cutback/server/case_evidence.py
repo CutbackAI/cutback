@@ -57,6 +57,7 @@ def recorder(sessions, store, project_id, run_id, policy_id):
                             "case_hash": digest(value["case"]["id"]),
                             "stratum_hash": digest(value["case"].get("stratum", "default")),
                             "sample_unknown": episode_unknown,
+                            "semantics_preserved": clean == value,
                             "sample_failed": not episode_unknown
                             and (
                                 not value.get("complete", True)

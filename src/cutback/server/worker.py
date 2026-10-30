@@ -196,6 +196,20 @@ def run_one(
                 return {"status": "FAILED", "provider_calls": 0}
             from cutback.server.campaign_service import authorize_campaign_run
 
+            if (
+                plan.routing_execution is not None
+                and plan.routing_execution.transport == "scripted_test_only"
+                and getattr(executor, "synthetic_transport", False) is not True
+            ):
+                record.status = job.status = "BLOCKED"
+                job.available_at = None
+                record.results = {
+                    "code": "SCRIPTED_ROUTING_REQUIRES_EXPLICIT_SYNTHETIC_EXECUTOR",
+                    "next_action": "use the configured fixture worker for this saved plan",
+                    "provider_calls": 0,
+                }
+                return {"status": "BLOCKED", "run_id": str(record.id), "provider_calls": 0}
+
             try:
                 authorize_campaign_run(
                     session,
@@ -337,6 +351,9 @@ def run_one(
                 from cutback.server.criteria_service import validate_binding as validate_criteria
 
                 validate_criteria(session, store, project_id, plan)
+                from cutback.server.routing_service import validate_binding as validate_routing
+
+                validate_routing(session, store, project_id, plan, dataset_id=dataset_id)
 
             def authorize_execution(session):
                 require_payloads_enabled()
@@ -373,6 +390,7 @@ def run_one(
 
                 recheck_bindings(session, store, project_id, plan_row, plan)
                 validate_criteria(session, store, project_id, plan)
+                validate_routing(session, store, project_id, plan, dataset_id=dataset_id)
                 row = session.get(CapturePolicyRecord, provenance["policy_id"])
                 current_policy = CapturePolicy.model_validate(row.policy) if row else None
                 if (
@@ -555,8 +573,19 @@ def run_one(
 
                 criteria_evidence = criteria_receipt(session, project_id, plan)
                 results.update(criteria_evidence)
+                from cutback.server.routing_service import receipt as routing_receipt
+
+                routing_evidence = routing_receipt(session, store, project_id, plan)
+                results.update(routing_evidence)
+                if routing_evidence.get("routing_source_current") is False:
+                    results.update(
+                        status="FAILED",
+                        code="CURRENT_ROUTING_EVIDENCE_UNAVAILABLE",
+                        recommendations=[],
+                    )
                 for recommendation in results.get("recommendations", []):
                     recommendation.update(criteria_evidence)
+                    recommendation.update(routing_evidence)
                 from cutback.evals.search import sample_frontier
 
                 results["search_frontier"] = sample_frontier(results)

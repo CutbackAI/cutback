@@ -228,6 +228,31 @@ export function createSDK(request:Request) {return {
   confirmation_v1_projects__project_id__criteria__criteria_id__confirmation_post: (args:{project_id:string;criteria_id:string;body:components["schemas"]["CriteriaConfirmationInput"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/criteria/${encodeURIComponent(String(args.criteria_id))}/confirmation`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  training_draft_v1_projects__project_id__routing_training_drafts_post: (args:{project_id:string;body:components["schemas"]["RoutingTrainingDraftInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/routing/training-drafts`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  list_fits_v1_projects__project_id__routing_fits_get: (args:{project_id:string;limit?:number;offset?:number}) => {
+    const query=new URLSearchParams();
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    if(args.offset!==undefined && args.offset!==null) query.set("offset",String(args.offset));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/routing/fits`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  fit_v1_projects__project_id__routing_fits_post: (args:{project_id:string;body:components["schemas"]["RoutingFitInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/routing/fits`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  training_runs_v1_projects__project_id__routing_training_runs_get: (args:{project_id:string;limit?:number;offset?:number}) => {
+    const query=new URLSearchParams();
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    if(args.offset!==undefined && args.offset!==null) query.set("offset",String(args.offset));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/routing/training-runs`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  content_v1_projects__project_id__routing_fits__fit_id__content_post: (args:{project_id:string;fit_id:string;body:components["schemas"]["ContentPurpose"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/routing/fits/${encodeURIComponent(String(args.fit_id))}/content`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  validation_draft_v1_projects__project_id__routing_fits__fit_id__validation_drafts_post: (args:{project_id:string;fit_id:string;body:components["schemas"]["RoutingValidationDraftInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/routing/fits/${encodeURIComponent(String(args.fit_id))}/validation-drafts`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  confirmation_draft_v1_projects__project_id__routing_fits__fit_id__confirmation_drafts_post: (args:{project_id:string;fit_id:string;body:components["schemas"]["RoutingConfirmationDraftInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/routing/fits/${encodeURIComponent(String(args.fit_id))}/confirmation-drafts`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   templates_v1_projects__project_id__campaign_templates_get: (args:{project_id:string;after?:string | null;limit?:number}) => {
     const query=new URLSearchParams();
     if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
