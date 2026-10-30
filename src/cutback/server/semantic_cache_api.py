@@ -111,6 +111,52 @@ def failure(exc, status=409):
     return HTTPException(404 if code == "SEMANTIC_CACHE_NAMESPACE_NOT_FOUND" else status, code)
 
 
+def public_lookup_reason(exc):
+    # Never reflect exception text, even when it looks like an uppercase code.
+    # Lookup keys select only these fixed public values; unexpected exceptions
+    # share a single constant response without paths, values or stack details.
+    return {
+        "SEMANTIC_CACHE_NAMESPACE_NOT_FOUND": "SEMANTIC_CACHE_NAMESPACE_NOT_FOUND",
+        "SEMANTIC_CACHE_NAMESPACE_EXPIRED_REVOKED_OR_CHANGED": (
+            "SEMANTIC_CACHE_NAMESPACE_EXPIRED_REVOKED_OR_CHANGED"
+        ),
+        "SEMANTIC_CACHE_SERVING_KEY_OR_SCOPE_DENIED": "SEMANTIC_CACHE_SERVING_KEY_OR_SCOPE_DENIED",
+        "SEMANTIC_CACHE_PROVIDER_NOT_AUTHORIZED": "SEMANTIC_CACHE_PROVIDER_NOT_AUTHORIZED",
+        "CAMPAIGN_CAPTURE_POLICY_REVOKED_OR_OUT_OF_SCOPE": (
+            "CAMPAIGN_CAPTURE_POLICY_REVOKED_OR_OUT_OF_SCOPE"
+        ),
+        "CAMPAIGN_CAPTURE_POLICY_EXPIRED_OR_OUT_OF_SCOPE": (
+            "CAMPAIGN_CAPTURE_POLICY_EXPIRED_OR_OUT_OF_SCOPE"
+        ),
+        "SEMANTIC_CACHE_CATALOG_BOUND": "SEMANTIC_CACHE_CATALOG_BOUND",
+        "SEMANTIC_CACHE_CATALOG_EXPIRED_OR_OUT_OF_SCOPE": (
+            "SEMANTIC_CACHE_CATALOG_EXPIRED_OR_OUT_OF_SCOPE"
+        ),
+        "SEMANTIC_CACHE_CATALOG_CHANGED_REQUALIFY": "SEMANTIC_CACHE_CATALOG_CHANGED_REQUALIFY",
+        "SEMANTIC_CACHE_CATALOG_CONTENT_UNAVAILABLE": "SEMANTIC_CACHE_CATALOG_CONTENT_UNAVAILABLE",
+        "SEMANTIC_CACHE_CATALOG_CONTENT_INTEGRITY_FAILURE": (
+            "SEMANTIC_CACHE_CATALOG_CONTENT_INTEGRITY_FAILURE"
+        ),
+        "SEMANTIC_CACHE_CURRENT_QUALIFICATION_DENIED": (
+            "SEMANTIC_CACHE_CURRENT_QUALIFICATION_DENIED"
+        ),
+        "SEMANTIC_CACHE_ACTIVATED_EVIDENCE_CHANGED": "SEMANTIC_CACHE_ACTIVATED_EVIDENCE_CHANGED",
+        "SEMANTIC_CACHE_REQUEST_CONTEXT_OR_EMBEDDING_MISMATCH": (
+            "SEMANTIC_CACHE_REQUEST_CONTEXT_OR_EMBEDDING_MISMATCH"
+        ),
+        "SEMANTIC_CACHE_EMBEDDING_DIMENSION_MISMATCH": (
+            "SEMANTIC_CACHE_EMBEDDING_DIMENSION_MISMATCH"
+        ),
+        "SEMANTIC_CACHE_CAPTURE_POLICY_CHANGED_REAPPROVAL_REQUIRED": (
+            "SEMANTIC_CACHE_CAPTURE_POLICY_CHANGED_REAPPROVAL_REQUIRED"
+        ),
+        "SEMANTIC_CACHE_QUALIFIED_ACTIVATION_REQUIRED": (
+            "SEMANTIC_CACHE_QUALIFIED_ACTIVATION_REQUIRED"
+        ),
+        "SEMANTIC_CACHE_LOOKUP_TIME_BOUND": "SEMANTIC_CACHE_LOOKUP_TIME_BOUND",
+    }.get(str(exc), "SEMANTIC_CACHE_LOOKUP_UNAVAILABLE")
+
+
 def namespace_receipt(session, row):
     count = (
         session.scalar(
@@ -700,12 +746,9 @@ def install_semantic_cache(app, sessions, authorize, scope):
                     "lookup_processing_ms": (monotonic() - started) * 1000,
                 }
         except ValueError as exc:
-            code = str(exc)
-            if not re.fullmatch(r"[A-Z0-9_]{1,120}", code):
-                code = "SEMANTIC_CACHE_LOOKUP_UNAVAILABLE"
             return {
                 "hit": False,
-                "reason": code,
+                "reason": public_lookup_reason(exc),
                 "lookup_processing_ms": (monotonic() - started) * 1000,
             }
         except (OSError, SQLAlchemyError):
