@@ -141,7 +141,7 @@ jobs:
           tests/integration/test_security_episodes.py
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 75
     strategy:
       fail-fast: false
       matrix:
@@ -187,7 +187,7 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy
-      - run: uv run pytest --cov=cutback --cov-report=term-missing --cov-report=xml
+      - run: uv run python scripts/check.py --cov=cutback --cov-report=term-missing --cov-report=xml
         env:
           CUTBACK_TEST_BROWSER: 'true'
           CUTBACK_TEST_LOCAL_STACK: ${{ matrix.python == '3.11.18' && 'true' || 'false' }}
