@@ -19,15 +19,21 @@ def register_criteria(app, output, request, fail):
             project = str(UUID(project))
         except ValueError:
             fail("CRITERIA_PROJECT_INVALID", "Supply an exact project UUID.")
-        output(
-            request(
-                method,
-                endpoint,
-                f"/v1/projects/{project}/criteria" + suffix,
-                **({"json": body} if body is not None else {}),
-            ),
-            destination,
+        result = request(
+            method,
+            endpoint,
+            f"/v1/projects/{project}/criteria" + suffix,
+            **({"json": body} if body is not None else {}),
         )
+        if suffix.endswith(("/content", "/source-evidence")):
+            from cutback.core.workspace import write_private_output
+
+            try:
+                write_private_output(destination, result)
+            except (OSError, ValueError):
+                fail("CRITERIA_PRIVATE_OUTPUT_INVALID", "Select a protected regular local path.")
+        else:
+            output(result, destination)
 
     def identifier(value):
         try:

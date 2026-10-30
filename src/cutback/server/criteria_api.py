@@ -5,7 +5,7 @@ from typing import Literal
 from uuid import UUID, uuid4
 
 from fastapi import Depends, HTTPException, Query
-from pydantic import Field
+from pydantic import UUID4, Field
 from sqlalchemy import func, select
 
 from cutback.core.evaluation_criteria import ReviewedCriteriaBinding
@@ -32,6 +32,7 @@ from cutback.server.db import (
 
 
 class CriteriaDraftInput(StrictModel):
+    request_id: UUID4 | None = None
     dataset_id: UUID
     requirements: CriteriaRequirements
     generator: ModelSpec
@@ -61,6 +62,8 @@ class CriteriaCancelInput(StrictModel):
 
 
 class CriteriaEvaluationInput(StrictModel):
+    request_id: UUID4 | None = None
+    content_nonce: UUID4 | None = None
     dataset_id: UUID
     criteria_binding: ReviewedCriteriaBinding
     baseline: ModelSpec
@@ -138,6 +141,54 @@ def install_criteria(app, sessions, authorize, scope, create_plan):
         store = require_store(app)
         with content_transaction(sessions, store, project_id) as (session, refs):
             lock_lineage(session, project_id)
+            if body.request_id:
+                from cutback.server.dataset_lineage import lock_preparation_identity
+
+                lock_preparation_identity(session, "criteria-draft", body.request_id)
+                previous = session.get(CriteriaVersionRecord, body.request_id, with_for_update=True)
+                if previous:
+                    if previous.project_id != project_id:
+                        raise HTTPException(409, "CRITERIA_REQUEST_ID_UNAVAILABLE")
+                    try:
+                        frozen, policy, value, requirements, _ = prepared_generation(
+                            session, store, previous
+                        )
+                        source = session.get(DatasetRecord, body.dataset_id)
+                        if (
+                            not source
+                            or source.project_id != project_id
+                            or previous.dataset_id != body.dataset_id
+                        ):
+                            raise ValueError
+                        training, identities = training_view(
+                            session,
+                            store,
+                            project_id,
+                            source,
+                            policy,
+                            limit=body.max_training_examples,
+                        )
+                        if (
+                            requirements != body.requirements
+                            or frozen.baseline != generator_model(body.generator)
+                            or frozen.budget != body.budget
+                            or frozen.transport != body.transport
+                            or training != value["training"]
+                            or identities != value["source_item_ids"]
+                        ):
+                            raise ValueError
+                    except ValueError:
+                        raise HTTPException(
+                            409, "CRITERIA_REQUEST_ID_CONTENT_OR_RIGHTS_CHANGED"
+                        ) from None
+                    return {
+                        **public(session, previous),
+                        "existing_draft": True,
+                        "budget": frozen.budget.model_dump(mode="json"),
+                        "worst_case_modeled_usd": str(upper_cost(frozen.baseline)),
+                        "fits_budget": True,
+                        "provider_calls_made_in_http": 0,
+                    }
             dataset = session.get(DatasetRecord, body.dataset_id)
             if not dataset or dataset.project_id != project_id:
                 raise HTTPException(404, "DATASET_NOT_FOUND")
@@ -191,7 +242,7 @@ def install_criteria(app, sessions, authorize, scope, create_plan):
                     datetime.now(UTC) + timedelta(days=policy.retention_days),
                 )
                 row = CriteriaVersionRecord(
-                    id=uuid4(),
+                    id=body.request_id or uuid4(),
                     project_id=project_id,
                     dataset_id=dataset.id,
                     environment_id=environment.id,
@@ -566,6 +617,54 @@ def install_criteria(app, sessions, authorize, scope, create_plan):
                 "evidence": evidence,
             }
 
+    @app.get("/v1/projects/{project_id}/criteria/{criteria_id}/evidence-validity")
+    def evidence_validity(project_id: UUID, criteria_id: UUID, run_id: UUID, auth=authorized):
+        from cutback.server.criteria_service import validate_binding
+        from cutback.server.dataset_lineage import require_current_test_evidence
+        from cutback.server.db import RecommendationRecord
+        from cutback.server.plan_artifacts import load_plan
+
+        scope(auth, project_id, ("viewer",))
+        store = require_store(app)
+        with sessions.begin() as session:
+            lock_lineage(session, project_id)
+            found(session, project_id, criteria_id)
+            run = session.get(ExperimentRunRecord, run_id)
+            if not run or run.project_id != project_id:
+                raise HTTPException(404, "RUN_NOT_FOUND")
+            try:
+                planned = session.get(ExperimentPlanRecord, run.plan_id)
+                plan = load_plan(store, project_id, planned.specification)
+                if (
+                    not plan.criteria_binding
+                    or plan.criteria_binding.criteria_id != criteria_id
+                    or not plan.predecessor_run_id
+                ):
+                    raise ValueError
+                validate_binding(session, store, project_id, plan)
+                recommendations = session.scalars(
+                    select(RecommendationRecord).where(
+                        RecommendationRecord.project_id == project_id,
+                        RecommendationRecord.run_id == run.id,
+                    )
+                ).all()
+                if len(recommendations) != 1:
+                    raise ValueError
+                require_current_test_evidence(session, store, recommendations[0])
+            except ValueError:
+                return {
+                    "eligible": False,
+                    "code": "CURRENT_REVIEWED_CONFIRMATION_UNAVAILABLE",
+                    "provider_calls": 0,
+                    "historical_quality_recomputed": False,
+                }
+            return {
+                "eligible": True,
+                "criteria_binding": plan.criteria_binding.model_dump(mode="json"),
+                "provider_calls": 0,
+                "historical_quality_recomputed": False,
+            }
+
     @app.post("/v1/projects/{project_id}/criteria/{criteria_id}/cancel")
     def cancel(project_id: UUID, criteria_id: UUID, body: CriteriaCancelInput, auth=authorized):
         scope(auth, project_id, ("analyst",))
@@ -615,6 +714,8 @@ def install_criteria(app, sessions, authorize, scope, create_plan):
             try:
                 if body.criteria_binding.criteria_id != criteria_id:
                     raise ValueError
+                if (body.request_id is None) != (body.content_nonce is None):
+                    raise ValueError
                 requirements, proposal, _ = reviewed_content(session, store, row)
                 criteria = materialize(proposal, requirements)
                 providers: list[Literal["openai", "anthropic", "local"]] = []
@@ -633,7 +734,7 @@ def install_criteria(app, sessions, authorize, scope, create_plan):
                     criteria=criteria,
                     criteria_binding=body.criteria_binding,
                     evaluator_version="deterministic-v13",
-                    content_nonce=uuid4(),
+                    content_nonce=body.content_nonce or uuid4(),
                     split="validation",
                     budget=body.budget,
                     repeats=body.repeats,
@@ -647,7 +748,9 @@ def install_criteria(app, sessions, authorize, scope, create_plan):
                     409, "CURRENT_REVIEWED_CRITERIA_AND_NATIVE_TARGET_CONTRACT_REQUIRED"
                 ) from None
         return create_plan(
-            project_id, PlanInput(dataset_id=body.dataset_id, specification=plan), auth
+            project_id,
+            PlanInput(request_id=body.request_id, dataset_id=body.dataset_id, specification=plan),
+            auth,
         )
 
     @app.post("/v1/projects/{project_id}/criteria/{criteria_id}/confirmation", status_code=201)

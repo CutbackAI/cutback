@@ -3155,6 +3155,64 @@
         }
       }
     },
+    "/v1/projects/{project_id}/criteria/{criteria_id}/evidence-validity": {
+      "get": {
+        "summary": "Evidence Validity",
+        "operationId": "evidence_validity_v1_projects__project_id__criteria__criteria_id__evidence_validity_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "criteria_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Criteria Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{project_id}/criteria/{criteria_id}/cancel": {
       "post": {
         "summary": "Cancel",
@@ -17667,6 +17725,18 @@
       },
       "CriteriaDraftInput": {
         "properties": {
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid4"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          },
           "dataset_id": {
             "type": "string",
             "format": "uuid",
@@ -17710,6 +17780,30 @@
       },
       "CriteriaEvaluationInput": {
         "properties": {
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid4"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          },
+          "content_nonce": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid4"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Nonce"
+          },
           "dataset_id": {
             "type": "string",
             "format": "uuid",
@@ -25579,6 +25673,18 @@
       },
       "PlanInput": {
         "properties": {
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid4"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          },
           "dataset_id": {
             "type": "string",
             "format": "uuid",

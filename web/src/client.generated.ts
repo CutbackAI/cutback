@@ -215,6 +215,10 @@ export function createSDK(request:Request) {return {
   source_evidence_v1_projects__project_id__criteria__criteria_id__recommendations__recommendation_id__source_evidence_post: (args:{project_id:string;criteria_id:string;recommendation_id:string;body:components["schemas"]["ContentPurpose"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/criteria/${encodeURIComponent(String(args.criteria_id))}/recommendations/${encodeURIComponent(String(args.recommendation_id))}/source-evidence`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  evidence_validity_v1_projects__project_id__criteria__criteria_id__evidence_validity_get: (args:{project_id:string;criteria_id:string;run_id:string}) => {
+    const query=new URLSearchParams();
+    if(args.run_id!==undefined && args.run_id!==null) query.set("run_id",String(args.run_id));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/criteria/${encodeURIComponent(String(args.criteria_id))}/evidence-validity`+(query.size?"?"+query.toString():""),{method:"GET"});},
   cancel_v1_projects__project_id__criteria__criteria_id__cancel_post: (args:{project_id:string;criteria_id:string;body:components["schemas"]["CriteriaCancelInput"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/criteria/${encodeURIComponent(String(args.criteria_id))}/cancel`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},

@@ -1,5 +1,7 @@
 # Independent reviewed-criteria sample
 
+For the application agent's durable prepare → generation → private review → validation → untouched confirmation → source proposal path, use the [agent walkthrough](../../docs/agent-reviewed-criteria.md). Its PostgreSQL acceptance starts from a separate fresh application and injects lost replies at every preparation boundary; no sample seeding is required for that test.
+
 This sample classifies synthetic support tickets into category and priority. It has no connection to a private application and requires no provider key. The generator proposes a field comparison using training rows; a demonstration-only review pins it before validation and untouched-test confirmation.
 
 `app.py` is the independent native SDK classifier. `check_application.py` exercises it with an owned HTTP transport. After installing the source environment, run `uv run python examples/reviewed-criteria/check_application.py` to verify the application itself, then `uv run cutback scan examples/reviewed-criteria` to inspect it without importing or executing it. The full demo also registers the exact source request, completes confirmation and prepares a model diff with rollback; it does not apply that diff or deploy it.

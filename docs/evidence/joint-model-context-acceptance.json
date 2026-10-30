@@ -1,0 +1,194 @@
+{
+  "reviewed_head": "76604f360d2eb71458e4495e3878933c6613afc4",
+  "runs": [
+    {
+      "run_id": 41092065446,
+      "jobs": [
+        {
+          "name": "openai3-sdk (3.11.18)",
+          "id": 124188219785,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1336,
+              "skipped": 9,
+              "seconds": 579.72
+            }
+          ]
+        },
+        {
+          "name": "legacy-sdk (3.11.18)",
+          "id": 124188220152,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 0.54
+            }
+          ]
+        },
+        {
+          "name": "isolated-tools",
+          "id": 124188220178,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 10,
+              "skipped": 0,
+              "seconds": 81.34
+            }
+          ]
+        },
+        {
+          "name": "verify (3.13.18)",
+          "id": 124188220185,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1573,
+              "skipped": 41,
+              "seconds": 1512.54
+            }
+          ]
+        },
+        {
+          "name": "verify (3.11.18)",
+          "id": 124188220210,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1574,
+              "skipped": 40,
+              "seconds": 1198.54
+            }
+          ]
+        },
+        {
+          "name": "infrastructure",
+          "id": 124188220237,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 7,
+              "skipped": 0,
+              "seconds": 1.77
+            }
+          ]
+        },
+        {
+          "name": "legacy-sdk (3.13.18)",
+          "id": 124188220373,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 0.83
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.13.18)",
+          "id": 124188220429,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1337,
+              "skipped": 8,
+              "seconds": 583.55
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": 41092065099,
+      "jobs": [
+        {
+          "name": "codeql (javascript-typescript)",
+          "id": 124188219044,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "codeql (python)",
+          "id": 124188219154,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "audit",
+          "id": 124188219561,
+          "conclusion": "success",
+          "tests": []
+        }
+      ]
+    }
+  ],
+  "identical_private_public_archives": {
+    "cutback-0.1.0.dev5-py3-none-any.whl": "aab4b1f41dd9b8f97f8e4c35ef81a1af04e3ffc9eebba2ebb97370567e3f5d93",
+    "cutback-0.1.0.dev5.tar.gz": "b21cdb6293edf9a85891e5965b4e356fb50f686d636600cf5cfe4bc08556e25e"
+  },
+  "version": "cutback.source-acceptance.v1",
+  "scope": "joint-model-context-search",
+  "accepted_tree": "154247fc4acaac3359de361344a11b0db33722e1",
+  "installed_default": {
+    "passed": 1579,
+    "skipped": 35,
+    "seconds": 3648.75
+  },
+  "installed_sdk3": {
+    "passed": 1350,
+    "skipped": 6,
+    "seconds": 2374.62
+  },
+  "image_acceptance": {
+    "image": "cutback-qualification:joint-context-portable",
+    "image_id": "sha256:7d36bc3d9004673443bbc06c96ead4a9c1558ef91f8a1992b492910af73f35b7",
+    "uid": 10001,
+    "python": "3.11.18",
+    "migration": "0026",
+    "sample_application_calls": 23,
+    "source_linked_support_desk_calls": 12,
+    "source_workflows": 2,
+    "application_workflows": 4,
+    "paid_provider_calls": 0,
+    "native_batch_fixture_restored": true,
+    "guarded_tool_effects_and_delivery_restored": true,
+    "guarded_security_utility_and_policy_decisions_restored": true,
+    "joint_model_context_confirmation_and_source_binding_restored": true,
+    "restored_tables": 95,
+    "row_counts_match": true,
+    "restored_and_rekeyed_objects": 1501,
+    "restored_and_rekeyed_cache_objects": 1,
+    "restored_and_rekeyed_plans": 18,
+    "semantic_qualified_catalog_restored": true,
+    "isolated_tool_receipts_restored": true,
+    "paired_security_suite_restored": true,
+    "runtime_guardrail_receipts_restored": true,
+    "database_pointers_preserved": true,
+    "production_changed": false,
+    "secret_delivery": "anonymous_stdin_pipes_and_scoped_memory_clients",
+    "independent_otel_producer_and_replay": "passed",
+    "concurrent_load": {
+      "tenants": 2,
+      "accepted": 2000,
+      "duplicates": 2000,
+      "seconds": 2.157,
+      "production_sla": false
+    }
+  },
+  "core_only_installed_smoke": "passed",
+  "paid_provider_calls": 0,
+  "production_deployed": false,
+  "pypi_release": "0.1.0.dev5 unchanged",
+  "limits": [
+    "Exact whole-module source wrapper only",
+    "Declared CPU basis; unknown cost remains unknown",
+    "Synthetic results do not establish customer savings or semantic equivalence",
+    "Broader market baseline remains unfinished"
+  ],
+  "merge_commit": "917d8726949aeef0cc2e2e7891da3d9da55de7e7",
+  "merged_at": "2026-10-30T17:48:39Z"
+}

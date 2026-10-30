@@ -46,6 +46,53 @@ def save_session(directory, state, phase=None, code=None):
 
 def next_action(state):
     phase = state["phase"]
+    if phase == "PREPARING_CONFIRMATION" and state.get("search_mode") == "reviewed_criteria":
+        return {
+            "code": "RESUME_SAME_CONFIRMATION_PREPARATION",
+            "tool": "cutback workflow confirm",
+            "requires": ["same_selected_candidate", "same_budget", "purpose_reference"],
+            "effects": ["reconcile_nonbillable_preparation"],
+            "provider_calls": 0,
+        }
+    if phase == "CRITERIA_PLAN_READY":
+        return {
+            "code": "REVIEW_EXACT_CRITERIA_GENERATION_BUDGET",
+            "tool": "cutback workflow continue",
+            "requires": ["exact_generation_plan_hash", "generation_budget_approval_reference"],
+            "effects": ["one_training_only_generation_call"],
+            "plan": state.get("criteria", {}).get("generation"),
+            "automatic_billable_retry": False,
+        }
+    if phase in {"APPROVING_CRITERIA", "QUEUEING_CRITERIA", "CRITERIA_QUEUED", "CRITERIA_RUNNING"}:
+        return {
+            "code": "RESUME_SAME_CRITERIA_GENERATION",
+            "tool": "cutback workflow continue",
+            "requires": [],
+            "effects": ["reconcile_same_approved_parent"],
+            "automatic_billable_retry": False,
+        }
+    if phase == "CRITERIA_REVIEW_REQUIRED":
+        return {
+            "code": "READ_AND_REVIEW_FROZEN_CRITERIA",
+            "tool": "cutback workflow criteria-read",
+            "requires": [
+                "purpose_reference",
+                "protected_output_file",
+                "explicit_criteria_decision",
+            ],
+            "effects": ["read_authorized_private_checks"],
+            "provider_calls": 0,
+        }
+    if phase in {"PREPARING_CRITERIA", "REVIEWING_CRITERIA", "PREPARING_REVIEWED_VALIDATION"}:
+        return {
+            "code": "RESUME_SAME_CRITERIA_INTENT",
+            "tool": "cutback workflow criteria-prepare"
+            if phase == "PREPARING_CRITERIA"
+            else "cutback workflow criteria-review",
+            "requires": ["same_original_request_or_decision", "purpose_reference"],
+            "effects": ["reconcile_nonbillable_preparation"],
+            "provider_calls": 0,
+        }
     if phase in {"ANALYZED", "SOURCE_CHANGED"}:
         if state.get("context_producers") and not state.get("profiles"):
             return {
@@ -125,6 +172,7 @@ def next_action(state):
         if state.get("search_mode") in {
             "model_and_output_cap",
             "joint_model_context",
+            "reviewed_criteria",
         } and not state.get("confirmation"):
             return {
                 "code": "SELECT_CANDIDATE_AND_FREEZE_CONFIRMATION",
@@ -274,7 +322,22 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
         )
         previous_id = None
         if prior and (new_session or prior["analysis_sha256"] != signature):
-            active = prior["phase"] in {"APPROVING", "QUEUEING", "QUEUED", "RUNNING"}
+            active = prior["phase"] in {
+                "APPROVING",
+                "QUEUEING",
+                "QUEUED",
+                "RUNNING",
+                "PREPARING_CRITERIA",
+                "CRITERIA_PLAN_READY",
+                "APPROVING_CRITERIA",
+                "QUEUEING_CRITERIA",
+                "CRITERIA_QUEUED",
+                "CRITERIA_RUNNING",
+                "CRITERIA_REVIEW_REQUIRED",
+                "REVIEWING_CRITERIA",
+                "PREPARING_REVIEWED_VALIDATION",
+                "PREPARING_CONFIRMATION",
+            }
             if active:
                 if new_session:
                     raise ValueError("ACTIVE_WORKFLOW_MUST_BE_RECONCILED_OR_CANCELLED")
@@ -480,6 +543,7 @@ def prepare(
     joint_context=False,
     assumed_usd_per_cpu_hour=None,
     min_test_samples=30,
+    criteria_generator_provider=None,
 ):
     """Read only explicitly permitted files; upload to the chosen encrypted collector; no calls."""
     from datetime import timedelta
@@ -492,7 +556,7 @@ def prepare(
     from cutback.evals.records import read_records
 
     if joint_context:
-        if search or for_campaign or campaign_generator_provider:
+        if search or for_campaign or campaign_generator_provider or criteria_generator_provider:
             raise ValueError("JOINT_CONTEXT_REQUIRES_ITS_OWN_FROZEN_SEARCH")
         from cutback.agent_context import prepare as prepare_context
 
@@ -530,6 +594,10 @@ def prepare(
         ):
             raise ValueError("CAMPAIGN_GENERATOR_PROVIDER_NOT_QUALIFIED")
         providers = {profile.provider}
+        if criteria_generator_provider is not None:
+            if criteria_generator_provider != "openai" or not search or for_campaign:
+                raise ValueError("CRITERIA_GENERATOR_VENDOR_REQUIRES_SEPARATE_NATIVE_SEARCH")
+            providers.add("openai")
         if for_campaign:
             if profile.request.sdk_surface not in {"responses.create", "messages.create"}:
                 raise ValueError("CAMPAIGN_NATIVE_TEXT_SURFACE_NOT_QUALIFIED")
@@ -663,6 +731,8 @@ def prepare(
         }
         if for_campaign:
             intent["campaign_basis"] = {"allowed_providers": rights.allowed_providers}
+        if criteria_generator_provider:
+            intent["criteria_generation"] = {"allowed_providers": rights.allowed_providers}
         identity = fingerprint(intent)
         if state["phase"] == "PLAN_READY":
             if state["preparation_sha256"] != identity:
@@ -687,6 +757,8 @@ def prepare(
         )
         if for_campaign:
             state["campaign_allowed_providers"] = rights.allowed_providers
+        if criteria_generator_provider:
+            state["criteria_allowed_providers"] = rights.allowed_providers
         save_session(directory, state, "PREPARING")
         inventory = read_private(directory / "inventory.json")
         control("POST", base + "/scans", inventory)
@@ -713,6 +785,17 @@ def prepare(
 
 def advance(root, control, *, plan_hash=None, approval_ref=None):
     """One exact approval, one run, subsequent invocations only poll that run."""
+    if load_session(root)["phase"] in {
+        "CRITERIA_PLAN_READY",
+        "APPROVING_CRITERIA",
+        "QUEUEING_CRITERIA",
+        "CRITERIA_QUEUED",
+        "CRITERIA_RUNNING",
+        "CRITERIA_REVIEW_REQUIRED",
+    }:
+        from cutback.agent_criteria import advance as advance_criteria
+
+        return advance_criteria(root, control, plan_hash=plan_hash, approval_ref=approval_ref)
     root, directory = workspace(root)
     with workspace_lock(directory):
         state = load_session(root)
@@ -784,7 +867,8 @@ def advance(root, control, *, plan_hash=None, approval_ref=None):
                 state["next_review"] = (
                     "cutback workflow confirm --candidate KEY --max-usd CEILING "
                     "--purpose-reference REVIEW"
-                    if state.get("search_mode") in {"model_and_output_cap", "joint_model_context"}
+                    if state.get("search_mode")
+                    in {"model_and_output_cap", "joint_model_context", "reviewed_criteria"}
                     and not state.get("confirmation")
                     else "cutback workflow proposal --purpose-reference REVIEW"
                 )
@@ -805,6 +889,23 @@ def gate(root, control, *, candidate=None, sample_only=False):
             raise ValueError("COLLECTOR_DESTINATION_MISMATCH")
         selected_profile(root, state, state["selected_workflow"])
         report = control("GET", f"/v1/projects/{state['project_id']}/experiments/{state['run_id']}")
+        if state.get("search_mode") == "reviewed_criteria" and state.get("confirmation"):
+            current = control(
+                "GET",
+                f"/v1/projects/{state['project_id']}/criteria/"
+                + state["criteria"]["id"]
+                + "/evidence-validity?run_id="
+                + state["run_id"],
+            )
+            if current.get("eligible") is not True:
+                return {
+                    "passed": False,
+                    "reasons": ["current_reviewed_confirmation_unavailable"],
+                    "candidate_keys": [],
+                    "plan_hash": state["plan"]["plan_hash"],
+                    "production_deployed": False,
+                    "production_savings_usd": None,
+                }
         if state.get("search_mode") == "joint_model_context":
             from cutback.evals.joint_context_planning import regression_gate as joint_gate
 
@@ -824,6 +925,17 @@ def gate(root, control, *, candidate=None, sample_only=False):
 
 def confirm(root, control, *, candidate, max_usd, max_requests=100, purpose):
     """Freeze one validation winner for a separately approved untouched test run."""
+    if load_session(root).get("search_mode") == "reviewed_criteria":
+        from cutback.agent_criteria import confirm as confirm_criteria
+
+        return confirm_criteria(
+            root,
+            control,
+            candidate=candidate,
+            max_usd=max_usd,
+            max_requests=max_requests,
+            purpose=purpose,
+        )
     from cutback.evals.experiments import Budget, ExperimentPlan, plan_summary
 
     root, directory = workspace(root)
@@ -834,7 +946,8 @@ def confirm(root, control, *, candidate, max_usd, max_requests=100, purpose):
         if (
             state["phase"] != "COMPLETED"
             or state.get("confirmation")
-            or state.get("search_mode") not in {"model_and_output_cap", "joint_model_context"}
+            or state.get("search_mode")
+            not in {"model_and_output_cap", "joint_model_context", "reviewed_criteria"}
         ):
             raise ValueError("COMPLETED_SEARCH_REQUIRED")
         selected_profile(root, state, state["selected_workflow"])
@@ -953,6 +1066,14 @@ def proposal(root, control, *, purpose, candidate=None):
                 r["evidence"]["candidate"]["key"],
             )
         )
+        if state.get("search_mode") == "reviewed_criteria":
+            choices[0] = control(
+                "POST",
+                base
+                + f"/criteria/{state['criteria']['id']}/recommendations/"
+                + f"{choices[0]['id']}/source-evidence",
+                {"purpose": purpose},
+            )
         artifact = model_patch(
             root,
             read_private(directory / "inventory.json"),

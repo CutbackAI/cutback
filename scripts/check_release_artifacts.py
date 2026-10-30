@@ -125,6 +125,7 @@ def check(directory: Path):
             "examples/model-context-search/questions.jsonl",
             "docs/joint-model-context.md",
             "docs/reviewed-criteria.md",
+            "docs/agent-reviewed-criteria.md",
             "examples/reviewed-criteria/README.md",
             "examples/reviewed-criteria/app.py",
             "examples/reviewed-criteria/check_application.py",
