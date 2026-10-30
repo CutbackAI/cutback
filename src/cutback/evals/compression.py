@@ -21,7 +21,8 @@ from cutback.evals.retrieval import AssumedCPURate
 
 class CompressionExecutionSpec(StrictModel):
     version: Literal["cutback.compression-execution.v1"] = "cutback.compression-execution.v1"
-    contract_sha256: str = Field(default=CONTRACT_SHA256, pattern=r"^[a-f0-9]{64}$")
+    # Preserve runtime-specific reapproval without baking it into generated API artifacts.
+    contract_sha256: str = Field(default_factory=lambda: CONTRACT_SHA256, pattern=r"^[a-f0-9]{64}$")
     variants: tuple[CompressionVariant, ...] = Field(min_length=2, max_length=6)
     max_query_bytes: int = Field(default=1024, strict=True, ge=1, le=4096)
     assumed_usd_per_cpu_hour: AssumedCPURate | None = None
