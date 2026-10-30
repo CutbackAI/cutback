@@ -115,11 +115,15 @@ test("batch storage and budget approval are exact and native results preserve mi
   expect(page.url().includes(key)).toBe(false);
   let release!: () => void;
   let captured!: () => void;
+  let fulfilled!: () => void;
   const gate = new Promise<void>((resolve) => {
     release = resolve;
   });
   const started = new Promise<void>((resolve) => {
     captured = resolve;
+  });
+  const finished = new Promise<void>((resolve) => {
+    fulfilled = resolve;
   });
   await page.route(
     `**/projects/${process.env.CUTBACK_UI_PROJECT}/provider-batches?*`,
@@ -128,22 +132,33 @@ test("batch storage and budget approval are exact and native results preserve mi
       captured();
       await gate;
       await route.fulfill({ response: original });
+      fulfilled();
     },
+    { times: 1 },
   );
-  await panel
-    .getByRole("button", { name: "Refresh batches", exact: true })
-    .click();
-  await started;
-  await page
-    .getByLabel("Project", { exact: true })
-    .selectOption(process.env.CUTBACK_BATCH_OTHER_PROJECT!);
-  await expect(panel).toContainText("No prepared batches on this page");
-  release();
-  await expect(
-    panel.getByText(`Review batch ${prepared.id.slice(0, 8)}`, { exact: true }),
-  ).toHaveCount(0);
-  await expect(
-    panel.getByLabel("I authorize provider-side storage", { exact: false }),
-  ).not.toBeChecked();
-  expect(failures).toEqual([]);
+  try {
+    await panel
+      .getByRole("button", { name: "Refresh batches", exact: true })
+      .click();
+    await started;
+    await page
+      .getByLabel("Project", { exact: true })
+      .selectOption(process.env.CUTBACK_BATCH_OTHER_PROJECT!);
+    await expect(panel).toContainText("No prepared batches on this page");
+    release();
+    await finished;
+    await page.unrouteAll({ behavior: "wait" });
+    await expect(
+      panel.getByText(`Review batch ${prepared.id.slice(0, 8)}`, {
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await expect(
+      panel.getByLabel("I authorize provider-side storage", { exact: false }),
+    ).not.toBeChecked();
+    expect(failures).toEqual([]);
+  } finally {
+    release();
+    await page.unrouteAll({ behavior: "wait" });
+  }
 });
