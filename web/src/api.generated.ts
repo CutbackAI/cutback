@@ -3615,7 +3615,7 @@ export interface components {
              * @default cutback.improvement-campaign.v1
              * @enum {string}
              */
-            version: "cutback.improvement-campaign.v1" | "cutback.improvement-campaign.v2";
+            version: "cutback.improvement-campaign.v1" | "cutback.improvement-campaign.v2" | "cutback.improvement-campaign.v3";
             /**
              * Request Id
              * Format: uuid
@@ -5155,7 +5155,7 @@ export interface components {
              * @default cutback.improvement-campaign.v1
              * @enum {string}
              */
-            version: "cutback.improvement-campaign.v1" | "cutback.improvement-campaign.v2";
+            version: "cutback.improvement-campaign.v1" | "cutback.improvement-campaign.v2" | "cutback.improvement-campaign.v3";
             /**
              * Dataset Id
              * Format: uuid
@@ -5172,6 +5172,8 @@ export interface components {
             generator: components["schemas"]["NativeGeneratorSpec"];
             budget: components["schemas"]["CampaignBudget"];
             instruction_edit?: components["schemas"]["LiteralInstructionEdit"] | null;
+            /** Static Portfolio */
+            static_portfolio?: components["schemas"]["ModelSpec-Input"][] | null;
             /** Conservative Savings Per Success Usd */
             conservative_savings_per_success_usd?: number | string | null;
             /** Forecast Successful Tasks */

@@ -12,7 +12,9 @@ uv run python examples/improvement-campaign/sample.py --local-target .
 
 Add `--outcomes` for ordinary agent preparation → native search → application checks → encrypted diff → later task outcomes. The later synthetic fixture is deliberately cheap but worse and must return `REVIEW_ROLLBACK`. Read [the outcome walkthrough](../../docs/campaign-outcomes.md) for trust, accounting and cleanup boundaries. No live application is deployed.
 
-The collector and worker code must both come from this source checkout and have migration `0019`. The script reads the owned local configuration privately, creates a synthetic project, leaves its receipts available in the dashboard and writes the independent classifier only under the target's ignored `.cutback/campaign-example/` directory. Add `--cleanup` to explicitly delete that project afterward. It never reads another application's source or examples.
+The collector and worker code must both come from this source checkout and have migration `0020`. The script reads the owned local configuration privately, creates a synthetic project, leaves its receipts available in the dashboard and writes the independent classifier only under the target's ignored `.cutback/campaign-example/` directory. Add `--cleanup` to explicitly delete that project afterward. It never reads another application's source or examples.
+
+The ordinary `--outcomes` agent path now prepares a v3 portfolio before instruction search; see the [step-by-step portfolio walkthrough](../automatic-portfolio/README.md). The guided demo's saved campaign below remains v2 for compatibility. Both use one cumulative parent ledger and untouched confirmation.
 
 Open [the classifier](../../src/cutback/sample_app/campaign.py): it uses the native SDK and has no Cutback import. The sample scans a copied file without executing it. It registers that exact source profile, imports forty synthetic examples, and freezes an explicitly declared synthetic business-cost window. Its conservative opportunity forecast bounds the complete search before approval.
 

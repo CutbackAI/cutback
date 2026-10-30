@@ -1,0 +1,126 @@
+{
+  "status": "bounded_increment_merged_and_accepted",
+  "public_pr": "https://github.com/CutbackAI/cutback/pull/41",
+  "public_head": "93975d55e99131c0d1e293ae76ca5a4c7cf50101",
+  "public_merge": "8ac5a3df66b572835bf2ca2de523b6c862a93ad9",
+  "merged_tree": "fd67a9d35474a11c591419bd38e9350026882dd1",
+  "archives": {
+    "cutback-0.1.0.dev5-py3-none-any.whl": "6483763722c354f43417617662f7fcf7d9eeacb9388c512ffb06c8729881e5f2",
+    "cutback-0.1.0.dev5.tar.gz": "c6e80433ffb3a6dc51fbd23cca65fe7a4ba3a73964d673b1c97d9ef1bbc39bf9"
+  },
+  "application_files": 241,
+  "python_modules": 225,
+  "source_and_both_installed_environments_match": true,
+  "installed_default_full": {
+    "passed": 1237,
+    "skipped": 32,
+    "seconds": 2279.07
+  },
+  "installed_sdk3_broad_selected": {
+    "passed": 1025,
+    "skipped": 9,
+    "seconds": 1118.93
+  },
+  "source_native_browser_lineage": {
+    "passed": 7,
+    "seconds": 80.43
+  },
+  "related_units": {
+    "passed": 23,
+    "seconds": 0.5
+  },
+  "hosted": {
+    "run": 41002812056,
+    "head": "93975d55e99131c0d1e293ae76ca5a4c7cf50101",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "legacy-sdk (3.11.18)",
+        "databaseId": 123890875410,
+        "conclusion": "success",
+        "pytest_summaries": [
+          "21 passed in 0.49s"
+        ]
+      },
+      {
+        "name": "infrastructure",
+        "databaseId": 123890875676,
+        "conclusion": "success",
+        "pytest_summaries": [
+          "5 passed in 0.93s"
+        ]
+      },
+      {
+        "name": "legacy-sdk (3.13.18)",
+        "databaseId": 123890875713,
+        "conclusion": "success",
+        "pytest_summaries": [
+          "21 passed in 0.54s"
+        ]
+      },
+      {
+        "name": "openai3-sdk (3.13.18)",
+        "databaseId": 123890875718,
+        "conclusion": "success",
+        "pytest_summaries": [
+          "1028 passed, 6 skipped in 270.28s"
+        ]
+      },
+      {
+        "name": "verify (3.11.18)",
+        "databaseId": 123890875743,
+        "conclusion": "success",
+        "pytest_summaries": [
+          "1239 passed, 30 skipped in 1092.06s"
+        ]
+      },
+      {
+        "name": "openai3-sdk (3.11.18)",
+        "databaseId": 123890875746,
+        "conclusion": "success",
+        "pytest_summaries": [
+          "1027 passed, 7 skipped in 293.71s"
+        ]
+      },
+      {
+        "name": "verify (3.13.18)",
+        "databaseId": 123890876900,
+        "conclusion": "success",
+        "pytest_summaries": [
+          "1238 passed, 31 skipped in 991.62s"
+        ]
+      }
+    ]
+  },
+  "required_hosted_checks_successful": 10,
+  "linux_image": {
+    "uid": 10001,
+    "migration": "0020",
+    "restored_tables": 85,
+    "restored_encrypted_objects": 701,
+    "restored_plans": 15,
+    "tenants": 2,
+    "accepted": 2000,
+    "duplicates": 2000,
+    "seconds": 2.516,
+    "production_sla": false
+  },
+  "boundary": {
+    "files": 767,
+    "reachable_objects": 3098,
+    "archive_members": 1009,
+    "findings": 0
+  },
+  "core_only_smoke": "passed",
+  "twine_payload_and_reproducibility": "passed",
+  "paid_provider_calls": 0,
+  "new_pypi_upload": false,
+  "production_changed": false,
+  "scope": "Actual extractive input transforms, fixed qualified native text model, declared local CPU/native components, independent confirmation, exact settings and both-tree checks. Learned/generative transforms and arbitrary dynamic consumers remain unqualified.",
+  "failed_trials_retained": [
+    "Original singleton-answer v1 dataset produced no validation cases: original full installed 1230 passed,32 skipped,3 failures; original installed SDK3 1020 passed,9 skipped,1 failure. Explicit new task-aware-v2 imports preserve old hashes, assignments and exposure.",
+    "Initial hosted formatting failed one overlong Unicode test line; formatted before exact passing candidate.",
+    "Private/public source archive differed only generated TypeScript line endings; canonical committed bytes restored before matching builds."
+  ],
+  "broader_product_complete": false
+}

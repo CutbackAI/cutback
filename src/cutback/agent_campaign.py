@@ -51,6 +51,8 @@ def prepare(
             if simple_first is None and saved
             else "cutback.improvement-campaign.v1"
             if simple_first is False
+            else "cutback.improvement-campaign.v3"
+            if simple_first is None
             else "cutback.improvement-campaign.v2"
         )
         body = {

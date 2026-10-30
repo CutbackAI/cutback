@@ -88,9 +88,12 @@ def test_change_lookup_follows_fixed_metadata_pages_and_never_reads_payloads():
         declared_change(lambda *args: [], "/v1/projects/owned", desired)
 
 
-def test_simple_first_outcome_family_includes_static_success_and_three_round_fallback():
+@pytest.mark.parametrize(
+    "version", ["cutback.improvement-campaign.v2", "cutback.improvement-campaign.v3"]
+)
+def test_simple_first_outcome_family_includes_static_success_and_three_round_fallback(version):
     saved, row = reviewed()
-    row["specification"] = {"version": "cutback.improvement-campaign.v2"}
+    row["specification"] = {"version": version}
     row["runs"].pop(0)
     row["requests"] = 2
     assert len(reviewed_campaign(saved, row)[1]) == 2

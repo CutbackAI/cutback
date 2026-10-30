@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import type { components } from "./api.generated";
 import { type API, type Data, explain, json, money } from "./ui";
 import { NativeContracts } from "./native-contracts";
+import { gatewayModeledUSD } from "./gateway-money";
 
 type Brief = components["schemas"]["CampaignBrief"];
 type Detail = components["schemas"]["CampaignDetail"];
@@ -13,7 +14,9 @@ function nativeCampaignPlan(value: Detail["specification"]): Data {
   return {
     ...specification.template,
     candidates: [
-      ...(specification.template?.candidates || []),
+      ...(specification.static_portfolio ||
+        specification.template?.candidates ||
+        []),
       specification.generator?.model,
     ].filter(Boolean),
   };
@@ -238,7 +241,7 @@ export function Campaigns({
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const body = {
-      version: "cutback.improvement-campaign.v2",
+      version: "cutback.improvement-campaign.v3",
       template_plan_id: template,
       baseline_snapshot_id: snapshot,
       generator_model: {
@@ -563,8 +566,10 @@ export function Campaigns({
             Refresh campaign evidence
           </button>
           <h3>Frozen economic bounds</h3>
-          {detail.specification.version ===
-            "cutback.improvement-campaign.v2" && (
+          {[
+            "cutback.improvement-campaign.v2",
+            "cutback.improvement-campaign.v3",
+          ].includes(String(detail.specification.version)) && (
             <p>
               Search order:{" "}
               {detail.economic_envelope.static_alternative_available
@@ -578,6 +583,56 @@ export function Campaigns({
               Native API costs are bounded; other optimization overhead is
               unmeasured.
             </p>
+          )}
+          {detail.specification.version ===
+            "cutback.improvement-campaign.v3" && (
+            <div
+              className="table-scroll"
+              role="region"
+              aria-label="Frozen static portfolio"
+              tabIndex={0}
+            >
+              <table>
+                <caption>
+                  Model and output limits frozen before approval
+                </caption>
+                <thead>
+                  <tr>
+                    <th>Candidate</th>
+                    <th>Model</th>
+                    <th>Output token ceiling</th>
+                    <th>Worst case USD per request</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(
+                    (detail.economic_envelope.static_portfolio as Data[]) || []
+                  ).map((m) => (
+                    <tr key={String(m.key)}>
+                      <td>{String(m.key)}</td>
+                      <td>{String(m.model)}</td>
+                      <td>{String(m.max_output_tokens)}</td>
+                      <td>{gatewayModeledUSD(m.worst_case_request_usd)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p>
+                All listed alternatives share the same validation cases and
+                parent budget. Only one eligible candidate consumes independent
+                confirmation. If none passes, instruction search runs only when
+                reserved in this envelope.
+              </p>
+              {Array.isArray(detail.economic_envelope.omitted_static_keys) &&
+                detail.economic_envelope.omitted_static_keys.length > 0 && (
+                  <p>
+                    Preparation omitted{" "}
+                    {detail.economic_envelope.omitted_static_keys.length}{" "}
+                    alternatives to fit the reviewed budget. Validation and
+                    confirmation samples were preserved.
+                  </p>
+                )}
+            </div>
           )}
           <p>
             USD{" "}
@@ -675,8 +730,10 @@ export function Campaigns({
             {detail.runs.map((r, index) => (
               <li key={String(r.run_id)}>
                 {index === 0 &&
-                detail.specification.version ===
-                  "cutback.improvement-campaign.v2" &&
+                [
+                  "cutback.improvement-campaign.v2",
+                  "cutback.improvement-campaign.v3",
+                ].includes(String(detail.specification.version)) &&
                 detail.economic_envelope.static_alternative_available
                   ? "Initial model/output-cap validation"
                   : `Round ${String(r.round)} · ${String(r.phase)}`}{" "}

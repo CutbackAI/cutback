@@ -221,7 +221,9 @@ def run_sample(
         approval_ref="owned-synthetic-no-vendor-spend",
     )
     sessions, store = app.state.sessions, app.state.artifact_store
-    executor, requests = synthetic_executor(seeds_from_scope=True)
+    executor, requests = synthetic_executor(
+        seeds_from_scope=True, reject_static_portfolio=not modern_model
+    )
     try:
 
         def source_scope():
