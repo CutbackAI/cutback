@@ -14,6 +14,28 @@ from cutback.core.request_profiles import safe_relative
 PROGRAM_SHA256: Final = "a6175e8cf0f03483bc69efd5e6f49efe0e5f5fc8eed2f6836e08b8175220828e"
 
 
+def program_dump(node):
+    """Preserve the qualified 3.11 representation across AST display changes.
+
+    Empty type parameters were added in 3.12 and empty-list display changed in
+    3.13. Nonempty type parameters remain outside this exact wrapper contract.
+    """
+    if isinstance(node, ast.AST):
+        fields = []
+        for name, value in ast.iter_fields(node):
+            if name == "type_params":
+                if value:
+                    raise ValueError("CONTEXT_PRODUCER_TYPE_PARAMETERS_NOT_QUALIFIED")
+                continue
+            if value is None and getattr(type(node), name, ...) is None:
+                continue
+            fields.append(name + "=" + program_dump(value))
+        return type(node).__name__ + "(" + ", ".join(fields) + ")"
+    if isinstance(node, list):
+        return "[" + ", ".join(program_dump(value) for value in node) + "]"
+    return repr(node)
+
+
 class ContextProducerBinding(StrictModel):
     version: Literal["cutback.context-producer.v1"] = "cutback.context-producer.v1"
     file: str = Field(min_length=1, max_length=240, pattern=r"^[A-Za-z0-9_./-]+$")
@@ -63,7 +85,7 @@ def qualify(raw: bytes):
         for keyword in call.keywords:
             if keyword.arg in {"model", "max_output_tokens"}:
                 keyword.value = ast.Constant(value="CUTBACK_BOUND_LITERAL")
-        actual = hashlib.sha256(ast.dump(tree, include_attributes=False).encode()).hexdigest()
+        actual = hashlib.sha256(program_dump(tree).encode()).hexdigest()
         if actual != PROGRAM_SHA256:
             raise ValueError
     except (
