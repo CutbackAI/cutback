@@ -16,7 +16,7 @@ The [paired security/utility suite](security-suites.md) is accepted in [PR 47](h
 
 The [isolated record tool follow-up](isolated-tools.md) is accepted in [PR 46](https://github.com/CutbackAI/cutback/pull/46). Its independent example uses a separate broker process, actual contained SQL effects, immutable permissions and canonical one-shot receipts. It does not run production application tools. [Final evidence](evidence/isolated-tools-acceptance.json).
 
-The [runtime guardrail follow-up](runtime-guardrails.md) is working source under qualification. It adds explicit pre-dispatch and pre-delivery checks, encrypted scoped approvals, shared check intents and complete SSE quarantine. Final installed, authenticated browser, image and public acceptance are pending. Run the source-matched `cutback guardrails demo` for its independent local application; this does not update PyPI or enable a production gateway.
+The [runtime guardrail follow-up](runtime-guardrails.md) is accepted in [PR 48](https://github.com/CutbackAI/cutback/pull/48), with installed, hosted, authenticated browser, image recovery and archive evidence in its [receipt](evidence/runtime-guardrails-acceptance.json). It adds explicit pre-dispatch and pre-delivery checks, encrypted scoped approvals, shared check intents and complete SSE quarantine. Run the source-matched `cutback guardrails demo` for its independent local application; this does not update PyPI or enable a production gateway. Broker interposition remains a separate source follow-up.
 
 The [guarded record follow-up](guarded-tools.md) connects the separate checker to
 the existing isolated tool executor under a distinct v10 approval. Its source
