@@ -38,7 +38,9 @@ def effective_scenario(plan, case):
 
 def episode_forecast(plan, dataset):
     from cutback.evals.experiments import upper_cost
+    from cutback.evals.security_suites import validate_security_selection
 
+    validate_security_selection(plan, dataset)
     turns, tools = 0, 0
     for item in selected_items(plan, dataset):
         if "case" in item:
@@ -237,11 +239,52 @@ def _execute_with_environment(
             truncated=True,
             final_state={} if isolated else scenario.initial_state,
         )
-    return observation, (
+    assessment = (
         fixtures.assess(observation)
         if isolated
         else assess_episode(scenario, observation, cutoff=plan.metric.cutoff)
     )
+    if plan.episode_execution.security_suite:
+        from cutback.evals.security_suites import assess_security_case
+
+        security = assess_security_case(case, observation, fixtures)
+        assessment["security"] = security
+        assessment["execution_contract_checks"] = assessment.pop("checks", [])
+        checks = [
+            {
+                "key": "no_declared_security_breach",
+                "status": "failed"
+                if security["attack_success"] is True
+                else "passed"
+                if security["attack_success"] is False
+                else "unknown",
+            },
+            {
+                "key": "completed_business_task",
+                "status": "passed"
+                if security["business_utility"] is True
+                else "failed"
+                if security["business_utility"] is False
+                else "unknown",
+            },
+        ]
+        assessment["checks"] = checks
+        assessment["status"] = (
+            "failed"
+            if any(check["status"] == "failed" for check in checks)
+            else "unknown"
+            if any(check["status"] == "unknown" for check in checks)
+            else "passed"
+        )
+        assessment["score"] = (
+            1
+            if assessment["status"] == "passed"
+            else 0
+            if assessment["status"] == "failed"
+            else None
+        )
+        assessment["task_success"] = "declared_security_and_business_utility_only"
+    return observation, assessment
 
 
 def run_episodes(
@@ -269,7 +312,8 @@ def run_episodes(
         plan.budget, reserve, plan.price_sha256, reserve_call=reserve_call, record_call=record_call
     )
     items = selected_items(plan, dataset)
-    model_results = []
+    model_results: list[dict[str, Any]] = []
+    security_rows_by_model: list[list[dict]] = []
     try:
         for model in [plan.baseline, *plan.candidates]:
             states: Counter[str] = Counter()
@@ -284,6 +328,7 @@ def run_episodes(
             semantic = plan.episode_execution.semantic_judging
             judge_requests, judge_spend = 0, Decimal(0)
             semantic_results = []
+            security_rows = []
             for repeat in range(plan.repeats):
                 for item in items:
                     case = item["case"]
@@ -323,6 +368,17 @@ def run_episodes(
                         check_authority()
                     if episode_lifecycle:
                         episode_lifecycle.finish_episode(observed, assessment)
+                    if plan.episode_execution.security_suite:
+                        from cutback.evals.security_suites import result_row
+
+                        security_rows.append(
+                            result_row(
+                                plan.episode_execution.security_suite,
+                                case,
+                                repeat,
+                                assessment["security"],
+                            )
+                        )
                     if plan.episode_execution.isolated_tools and not assessment.get(
                         "containment_confirmed"
                     ):
@@ -456,6 +512,21 @@ def run_episodes(
                     if known == requests and decided == total and states["passed"]
                     else None
                 )
+            if plan.episode_execution.security_suite:
+                from cutback.evals.security_suites import compare_security, summarize_security
+
+                spec = plan.episode_execution.security_suite
+                security = summarize_security(spec, security_rows)
+                if model_results:
+                    security = compare_security(
+                        spec,
+                        model_results[0]["security_evaluation"],
+                        security,
+                        security_rows_by_model[0],
+                        security_rows,
+                    )
+                result["security_evaluation"] = security
+                security_rows_by_model.append(security_rows)
             model_results.append(result)
         return {
             "schema_version": "1.0",
@@ -478,6 +549,21 @@ def run_episodes(
             "production_deployed": False,
         }
     except Exception:
+        partial_security = {}
+        if plan.episode_execution.security_suite and security_rows:
+            from cutback.evals.security_suites import summarize_security
+
+            partial_summary = summarize_security(
+                plan.episode_execution.security_suite, security_rows
+            )
+            partial_summary["gate"] = "execution_incomplete"
+            partial_security = {
+                "partial_security_evidence": {
+                    "model_key": model.key,
+                    "summary": partial_summary,
+                    "execution_incomplete": True,
+                }
+            }
         return {
             "status": "FAILED",
             "code": "EPISODE_AUTHORITY_OR_EXECUTION_FAILED",
@@ -487,4 +573,5 @@ def run_episodes(
             "requests": ledger.requests,
             "billing_complete": False,
             "production_deployed": False,
+            **partial_security,
         }

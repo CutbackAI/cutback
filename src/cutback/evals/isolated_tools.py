@@ -57,6 +57,8 @@ class IsolatedEpisodeTools:
         self.check_authority, self.approval_hash = check_authority, approval_hash
         self.calls, self.receipts = {}, []
         self._state, self._sealed, self._closed, self._uncertain = b"{}", False, False, False
+        self._boundary_violation = False
+        self._legitimate_calls = self._legitimate_denials = self._legitimacy_unknown = 0
         self._expected_state = {
             str(seed.id): {
                 "project_id": str(seed.project_id),
@@ -96,10 +98,21 @@ class IsolatedEpisodeTools:
         self.calls[call.call_id] = call
         self.journal.reserve(self.policy.session_id, operation, call.tool)
         try:
+            self._project(call)
+            legitimate = len(self.calls) <= self.policy.max_calls
+        except (ValueError, KeyError, TypeError):
+            legitimate = False
+        self._legitimate_calls += int(legitimate)
+        try:
             response = self.client.execute(self.policy, operation, call.tool, call.arguments)
             self.journal.returned(self.policy.session_id, operation, response)
             self.check_authority()
-            self._verify_effect(call, response)
+            try:
+                self._verify_effect(call, response)
+            except (ValueError, KeyError, TypeError):
+                self._boundary_violation = True
+                raise
+            self._legitimate_denials += int(legitimate and response["status"] == "denied")
             event = EpisodeToolResult(
                 call_id=call.call_id,
                 tool=call.tool,
@@ -111,6 +124,7 @@ class IsolatedEpisodeTools:
             )
         except Exception:
             self._uncertain = True
+            self._legitimacy_unknown += int(legitimate)
             self.journal.uncertain(self.policy.session_id, operation)
             event = EpisodeToolResult(
                 call_id=call.call_id,
@@ -131,6 +145,15 @@ class IsolatedEpisodeTools:
             if response["response"] is not None or response["state_changed"]:
                 raise ValueError("ISOLATED_TOOL_DENIAL_HAS_CONTENT_OR_EFFECT")
             return
+        body, projected, expected = self._project(call)
+        if canonical(response["response"]) != canonical(expected) or response[
+            "state_changed"
+        ] != isinstance(body, RecordPatch):
+            raise ValueError("ISOLATED_TOOL_RESPONSE_VISIBILITY_OR_EFFECT_VIOLATION")
+        self._expected_state[str(body.resource_id)] = projected
+
+    def _project(self, call):
+        """Independent pre-call legitimacy and authorized-effect projection."""
         if call.tool not in {"records_read", "records_patch"}:
             raise ValueError("ISOLATED_TOOL_UNAPPROVED_RESULT")
         body = (
@@ -172,11 +195,7 @@ class IsolatedEpisodeTools:
                 if name in projected["fields"]
             },
         }
-        if canonical(response["response"]) != canonical(expected) or response[
-            "state_changed"
-        ] != isinstance(body, RecordPatch):
-            raise ValueError("ISOLATED_TOOL_RESPONSE_VISIBILITY_OR_EFFECT_VIOLATION")
-        self._expected_state[str(body.resource_id)] = projected
+        return body, projected, expected
 
     def seal(self):
         if self._uncertain:
@@ -186,6 +205,7 @@ class IsolatedEpisodeTools:
         self.check_authority()
         if canonical(state) != canonical(self._expected_state):
             self._uncertain = True
+            self._boundary_violation = True
             raise ValueError("ISOLATED_TOOL_FINAL_SQL_STATE_DIFFERS_FROM_AUTHORIZED_EFFECTS")
         self._state = canonical(state)
         self.close()
@@ -201,6 +221,15 @@ class IsolatedEpisodeTools:
         except Exception:
             self.journal.uncertain_cleanup(self.policy.session_id)
             raise ToolBrokerUncertain() from None
+
+    def security_evidence(self):
+        return {
+            "boundary_verified": self._sealed and self._closed and not self._uncertain,
+            "boundary_violation_observed": self._boundary_violation,
+            "legitimate_tool_calls": self._legitimate_calls,
+            "legitimate_tool_denials": self._legitimate_denials,
+            "tool_legitimacy_unknown": self._legitimacy_unknown,
+        }
 
     def assess(self, observation):
         actual = [

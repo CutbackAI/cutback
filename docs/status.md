@@ -12,6 +12,8 @@ Updated 30 October 2026. Cutback is a pre-alpha product with tested, bounded wor
 
 A source merge does not update the PyPI wheel. New source commands require a source-matched installation and collector; do not mix them with an older wheel and assume compatibility.
 
+The [paired security/utility suite](security-suites.md) is under source qualification. It keeps benign and attack cases paired, freezes content/coverage/acceptance bounds and reports realized breaches separately from useful work and unknowns. Its [independent sample](../examples/paired-security/README.md) contrasts a refusal control with a useful scoped agent. This is bounded record security; adaptive red teaming, broad tool targets and runtime guardrails remain separate unfinished requirements.
+
 The [isolated record tool follow-up](isolated-tools.md) is under qualification in source. Its independent example uses a separate broker process, actual contained SQL effects, immutable permissions and canonical one-shot receipts. It does not run production application tools. Follow [progress](progress.md) for its remaining installed, browser, recovery and publication gates.
 
 The context-compression follow-up adds actual original-versus-compressed native input comparisons, encrypted input review and checked settings proposals. Its current qualification and remaining gates are recorded in [progress](progress.md); [the independent application](../examples/context-compression/README.md) provides the source-checkout walkthrough.

@@ -155,6 +155,25 @@ export function SampleGuide({
           </p>
         </section>
       )}
+      {demo.security_suite_sample && (
+        <section aria-label="Paired security and utility sample">
+          <h2>Resist an attack and still finish the task</h2>
+          <p>
+            Both scripted controls block the attack. One refuses the legitimate
+            task too; the other completes it using scoped record tools. Their
+            native turns, SQL effects and cleanup are real. The scripted
+            behavior is not evidence about actual model quality.
+          </p>
+          <button onClick={() => inspect(demo.security_suite_sample.run_id)}>
+            Inspect paired security and utility
+          </button>
+          <p>
+            The small sample intentionally reports insufficient evidence. It
+            cannot establish population security or a general guardrail
+            false-positive rate.
+          </p>
+        </section>
+      )}
       {demo.semantic_cache_sample && (
         <section aria-label="Qualified semantic cache sample">
           <h2>Refuse a tempting wrong cached answer</h2>

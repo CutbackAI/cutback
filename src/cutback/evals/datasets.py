@@ -14,6 +14,7 @@ from pydantic import Field, model_serializer, model_validator
 from cutback.core.episodes import EpisodeScenario
 from cutback.core.isolated_episodes import IsolatedRecordScenario
 from cutback.core.models import Identifier, StrictModel
+from cutback.core.security_suites import SecurityCase, SecuritySuiteIdentity
 
 
 def digest(value) -> str:
@@ -93,12 +94,15 @@ class Case(StrictModel):
     group: Identifier | None = None
     stratum: Identifier = "default"
     episode: EpisodeScenario | IsolatedRecordScenario | None = None
+    security: SecurityCase | None = None
 
     @model_serializer(mode="wrap")
     def preserve_existing_case_hashes(self, handler):
         result = handler(self)
         if self.episode is None:
             result.pop("episode", None)
+        if self.security is None:
+            result.pop("security", None)
         return result
 
 
@@ -113,18 +117,27 @@ class DatasetImport(StrictModel):
     cases: Annotated[list[Case], Field(min_length=1, max_length=10000)]
     split_seed: int = Field(default=17, ge=0, le=2**31 - 1)
     split_policy: Literal["task-aware-v2"] | None = None
+    security_suite: SecuritySuiteIdentity | None = None
 
     @model_serializer(mode="wrap")
     def preserve_released_import_hashes(self, handler):
         result = handler(self)
         if self.split_policy is None:
             result.pop("split_policy", None)
+        if self.security_suite is None:
+            result.pop("security_suite", None)
         return result
 
     @model_validator(mode="after")
     def synthetic_episode_boundary(self):
         if any(case.episode for case in self.cases) and self.source_type != "synthetic_fixture":
             raise ValueError("EPISODE_FIXTURES_REQUIRE_DECLARED_SYNTHETIC_SOURCE")
+        if self.security_suite:
+            from cutback.evals.security_suites import validate_suite_cases
+
+            validate_suite_cases(self.security_suite, self.cases)
+        elif any(case.security is not None for case in self.cases):
+            raise ValueError("SECURITY_CASES_REQUIRE_IMMUTABLE_SUITE_MANIFEST")
         return self
 
 
@@ -195,6 +208,8 @@ def prepare_dataset(body: DatasetImport, *, lineage_groups: dict[str, str] | Non
         keys = ["duplicate:" + normalized[i]]
         if case.group:
             keys.append("group:" + case.group)
+        if case.security:
+            keys.append("security-family:" + case.security.family)
         if lineage_groups and case.id in lineage_groups:
             keys.append("lineage:" + lineage_groups[case.id])
         for key in keys:
@@ -257,6 +272,11 @@ def prepare_dataset(body: DatasetImport, *, lineage_groups: dict[str, str] | Non
     counts = Counter(item["split"] for item in items)
     return {
         "schema_version": "1.0",
+        **(
+            {"security_suite": body.security_suite.model_dump(mode="json")}
+            if body.security_suite
+            else {}
+        ),
         "task_inference": task,
         "immutable_hash": digest(body.model_dump(mode="json")),
         "items": items,

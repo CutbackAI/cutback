@@ -4,7 +4,8 @@ from decimal import Decimal
 from uuid import uuid4
 
 from cutback.core.episode_judging import EpisodeJudgingSpec
-from cutback.core.isolated_episodes import IsolatedRecordExecution
+from cutback.core.isolated_episodes import IsolatedRecordExecution, IsolatedSecurityExecution
+from cutback.core.security_suites import SecurityEvaluationSpec
 from cutback.evals.experiments import (
     Budget,
     EpisodeExecutionSpec,
@@ -39,9 +40,18 @@ def draft_plan(
     episode_judging: EpisodeJudgingSpec | None = None,
     episode_judge: ModelSpec | None = None,
     episode_max_turns=32,
-    isolated_tools: IsolatedRecordExecution | None = None,
+    isolated_tools: IsolatedRecordExecution | IsolatedSecurityExecution | None = None,
+    security_suite: SecurityEvaluationSpec | None = None,
 ):
     provenance = dataset["provenance"]
+    if (provenance.get("security_suite") is not None) != (security_suite is not None) or (
+        security_suite is not None
+        and (
+            isolated_tools is None
+            or provenance["security_suite"] != security_suite.suite.model_dump(mode="json")
+        )
+    ):
+        raise ValueError("SECURITY_SUITE_REQUIRES_EXPLICIT_MATCHING_SCOPED_EVALUATION")
     catalog = Catalog()
     if candidates is None:
         baseline_rate = catalog.rate_info(baseline.provider, baseline.model)["rate"]
@@ -127,7 +137,9 @@ def draft_plan(
         pilot_minimum=pilot_minimum,
         criteria=criteria or [],
         retain_case_outputs=retain_case_outputs,
-        evaluator_version="deterministic-v8"
+        evaluator_version="deterministic-v9"
+        if security_suite
+        else "deterministic-v8"
         if isolated_tools
         else "deterministic-v5"
         if episode_judging
@@ -137,7 +149,9 @@ def draft_plan(
         content_nonce=uuid4() if episode_judging or isolated_tools else None,
         judge=episode_judge,
         episode_execution=EpisodeExecutionSpec(
-            version="native-isolated-record-episode-v1"
+            version="native-isolated-record-security-v1"
+            if security_suite
+            else "native-isolated-record-episode-v1"
             if isolated_tools
             else "native-fixture-episode-v2"
             if episode_judging
@@ -146,6 +160,7 @@ def draft_plan(
             max_tool_calls=100,
             semantic_judging=episode_judging,
             isolated_tools=isolated_tools,
+            security_suite=security_suite,
         )
         if kind == "episode_contract"
         else None,

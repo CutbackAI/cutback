@@ -105,6 +105,11 @@ def load_dataset(
         raise ValueError("DATASET_INTEGRITY_FAILURE")
     return {
         "immutable_hash": dataset.immutable_hash,
+        **(
+            {"security_suite": dataset.provenance["security_suite"]}
+            if dataset.provenance.get("security_suite")
+            else {}
+        ),
         "items": [item for _, item in ordered],
         "expires_at": min(expiries).isoformat(),
     }, policy

@@ -45,7 +45,7 @@ def inside(container, code, values):
 
 
 def seed_owned_isolated_records(
-    container, directory, values, project, image_id, password, database
+    container, directory, values, project, image_id, password, database, *, security_suite=False
 ):
     """A separate host worker/broker; the image receives no Docker socket."""
     import uvicorn
@@ -92,6 +92,11 @@ def seed_owned_isolated_records(
                 headers={"Authorization": "Bearer " + values["CUTBACK_ADMIN_TOKEN"]},
             ) as control:
                 receipt = seed_isolated_tools(app, control, project, image_id)
+                if security_suite:
+                    from cutback.demo_security_suites import seed_security_suite
+
+                    security = seed_security_suite(app, control, project, image_id)
+                    assert security["sessions"] == 4 and security["cleanup_confirmed"]
             assert (
                 receipt["sessions"] == receipt["state_changes"] == 4
                 and receipt["cleanup_confirmed"]
@@ -122,8 +127,11 @@ def seed_owned_isolated_records(
                 os.environ["CUTBACK_ALLOW_PAYLOADS"] = prior
 
 
-def main(image, *, isolated_tools=False):
+def main(image, *, isolated_tools=False, security_suite=False):
     from cutback.server.migrate import CURRENT_REVISION
+
+    if security_suite and not isolated_tools:
+        raise ValueError("SECURITY_IMAGE_GATE_REQUIRES_ACTUAL_ISOLATED_TOOLS")
 
     image_id = json.loads(checked(["docker", "image", "inspect", image]))[0]["Id"]
     password = (ROOT / "infra/compose/secrets/db_password").read_text().strip()
@@ -256,6 +264,7 @@ print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":mani
                         image_id,
                         password,
                         names[0],
+                        security_suite=security_suite,
                     )
                 with psycopg.connect(**kwargs, autocommit=True) as conn:
                     key = os.urandom(32)
@@ -266,12 +275,14 @@ print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":mani
                         key,
                         compose("pg_restore", "-U", "cutback", "-d", names[1], "--exit-on-error"),
                     )
-                recovery = """import json,os,shutil
+                recovery = (
+                    """import json,os,shutil
 from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.engine import make_url
 from cutback.server.runtime import configure_secrets
 from cutback.server.db import database,PayloadSample,ExperimentPlanRecord
+from cutback.server.db import ExperimentRunRecord,DatasetRecord
 from cutback.server.provider_batch_db import ProviderBatchRecord
 from cutback.server.enterprise_db import CacheEntry
 from cutback.server.semantic_cache_db import SemanticCacheNamespace,SemanticCacheQualification
@@ -322,9 +333,25 @@ with sessions() as session:
  tools=session.scalars(select(ToolSessionRecord)).all()
  operations=session.scalars(select(ToolOperationRecord)).all()
  if TOOLS_EXPECTED:
-  assert len(tools)==4 and all(row.state=="CLOSED" and row.cleanup_confirmed for row in tools)
-  assert len(operations)==8 and all(row.state=="RETURNED" for row in operations)
-  assert sum(row.state_changed is True for row in operations)==4
+  assert len(tools)==(8 if SECURITY_EXPECTED else 4)
+  assert all(row.state=="CLOSED" and row.cleanup_confirmed for row in tools)
+  assert len(operations)==(15 if SECURITY_EXPECTED else 8)
+  assert all(row.state=="RETURNED" for row in operations)
+  assert sum(row.state_changed is True for row in operations)==(7 if SECURITY_EXPECTED else 4)
+ if SECURITY_EXPECTED:
+  from cutback.server.worker import load_dataset
+  security_runs=[row for row in session.scalars(select(ExperimentRunRecord)).all()
+                 if (row.results or {}).get("execution_version")==
+                 "native-isolated-record-security-v1"]
+  assert len(security_runs)==1 and security_runs[0].status=="COMPLETED"
+  reports=[row["security_evaluation"] for row in security_runs[0].results["models"]]
+  assert reports[0]["attacked_utility"]["value"]==0 and reports[1]["attacked_utility"]["value"]==1
+  assert all(row["gate"]=="insufficient_evidence" for row in reports)
+  security_datasets=[row for row in session.scalars(select(DatasetRecord)).all()
+                     if row.provenance.get("security_suite")]
+  assert len(security_datasets)==1
+  loaded,_=load_dataset(session,security_datasets[0],new_only)
+  assert loaded["security_suite"]==reports[0]["suite"] and len(loaded["items"])==20
  assert plans
  for row in plans:
   before=original.get(row.project_id,row.specification["artifact_ref"])
@@ -332,9 +359,12 @@ with sessions() as session:
   rotating.rekey(row.project_id,row.specification["artifact_ref"])
   after=new_only.get(row.project_id,row.specification["artifact_ref"])
   assert before==after
-print(json.dumps({"restored_and_rekeyed_objects":len(rows)+len(caches),"restored_and_rekeyed_cache_objects":len(caches),"restored_and_rekeyed_plans":len(plans),"semantic_qualified_catalog_restored":True,"isolated_tool_receipts_restored":bool(TOOLS_EXPECTED),"database_pointers_preserved":True}))
+print(json.dumps({"restored_and_rekeyed_objects":len(rows)+len(caches),"restored_and_rekeyed_cache_objects":len(caches),"restored_and_rekeyed_plans":len(plans),"semantic_qualified_catalog_restored":True,"isolated_tool_receipts_restored":bool(TOOLS_EXPECTED),"paired_security_suite_restored":bool(SECURITY_EXPECTED),"database_pointers_preserved":True}))
 engine.dispose()
-""".replace("RECOVERED", repr(names[1])).replace("TOOLS_EXPECTED", repr(isolated_tools))
+""".replace("RECOVERED", repr(names[1]))
+                    .replace("TOOLS_EXPECTED", repr(isolated_tools))
+                    .replace("SECURITY_EXPECTED", repr(security_suite))
+                )
                 recovered = json.loads(inside(container, recovery, values).strip().splitlines()[-1])
 
                 def counts(name):
@@ -494,5 +524,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--image", required=True)
     parser.add_argument("--isolated-tools", action="store_true")
+    parser.add_argument("--security-suite", action="store_true")
     args = parser.parse_args()
-    main(args.image, isolated_tools=args.isolated_tools)
+    main(args.image, isolated_tools=args.isolated_tools, security_suite=args.security_suite)

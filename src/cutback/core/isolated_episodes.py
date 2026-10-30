@@ -10,15 +10,12 @@ from cutback.core.models import Identifier, StrictModel
 from cutback.core.tool_policy import RecordGrant, RecordSeed
 
 
-class IsolatedRecordExecution(StrictModel):
-    version: Literal["isolated-record-tools-v1"] = "isolated-record-tools-v1"
+class RecordExecutionScope(StrictModel):
     project_id: UUID
     principal_id: UUID
     broker_id: UUID
     environment: Identifier
     image_id: str = Field(pattern=r"^sha256:[a-f0-9]{64}$")
-    max_sessions: int = Field(default=32, strict=True, ge=1, le=128)
-    max_total_tool_calls: int = Field(default=512, strict=True, ge=1, le=4096)
     max_wall_seconds: int = Field(default=60, strict=True, ge=1, le=120)
     max_result_bytes: int = Field(default=16000, strict=True, ge=256, le=64000)
     content_use_approved: Literal[True]
@@ -35,6 +32,20 @@ class IsolatedRecordExecution(StrictModel):
         if self.project_id.int == 0 or self.principal_id.int == 0 or self.broker_id.int == 0:
             raise ValueError("ISOLATED_EPISODE_NONZERO_SCOPE_REQUIRED")
         return self
+
+
+class IsolatedRecordExecution(RecordExecutionScope):
+    version: Literal["isolated-record-tools-v1"] = "isolated-record-tools-v1"
+    max_sessions: int = Field(default=32, strict=True, ge=1, le=128)
+    max_total_tool_calls: int = Field(default=512, strict=True, ge=1, le=4096)
+
+
+class IsolatedSecurityExecution(RecordExecutionScope):
+    """Larger finite suite bounds, only accepted by the distinct v9 contract."""
+
+    version: Literal["isolated-record-security-tools-v1"] = "isolated-record-security-tools-v1"
+    max_sessions: int = Field(default=128, strict=True, ge=1, le=1000)
+    max_total_tool_calls: int = Field(default=4096, strict=True, ge=1, le=100000)
 
 
 class IsolatedRecordScenario(StrictModel):
