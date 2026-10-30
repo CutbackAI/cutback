@@ -21,15 +21,22 @@ from cutback.server.worker import run_one
 pytestmark = [pytest.mark.postgres, pytest.mark.e2e]
 
 
+@pytest.mark.parametrize("semantic", [False, True])
 def test_criteria_authenticated_generation_review_confirmation_and_accessibility(
-    api, tenant, tmp_path, monkeypatch
+    api, tenant, tmp_path, monkeypatch, semantic
 ):
     if os.getenv("CUTBACK_TEST_BROWSER") != "true":
         pytest.skip("set CUTBACK_TEST_BROWSER=true for authenticated criteria acceptance")
     monkeypatch.setenv("CUTBACK_ALLOW_PAYLOADS", "true")
     api[2].state.artifact_store = EncryptedFileStore(tmp_path / "encrypted", os.urandom(32))
     stop = threading.Event()
-    executor, calls = synthetic_executor()
+    if semantic:
+        from cutback.demo_rubrics import seed_rubrics
+        from cutback.demo_rubrics import synthetic_executor as rubric_executor
+
+        executor, calls = rubric_executor()
+    else:
+        executor, calls = synthetic_executor()
     errors = []
 
     def worker():
@@ -65,7 +72,11 @@ def test_criteria_authenticated_generation_review_confirmation_and_accessibility
             server(api[2]) as endpoint,
             httpx.Client(base_url=endpoint, headers=api[1], trust_env=False) as control,
         ):
-            state = seed_criteria(api[2], control, tenant[0], execute=False)
+            state = (
+                seed_rubrics(api[2], control, tenant[0], execute=False)
+                if semantic
+                else seed_criteria(api[2], control, tenant[0], execute=False)
+            )
             thread.start()
             result = subprocess.run(
                 browser_command(Path(__file__).resolve().parents[2] / "web", "criteria.spec.ts"),
@@ -76,6 +87,7 @@ def test_criteria_authenticated_generation_review_confirmation_and_accessibility
                     "CUTBACK_UI_KEY": token,
                     "CUTBACK_UI_PROJECT": tenant[0],
                     "CUTBACK_CRITERIA_BROWSER": "true",
+                    "CUTBACK_CRITERIA_SEMANTIC": "true" if semantic else "false",
                     "CUTBACK_CRITERIA_ID": state["criteria_id"],
                     "CUTBACK_CRITERIA_DATASET": state["dataset_id"],
                     "CUTBACK_CRITERIA_VIEWER": viewer,

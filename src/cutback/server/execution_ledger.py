@@ -211,7 +211,11 @@ class ExecutionLedger:
         if purpose not in PURPOSES or self.plan.price_sha256 != Catalog().sha256:
             raise ValueError("EXECUTION_PURPOSE_OR_PRICE_CONTRACT_NOT_APPROVED")
         operation = getattr(self.plan, "operation", None)
-        proposal = operation in {"candidate-generation-v1", "criteria-generation-v1"}
+        proposal = operation in {
+            "candidate-generation-v1",
+            "criteria-generation-v1",
+            "criteria-generation-v2",
+        }
         if (purpose == "optimization") != proposal:
             raise ValueError("EXECUTION_PURPOSE_OUTSIDE_APPROVED_OPERATION")
         targets = [

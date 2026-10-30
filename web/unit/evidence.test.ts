@@ -6,6 +6,35 @@ import {
   experimentTitle,
 } from "../src/evidence.ts";
 
+test("generated semantic rubrics remain proxy evidence after untouched confirmation", () => {
+  const proxy = {
+    evaluator_version: "deterministic-v14",
+    quality_gate_passed: true,
+    evidence_tier: 3,
+    semantic_quality: "NOT VERIFIED",
+    source_patch_eligible: false,
+    criteria_binding: {
+      version_sha256: "b".repeat(64),
+      review_approval_id: "owned-epoch",
+    },
+    criteria_review_assurance: "owner_review_not_independent_judge_calibration",
+    criteria_generation_cost: { billing_complete: true },
+  };
+  assert.match(decisionLabel(proxy), /untouched-test confirmation required/);
+  assert.match(
+    decisionLabel({
+      ...proxy,
+      criteria_confirmation_predecessor_run_id: "owned-validation",
+    }),
+    /semantic quality unverified/,
+  );
+  assert.match(
+    decisionLabel({ ...proxy, quality_gate_passed: false }),
+    /not eligible/,
+  );
+  assert.match(decisionLabel({ ...proxy, evidence_tier: 4 }), /incomplete/);
+});
+
 test("reviewed criteria distinguish validation from confirmation without a calibration claim", () => {
   const reviewed = {
     evaluator_version: "deterministic-v13",

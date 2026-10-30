@@ -71,6 +71,7 @@ def run_criteria_one(sessions, store, *, executor=None, execution_enabled=False,
     owned = executor is None
     run_id = None
     claimed = False
+    operation: str | None = None
     try:
         # Read the approved transport before constructing an optional provider client.
         with sessions.begin() as session:
@@ -96,12 +97,13 @@ def run_criteria_one(sessions, store, *, executor=None, execution_enabled=False,
                 raise ValueError("CRITERIA_QUEUED_PARENT_AND_RUN_REQUIRED")
             plan_row = session.get(ExperimentPlanRecord, run.plan_id)
             plan = load_generation(store, project, plan_row.specification)
+            operation = plan.operation
             if plan.transport == "scripted_test_only" and not synthetic:
                 job.status = "BLOCKED"
                 job.available_at = None
                 run.status = "BLOCKED"
                 run.results = {
-                    "operation": "criteria-generation-v1",
+                    "operation": operation,
                     "code": "SCRIPTED_CRITERIA_REQUIRES_EXPLICIT_SYNTHETIC_EXECUTOR",
                     "requests": 0,
                     "billing_complete": True,
@@ -206,7 +208,7 @@ def run_criteria_one(sessions, store, *, executor=None, execution_enabled=False,
                 version_sha256(row, plan.input_sha256, payload.content_hash) if valid else None
             )
             run.results = {
-                "operation": "criteria-generation-v1",
+                "operation": operation,
                 "status": run.status,
                 "code": "CRITERIA_PROPOSAL_REQUIRES_OWNER_REVIEW"
                 if valid
@@ -249,7 +251,7 @@ def run_criteria_one(sessions, store, *, executor=None, execution_enabled=False,
                 if row is None and run.status in {"QUEUED", "BLOCKED", "RUNNING"}:
                     run.status = job.status = "FAILED"
                     run.results = {
-                        "operation": "criteria-generation-v1",
+                        "operation": operation,
                         "code": "CRITERIA_PARENT_UNAVAILABLE_NO_REPLAY",
                     }
                 if (
@@ -259,7 +261,7 @@ def run_criteria_one(sessions, store, *, executor=None, execution_enabled=False,
                 ):
                     row.state = run.status = job.status = "FAILED"
                     run.results = {
-                        "operation": "criteria-generation-v1",
+                        "operation": operation,
                         "status": "FAILED",
                         "code": "CRITERIA_AUTHORITY_NATIVE_OR_STORAGE_FAILED_NO_REPLAY",
                         "requests": run.requests_used,

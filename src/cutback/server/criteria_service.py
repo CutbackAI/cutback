@@ -6,12 +6,14 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 
 from cutback.core.evaluation_criteria import ReviewedCriteriaBinding
+from cutback.core.semantic_rubrics import SemanticRubricRequirements
 from cutback.evals.criteria_generation import (
     CriteriaGenerationPlan,
-    CriteriaRequirements,
     decode,
+    generation_contract,
     generation_input,
     materialize,
+    parse_requirements,
 )
 from cutback.evals.datasets import digest
 from cutback.server.criteria_content import current_policy, read_payload, training_view
@@ -49,7 +51,7 @@ def read_input(session, store, row, policy):
         "source_item_ids",
     }:
         raise ValueError("CRITERIA_FROZEN_TRAINING_INPUT_CHANGED")
-    requirements = CriteriaRequirements.model_validate(value["requirements"])
+    requirements = parse_requirements(value["requirements"])
     if generation_input(requirements, value["training"]) != value["input"]:
         raise ValueError("CRITERIA_FROZEN_GENERATOR_FRAME_CHANGED")
     return value, sha, requirements
@@ -74,7 +76,7 @@ def prepared_generation(session, store, row):
     ):
         raise ValueError("CRITERIA_GENERATION_SCOPE_OR_TRANSPORT_CHANGED")
     value, sha, requirements = read_input(session, store, row, policy)
-    if sha != plan.input_sha256:
+    if sha != plan.input_sha256 or plan.operation != generation_contract(requirements)["operation"]:
         raise ValueError("CRITERIA_GENERATION_APPROVED_INPUT_CHANGED")
     rows, identities = training_view(
         session, store, row.project_id, dataset, policy, limit=len(value["training"])
@@ -185,6 +187,28 @@ def validate_binding(session, store, project, plan):
     ):
         raise ValueError("CRITERIA_REVIEWED_VERSION_UNAVAILABLE_OR_NOT_APPROVED")
     requirements, proposal, dataset = reviewed_content(session, store, row)
+    if isinstance(requirements, SemanticRubricRequirements):
+        from cutback.evals.metrics import MetricSpec
+        from cutback.evals.rubric_generation import materialize_rubrics, rubric_judge
+
+        expected_metric = MetricSpec(
+            kind="episode_contract",
+            minimum=requirements.minimum,
+            max_regression=requirements.max_regression,
+            min_test_samples=requirements.min_test_samples,
+            min_test_groups=requirements.min_test_groups,
+        )
+        if (
+            plan.workflow != dataset.workflow_id
+            or plan.evaluator_version != "deterministic-v14"
+            or not plan.episode_execution
+            or plan.metric != expected_metric
+            or plan.episode_execution.semantic_judging
+            != materialize_rubrics(proposal, requirements)
+            or plan.judge != rubric_judge(requirements)
+        ):
+            raise ValueError("EXPERIMENT_MUST_PIN_EXACT_REVIEWED_SEMANTIC_RUBRICS_AND_JUDGE")
+        return row
     criteria = materialize(proposal, requirements)
     if (
         plan.workflow != dataset.workflow_id

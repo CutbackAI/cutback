@@ -22,6 +22,7 @@ def test_cli_draft_reconcile_review_and_validation_have_distinct_actions(tmp_pat
 
     register_criteria(app, lambda value, path=None: outputs.append(value), request, fail)
     project, criteria = str(uuid4()), str(uuid4())
+    confirmation_request = str(uuid4())
     common = [
         "--project",
         project,
@@ -47,6 +48,22 @@ def test_cli_draft_reconcile_review_and_validation_have_distinct_actions(tmp_pat
             "/" + criteria + "/review",
         ),
         (["evaluate", criteria, str(body)], "POST", "/" + criteria + "/evaluation-draft"),
+        (
+            [
+                "confirm",
+                criteria,
+                str(uuid4()),
+                "candidate",
+                "--max-usd",
+                "1",
+                "--max-requests",
+                "100",
+                "--request-id",
+                confirmation_request,
+            ],
+            "POST",
+            "/" + criteria + "/confirmation",
+        ),
     ]
     for command, method, suffix in commands:
         result = CliRunner().invoke(app, ["criteria", *command, *common])
@@ -56,6 +73,8 @@ def test_cli_draft_reconcile_review_and_validation_have_distinct_actions(tmp_pat
             "http://127.0.0.1:8080",
             f"/v1/projects/{project}/criteria" + suffix,
         )
+        if command[0] == "confirm":
+            assert calls[-1][1]["json"]["request_id"] == confirmation_request
     assert len(calls) == len(outputs) == len(commands)
     invalid = CliRunner().invoke(
         app, ["criteria", "review", criteria, "b" * 64, "auto-approve", "owned", *common]

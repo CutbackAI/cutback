@@ -17700,6 +17700,18 @@
       },
       "CriteriaConfirmationInput": {
         "properties": {
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid4"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          },
           "validation_run_id": {
             "type": "string",
             "format": "uuid",
@@ -17743,7 +17755,15 @@
             "title": "Dataset Id"
           },
           "requirements": {
-            "$ref": "#/components/schemas/CriteriaRequirements"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CriteriaRequirements"
+              },
+              {
+                "$ref": "#/components/schemas/SemanticRubricRequirements"
+              }
+            ],
+            "title": "Requirements"
           },
           "generator": {
             "$ref": "#/components/schemas/ModelSpec-Input"
@@ -17843,6 +17863,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/SourceBinding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "episode_execution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EpisodeExecutionSpec"
               },
               {
                 "type": "null"
@@ -19299,7 +19329,8 @@
               "deterministic-v10",
               "deterministic-v11",
               "deterministic-v12",
-              "deterministic-v13"
+              "deterministic-v13",
+              "deterministic-v14"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -19614,7 +19645,8 @@
               "deterministic-v10",
               "deterministic-v11",
               "deterministic-v12",
-              "deterministic-v13"
+              "deterministic-v13",
+              "deterministic-v14"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -29212,6 +29244,74 @@
         ],
         "title": "SemanticDatasetEnvelope"
       },
+      "SemanticDimension": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "answer_correctness",
+              "retrieval_groundedness",
+              "conversation_constraints"
+            ],
+            "title": "Kind"
+          },
+          "requirement": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Requirement"
+          },
+          "minimum": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Minimum"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "requirement",
+          "minimum"
+        ],
+        "title": "SemanticDimension"
+      },
+      "SemanticJudgeChoice": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "openai",
+            "title": "Provider",
+            "default": "openai"
+          },
+          "model": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Model"
+          },
+          "max_input_tokens": {
+            "type": "integer",
+            "maximum": 262144.0,
+            "minimum": 256.0,
+            "title": "Max Input Tokens"
+          },
+          "max_output_tokens": {
+            "type": "integer",
+            "maximum": 8192.0,
+            "minimum": 128.0,
+            "title": "Max Output Tokens"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "model",
+          "max_input_tokens",
+          "max_output_tokens"
+        ],
+        "title": "SemanticJudgeChoice"
+      },
       "SemanticLookup": {
         "properties": {
           "project_id": {
@@ -29330,6 +29430,70 @@
           "ttl_seconds"
         ],
         "title": "SemanticPut"
+      },
+      "SemanticRubricRequirements": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "episode_semantic_rubrics_v1",
+            "title": "Kind",
+            "default": "episode_semantic_rubrics_v1"
+          },
+          "task_brief": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Task Brief"
+          },
+          "dimensions": {
+            "items": {
+              "$ref": "#/components/schemas/SemanticDimension"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Dimensions"
+          },
+          "judge": {
+            "$ref": "#/components/schemas/SemanticJudgeChoice"
+          },
+          "minimum": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Minimum"
+          },
+          "max_regression": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Max Regression",
+            "default": 0
+          },
+          "min_test_samples": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Min Test Samples",
+            "default": 30
+          },
+          "min_test_groups": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Min Test Groups",
+            "default": 3
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "task_brief",
+          "dimensions",
+          "judge",
+          "minimum"
+        ],
+        "title": "SemanticRubricRequirements"
       },
       "SemanticUploadAppend": {
         "properties": {

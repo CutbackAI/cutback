@@ -1115,7 +1115,7 @@ def install_evaluation(app, sessions, authorize, scope):
                 raise HTTPException(404, "PLAN_NOT_FOUND")
             if (
                 row.specification.get("public_specification", {}).get("operation")
-                == "criteria-generation-v1"
+                in {"criteria-generation-v1", "criteria-generation-v2"}
             ):
                 raise HTTPException(409, "CRITERIA_REQUIRES_ITS_SCOPED_GENERATION_APPROVAL")
             if row.approval_status != "pending":

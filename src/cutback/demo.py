@@ -109,6 +109,7 @@ def seed_support_desk(
     guarded_security=False,
     joint_model_context=False,
     reviewed_criteria=False,
+    semantic_rubrics=False,
 ):
     """Use actual scoped HTTP APIs and the durable worker, retaining the sample project."""
     require_demo_git()
@@ -389,6 +390,11 @@ def seed_support_desk(
                 from cutback.demo_criteria import seed_criteria
 
                 criteria_sample = seed_criteria(app, control, project["id"], workspace=workspace)
+            rubric_sample = None
+            if semantic_rubrics:
+                from cutback.demo_rubrics import seed_rubrics
+
+                rubric_sample = seed_rubrics(app, control, project["id"])
             ticket_sample = None
             if ticket_router:
                 from cutback.demo_campaign_outcomes import run_sample
@@ -454,6 +460,7 @@ def seed_support_desk(
                 "source_diff": patch,
                 "paid_provider_calls": 0,
                 **({"reviewed_criteria_sample": criteria_sample} if criteria_sample else {}),
+                **({"semantic_rubrics_sample": rubric_sample} if rubric_sample else {}),
                 **({"isolated_tool_sample": isolated_sample} if isolated_sample else {}),
                 **({"security_suite_sample": security_sample} if security_sample else {}),
                 **({"runtime_guardrail_sample": runtime_sample} if runtime_sample else {}),
@@ -598,6 +605,7 @@ def launch_demo(
     guarded_security=False,
     joint_model_context=False,
     reviewed_criteria=False,
+    semantic_rubrics=False,
 ):
     """Own one temporary Docker database. Never connect to production or reuse app keys."""
     require_demo_git()
@@ -733,6 +741,7 @@ def launch_demo(
                 guarded_security=guarded_security,
                 joint_model_context=joint_model_context,
                 reviewed_criteria=reviewed_criteria,
+                semantic_rubrics=semantic_rubrics,
             )
             print(
                 f"Ready: {endpoint}/dashboard/\n"

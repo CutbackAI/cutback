@@ -11,13 +11,21 @@ from sqlalchemy import func, select
 from cutback.core.evaluation_criteria import ReviewedCriteriaBinding
 from cutback.core.models import Identifier, StrictModel
 from cutback.core.request_profiles import SourceBinding
+from cutback.core.semantic_rubrics import SemanticRubricRequirements
 from cutback.evals.criteria_generation import (
     CriteriaGenerationPlan,
-    CriteriaRequirements,
+    CriteriaRequirementsType,
+    generation_contract,
     generation_input,
     generator_model,
 )
-from cutback.evals.experiments import Budget, ExperimentPlan, ModelSpec, upper_cost
+from cutback.evals.experiments import (
+    Budget,
+    EpisodeExecutionSpec,
+    ExperimentPlan,
+    ModelSpec,
+    upper_cost,
+)
 from cutback.server.criteria_db import CriteriaVersionRecord
 from cutback.server.db import (
     AuditEvent,
@@ -34,7 +42,7 @@ from cutback.server.db import (
 class CriteriaDraftInput(StrictModel):
     request_id: UUID4 | None = None
     dataset_id: UUID
-    requirements: CriteriaRequirements
+    requirements: CriteriaRequirementsType
     generator: ModelSpec
     budget: Budget
     max_training_examples: int = Field(default=4, strict=True, ge=1, le=8)
@@ -72,10 +80,12 @@ class CriteriaEvaluationInput(StrictModel):
     repeats: int = Field(default=1, strict=True, ge=1, le=5)
     retain_case_outputs: bool = False
     source_binding: SourceBinding | None = None
+    episode_execution: EpisodeExecutionSpec | None = None
     name: Identifier = "reviewed-criteria-validation"
 
 
 class CriteriaConfirmationInput(StrictModel):
+    request_id: UUID4 | None = None
     validation_run_id: UUID
     candidate_key: Identifier
     budget: Budget
@@ -102,6 +112,7 @@ def install_criteria(app, sessions, authorize, scope, create_plan):
 
     def public(session, row):
         plan = session.get(ExperimentPlanRecord, row.generation_plan_id)
+        operation = plan.specification.get("public_specification", {}).get("operation")
         run = (
             session.get(ExperimentRunRecord, row.generation_run_id)
             if row.generation_run_id
@@ -110,6 +121,10 @@ def install_criteria(app, sessions, authorize, scope, create_plan):
         return {
             "id": str(row.id),
             "dataset_id": str(row.dataset_id),
+            "criteria_kind": {
+                "criteria-generation-v1": "deterministic",
+                "criteria-generation-v2": "episode_semantic_rubrics",
+            }.get(operation, "unknown"),
             "state": run.status if run and run.status in {"FAILED", "CANCELLED"} else row.state,
             "review_status": row.review_status,
             "generation_plan_id": str(row.generation_plan_id),
@@ -170,7 +185,11 @@ def install_criteria(app, sessions, authorize, scope, create_plan):
                         )
                         if (
                             requirements != body.requirements
-                            or frozen.baseline != generator_model(body.generator)
+                            or frozen.baseline
+                            != generator_model(
+                                body.generator,
+                                semantic=isinstance(body.requirements, SemanticRubricRequirements),
+                            )
                             or frozen.budget != body.budget
                             or frozen.transport != body.transport
                             or training != value["training"]
@@ -192,6 +211,22 @@ def install_criteria(app, sessions, authorize, scope, create_plan):
             dataset = session.get(DatasetRecord, body.dataset_id)
             if not dataset or dataset.project_id != project_id:
                 raise HTTPException(404, "DATASET_NOT_FOUND")
+            if isinstance(body.requirements, SemanticRubricRequirements):
+                from cutback.evals.rubric_generation import rubric_judge
+                from cutback.server.evaluation_api import dataset_manifest
+
+                manifest = dataset_manifest(session, dataset)
+                try:
+                    rubric_judge(body.requirements)
+                    if not manifest["items"] or any(
+                        item.get("episode_execution") != "synthetic_fixtures_only"
+                        for item in manifest["items"]
+                    ):
+                        raise ValueError
+                except ValueError:
+                    raise HTTPException(
+                        409, "SEMANTIC_RUBRIC_REQUIRES_NATIVE_EPISODES_AND_QUALIFIED_JUDGE"
+                    ) from None
             _, policy = active_policy(session, project_id, UUID(dataset.provenance["policy_id"]))
             if (
                 policy_object_count(session, UUID(dataset.provenance["policy_id"])) + 2
@@ -222,7 +257,10 @@ def install_criteria(app, sessions, authorize, scope, create_plan):
                 training, source_ids = training_view(
                     session, store, project_id, dataset, policy, limit=body.max_training_examples
                 )
-                model = generator_model(body.generator)
+                model = generator_model(
+                    body.generator,
+                    semantic=isinstance(body.requirements, SemanticRubricRequirements),
+                )
                 text = generation_input(body.requirements, training)
                 if (
                     len(text.encode()) + len(model.instruction.encode()) + 4096
@@ -269,6 +307,7 @@ def install_criteria(app, sessions, authorize, scope, create_plan):
                 )
                 row.input_payload_id = payload.id
                 plan = CriteriaGenerationPlan(
+                    **generation_contract(body.requirements),
                     criteria_id=row.id,
                     transport=body.transport,
                     workflow=dataset.workflow_id,
@@ -460,7 +499,12 @@ def install_criteria(app, sessions, authorize, scope, create_plan):
                 invalid_output = None
                 if row.state == "COMPLETED":
                     requirements, proposal, _ = reviewed_content(session, store, row)
-                    criteria = materialize(proposal, requirements)
+                    if isinstance(requirements, SemanticRubricRequirements):
+                        from cutback.evals.rubric_generation import materialize_rubrics
+
+                        criteria = materialize_rubrics(proposal, requirements).criteria
+                    else:
+                        criteria = materialize(proposal, requirements)
                 elif row.state == "FAILED" and row.output_payload_id:
                     output, _ = read_payload(
                         session, store, row, row.output_payload_id, policy, kind="criteria_output"
@@ -717,23 +761,65 @@ def install_criteria(app, sessions, authorize, scope, create_plan):
                 if (body.request_id is None) != (body.content_nonce is None):
                     raise ValueError
                 requirements, proposal, _ = reviewed_content(session, store, row)
-                criteria = materialize(proposal, requirements)
+                episode = None
+                judge = None
+                evaluator: Literal["deterministic-v13", "deterministic-v14"] = "deterministic-v13"
+                if isinstance(requirements, SemanticRubricRequirements):
+                    from cutback.evals.metrics import MetricSpec
+                    from cutback.evals.rubric_generation import materialize_rubrics, rubric_judge
+
+                    if (
+                        body.episode_execution is None
+                        or body.episode_execution.semantic_judging
+                        or body.episode_execution.isolated_tools
+                        or body.episode_execution.security_suite
+                        or body.source_binding is not None
+                    ):
+                        raise ValueError
+                    episode = EpisodeExecutionSpec.model_validate(
+                        {
+                            **body.episode_execution.model_dump(mode="json"),
+                            "version": "native-fixture-episode-v2",
+                            "semantic_judging": materialize_rubrics(
+                                proposal, requirements
+                            ).model_dump(mode="json"),
+                        }
+                    )
+                    judge = rubric_judge(requirements)
+                    criteria = []
+                    metric = MetricSpec(
+                        kind="episode_contract",
+                        minimum=requirements.minimum,
+                        max_regression=requirements.max_regression,
+                        min_test_samples=requirements.min_test_samples,
+                        min_test_groups=requirements.min_test_groups,
+                    )
+                    evaluator = "deterministic-v14"
+                else:
+                    if body.episode_execution is not None:
+                        raise ValueError
+                    criteria = materialize(proposal, requirements)
+                    metric = criteria[0].metric
                 providers: list[Literal["openai", "anthropic", "local"]] = []
                 for target in [body.baseline, *body.candidates]:
                     if target.provider != "openai" and target.provider != "anthropic":
                         raise ValueError
                     if target.provider not in providers:
                         providers.append(target.provider)
+                if judge is not None and judge.provider not in providers:
+                    providers.append(judge.provider)
                 plan = ExperimentPlan(
                     name=body.name,
                     workflow=dataset.workflow_id,
                     dataset_hash=dataset.immutable_hash,
                     baseline=body.baseline,
                     candidates=body.candidates,
-                    metric=criteria[0].metric,
+                    metric=metric,
                     criteria=criteria,
                     criteria_binding=body.criteria_binding,
-                    evaluator_version="deterministic-v13",
+                    evaluator_version=evaluator,
+                    episode_execution=episode,
+                    judge=judge,
                     content_nonce=body.content_nonce or uuid4(),
                     split="validation",
                     budget=body.budget,
@@ -793,4 +879,8 @@ def install_criteria(app, sessions, authorize, scope, create_plan):
                     409, "EXACT_REVIEWED_VALIDATION_CANDIDATE_AND_CONFIRMATION_GATES_REQUIRED"
                 ) from None
             dataset_id = planned.dataset_id
-        return create_plan(project_id, PlanInput(dataset_id=dataset_id, specification=plan), auth)
+        return create_plan(
+            project_id,
+            PlanInput(request_id=body.request_id, dataset_id=dataset_id, specification=plan),
+            auth,
+        )

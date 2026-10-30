@@ -109,6 +109,28 @@ export function SampleGuide({
           </button>
         )}
       </div>
+      {demo.semantic_rubrics_sample && (
+        <section aria-label="Reviewed semantic rubric sample">
+          <h2>Generate a rubric, review it, then test unseen episodes</h2>
+          <p>
+            The owner fixes the requirement and thresholds. A training-only
+            proposal is reviewed before validation and a separately approved
+            untouched-test comparison. This sample uses synthetic native
+            replies. Its model proxy scores establish neither independent
+            semantic truth nor customer savings.
+          </p>
+          <button onClick={() => navigate("Experiments")}>
+            Inspect generated semantic rubrics
+          </button>
+          <button
+            onClick={() =>
+              inspect(demo.semantic_rubrics_sample.confirmation_run_id)
+            }
+          >
+            Inspect the untouched proxy comparison
+          </button>
+        </section>
+      )}
       {demo.provider_batch_sample && (
         <section aria-label="Native batch ticket sample">
           <h2>Process a three-label task asynchronously</h2>
