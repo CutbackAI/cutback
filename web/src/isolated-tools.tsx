@@ -202,6 +202,22 @@ export function IsolatedToolEvidence({
                             <dd>
                               <code>{row.approval_hash}</code>
                             </dd>
+                            <dt>Runtime guard policy</dt>
+                            <dd>
+                              {row.guardrail_policy_id ? (
+                                <code>{row.guardrail_policy_id}</code>
+                              ) : (
+                                "No guarded execution contract"
+                              )}
+                            </dd>
+                            {row.guardrail_policy_sha256 && (
+                              <>
+                                <dt>Guard policy digest</dt>
+                                <dd>
+                                  <code>{row.guardrail_policy_sha256}</code>
+                                </dd>
+                              </>
+                            )}
                           </dl>
                         </details>
                       </td>
@@ -224,7 +240,14 @@ export function IsolatedToolEvidence({
             <caption>Tool operations for {selected}</caption>
             <thead>
               <tr>
-                {["Sequence", "Tool", "State", "State change"].map((label) => (
+                {[
+                  "Sequence",
+                  "Tool",
+                  "State",
+                  "State change",
+                  "Broker intent",
+                  "Reply release",
+                ].map((label) => (
                   <th key={label}>{label}</th>
                 ))}
               </tr>
@@ -249,6 +272,16 @@ export function IsolatedToolEvidence({
                       : row.state_changed
                         ? "Recorded"
                         : "None"}
+                  </td>
+                  <td>{row.broker_intent ?? "Unknown; older contract"}</td>
+                  <td>
+                    {row.result_delivery === "AUTHORIZED"
+                      ? "Release authorized; consumption unverified"
+                      : row.result_delivery === "WITHHELD"
+                        ? "Withheld; recorded effects remain"
+                        : row.result_delivery === "NOT_RELEASED"
+                          ? "Release not authorized"
+                          : "Unknown"}
                   </td>
                 </tr>
               ))}

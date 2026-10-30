@@ -6,7 +6,7 @@ from cutback.core.guardrails import GuardrailBinding, GuardrailDecision
 from cutback.server.guardrail_controls import finish_check, reserve_check
 
 
-class DurableGuardrailChecker:
+class _DurableGuardScope:
     def __init__(self, sessions, client):
         self.sessions, self.client = sessions, client
         self._binding_json = client.binding.model_dump_json()
@@ -30,6 +30,8 @@ class DurableGuardrailChecker:
             coverage_complete=False,
         )
 
+
+class DurableGuardrailChecker(_DurableGuardScope):
     async def check(self, *, operation_id, stage, content):
         binding = self.binding
 
@@ -57,4 +59,23 @@ class DurableGuardrailChecker:
         except Exception:
             # A configured fail-open mode cannot override current authority,
             # shared quotas, durable intent identity or missing database evidence.
+            return self._denied(operation_id, stage)
+
+
+class SyncDurableGuardrailChecker(_DurableGuardScope):
+    """The synchronous tool host uses the same one-shot shared quota and authority."""
+
+    def check(self, *, operation_id, stage, content):
+        binding = self.binding
+        try:
+            with self.sessions.begin() as session:
+                reserve_check(
+                    session, binding.project_id, binding.policy_id, binding, operation_id, stage
+                )
+            decision = self.client.check(operation_id=operation_id, stage=stage, content=content)
+            with self.sessions.begin() as session:
+                return finish_check(
+                    session, binding.project_id, binding.policy_id, binding, decision
+                )
+        except Exception:
             return self._denied(operation_id, stage)

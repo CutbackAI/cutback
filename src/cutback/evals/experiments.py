@@ -13,7 +13,11 @@ from pydantic import Field, JsonValue, PrivateAttr, model_serializer, model_vali
 from cutback.core.agent_turns import AgentTurnFrame
 from cutback.core.episode_judging import EpisodeJudgingSpec
 from cutback.core.episodes import EpisodeAssistant
-from cutback.core.isolated_episodes import IsolatedRecordExecution, IsolatedSecurityExecution
+from cutback.core.isolated_episodes import (
+    GuardedRecordExecution,
+    IsolatedRecordExecution,
+    IsolatedSecurityExecution,
+)
 from cutback.core.models import Identifier, StrictModel
 from cutback.core.native_models import NativeModelContract, validate_luna_text_contract
 from cutback.core.observation import observation_scope
@@ -204,13 +208,16 @@ class EpisodeExecutionSpec(StrictModel):
         "native-fixture-episode-v2",
         "native-isolated-record-episode-v1",
         "native-isolated-record-security-v1",
+        "native-isolated-record-guarded-v1",
     ] = "native-fixture-episode-v1"
     openai_surface: Literal["responses.create", "chat.completions.create"] = "responses.create"
     max_turns: int = Field(default=8, ge=1, le=32)
     max_tool_calls: int = Field(default=16, ge=0, le=100)
     transport: Literal["native_provider", "scripted_test_only"] = "native_provider"
     semantic_judging: EpisodeJudgingSpec | None = None
-    isolated_tools: IsolatedRecordExecution | IsolatedSecurityExecution | None = None
+    isolated_tools: (
+        IsolatedRecordExecution | IsolatedSecurityExecution | GuardedRecordExecution | None
+    ) = None
     security_suite: SecurityEvaluationSpec | None = None
 
     @model_serializer(mode="wrap")
@@ -228,7 +235,11 @@ class EpisodeExecutionSpec(StrictModel):
     def judging_version(self):
         if (
             self.version
-            in {"native-isolated-record-episode-v1", "native-isolated-record-security-v1"}
+            in {
+                "native-isolated-record-episode-v1",
+                "native-isolated-record-security-v1",
+                "native-isolated-record-guarded-v1",
+            }
         ) != (self.isolated_tools is not None):
             raise ValueError("ISOLATED_EPISODE_REQUIRES_EXPLICIT_SEPARATE_EXECUTION_CONTRACT")
         if (self.version == "native-isolated-record-security-v1") != (
@@ -240,6 +251,10 @@ class EpisodeExecutionSpec(StrictModel):
             and self.security_suite is None
         ):
             raise ValueError("LARGER_SECURITY_BOUNDS_REQUIRE_EXPLICIT_V9_SUITE_APPROVAL")
+        if (self.version == "native-isolated-record-guarded-v1") != isinstance(
+            self.isolated_tools, GuardedRecordExecution
+        ):
+            raise ValueError("GUARDED_RECORD_TOOLS_REQUIRE_EXPLICIT_V10_EXECUTION_APPROVAL")
         if (self.version == "native-fixture-episode-v2") != (self.semantic_judging is not None):
             raise ValueError("EPISODE_SEMANTIC_JUDGING_REQUIRES_EXPLICIT_V2_EXECUTION")
         return self
@@ -286,6 +301,7 @@ class ExperimentPlan(StrictModel):
         "deterministic-v7",
         "deterministic-v8",
         "deterministic-v9",
+        "deterministic-v10",
     ] = "deterministic-v3"
     episode_execution: EpisodeExecutionSpec | None = None
     retrieval_execution: RetrievalExecutionSpec | None = None
@@ -409,7 +425,9 @@ class ExperimentPlan(StrictModel):
             if (
                 self.evaluator_version
                 != (
-                    "deterministic-v9"
+                    "deterministic-v10"
+                    if isinstance(self.episode_execution.isolated_tools, GuardedRecordExecution)
+                    else "deterministic-v9"
                     if self.episode_execution.security_suite
                     else "deterministic-v8"
                     if isolated
@@ -429,6 +447,12 @@ class ExperimentPlan(StrictModel):
                 self.content_nonce is None or self.content_nonce.int == 0 or self.staged or semantic
             ):
                 raise ValueError("ISOLATED_EPISODE_REQUIRES_NONCE_AND_SEPARATE_V8_APPROVAL")
+            if (
+                isinstance(self.episode_execution.isolated_tools, GuardedRecordExecution)
+                and self.workflow
+                not in self.episode_execution.isolated_tools.runtime_guardrails.workflows
+            ):
+                raise ValueError("GUARDED_RECORD_WORKFLOW_OUTSIDE_EXACT_POLICY")
             if semantic:
                 from cutback.evals.episode_judging import episode_judge_model
 

@@ -134,7 +134,11 @@ export function SampleGuide({
       )}
       {demo.isolated_tool_sample && (
         <section aria-label="Isolated record task sample">
-          <h2>Read, resolve and verify a record</h2>
+          <h2>
+            {demo.isolated_tool_sample.runtime_guardrails
+              ? "A write completes; its reply is withheld"
+              : "Read, resolve and verify a record"}
+          </h2>
           <p>
             Follow a native agent conversation through a separate tool service
             and a real SQL transaction inside an isolated container. Only
@@ -153,6 +157,16 @@ export function SampleGuide({
             {demo.isolated_tool_sample.state_changes} recorded changes · Cleanup
             confirmed · Paid provider calls: zero.
           </p>
+          {demo.isolated_tool_sample.runtime_guardrails && (
+            <p>
+              {demo.isolated_tool_sample.runtime_guardrails.checks} tool checks
+              ·{" "}
+              {demo.isolated_tool_sample.runtime_guardrails.withheld_operations}{" "}
+              replies withheld. Blocking a reply does not undo a recorded write.
+              The policy is disabled after this sample; its saved approval does
+              not authorize further execution.
+            </p>
+          )}
         </section>
       )}
       {demo.security_suite_sample && (

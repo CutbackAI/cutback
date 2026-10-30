@@ -6,6 +6,7 @@ from uuid import UUID
 from pydantic import Field, StrictBool, StrictInt, field_validator, model_validator
 
 from cutback.core.episodes import EpisodeAssertions, bounded_episode_value
+from cutback.core.guardrails import GuardrailBinding
 from cutback.core.models import Identifier, StrictModel
 from cutback.core.tool_policy import RecordGrant, RecordSeed
 
@@ -46,6 +47,28 @@ class IsolatedSecurityExecution(RecordExecutionScope):
     version: Literal["isolated-record-security-tools-v1"] = "isolated-record-security-tools-v1"
     max_sessions: int = Field(default=128, strict=True, ge=1, le=1000)
     max_total_tool_calls: int = Field(default=4096, strict=True, ge=1, le=100000)
+
+
+class GuardedRecordExecution(RecordExecutionScope):
+    """A separate tool-only guard contract; never silently changes released v8/v9."""
+
+    version: Literal["isolated-record-guarded-tools-v1"] = "isolated-record-guarded-tools-v1"
+    max_sessions: int = Field(default=32, strict=True, ge=1, le=128)
+    max_total_tool_calls: int = Field(default=512, strict=True, ge=1, le=4096)
+    runtime_guardrails: GuardrailBinding
+
+    @model_validator(mode="after")
+    def exact_guard_target(self):
+        guard = self.runtime_guardrails
+        if (guard.project_id, guard.principal_id, guard.environment) != (
+            self.project_id,
+            self.principal_id,
+            self.environment,
+        ):
+            raise ValueError("GUARDED_RECORD_CHECKER_SCOPE_MISMATCH")
+        if set(guard.protected_stages) != {"tool_input", "tool_output"}:
+            raise ValueError("GUARDED_RECORD_TARGET_REQUIRES_ONLY_DECLARED_TOOL_STAGES")
+        return self
 
 
 class IsolatedRecordScenario(StrictModel):

@@ -34,11 +34,18 @@ def register_tools(app, output, request, fail):
     ):
         """Freeze a proposal. This neither approves a budget nor queues execution."""
         from cutback.cli_checks import read
-        from cutback.core.isolated_episodes import IsolatedRecordExecution
+        from cutback.core.isolated_episodes import GuardedRecordExecution, IsolatedRecordExecution
         from cutback.evals.experiments import ModelSpec
 
         try:
-            contract = IsolatedRecordExecution.model_validate(read(contract_file))
+            raw = read(contract_file)
+            if not isinstance(raw, dict):
+                raise ValueError("OBJECT")
+            contract: GuardedRecordExecution | IsolatedRecordExecution
+            if raw.get("version") == "isolated-record-guarded-tools-v1":
+                contract = GuardedRecordExecution.model_validate(raw)
+            else:
+                contract = IsolatedRecordExecution.model_validate(raw)
             if contract.project_id != project:
                 raise ValueError("SCOPE")
             original = ModelSpec(key="baseline", provider=provider, model=baseline)

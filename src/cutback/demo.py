@@ -105,6 +105,7 @@ def seed_support_desk(
     tool_image_id=None,
     security_suite=False,
     runtime_guardrails=False,
+    guarded_tools=False,
 ):
     """Use actual scoped HTTP APIs and the durable worker, retaining the sample project."""
     require_demo_git()
@@ -413,7 +414,14 @@ def seed_support_desk(
             if tool_image_id:
                 from cutback.demo_isolated_tools import seed_isolated_tools
 
-                isolated_sample = seed_isolated_tools(app, control, project["id"], tool_image_id)
+                isolated_sample = seed_isolated_tools(
+                    app,
+                    control,
+                    project["id"],
+                    tool_image_id,
+                    guarded=guarded_tools,
+                    deny_tool_output=guarded_tools,
+                )
             manifest = {
                 "available": True,
                 "title": "Support-desk triage",
@@ -554,11 +562,14 @@ def launch_demo(
     tool_image_id=None,
     security_suite=False,
     runtime_guardrails=False,
+    guarded_tools=False,
 ):
     """Own one temporary Docker database. Never connect to production or reuse app keys."""
     require_demo_git()
     if security_suite and tool_image_id is None:
         raise ValueError("SECURITY_DEMO_REQUIRES_EXPLICIT_LOCAL_TOOL_IMAGE_ID")
+    if guarded_tools and tool_image_id is None:
+        raise ValueError("GUARDED_TOOL_DEMO_REQUIRES_EXPLICIT_LOCAL_TOOL_IMAGE_ID")
     if tool_image_id is not None and not re.fullmatch(r"sha256:[a-f0-9]{64}", tool_image_id):
         raise ValueError("DEMO_EXACT_LOCAL_TOOL_IMAGE_ID_REQUIRED")
 
@@ -681,6 +692,7 @@ def launch_demo(
                 tool_image_id=tool_image_id,
                 security_suite=security_suite,
                 runtime_guardrails=runtime_guardrails,
+                guarded_tools=guarded_tools,
             )
             print(
                 f"Ready: {endpoint}/dashboard/\n"

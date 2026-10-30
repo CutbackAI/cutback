@@ -2,13 +2,61 @@
 
 import os
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from uuid import uuid4
 
+from cutback.core.isolated_episodes import GuardedRecordExecution
 from cutback.core.tool_policy import IsolatedToolPolicy
 from cutback.evals.datasets import digest
 from cutback.evals.isolated_tools import IsolatedEpisodeTools
 from cutback.server.tool_ledger import ToolJournal
 from cutback.tool_client import ToolBrokerClient
+
+
+def configured_tool_guard_client(spec, workflow):
+    """Public frozen binding and a separate scoped credential; never private rules."""
+    from cutback.core.guardrails import GuardrailBinding
+    from cutback.guardrail_client import GuardrailClient
+    from cutback.guardrails import strict_json
+
+    try:
+        if not isinstance(spec, GuardedRecordExecution):
+            raise ValueError("CONTRACT")
+        path = Path(os.environ["CUTBACK_TOOL_GUARDRAIL_BINDING_FILE"])
+        if path.is_symlink():
+            raise ValueError("LINK")
+        with path.open("rb") as stream:
+            raw = stream.read(65537)
+        if len(raw) > 65536:
+            raise ValueError("BOUND")
+        binding = GuardrailBinding.model_validate(strict_json(raw))
+        if binding != spec.runtime_guardrails or workflow not in binding.workflows:
+            raise ValueError("SCOPE")
+        token, token_file = (
+            os.getenv("CUTBACK_TOOL_GUARDRAIL_TOKEN"),
+            os.getenv("CUTBACK_TOOL_GUARDRAIL_TOKEN_FILE"),
+        )
+        if bool(token) == bool(token_file):
+            raise ValueError("ONE_CREDENTIAL_SOURCE")
+        if token_file:
+            source = Path(token_file)
+            if source.is_symlink():
+                raise ValueError("LINK")
+            with source.open("rb") as stream:
+                raw = stream.read(513)
+            if len(raw) > 512:
+                raise ValueError("BOUND")
+            token = raw.decode("utf-8").strip()
+        return GuardrailClient(
+            os.environ["CUTBACK_TOOL_GUARDRAIL_ORIGIN"],
+            token,
+            binding=binding,
+            workflow=workflow,
+            allow_insecure_loopback=os.getenv("CUTBACK_TOOL_GUARDRAIL_ALLOW_LOOPBACK_HTTP", "false")
+            == "true",
+        )
+    except Exception:
+        raise ValueError("GUARDED_TOOL_FIXED_SCOPED_CLIENT_NOT_CONFIGURED") from None
 
 
 def configured_tool_client(spec, *, containment=False):
@@ -36,9 +84,18 @@ def configured_tool_client(spec, *, containment=False):
     )
 
 
-def environment_factory(ledger, client, check_authority, *, content_expires_at):
+def environment_factory(ledger, client, check_authority, *, content_expires_at, guard_checker=None):
     plan = ledger.plan
     spec = plan.episode_execution.isolated_tools
+    if isinstance(spec, GuardedRecordExecution):
+        if (
+            guard_checker is None
+            or guard_checker.binding != spec.runtime_guardrails
+            or guard_checker.client.workflow != plan.workflow
+        ):
+            raise ValueError("GUARDED_RECORD_SCOPED_DURABLE_CHECKER_REQUIRED")
+    elif guard_checker is not None:
+        raise ValueError("GUARDED_RECORD_CHECKER_REQUIRES_EXPLICIT_V10_PLAN")
     if (client.project_id, client.principal_id, client.image_id, client.broker_id) != (
         spec.project_id,
         spec.principal_id,
@@ -76,6 +133,7 @@ def environment_factory(ledger, client, check_authority, *, content_expires_at):
             ToolJournal(ledger),
             approval_hash=digest(plan.model_dump(mode="json")),
             check_authority=check_authority,
+            guard_checker=guard_checker,
         )
 
     return create

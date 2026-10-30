@@ -109,6 +109,7 @@ def demo(
     tool_image_id: str | None = None,
     security_suite: bool = False,
     runtime_guardrails: bool = False,
+    guarded_tools: bool = False,
 ):
     """Explore the complete sample. Requires Docker and Git; no API key or paid calls."""
     try:
@@ -123,6 +124,7 @@ def demo(
             tool_image_id=tool_image_id,
             security_suite=security_suite,
             runtime_guardrails=runtime_guardrails,
+            guarded_tools=guarded_tools,
         )
     except ImportError:
         fail(

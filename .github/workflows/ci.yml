@@ -130,6 +130,7 @@ jobs:
           tests/integration/test_provider_batch_native.py
           tests/end_to_end/test_provider_batch_sample.py
           tests/integration/test_isolated_episodes.py
+          tests/integration/test_guarded_tool_episodes.py
           tests/integration/test_tool_ledger.py
           tests/integration/test_security_episodes.py
   verify:
@@ -229,4 +230,4 @@ jobs:
           docker build --tag cutback-ci-tools:${{ github.sha }} --file infra/compose/Dockerfile .
           echo "CUTBACK_TEST_TOOL_IMAGE_ID=$(docker image inspect cutback-ci-tools:${{ github.sha }} --format '{{.Id}}')" >> "$GITHUB_ENV"
       - name: Verify actual kernel controls, separate-process HTTP, native SQL and authenticated UI
-        run: uv run python scripts/check.py tests/integration/test_tool_isolation.py tests/end_to_end/test_isolated_tools_pipeline.py tests/end_to_end/test_security_suite_pipeline.py -q
+        run: uv run python scripts/check.py tests/integration/test_tool_isolation.py tests/end_to_end/test_isolated_tools_pipeline.py tests/end_to_end/test_security_suite_pipeline.py tests/end_to_end/test_guarded_tools_pipeline.py -q

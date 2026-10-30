@@ -25,6 +25,18 @@ class ToolSessionRecord(Base):
             "id", "environment_id", "run_id", "project_id", name="uq_tool_session_scope"
         ),
         UniqueConstraint("episode_id", name="uq_tool_session_episode"),
+        UniqueConstraint(
+            "id", "project_id", "guardrail_policy_id", name="uq_tool_session_guard_scope"
+        ),
+        ForeignKeyConstraint(
+            ["guardrail_policy_id", "project_id"],
+            ["runtime_guardrail_policies.id", "runtime_guardrail_policies.project_id"],
+            name="fk_tool_session_guard_project",
+        ),
+        CheckConstraint(
+            "(guardrail_policy_id IS NULL) = (guardrail_policy_sha256 IS NULL)",
+            name="ck_tool_guard_identity_pair",
+        ),
         ForeignKeyConstraint(
             ["episode_id", "environment_id", "run_id", "project_id"],
             [
@@ -59,6 +71,8 @@ class ToolSessionRecord(Base):
     episode_id: Mapped[UUID] = mapped_column(Uuid)
     principal_id: Mapped[UUID] = mapped_column(Uuid)
     broker_id: Mapped[UUID] = mapped_column(Uuid)
+    guardrail_policy_id: Mapped[UUID | None] = mapped_column(Uuid)
+    guardrail_policy_sha256: Mapped[str | None] = mapped_column(String(64))
     environment_name: Mapped[str] = mapped_column(String(200))
     workflow: Mapped[str] = mapped_column(String(200))
     broker_generation: Mapped[UUID] = mapped_column(Uuid)
@@ -95,6 +109,25 @@ class ToolOperationRecord(Base):
             name="fk_tool_operation_session_scope",
         ),
         UniqueConstraint("session_id", "sequence", name="uq_tool_operation_sequence"),
+        ForeignKeyConstraint(
+            ["session_id", "project_id", "guardrail_policy_id"],
+            ["tool_sessions.id", "tool_sessions.project_id", "tool_sessions.guardrail_policy_id"],
+            name="fk_tool_operation_guard_scope",
+        ),
+        CheckConstraint(
+            "broker_intent IS NULL OR broker_intent IN ('NOT_STARTED','STARTED','UNKNOWN')",
+            name="ck_tool_broker_intent",
+        ),
+        CheckConstraint(
+            "result_delivery IS NULL OR "
+            "result_delivery IN ('NOT_RELEASED','AUTHORIZED','WITHHELD','UNKNOWN')",
+            name="ck_tool_result_delivery",
+        ),
+        CheckConstraint(
+            "(guardrail_policy_id IS NULL) = (broker_intent IS NULL) AND "
+            "(guardrail_policy_id IS NULL) = (result_delivery IS NULL)",
+            name="ck_tool_guard_observation_pair",
+        ),
         CheckConstraint("sequence >= 1 AND sequence <= 100", name="ck_tool_operation_sequence"),
         CheckConstraint(
             "state IN ('DISPATCHING','RETURNED','DENIED','UNCERTAIN')",
@@ -113,6 +146,9 @@ class ToolOperationRecord(Base):
     run_id: Mapped[UUID] = mapped_column(Uuid)
     sequence: Mapped[int] = mapped_column(Integer)
     tool_kind: Mapped[str] = mapped_column(String(20))
+    guardrail_policy_id: Mapped[UUID | None] = mapped_column(Uuid)
+    broker_intent: Mapped[str | None] = mapped_column(String(16))
+    result_delivery: Mapped[str | None] = mapped_column(String(16))
     state: Mapped[str] = mapped_column(String(20), default="DISPATCHING")
     state_changed: Mapped[bool | None] = mapped_column()
     created_at: Mapped[datetime] = mapped_column(

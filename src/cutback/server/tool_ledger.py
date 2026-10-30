@@ -5,6 +5,7 @@ from uuid import UUID
 
 from sqlalchemy import func, select
 
+from cutback.core.isolated_episodes import GuardedRecordExecution
 from cutback.evals.datasets import digest
 from cutback.server.db import Environment
 from cutback.server.execution_db import ExecutionEpisode
@@ -27,6 +28,21 @@ class ToolJournal:
         ):
             raise ValueError("ISOLATED_TOOL_RUN_OR_LEASE_NOT_CURRENT")
         ledger.authorize(session)
+        spec = ledger.plan.episode_execution.isolated_tools
+        if isinstance(spec, GuardedRecordExecution):
+            from fastapi import HTTPException
+
+            from cutback.server.guardrail_controls import current_authority
+
+            try:
+                current_authority(
+                    session,
+                    run.project_id,
+                    spec.runtime_guardrails.policy_id,
+                    spec.runtime_guardrails,
+                )
+            except HTTPException:
+                raise ValueError("GUARDED_TOOL_CURRENT_AUTHORITY_REQUIRED") from None
         episode = session.get(ExecutionEpisode, ledger.episode_id, with_for_update=True)
         if (
             not episode
@@ -85,6 +101,12 @@ class ToolJournal:
                     episode_id=episode.id,
                     principal_id=policy.principal_id,
                     broker_id=spec.broker_id,
+                    guardrail_policy_id=spec.runtime_guardrails.policy_id
+                    if isinstance(spec, GuardedRecordExecution)
+                    else None,
+                    guardrail_policy_sha256=spec.runtime_guardrails.policy_sha256
+                    if isinstance(spec, GuardedRecordExecution)
+                    else None,
                     environment_name=policy.environment,
                     workflow=policy.workflow,
                     broker_generation=UUID(str(generation)),
@@ -162,6 +184,9 @@ class ToolJournal:
                     sequence=row.calls_used,
                     tool_kind=tool if tool in {"records_read", "records_patch"} else "unapproved",
                     state="DISPATCHING",
+                    guardrail_policy_id=row.guardrail_policy_id,
+                    broker_intent="NOT_STARTED" if row.guardrail_policy_id else None,
+                    result_delivery="NOT_RELEASED" if row.guardrail_policy_id else None,
                     state_changed=None,
                 )
             )
@@ -178,11 +203,98 @@ class ToolJournal:
                 or response.get("policy_sha256") != row.policy_sha256
                 or response.get("status") not in {"returned", "denied"}
                 or type(response.get("state_changed")) is not bool
+                or call.guardrail_policy_id is not None
+                and call.broker_intent != "STARTED"
             ):
                 raise ValueError("ISOLATED_TOOL_OPERATION_RECEIPT_INVALID")
             call.state = "RETURNED" if response["status"] == "returned" else "DENIED"
             call.state_changed = response["state_changed"]
             call.completed_at = datetime.now(UTC)
+
+    def broker_started(self, identifier, operation):
+        """Commit the one-shot broker intent after the input decision, before I/O."""
+        with self.sessions.begin() as session:
+            self._current(session)
+            row = self._owned(session, identifier)
+            call = session.get(ToolOperationRecord, operation, with_for_update=True)
+            if (
+                call is None
+                or call.session_id != row.id
+                or call.guardrail_policy_id is None
+                or call.guardrail_policy_id != row.guardrail_policy_id
+                or call.state != "DISPATCHING"
+                or call.broker_intent != "NOT_STARTED"
+            ):
+                raise ValueError("GUARDED_TOOL_BROKER_INTENT_SCOPE_OR_REPLAY_DENIED")
+            self._allowed_guard_decision(session, row, operation, "tool_input")
+            call.broker_intent = "STARTED"
+
+    def input_blocked(self, identifier, operation):
+        """Known host denial before broker I/O; no fabricated broker receipt."""
+        with self.sessions.begin() as session:
+            row = self._owned(session, identifier)
+            call = session.get(ToolOperationRecord, operation, with_for_update=True)
+            if (
+                call is None
+                or call.session_id != row.id
+                or call.guardrail_policy_id is None
+                or call.state != "DISPATCHING"
+                or call.broker_intent != "NOT_STARTED"
+            ):
+                raise ValueError("GUARDED_TOOL_PRECALL_DENIAL_NOT_PROVEN")
+            call.state, call.result_delivery, call.state_changed = "DENIED", "WITHHELD", False
+            call.completed_at = datetime.now(UTC)
+
+    def delivery(self, identifier, operation, *, delivered):
+        """A withheld reply cannot erase an independently recorded write effect."""
+        with self.sessions.begin() as session:
+            if delivered:
+                self._current(session)
+            row = self._owned(session, identifier)
+            call = session.get(ToolOperationRecord, operation, with_for_update=True)
+            if (
+                type(delivered) is not bool
+                or call is None
+                or call.session_id != row.id
+                or call.guardrail_policy_id is None
+                or call.state not in {"RETURNED", "DENIED"}
+                or call.broker_intent != "STARTED"
+                or call.result_delivery != "NOT_RELEASED"
+            ):
+                raise ValueError("GUARDED_TOOL_DELIVERY_SCOPE_OR_REPLAY_DENIED")
+            if delivered:
+                self._allowed_guard_decision(session, row, operation, "tool_output")
+            # This is release authorization, not proof that another model or
+            # downstream application actually consumed the reply.
+            call.result_delivery = "AUTHORIZED" if delivered else "WITHHELD"
+
+    def _allowed_guard_decision(self, session, row, operation, stage):
+        from cutback.core.guardrails import GuardrailDecision
+        from cutback.server.guardrail_db import GuardrailOperationRow
+
+        record = session.get(
+            GuardrailOperationRow, (row.project_id, row.guardrail_policy_id, operation, stage)
+        )
+        decision = (
+            GuardrailDecision.model_validate(record.decision)
+            if record and record.decision
+            else None
+        )
+        specification = self.ledger.plan.episode_execution.isolated_tools
+        binding = specification.runtime_guardrails
+        if (
+            decision is None
+            or record.state not in {"COMPLETED", "UNKNOWN"}
+            or decision.policy_id != row.guardrail_policy_id
+            or decision.policy_sha256 != row.guardrail_policy_sha256
+            or decision.stage != stage
+            or decision.operation_id != operation
+            or decision.action != "allow"
+            or decision.checks_expected != binding.stage_rule_counts[stage]
+            or decision.status == "unavailable"
+            and binding.on_unavailable != "fail_open"
+        ):
+            raise ValueError("GUARDED_TOOL_DURABLE_STAGE_DECISION_REQUIRED")
 
     def uncertain_start(self, identifier):
         self._uncertain(identifier)
@@ -206,6 +318,8 @@ class ToolJournal:
                 # receipt, nor invent the missing result for the next model turn.
                 if call.state == "DISPATCHING":
                     call.state = "UNCERTAIN"
+                    if call.guardrail_policy_id is not None:
+                        call.broker_intent, call.result_delivery = "UNKNOWN", "UNKNOWN"
 
     def closed(self, identifier, receipt):
         with self.sessions.begin() as session:

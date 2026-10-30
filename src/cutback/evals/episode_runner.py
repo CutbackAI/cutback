@@ -192,6 +192,9 @@ def _execute_with_environment(
                 outcome = "policy_denied"
                 break
             events.append(executed.event)
+            if isolated_stop := getattr(executed, "stop", None):
+                outcome = isolated_stop
+                break
             if (
                 plan.episode_execution.isolated_tools is not None
                 and executed.event.status == "uncertain"
