@@ -21,6 +21,7 @@ def main():
         "policy_id": str(args.policy),
         "source_type": "synthetic_fixture",
         "provenance_ref": "owned-context-policy-facts-v1",
+        "split_policy": "task-aware-v2",
         "independent_labels": True,
         "representative": False,
         "cases": cases,

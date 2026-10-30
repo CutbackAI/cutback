@@ -4111,6 +4111,8 @@ export interface components {
              * @default 17
              */
             split_seed: number;
+            /** Split Policy */
+            split_policy?: "task-aware-v2" | null;
         };
         /** DraftInput */
         DraftInput: {

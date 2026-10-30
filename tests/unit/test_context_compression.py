@@ -57,7 +57,8 @@ def test_unknown_cpu_or_native_usage_cannot_authorize_a_compression_change(rate,
 
 def test_line_selection_preserves_exact_text_query_and_order_and_never_truncates():
     value = ContextInput(
-        query="\u03a9 deadline", context="unrelated long line\n\u03a9 deadline=14\n\u03a9 deadline=14\nfinal\n"
+        query="\u03a9 deadline",
+        context="unrelated long line\n\u03a9 deadline=14\n\u03a9 deadline=14\nfinal\n",
     )
     result = compress_context(value, CompressionSettings(mode="query_lines", max_context_bytes=64))
     assert result.query == value.query and "\u03a9 deadline=14\n" in result.context

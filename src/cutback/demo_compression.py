@@ -151,6 +151,7 @@ def seed_compression(app, control, project_id, workspace, *, execute=True):
             "independent_labels": True,
             "representative": False,
             "provenance_ref": "owned-context-policy-facts-v1",
+            "split_policy": "task-aware-v2",
             "cases": cases,
         },
     )

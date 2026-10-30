@@ -14388,6 +14388,18 @@
             "minimum": 0.0,
             "title": "Split Seed",
             "default": 17
+          },
+          "split_policy": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "task-aware-v2"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Split Policy"
           }
         },
         "additionalProperties": false,

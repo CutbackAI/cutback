@@ -168,6 +168,8 @@ def check(directory: Path):
             "examples/context-compression/prepare_dataset.py",
             "examples/context-compression/prepare_request.py",
             "tests/unit/test_context_compression.py",
+            "tests/unit/test_task_aware_splits.py",
+            "tests/integration/test_task_aware_split_workflow.py",
             "tests/integration/test_compression_workflow.py",
             "tests/end_to_end/test_compression_pipeline.py",
             "web/tests/compression.spec.ts",

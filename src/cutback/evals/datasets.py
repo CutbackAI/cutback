@@ -111,6 +111,14 @@ class DatasetImport(StrictModel):
     provenance_ref: Identifier
     cases: Annotated[list[Case], Field(min_length=1, max_length=10000)]
     split_seed: int = Field(default=17, ge=0, le=2**31 - 1)
+    split_policy: Literal["task-aware-v2"] | None = None
+
+    @model_serializer(mode="wrap")
+    def preserve_released_import_hashes(self, handler):
+        result = handler(self)
+        if self.split_policy is None:
+            result.pop("split_policy", None)
+        return result
 
     @model_validator(mode="after")
     def synthetic_episode_boundary(self):
@@ -192,6 +200,13 @@ def prepare_dataset(body: DatasetImport, *, lineage_groups: dict[str, str] | Non
         components.setdefault(find(i), []).append(i)
     assignments = {}
     strata: dict[str, list] = {}
+    task = infer_task(body)
+    # v1 remains exactly reproducible. v2 only treats repeated short labels as
+    # classes; unique answer texts/numeric targets must not all become singleton
+    # strata assigned to test, leaving no validation or training data.
+    label_strata = body.independent_labels and (
+        body.split_policy is None or task["kind"] == "classification"
+    )
     for members in components.values():
         group_hash = digest(sorted(normalized[i] for i in members))
         stratum = digest(
@@ -200,7 +215,7 @@ def prepare_dataset(body: DatasetImport, *, lineage_groups: dict[str, str] | Non
                     (
                         body.cases[i].stratum,
                         str(body.cases[i].gold)
-                        if body.independent_labels and isinstance(body.cases[i].gold, str)
+                        if label_strata and isinstance(body.cases[i].gold, str)
                         else "",
                     )
                     for i in members
@@ -236,13 +251,15 @@ def prepare_dataset(body: DatasetImport, *, lineage_groups: dict[str, str] | Non
     counts = Counter(item["split"] for item in items)
     return {
         "schema_version": "1.0",
-        "task_inference": infer_task(body),
+        "task_inference": task,
         "immutable_hash": digest(body.model_dump(mode="json")),
         "items": items,
         "split_counts": dict(counts),
         "group_count": len(components),
         "strata": dict(Counter(case.stratum for case in body.cases)),
-        "split_strategy": "seeded_stratified_duplicate_and_customer_group_union_v1",
+        "split_strategy": "seeded_task_aware_group_union_v2"
+        if body.split_policy
+        else "seeded_stratified_duplicate_and_customer_group_union_v1",
         "warnings": (["INSUFFICIENT_SPLIT_GROUPS"] if len(counts) < 3 else [])
         + (["RARE_STRATA_HAVE_INSUFFICIENT_SPLIT_GROUPS"] if rare else []),
     }

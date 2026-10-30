@@ -16,6 +16,8 @@ The compression journey keeps the native model, instruction, output ceiling and 
 
 The source-built `cutback demo` seeds an owned synthetic context application, a passing duplicate-line alternative and an aggressive alternative that loses an essential fact. Its native SDK responses and usage are synthetic. This demonstrates the product journey, not actual model accuracy or customer savings.
 
+The sample declares `split_policy: task-aware-v2`: each synthetic policy has a distinct correct answer. This avoids treating every answer as its own singleton classification stratum. Existing dataset versions retain their assignments and lineage; reimporting cannot reset held-out exposure.
+
 A settings binding proves which file and source tree a proposed diff changes. It does not prove that every application's dynamic request builder uses that setting, model or frame. The declared native request and application-consumer checks must match the actual application; unsupported builders require an inspected adapter. A passing fixture or settings-only check is not universal source/runtime coverage.
 
 ## Frozen algorithm and limits

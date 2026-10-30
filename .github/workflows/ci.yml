@@ -117,6 +117,7 @@ jobs:
           tests/integration/test_retrieval_workflow.py
           tests/end_to_end/test_retrieval_pipeline.py
           tests/integration/test_compression_workflow.py
+          tests/integration/test_task_aware_split_workflow.py
           tests/end_to_end/test_compression_pipeline.py
   verify:
     runs-on: ubuntu-latest
