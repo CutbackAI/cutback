@@ -3,7 +3,6 @@
 import os
 import runpy
 import secrets
-import shutil
 import subprocess
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -11,6 +10,7 @@ from uuid import UUID, uuid4
 
 import httpx
 import pytest
+from support_browser import browser_command
 from test_pipeline import server
 
 from cutback.scanner import scan
@@ -201,7 +201,7 @@ def test_dashboard_authenticated_accessibility(postgres_url, tmp_path, event, mo
                 break
         assert result["status"] == "passed", result
         result = subprocess.run(
-            [shutil.which("npm.cmd") or shutil.which("npm") or "npm", "test"],
+            browser_command(root / "web"),
             cwd=root / "web",
             env={
                 **os.environ,

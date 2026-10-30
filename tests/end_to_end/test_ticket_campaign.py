@@ -2,11 +2,11 @@
 
 import json
 import os
-import shutil
 import subprocess
 from pathlib import Path
 
 import pytest
+from support_browser import browser_command
 
 from cutback.demo_campaign_outcomes import run_sample
 from cutback.evals.artifacts import EncryptedFileStore
@@ -77,12 +77,7 @@ def test_no_key_guided_ticket_sample_and_authenticated_paired_case_browser(
         assert manifest["ticket_campaign_sample"]["declared_intent_families"] == 60
         assert manifest["ticket_campaign_sample"]["paid_provider_calls"] == 0
         result = subprocess.run(
-            [
-                shutil.which("npm.cmd") or shutil.which("npm") or "npm",
-                "test",
-                "--",
-                "ticket-campaign.spec.ts",
-            ],
+            browser_command(Path(__file__).resolve().parents[2] / "web", "ticket-campaign.spec.ts"),
             cwd=Path(__file__).resolve().parents[2] / "web",
             env={
                 **os.environ,

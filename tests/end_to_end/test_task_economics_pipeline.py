@@ -2,7 +2,6 @@
 
 import os
 import secrets
-import shutil
 import subprocess
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -11,6 +10,7 @@ from uuid import uuid4
 
 import httpx
 import pytest
+from support_browser import browser_command
 from test_pipeline import server
 
 from cutback.demo_economics import seed_task_economics
@@ -73,12 +73,9 @@ def test_owned_native_task_sample_and_browser(postgres_url):
         assert incomplete["declared_window_cost_per_success_usd"] is None
         if os.getenv("CUTBACK_TEST_BROWSER") == "true":
             result = subprocess.run(
-                [
-                    shutil.which("npm.cmd") or shutil.which("npm") or "npm",
-                    "test",
-                    "--",
-                    "task-economics.spec.ts",
-                ],
+                browser_command(
+                    Path(__file__).resolve().parents[2] / "web", "task-economics.spec.ts"
+                ),
                 cwd=Path(__file__).resolve().parents[2] / "web",
                 env={
                     **os.environ,

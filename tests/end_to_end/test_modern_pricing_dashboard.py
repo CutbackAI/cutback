@@ -1,13 +1,13 @@
 """Authenticated list-price interpretation with real scoped HTTP/PostgreSQL."""
 
 import os
-import shutil
 import subprocess
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import UUID
 
 import pytest
+from support_browser import browser_command
 from test_pipeline import server
 
 
@@ -42,12 +42,7 @@ def test_modern_pricing_dashboard(api, tenant):
     token = api[1]["Authorization"][7:]
     with server(api[2]) as endpoint:
         completed = subprocess.run(
-            [
-                shutil.which("npm.cmd") or shutil.which("npm") or "npm",
-                "test",
-                "--",
-                "modern-pricing.spec.ts",
-            ],
+            browser_command(root / "web", "modern-pricing.spec.ts"),
             cwd=root / "web",
             env={
                 **os.environ,

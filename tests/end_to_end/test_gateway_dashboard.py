@@ -2,7 +2,6 @@
 
 import json
 import os
-import shutil
 import subprocess
 from pathlib import Path
 from uuid import UUID
@@ -10,6 +9,7 @@ from uuid import UUID
 import httpx
 import pytest
 from pydantic import SecretStr
+from support_browser import browser_command
 from support_gateway import native_response
 from test_pipeline import server
 
@@ -51,12 +51,7 @@ def test_gateway_controls_dashboard(api, tenant):
     token, viewer = api[1]["Authorization"][7:], tenant[2]["Authorization"][7:]
     with server(api[2]) as endpoint, server(gateway) as gateway_endpoint:
         completed = subprocess.run(
-            [
-                shutil.which("npm.cmd") or shutil.which("npm") or "npm",
-                "test",
-                "--",
-                "gateway.spec.ts",
-            ],
+            browser_command(Path(__file__).resolve().parents[2] / "web", "gateway.spec.ts"),
             cwd=Path(__file__).resolve().parents[2] / "web",
             env={
                 **os.environ,

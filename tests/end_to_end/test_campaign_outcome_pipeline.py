@@ -2,11 +2,11 @@
 
 import json
 import os
-import shutil
 import subprocess
 from pathlib import Path
 
 import pytest
+from support_browser import browser_command
 
 from cutback.demo_campaign_outcomes import run_sample
 from cutback.evals.artifacts import EncryptedFileStore
@@ -110,12 +110,9 @@ def test_ordinary_campaign_checks_uploaded_diff_and_later_rollback_review(
         token = api[1]["Authorization"][7:]
         with server(app) as endpoint:
             browser = subprocess.run(
-                [
-                    shutil.which("npm.cmd") or shutil.which("npm") or "npm",
-                    "test",
-                    "--",
-                    "native-modern.spec.ts",
-                ],
+                browser_command(
+                    Path(__file__).resolve().parents[2] / "web", "native-modern.spec.ts"
+                ),
                 cwd=Path(__file__).resolve().parents[2] / "web",
                 env={
                     **os.environ,

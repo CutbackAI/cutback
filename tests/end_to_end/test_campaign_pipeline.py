@@ -1,12 +1,12 @@
 import os
 import secrets
-import shutil
 import subprocess
 from pathlib import Path
 from uuid import uuid4
 
 import httpx
 import pytest
+from support_browser import browser_command
 from test_pipeline import server
 
 from cutback.demo_campaigns import seed_campaign
@@ -49,12 +49,7 @@ def test_source_bound_native_campaign_and_authenticated_browser(
         assert result["source_diff"]["rollback_diff"]
         if os.getenv("CUTBACK_TEST_BROWSER") == "true":
             completed = subprocess.run(
-                [
-                    shutil.which("npm.cmd") or shutil.which("npm") or "npm",
-                    "test",
-                    "--",
-                    "campaigns.spec.ts",
-                ],
+                browser_command(Path(__file__).resolve().parents[2] / "web", "campaigns.spec.ts"),
                 cwd=Path(__file__).resolve().parents[2] / "web",
                 env={
                     **os.environ,
