@@ -132,6 +132,29 @@ export function SampleGuide({
           </p>
         </section>
       )}
+      {demo.isolated_tool_sample && (
+        <section aria-label="Isolated record task sample">
+          <h2>Read, resolve and verify a record</h2>
+          <p>
+            Follow a native agent conversation through a separate tool service
+            and a real SQL transaction inside an isolated container. Only
+            approved fields and transitions are available. A final state check
+            and confirmed cleanup are required.
+          </p>
+          <p>
+            The model replies are scripted. This tests execution mechanics; it
+            does not establish real-model quality or customer savings.
+          </p>
+          <button onClick={() => inspect(demo.isolated_tool_sample.run_id)}>
+            Inspect isolated record tasks
+          </button>
+          <p>
+            {demo.isolated_tool_sample.sessions} sessions ·{" "}
+            {demo.isolated_tool_sample.state_changes} recorded changes · Cleanup
+            confirmed · Paid provider calls: zero.
+          </p>
+        </section>
+      )}
       {demo.semantic_cache_sample && (
         <section aria-label="Qualified semantic cache sample">
           <h2>Refuse a tempting wrong cached answer</h2>

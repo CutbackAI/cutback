@@ -63,6 +63,16 @@ spec:
             {{- end }}
             {{- if eq $component "worker" }}
             - {name: CUTBACK_TRAINING_EXECUTION, value: "false"}
+            - {name: CUTBACK_TOOL_EXECUTION, value: {{ $root.Values.toolBroker.execution | quote }}}
+            - {name: CUTBACK_TOOL_CONTAINMENT, value: {{ $root.Values.toolBroker.containment | quote }}}
+            {{- if or $root.Values.toolBroker.execution $root.Values.toolBroker.containment }}
+            - {name: CUTBACK_TOOL_BROKER_ORIGIN, value: {{ $root.Values.toolBroker.origin | quote }}}
+            - {name: CUTBACK_TOOL_BROKER_PROJECT, value: {{ $root.Values.toolBroker.projectID | quote }}}
+            - {name: CUTBACK_TOOL_BROKER_PRINCIPAL, value: {{ $root.Values.toolBroker.principalID | quote }}}
+            - {name: CUTBACK_TOOL_BROKER_ID, value: {{ $root.Values.toolBroker.brokerID | quote }}}
+            - {name: CUTBACK_TOOL_BROKER_IMAGE_ID, value: {{ $root.Values.toolBroker.imageID | quote }}}
+            - {name: CUTBACK_TOOL_BROKER_TOKEN_FILE, value: /run/tool-broker/token}
+            {{- end }}
             {{- end }}
             {{- if eq $component "collector" }}
             - {name: CUTBACK_ADMIN_TOKEN_FILE, value: /run/cutback/admin_token}
@@ -106,6 +116,9 @@ spec:
           volumeMounts:
             - {name: runtime, mountPath: /run/cutback, readOnly: true}
             - {name: temporary, mountPath: /tmp}
+            {{- if and (eq $component "worker") (or $root.Values.toolBroker.execution $root.Values.toolBroker.containment) }}
+            - {name: tool-broker, mountPath: /run/tool-broker, readOnly: true}
+            {{- end }}
             {{- if and $root.Values.payloads.enabled (eq $root.Values.payloads.backend "file") }}
             - {name: payloads, mountPath: /var/lib/cutback/payloads}
             {{- end }}
@@ -113,6 +126,13 @@ spec:
             - {name: experiments, mountPath: /run/experiments, readOnly: true}
             {{- end }}
       volumes:
+        {{- if and (eq $component "worker") (or $root.Values.toolBroker.execution $root.Values.toolBroker.containment) }}
+        - name: tool-broker
+          secret:
+            secretName: {{ $root.Values.toolBroker.secretName | quote }}
+            defaultMode: 0440
+            items: [{key: {{ $root.Values.toolBroker.tokenKey | quote }}, path: token}]
+        {{- end }}
         - name: runtime
           secret:
             secretName: {{ $root.Values.secrets.runtime }}

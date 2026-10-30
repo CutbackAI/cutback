@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { components } from "./api.generated";
 import { type API, explain, money } from "./ui";
+import { IsolatedToolEvidence } from "./isolated-tools";
 
 type Calls = components["schemas"]["CallPage"];
 type Episodes = components["schemas"]["EpisodePage"];
@@ -9,10 +10,12 @@ export function ExecutionEvidence({
   api,
   base,
   runId,
+  canContain = false,
 }: {
   api: API;
   base: string;
   runId: string;
+  canContain?: boolean;
 }) {
   const [calls, setCalls] = useState<Calls | null>(null);
   const [episodes, setEpisodes] = useState<Episodes | null>(null);
@@ -53,9 +56,9 @@ export function ExecutionEvidence({
     <section aria-label="Agent execution and call receipts">
       <h3>Execution and call receipts</h3>
       <p>
-        Inspect each reserved model call and the task it belonged to. Tool
-        fixtures change only declared synthetic state. Production task success
-        and total production task cost remain unverified.
+        Inspect each reserved model call and the task it belonged to. Each
+        episode identifies its fixture or isolated record contract. Production
+        task success and total production task cost remain unverified.
       </p>
       <button disabled={busy} onClick={() => load()}>
         {busy
@@ -175,6 +178,7 @@ export function ExecutionEvidence({
                       </th>
                       <td>{row.outcome ?? "Pending"}</td>
                       <td>
+                        <p>{row.execution_version}</p>
                         {row.state}
                         <details>
                           <summary>Individual checks</summary>
@@ -204,6 +208,12 @@ export function ExecutionEvidence({
           )}
         </>
       )}
+      <IsolatedToolEvidence
+        api={api}
+        base={base}
+        runId={runId}
+        canContain={canContain}
+      />
     </section>
   );
 }

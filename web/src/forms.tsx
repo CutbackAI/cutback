@@ -455,6 +455,8 @@ export function PlanForm({
   const episode =
     current?.provenance?.task_inference?.suggested_metric ===
     "episode_contract";
+  const isolated =
+    current?.provenance?.task_inference?.kind === "isolated_record_episode";
   return (
     <Editor title="Plan an experiment">
       <Form
@@ -540,7 +542,24 @@ export function PlanForm({
             ...(episode
               ? { episode_max_turns: Number(data.episode_turns) }
               : {}),
-            ...(episode && semanticEnabled
+            ...(isolated
+              ? {
+                  isolated_tools: {
+                    version: "isolated-record-tools-v1",
+                    project_id: base.split("/").pop(),
+                    principal_id: String(data.tool_principal),
+                    broker_id: String(data.tool_broker),
+                    environment: current?.provenance?.environment || "staging",
+                    image_id: String(data.tool_image),
+                    max_sessions: Number(data.tool_sessions),
+                    max_total_tool_calls: Number(data.tool_calls),
+                    max_wall_seconds: Number(data.tool_wall),
+                    max_result_bytes: Number(data.tool_result),
+                    content_use_approved: !!data.tool_content_consent,
+                  },
+                }
+              : {}),
+            ...(episode && semanticEnabled && !isolated
               ? {
                   episode_judge: {
                     key: "episode-judge",
@@ -600,6 +619,7 @@ export function PlanForm({
           onChange={(event) => {
             setDataset(event.target.value);
             setStrategy("model_swap");
+            setSemanticEnabled(false);
           }}
           required
         >
@@ -702,8 +722,9 @@ export function PlanForm({
           <fieldset>
             <legend>Agent and RAG episode evaluation</legend>
             <p>
-              Every case runs its declared synthetic conversation and tool
-              fixtures. No real tool actions are performed.
+              {isolated
+                ? "Each case uses actual scoped SQL records in the separately operated isolated tool service. Record permissions and state transitions come from this frozen dataset. Production applications are not modified."
+                : "Every case runs its declared synthetic conversation and tool fixtures. No real tool actions are performed."}
             </p>
             <Field
               label="Maximum native turns per case"
@@ -714,15 +735,94 @@ export function PlanForm({
               defaultValue="8"
               required
             />
-            <label className="check">
-              <input
-                type="checkbox"
-                checked={semanticEnabled}
-                onChange={(event) => setSemanticEnabled(event.target.checked)}
-              />
-              Add a semantic model judge
-            </label>
-            {semanticEnabled && (
+            {isolated && (
+              <fieldset>
+                <legend>Approved isolated tool service</legend>
+                <p>
+                  Use the identity supplied by the operator. The service must
+                  match this project, record owner, environment and pinned
+                  image. It receives no model or database credentials.
+                </p>
+                <Field
+                  label="Tool service ID"
+                  name="tool_broker"
+                  required
+                  pattern="[a-fA-F0-9-]{36}"
+                />
+                <Field
+                  label="Authorized record owner ID"
+                  name="tool_principal"
+                  required
+                  pattern="[a-fA-F0-9-]{36}"
+                />
+                <Field
+                  label="Approved container image digest"
+                  name="tool_image"
+                  required
+                  pattern="sha256:[a-f0-9]{64}"
+                />
+                <p>
+                  Environment: {current?.provenance?.environment || "staging"}
+                </p>
+                <Field
+                  label="Maximum isolated sessions for this run"
+                  name="tool_sessions"
+                  type="number"
+                  min="1"
+                  max="128"
+                  defaultValue="32"
+                  required
+                />
+                <Field
+                  label="Maximum total tool operations"
+                  name="tool_calls"
+                  type="number"
+                  min="1"
+                  max="4096"
+                  defaultValue="512"
+                  required
+                />
+                <Field
+                  label="Maximum seconds per isolated session"
+                  name="tool_wall"
+                  type="number"
+                  min="1"
+                  max="120"
+                  defaultValue="60"
+                  required
+                />
+                <Field
+                  label="Maximum bytes per tool result"
+                  name="tool_result"
+                  type="number"
+                  min="256"
+                  max="64000"
+                  defaultValue="16000"
+                  required
+                />
+                <label className="check">
+                  <input type="checkbox" name="tool_content_consent" required />
+                  I authorize the selected records to be used in this isolated
+                  tool service.
+                </label>
+                <p className="hint">
+                  A lost operation response is not retried. Final state and
+                  confirmed cleanup are required for a passing task. Tool and
+                  complete task costs remain unknown.
+                </p>
+              </fieldset>
+            )}
+            {!isolated && (
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={semanticEnabled}
+                  onChange={(event) => setSemanticEnabled(event.target.checked)}
+                />
+                Add a semantic model judge
+              </label>
+            )}
+            {semanticEnabled && !isolated && (
               <>
                 <p className="hint">
                   This adds one separately budgeted OpenAI request per completed
@@ -998,14 +1098,16 @@ export function RateForm({
               modern || !data.cache_write ? null : String(data.cache_write),
             cache_write_1h:
               modern || !data.cache_hour ? null : String(data.cache_hour),
-            ...(modern ? {
-              input_token_contract: "openai-inclusive-cache-writes-v2",
-              cache_write_30m: String(data.cache_30m),
-              cache_write_12h: String(data.cache_12h),
-              long_context_threshold: Number(data.context_threshold),
-              long_context_input_multiplier: String(data.context_input),
-              long_context_output_multiplier: String(data.context_output),
-            } : {}),
+            ...(modern
+              ? {
+                  input_token_contract: "openai-inclusive-cache-writes-v2",
+                  cache_write_30m: String(data.cache_30m),
+                  cache_write_12h: String(data.cache_12h),
+                  long_context_threshold: Number(data.context_threshold),
+                  long_context_input_multiplier: String(data.context_input),
+                  long_context_output_multiplier: String(data.context_output),
+                }
+              : {}),
             valid_from: new Date(String(data.starts)).toISOString(),
             valid_to: data.ends
               ? new Date(String(data.ends)).toISOString()
@@ -1015,18 +1117,31 @@ export function RateForm({
           return "Contract rate recorded.";
         }}
       >
-        <Select label="Rate provider" name="provider" value={provider} onChange={(event) => {
-          setProvider(event.target.value);
-          if (event.target.value !== "openai") setModern(false);
-        }}>
+        <Select
+          label="Rate provider"
+          name="provider"
+          value={provider}
+          onChange={(event) => {
+            setProvider(event.target.value);
+            if (event.target.value !== "openai") setModern(false);
+          }}
+        >
           <option>openai</option>
           <option>anthropic</option>
         </Select>
-        {provider === "openai" && <Select label="Input token contract" name="token_contract"
-          value={modern ? "modern" : "legacy"} onChange={(event) => setModern(event.target.value === "modern")}>
-          <option value="legacy">Legacy input includes cached reads</option>
-          <option value="modern">OpenAI input includes disjoint cache reads and writes</option>
-        </Select>}
+        {provider === "openai" && (
+          <Select
+            label="Input token contract"
+            name="token_contract"
+            value={modern ? "modern" : "legacy"}
+            onChange={(event) => setModern(event.target.value === "modern")}
+          >
+            <option value="legacy">Legacy input includes cached reads</option>
+            <option value="modern">
+              OpenAI input includes disjoint cache reads and writes
+            </option>
+          </Select>
+        )}
         <Field label="Exact model ID" name="model" required />
         <Field label="Region (optional)" name="region" />
         <Field label="Service tier (optional)" name="tier" />
@@ -1045,27 +1160,77 @@ export function RateForm({
             required
           />
         ))}
-        {modern ? <>
-          <Field label="30-minute cache write rate" name="cache_30m" type="number" min="0" step="any" required />
-          <Field label="12-hour cache write rate" name="cache_12h" type="number" min="0" step="any" required />
-          <Field label="Long-context threshold tokens" name="context_threshold" type="number" min="1" max="100000000" defaultValue="272000" required />
-          <Field label="Long-context input/cache multiplier" name="context_input" type="number" min="1" max="10" step="any" defaultValue="2" required />
-          <Field label="Long-context output multiplier" name="context_output" type="number" min="1" max="10" step="any" defaultValue="1.5" required />
-        </> : provider === "anthropic" ? <><Field
-          label="Five-minute cache write rate (optional)"
-          name="cache_write"
-          type="number"
-          min="0"
-          step="any"
-        />
-        <Field
-          label="One-hour cache write rate (optional)"
-          name="cache_hour"
-          type="number"
-          min="0"
-          step="any"
-        />
-        </> : <p className="hint">Choose the versioned write contract to declare OpenAI cache-write rates.</p>}
+        {modern ? (
+          <>
+            <Field
+              label="30-minute cache write rate"
+              name="cache_30m"
+              type="number"
+              min="0"
+              step="any"
+              required
+            />
+            <Field
+              label="12-hour cache write rate"
+              name="cache_12h"
+              type="number"
+              min="0"
+              step="any"
+              required
+            />
+            <Field
+              label="Long-context threshold tokens"
+              name="context_threshold"
+              type="number"
+              min="1"
+              max="100000000"
+              defaultValue="272000"
+              required
+            />
+            <Field
+              label="Long-context input/cache multiplier"
+              name="context_input"
+              type="number"
+              min="1"
+              max="10"
+              step="any"
+              defaultValue="2"
+              required
+            />
+            <Field
+              label="Long-context output multiplier"
+              name="context_output"
+              type="number"
+              min="1"
+              max="10"
+              step="any"
+              defaultValue="1.5"
+              required
+            />
+          </>
+        ) : provider === "anthropic" ? (
+          <>
+            <Field
+              label="Five-minute cache write rate (optional)"
+              name="cache_write"
+              type="number"
+              min="0"
+              step="any"
+            />
+            <Field
+              label="One-hour cache write rate (optional)"
+              name="cache_hour"
+              type="number"
+              min="0"
+              step="any"
+            />
+          </>
+        ) : (
+          <p className="hint">
+            Choose the versioned write contract to declare OpenAI cache-write
+            rates.
+          </p>
+        )}
         <Field
           label="Effective from (local time)"
           name="starts"

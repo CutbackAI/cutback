@@ -181,7 +181,7 @@ Evidence: [OpenInference privacy](https://arize-ai.github.io/openinference/spec/
 | S03 | Enforce tenant/environment/RBAC scope on every query/mutation/content read | Bounded | Server scope guards and PostgreSQL tenant tests; new endpoints require the same |
 | S04 | Rotate/revoke/expire credentials; browser tokens never persist in URLs/storage/logs | Bounded | Access keys, OIDC/PKCE, authenticated browser checks |
 | S05 | Export/delete all new records and content with auditable receipts and retention | Bounded | `privacy_api.py`, maintenance; new tables must be added and tested |
-| S06 | Protect tool execution against data exfiltration, unauthorized state changes and malicious fixtures | Missing | Requires separate application/tool execution boundary; product RBAC alone is insufficient |
+| S06 | Protect tool execution against data exfiltration, unauthorized state changes and malicious fixtures | Partial | [Separate isolated SQL adapter](isolated-tools.md) in source qualification: pinned process/container boundary, scoped fields/transitions/CAS, actual final state and canonical one-shot intents. General application tools and final publication/installed acceptance remain unfinished. Product RBAC alone is insufficient. |
 | S07 | Run versioned adversarial suites with attack coverage, utility and false-positive reporting | Missing | No qualified red-team integration/product yet |
 | S08 | Enforce optional runtime input/output/tool policy with explicit fail-open/fail-closed semantics | Missing | Capture redaction/content policy is not runtime application guardrailing |
 | S09 | Keep source and private application identity outside public examples/history/archives | Bounded | `scripts/check_public_boundary.py` with external private marker policy |

@@ -18,7 +18,6 @@ import "./style.css";
 import { SampleGuide } from "./demo";
 import { PatchReview } from "./change-review";
 import { CaseEvidence } from "./case-evidence";
-import { ExecutionEvidence } from "./execution";
 import { TaskEconomics } from "./task-economics";
 import { Campaigns } from "./campaigns";
 import { AgentWorkflow } from "./agent-workflow";
@@ -30,6 +29,11 @@ import { Monitoring } from "./monitoring";
 import { PriceSnapshots } from "./price-snapshots";
 import { NativeContracts } from "./native-contracts";
 import { decisionLabel, criterionLabel, experimentTitle } from "./evidence";
+const ExecutionEvidence = React.lazy(() =>
+  import("./execution").then((module) => ({
+    default: module.ExecutionEvidence,
+  })),
+);
 
 const GatewayBudgets = React.lazy(() =>
   import("./gateway").then((module) => ({
@@ -952,12 +956,19 @@ function App() {
                 evidence={(detail) => (
                   <>
                     <RunEvidence detail={detail} />
-                    <ExecutionEvidence
-                      key={`${base}:${detail.id}`}
-                      api={api}
-                      base={base}
-                      runId={detail.id}
-                    />
+                    <React.Suspense
+                      fallback={
+                        <p role="status">Loading execution evidence…</p>
+                      }
+                    >
+                      <ExecutionEvidence
+                        key={`${base}:${detail.id}`}
+                        api={api}
+                        base={base}
+                        runId={detail.id}
+                        canContain={admin}
+                      />
+                    </React.Suspense>
                     {detail.results?.case_outputs_retained && admin && (
                       <CaseEvidence
                         key={detail.id}
@@ -1803,12 +1814,17 @@ function Experiments({
         <>
           <h2>Experiment decision</h2>
           <RunEvidence detail={detail} />
-          <ExecutionEvidence
-            key={`${base}:${detail.id}`}
-            api={api}
-            base={base}
-            runId={detail.id}
-          />
+          <React.Suspense
+            fallback={<p role="status">Loading execution evidence…</p>}
+          >
+            <ExecutionEvidence
+              key={`${base}:${detail.id}`}
+              api={api}
+              base={base}
+              runId={detail.id}
+              canContain={admin}
+            />
+          </React.Suspense>
           {detail.results?.case_outputs_retained && admin && (
             <CaseEvidence
               key={`${base}:${detail.id}`}

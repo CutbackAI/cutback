@@ -88,6 +88,7 @@ from cutback.server.semantic_cache_db import (
     SemanticCacheQualification,
 )
 from cutback.server.semantic_upload_db import SemanticDatasetUpload, SemanticUploadCase
+from cutback.server.tool_db import ToolOperationRecord, ToolSessionRecord
 from cutback.server.trace_db import (
     ExecutionSession,
     ExecutionSpan,
@@ -138,6 +139,8 @@ def install_privacy(app, sessions, authorize, scope):
                     ImprovementObservation,
                     ExecutionCall,
                     ExecutionEpisode,
+                    ToolSessionRecord,
+                    ToolOperationRecord,
                     NotificationConfig,
                     NotificationDelivery,
                     QualityRule,
@@ -252,6 +255,17 @@ def install_privacy(app, sessions, authorize, scope):
             ):
                 raise HTTPException(409, "FINISH_IN_FLIGHT_NOTIFICATION_FIRST")
             if session.scalar(
+                select(ToolSessionRecord.id)
+                .where(
+                    ToolSessionRecord.project_id == project_id,
+                    ToolSessionRecord.cleanup_confirmed.is_(False),
+                )
+                .limit(1)
+            ):
+                raise HTTPException(
+                    409, "CONFIRM_ISOLATED_TOOL_CONTAINMENT_BEFORE_PROJECT_DELETION"
+                )
+            if session.scalar(
                 select(ExecutionCall.id)
                 .where(
                     ExecutionCall.project_id == project_id,
@@ -356,6 +370,8 @@ def install_privacy(app, sessions, authorize, scope):
                 TaskRecord,
                 TaskCostSnapshot,
                 ExecutionCall,
+                ToolOperationRecord,
+                ToolSessionRecord,
                 ExecutionEpisode,
                 QualityEvaluation,
                 QualityPromptUse,

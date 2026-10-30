@@ -1,6 +1,17 @@
 {{- if and .Values.cache.enabled (not .Values.payloads.enabled) -}}
 {{- fail "Application caching requires explicitly authorized encrypted payload storage" -}}
 {{- end -}}
+{{- if or .Values.toolBroker.execution .Values.toolBroker.containment -}}
+{{- if or (not .Values.worker.enabled) (not (hasPrefix "https://" .Values.toolBroker.origin)) (not .Values.toolBroker.projectID) (not .Values.toolBroker.principalID) (not .Values.toolBroker.brokerID) (not .Values.toolBroker.imageID) (not .Values.toolBroker.secretName) -}}
+{{- fail "External tool control requires a worker, scoped identities, pinned image, TLS origin and dedicated Secret" -}}
+{{- end -}}
+{{- if has .Values.toolBroker.secretName (list .Values.secrets.runtime .Values.secrets.experiments .Values.secrets.migration .Values.secrets.notifications) -}}
+{{- fail "Tool service credentials require a separate dedicated Secret" -}}
+{{- end -}}
+{{- if and .Values.toolBroker.execution (or (not .Values.execution.experiments) (not .Values.payloads.enabled)) -}}
+{{- fail "Isolated tool execution requires explicitly enabled experiments and encrypted payloads" -}}
+{{- end -}}
+{{- end -}}
 {{- if and .Values.semanticCache.enabled (not .Values.payloads.enabled) -}}
 {{- fail "Semantic caching requires explicitly authorized encrypted payload storage" -}}
 {{- end -}}

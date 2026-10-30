@@ -19,6 +19,7 @@ from cutback.cli_episodes import register_episodes
 from cutback.cli_qualification import register_qualification
 from cutback.cli_retrieval import register_retrieval
 from cutback.cli_semantic_cache import register_semantic_cache
+from cutback.cli_tools import register_tools
 from cutback.cli_workflows import register
 
 app = typer.Typer(
@@ -103,6 +104,7 @@ def demo(
     ticket_router: bool = False,
     provider_batch: bool = False,
     semantic_cache: bool = False,
+    tool_image_id: str | None = None,
 ):
     """Explore the complete sample. Requires Docker and Git; no API key or paid calls."""
     try:
@@ -114,6 +116,7 @@ def demo(
             ticket_router=ticket_router,
             provider_batch=provider_batch,
             semantic_cache=semantic_cache,
+            tool_image_id=tool_image_id,
         )
     except ImportError:
         fail(
@@ -522,6 +525,7 @@ register_agent(app, output, fail)
 register_checks(app, output, fail)
 register_qualification(app, output, fail)
 register_episodes(app, output, fail)
+register_tools(app, output, request, fail)
 register_retrieval(app, output, request, fail)
 register_compression(app, output, request, fail)
 register_batch(app, output, request, fail)

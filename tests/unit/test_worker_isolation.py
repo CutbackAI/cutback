@@ -1,6 +1,26 @@
 from cutback.server import worker_boot
 
 
+def test_tool_containment_needs_no_content_or_inference_and_is_independently_opted_in(monkeypatch):
+    monkeypatch.setattr(worker_boot, "configured_execution_enabled", lambda: False)
+    monkeypatch.setenv("CUTBACK_TOOL_EXECUTION", "false")
+    monkeypatch.setenv("CUTBACK_TOOL_CONTAINMENT", "false")
+    monkeypatch.setattr(
+        "cutback.server.execution_ledger.recover_execution_leases", lambda *args: None
+    )
+    monkeypatch.setattr("cutback.server.campaign_retention.expire_campaigns", lambda *args: None)
+    monkeypatch.setattr(worker_boot, "maintain_all", lambda *args, **kwargs: None)
+    assert "tool_containment" not in worker_boot.worker_cycle(None, None)
+    calls = []
+    monkeypatch.setattr(
+        "cutback.server.tool_recovery.recover_tool_one",
+        lambda sessions: calls.append("containment-only"),
+    )
+    monkeypatch.setenv("CUTBACK_TOOL_CONTAINMENT", "true")
+    assert worker_boot.worker_cycle(None, None)["tool_containment"]["status"] == "OK"
+    assert calls == ["containment-only"]
+
+
 def test_outcome_observation_needs_no_content_or_model_execution(monkeypatch):
     monkeypatch.setattr(worker_boot, "configured_execution_enabled", lambda: False)
     monkeypatch.setenv("CUTBACK_ONLINE_EXECUTION", "false")

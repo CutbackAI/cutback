@@ -32,7 +32,9 @@ export function EpisodeContent({
         <strong>Declared checks:</strong> {assessment?.status ?? "Unknown"}.
       </p>
       <p className="hint">
-        Synthetic fixture state and declared references. This does not verify
+        {assessment?.containment_confirmed
+          ? "Actual isolated SQL state, confirmed container cleanup and declared references. This does not verify "
+          : "Synthetic fixture state and declared references. This does not verify "}
         production task success or semantic correctness.
       </p>
       <ol

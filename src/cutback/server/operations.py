@@ -165,9 +165,17 @@ def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False
             retain_campaigns(session, now - timedelta(days=aggregate_days), selected)
             from cutback.server.execution_db import ExecutionCall, ExecutionEpisode
             from cutback.server.quality_db import QualityEvaluation
+            from cutback.server.tool_db import ToolSessionRecord
 
             # Aggregate counters survive receipt pruning; never reconstruct old usage
             # coverage or task latency distributions from the remaining page.
+            session.execute(
+                delete(ToolSessionRecord).where(
+                    ToolSessionRecord.completed_at < cutoff,
+                    ToolSessionRecord.cleanup_confirmed.is_(True),
+                    selected(ToolSessionRecord.project_id),
+                )
+            )
             session.execute(
                 delete(ExecutionCall).where(
                     ExecutionCall.completed_at < cutoff,
@@ -182,6 +190,9 @@ def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False
                     selected(ExecutionEpisode.project_id),
                     ~select(ExecutionCall.id)
                     .where(ExecutionCall.episode_id == ExecutionEpisode.id)
+                    .exists(),
+                    ~select(ToolSessionRecord.id)
+                    .where(ToolSessionRecord.episode_id == ExecutionEpisode.id)
                     .exists(),
                 )
             )

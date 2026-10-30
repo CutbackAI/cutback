@@ -114,7 +114,7 @@ include = [
   "/infra/terraform/kubernetes/.terraform.lock.hcl", "/infra/terraform/kubernetes/tests",
   "/infra/training/Dockerfile", "/infra/training/pyproject.toml", "/infra/training/uv.lock",
   "/infra/sdk-compat",
-  "/scripts/check_public_boundary.py", "/scripts/check_source_snapshot.py", "/docs/provider-batches.md", "/docs/application-onboarding.md", "/docs/agent-workflow.md",
+  "/scripts/check_public_boundary.py", "/scripts/check_source_snapshot.py", "/docs/provider-batches.md", "/docs/isolated-tools.md", "/docs/application-onboarding.md", "/docs/agent-workflow.md",
   "/web/public", "/web/unit", "/scripts/create_training_fixture.py", "/scripts/scale_smoke.py",
   "/SECURITY.md", "/GOVERNANCE.md", "/.github", "/src", "/tests", "/examples", "/README.md", "/LICENSE", "/NOTICE",
   "/docs/audit-remediation.md", "/docs/otel-ingestion.md", "/docs/operating-and-recovering.md", "/scripts/check_toolchain.py", "/scripts/check_codeql_results.py", "/scripts/audit_training.py", "/scripts/image_acceptance.py", "/infra/training/.python-version",

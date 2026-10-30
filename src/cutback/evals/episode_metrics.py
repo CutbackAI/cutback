@@ -107,6 +107,38 @@ def assess_episode(scenario: EpisodeScenario, observation: EpisodeObservation, *
             "score": None,
             "task_success": "not_verified",
         }
+    return assess_constraints(
+        scenario,
+        observation,
+        state=runner.state,
+        calls=calls,
+        completed=completed,
+        retrievals=retrievals,
+        texts=texts,
+        fixture_errors=fixture_errors,
+        duplicates=duplicates,
+        unapproved=unapproved,
+    )
+
+
+def assess_constraints(
+    scenario,
+    observation,
+    *,
+    state,
+    calls,
+    completed,
+    retrievals,
+    texts,
+    fixture_errors,
+    duplicates,
+    unapproved,
+):
+    """Shared declared assertions after the caller verifies its execution boundary.
+
+    This function does not authenticate a transcript or establish an environment.
+    Fixture replay and isolated execution must verify their distinct evidence first.
+    """
     checks = []
 
     def check(key, result):
@@ -174,7 +206,7 @@ def assess_episode(scenario: EpisodeScenario, observation: EpisodeObservation, *
         check("tool_arguments_" + str(i + 1), present(matches >= rule.minimum_occurrences))
     for i, (pointer, value) in enumerate(scenario.assertions.final_state.items()):
         try:
-            correct = same_json(state_value(runner.state, pointer), value)
+            correct = same_json(state_value(state, pointer), value)
         except (KeyError, IndexError):
             correct = False
         check("final_state_" + str(i + 1), None if unavailable else correct)

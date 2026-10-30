@@ -212,6 +212,19 @@ export function createSDK(request:Request) {return {
   cancel_v1_projects__project_id__campaigns__campaign_id__cancel_post: (args:{project_id:string;campaign_id:string;body:components["schemas"]["CampaignCancel"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/campaigns/${encodeURIComponent(String(args.campaign_id))}/cancel`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  tool_sessions_v1_projects__project_id__experiments__run_id__tool_sessions_get: (args:{project_id:string;run_id:string;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/experiments/${encodeURIComponent(String(args.run_id))}/tool-sessions`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  tool_operations_v1_projects__project_id__experiments__run_id__tool_sessions__session_id__operations_get: (args:{project_id:string;run_id:string;session_id:string;after?:number;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/experiments/${encodeURIComponent(String(args.run_id))}/tool-sessions/${encodeURIComponent(String(args.session_id))}/operations`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  queue_tool_containment_v1_projects__project_id__experiments__run_id__tool_sessions__session_id__containment_post: (args:{project_id:string;run_id:string;session_id:string;body:components["schemas"]["ToolContainmentRequest"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/experiments/${encodeURIComponent(String(args.run_id))}/tool-sessions/${encodeURIComponent(String(args.session_id))}/containment`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   calls_v1_projects__project_id__experiments__run_id__calls_get: (args:{project_id:string;run_id:string;after?:number;limit?:number}) => {
     const query=new URLSearchParams();
     if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
