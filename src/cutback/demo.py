@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 import secrets
 import socket
 import subprocess
@@ -101,6 +102,7 @@ def seed_support_desk(
     ticket_router=False,
     provider_batch=False,
     semantic_cache=False,
+    tool_image_id=None,
 ):
     """Use actual scoped HTTP APIs and the durable worker, retaining the sample project."""
     require_demo_git()
@@ -395,6 +397,11 @@ def seed_support_desk(
                 from cutback.demo_semantic_cache import seed_semantic_cache
 
                 semantic_sample = seed_semantic_cache(app, control, project["id"])
+            isolated_sample = None
+            if tool_image_id:
+                from cutback.demo_isolated_tools import seed_isolated_tools
+
+                isolated_sample = seed_isolated_tools(app, control, project["id"], tool_image_id)
             manifest = {
                 "available": True,
                 "title": "Support-desk triage",
@@ -411,6 +418,7 @@ def seed_support_desk(
                 "sample_source": "cutback/sample_app/app.py",
                 "source_diff": patch,
                 "paid_provider_calls": 0,
+                **({"isolated_tool_sample": isolated_sample} if isolated_sample else {}),
                 **({"semantic_cache_sample": semantic_sample} if semantic_sample else {}),
                 **(
                     {
@@ -523,10 +531,18 @@ def install_demo_routes(app, manifest, token, endpoint):
 
 
 def launch_demo(
-    port=8766, open_browser=True, *, ticket_router=False, provider_batch=False, semantic_cache=False
+    port=8766,
+    open_browser=True,
+    *,
+    ticket_router=False,
+    provider_batch=False,
+    semantic_cache=False,
+    tool_image_id=None,
 ):
     """Own one temporary Docker database. Never connect to production or reuse app keys."""
     require_demo_git()
+    if tool_image_id is not None and not re.fullmatch(r"sha256:[a-f0-9]{64}", tool_image_id):
+        raise ValueError("DEMO_EXACT_LOCAL_TOOL_IMAGE_ID_REQUIRED")
 
     import psycopg
     import uvicorn
@@ -644,6 +660,7 @@ def launch_demo(
                 ticket_router=ticket_router,
                 provider_batch=provider_batch,
                 semantic_cache=semantic_cache,
+                tool_image_id=tool_image_id,
             )
             print(
                 f"Ready: {endpoint}/dashboard/\n"

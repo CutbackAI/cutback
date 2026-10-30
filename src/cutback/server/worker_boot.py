@@ -28,6 +28,13 @@ def worker_cycle(sessions, store, *, maintenance_due=True):
         from cutback.server.execution_ledger import recover_execution_leases
 
         attempt("execution_recovery", lambda: recover_execution_leases(sessions))
+        if any(
+            os.getenv(flag, "false").lower() == "true"
+            for flag in ("CUTBACK_TOOL_EXECUTION", "CUTBACK_TOOL_CONTAINMENT")
+        ):
+            from cutback.server.tool_recovery import recover_tool_one
+
+            attempt("tool_containment", lambda: recover_tool_one(sessions))
         attempt("campaign_expiry", lambda: expire_campaigns(sessions))
         attempt(
             "maintenance",

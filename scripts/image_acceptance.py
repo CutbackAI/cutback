@@ -13,6 +13,7 @@ import socket
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from pathlib import Path
 from urllib.parse import quote
@@ -43,7 +44,85 @@ def inside(container, code, values):
     )
 
 
-def main(image):
+def seed_owned_isolated_records(
+    container, directory, values, project, image_id, password, database
+):
+    """A separate host worker/broker; the image receives no Docker socket."""
+    import uvicorn
+
+    from cutback.demo_isolated_tools import seed_isolated_tools
+    from cutback.evals.artifacts import EncryptedFileStore
+    from cutback.server.api import create_app
+
+    encrypted = directory / "host-encrypted"
+    encrypted.mkdir()
+    checked(["docker", "cp", container + ":/tmp/encrypted/.", str(encrypted)])
+    app = create_app(
+        database_url=(
+            "postgresql+psycopg://cutback:"
+            + quote(password, safe="")
+            + "@127.0.0.1:55432/"
+            + database
+        ),
+        admin_token=values["CUTBACK_ADMIN_TOKEN"],
+        allow_insecure_http=True,
+    )
+    app.state.artifact_store = EncryptedFileStore(
+        encrypted, base64.b64decode(values["CUTBACK_PAYLOAD_KEY"])
+    )
+    prior = os.environ.get("CUTBACK_ALLOW_PAYLOADS")
+    os.environ["CUTBACK_ALLOW_PAYLOADS"] = "true"
+    with socket.socket() as bound:
+        bound.bind(("127.0.0.1", 0))
+        bound.listen(16)
+        port = bound.getsockname()[1]
+        server = uvicorn.Server(uvicorn.Config(app, log_level="critical", access_log=False))
+        thread = threading.Thread(target=server.run, kwargs={"sockets": [bound]}, daemon=True)
+        thread.start()
+        try:
+            deadline = time.monotonic() + 10
+            while not server.started:
+                if not thread.is_alive() or time.monotonic() >= deadline:
+                    raise ValueError("OWNED_TOOL_IMAGE_WORKER_NOT_READY")
+                time.sleep(0.05)
+            with httpx.Client(
+                base_url=f"http://127.0.0.1:{port}",
+                timeout=30,
+                trust_env=False,
+                headers={"Authorization": "Bearer " + values["CUTBACK_ADMIN_TOKEN"]},
+            ) as control:
+                receipt = seed_isolated_tools(app, control, project, image_id)
+            assert (
+                receipt["sessions"] == receipt["state_changes"] == 4
+                and receipt["cleanup_confirmed"]
+            )
+            # Only encrypted objects cross this owned copy. No key/token is a file.
+            checked(["docker", "cp", str(encrypted) + "/.", container + ":/tmp/encrypted"])
+            checked(
+                [
+                    "docker",
+                    "exec",
+                    "--user",
+                    "0",
+                    container,
+                    "chown",
+                    "-R",
+                    "10001:10001",
+                    "/tmp/encrypted",
+                ]
+            )
+            return receipt
+        finally:
+            server.should_exit = True
+            thread.join(timeout=10)
+            app.state.engine.dispose()
+            if prior is None:
+                os.environ.pop("CUTBACK_ALLOW_PAYLOADS", None)
+            else:
+                os.environ["CUTBACK_ALLOW_PAYLOADS"] = prior
+
+
+def main(image, *, isolated_tools=False):
     from cutback.server.migrate import CURRENT_REVISION
 
     image_id = json.loads(checked(["docker", "image", "inspect", image]))[0]["Id"]
@@ -168,6 +247,16 @@ print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":mani
                 assert len(source_groups) == 2
                 assert sum(group["observed_attempts"] for group in source_groups) == 12
                 assert client.get(base + "/changes").json()
+                if isolated_tools:
+                    seed_owned_isolated_records(
+                        container,
+                        directory,
+                        values,
+                        manifest["project_id"],
+                        image_id,
+                        password,
+                        names[0],
+                    )
                 with psycopg.connect(**kwargs, autocommit=True) as conn:
                     key = os.urandom(32)
                     dump = directory / "database.cbk"
@@ -187,6 +276,7 @@ from cutback.server.provider_batch_db import ProviderBatchRecord
 from cutback.server.enterprise_db import CacheEntry
 from cutback.server.semantic_cache_db import SemanticCacheNamespace,SemanticCacheQualification
 from cutback.server.semantic_upload_db import SemanticDatasetUpload
+from cutback.server.tool_db import ToolSessionRecord,ToolOperationRecord
 from cutback.server.semantic_cache_service import read_catalog
 from cutback.core.semantic_cache import SemanticCacheIndex
 from cutback.evals.datasets import digest
@@ -229,6 +319,12 @@ with sessions() as session:
  assert batches[0].report["billing_complete"] is True
  assert all(part.get("cleanup")=="deleted" for part in batches[0].pieces)
  plans=session.scalars(select(ExperimentPlanRecord)).all()
+ tools=session.scalars(select(ToolSessionRecord)).all()
+ operations=session.scalars(select(ToolOperationRecord)).all()
+ if TOOLS_EXPECTED:
+  assert len(tools)==4 and all(row.state=="CLOSED" and row.cleanup_confirmed for row in tools)
+  assert len(operations)==8 and all(row.state=="RETURNED" for row in operations)
+  assert sum(row.state_changed is True for row in operations)==4
  assert plans
  for row in plans:
   before=original.get(row.project_id,row.specification["artifact_ref"])
@@ -236,9 +332,9 @@ with sessions() as session:
   rotating.rekey(row.project_id,row.specification["artifact_ref"])
   after=new_only.get(row.project_id,row.specification["artifact_ref"])
   assert before==after
-print(json.dumps({"restored_and_rekeyed_objects":len(rows)+len(caches),"restored_and_rekeyed_cache_objects":len(caches),"restored_and_rekeyed_plans":len(plans),"semantic_qualified_catalog_restored":True,"database_pointers_preserved":True}))
+print(json.dumps({"restored_and_rekeyed_objects":len(rows)+len(caches),"restored_and_rekeyed_cache_objects":len(caches),"restored_and_rekeyed_plans":len(plans),"semantic_qualified_catalog_restored":True,"isolated_tool_receipts_restored":bool(TOOLS_EXPECTED),"database_pointers_preserved":True}))
 engine.dispose()
-""".replace("RECOVERED", repr(names[1]))
+""".replace("RECOVERED", repr(names[1])).replace("TOOLS_EXPECTED", repr(isolated_tools))
                 recovered = json.loads(inside(container, recovery, values).strip().splitlines()[-1])
 
                 def counts(name):
@@ -365,7 +461,9 @@ engine.dispose()
                     "row_counts_match": True,
                     **recovered,
                     "production_changed": False,
-                    "secret_delivery": "anonymous_stdin_pipes",
+                    "secret_delivery": "anonymous_stdin_pipes_and_scoped_memory_clients"
+                    if isolated_tools
+                    else "anonymous_stdin_pipes",
                     "independent_otel_producer_and_replay": "passed",
                     "concurrent_load": {
                         "tenants": 2,
@@ -395,4 +493,6 @@ engine.dispose()
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--image", required=True)
-    main(parser.parse_args().image)
+    parser.add_argument("--isolated-tools", action="store_true")
+    args = parser.parse_args()
+    main(args.image, isolated_tools=args.isolated_tools)

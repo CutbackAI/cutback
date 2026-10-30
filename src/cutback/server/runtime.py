@@ -35,6 +35,8 @@ def configure_secrets(*, control=True):
         "CUTBACK_EXPERIMENT_ANTHROPIC_KEY",
         "CUTBACK_LOCAL_INFERENCE_KEY",
     ]
+    if not control:
+        names.append("CUTBACK_TOOL_BROKER_TOKEN")
     if control:
         names += [
             "CUTBACK_ADMIN_TOKEN",

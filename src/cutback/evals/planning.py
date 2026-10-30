@@ -4,6 +4,7 @@ from decimal import Decimal
 from uuid import uuid4
 
 from cutback.core.episode_judging import EpisodeJudgingSpec
+from cutback.core.isolated_episodes import IsolatedRecordExecution
 from cutback.evals.experiments import (
     Budget,
     EpisodeExecutionSpec,
@@ -38,6 +39,7 @@ def draft_plan(
     episode_judging: EpisodeJudgingSpec | None = None,
     episode_judge: ModelSpec | None = None,
     episode_max_turns=32,
+    isolated_tools: IsolatedRecordExecution | None = None,
 ):
     provenance = dataset["provenance"]
     catalog = Catalog()
@@ -62,6 +64,15 @@ def draft_plan(
         raise ValueError("NO_COMPATIBLE_CHEAPER_MODEL_SUBMIT_REVIEWED_PROMPT_VARIANT")
     inferred = provenance.get("task_inference", {}).get("suggested_metric", "nonempty")
     kind = metric_kind or inferred
+    if (
+        isolated_tools is not None
+        and kind != "episode_contract"
+        or (
+            provenance.get("task_inference", {}).get("kind") == "isolated_record_episode"
+            and isolated_tools is None
+        )
+    ):
+        raise ValueError("ISOLATED_RECORD_EPISODE_REQUIRES_EXPLICIT_BROKER_APPROVAL_CONTRACT")
     if episode_judging is not None or episode_judge is not None:
         if kind != "episode_contract" or episode_judging is None or episode_judge is None:
             raise ValueError("EPISODE_JUDGING_REQUIRES_TYPED_EPISODES_CRITERIA_AND_JUDGE")
@@ -116,18 +127,25 @@ def draft_plan(
         pilot_minimum=pilot_minimum,
         criteria=criteria or [],
         retain_case_outputs=retain_case_outputs,
-        evaluator_version="deterministic-v5"
+        evaluator_version="deterministic-v8"
+        if isolated_tools
+        else "deterministic-v5"
         if episode_judging
         else "deterministic-v4"
         if kind == "episode_contract"
         else "deterministic-v3",
-        content_nonce=uuid4() if episode_judging else None,
+        content_nonce=uuid4() if episode_judging or isolated_tools else None,
         judge=episode_judge,
         episode_execution=EpisodeExecutionSpec(
-            version="native-fixture-episode-v2" if episode_judging else "native-fixture-episode-v1",
+            version="native-isolated-record-episode-v1"
+            if isolated_tools
+            else "native-fixture-episode-v2"
+            if episode_judging
+            else "native-fixture-episode-v1",
             max_turns=episode_max_turns,
             max_tool_calls=100,
             semantic_judging=episode_judging,
+            isolated_tools=isolated_tools,
         )
         if kind == "episode_contract"
         else None,

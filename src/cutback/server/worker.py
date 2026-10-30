@@ -110,11 +110,14 @@ def load_dataset(
     }, policy
 
 
-def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run_id=None):
+def run_one(
+    sessions, store, *, executor=None, execution_enabled=False, only_run_id=None, tool_client=None
+):
     only_run_id = UUID(str(only_run_id)) if only_run_id is not None else None
     if not execution_enabled:
         return {"status": "EXPERIMENT_EXECUTION_DISABLED", "provider_calls": 0}
     owned_executor = executor is None
+    owned_tool_client = False
     if owned_executor:
         from cutback.evals.executors import ConfiguredExecutor
 
@@ -238,6 +241,24 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
 
                     executor.close()
                     executor = NativeAgentExecutor()
+            if (
+                plan.episode_execution
+                and plan.episode_execution.isolated_tools
+                and tool_client is None
+            ):
+                from cutback.server.tool_execution import configured_tool_client
+
+                try:
+                    tool_client = configured_tool_client(plan.episode_execution.isolated_tools)
+                    owned_tool_client = True
+                except (ValueError, KeyError):
+                    record.status = job.status = "BLOCKED"
+                    job.available_at = None
+                    record.results = {
+                        "code": "ISOLATED_TOOL_WORKER_NOT_CONFIGURED",
+                        "provider_calls": 0,
+                    }
+                    return {"status": "BLOCKED", "provider_calls": 0}
             record.status, job.status = "RUNNING", "RUNNING"
             job.available_at = None
             job.attempts += 1
@@ -352,6 +373,20 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
                     ):
                         raise ValueError("EXECUTION_CANCELLED_OR_LEASE_EXPIRED")
 
+            tools_factory = None
+            if plan.episode_execution and plan.episode_execution.isolated_tools:
+                from cutback.server.tool_execution import environment_factory
+
+                tools_factory = environment_factory(
+                    call_ledger,
+                    tool_client,
+                    check_authority,
+                    content_expires_at=min(
+                        datetime.fromisoformat(dataset["expires_at"]),
+                        datetime.fromisoformat(plan_row.specification["expires_at"]),
+                        datetime.now(UTC) + timedelta(seconds=plan.budget.max_wall_seconds),
+                    ),
+                )
             with observation_scope("evaluation", run_id=run_id):
                 results = run(
                     plan,
@@ -365,6 +400,7 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
                     record_call=call_ledger.record,
                     episode_lifecycle=call_ledger,
                     check_authority=check_authority,
+                    environment_factory=tools_factory,
                     record_case=recorder(
                         sessions, store, project_id, run_id, provenance["policy_id"]
                     )
@@ -493,6 +529,8 @@ def run_one(sessions, store, *, executor=None, execution_enabled=False, only_run
             )
         return {"status": record.status, "run_id": str(run_id), "results": results}
     finally:
+        if owned_tool_client:
+            tool_client.close()
         if owned_executor:
             executor.close()
 

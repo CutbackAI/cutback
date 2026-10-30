@@ -885,6 +885,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/experiments/{run_id}/tool-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tool Sessions */
+        get: operations["tool_sessions_v1_projects__project_id__experiments__run_id__tool_sessions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/experiments/{run_id}/tool-sessions/{session_id}/operations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tool Operations */
+        get: operations["tool_operations_v1_projects__project_id__experiments__run_id__tool_sessions__session_id__operations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/experiments/{run_id}/tool-sessions/{session_id}/containment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Queue Tool Containment */
+        post: operations["queue_tool_containment_v1_projects__project_id__experiments__run_id__tool_sessions__session_id__containment_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/experiments/{run_id}/calls": {
         parameters: {
             query?: never;
@@ -4325,7 +4376,8 @@ export interface components {
              * @default default
              */
             stratum: string;
-            episode?: components["schemas"]["EpisodeScenario"] | null;
+            /** Episode */
+            episode?: components["schemas"]["EpisodeScenario"] | components["schemas"]["IsolatedRecordScenario"] | null;
         };
         /** CheckoutInput */
         CheckoutInput: {
@@ -4529,7 +4581,8 @@ export interface components {
             gold?: string | unknown[] | {
                 [key: string]: unknown;
             } | null;
-            episode?: components["schemas"]["EpisodeScenario"] | null;
+            /** Episode */
+            episode?: components["schemas"]["EpisodeScenario"] | components["schemas"]["IsolatedRecordScenario"] | null;
             /** Correction Ref */
             correction_ref: string;
             /**
@@ -4594,6 +4647,7 @@ export interface components {
         };
         /** DraftInput */
         DraftInput: {
+            isolated_tools?: components["schemas"]["IsolatedRecordExecution"] | null;
             episode_judging?: components["schemas"]["EpisodeJudgingSpec"] | null;
             episode_judge?: components["schemas"]["ModelSpec-Input"] | null;
             /**
@@ -4708,7 +4762,7 @@ export interface components {
              * @default native-fixture-episode-v1
              * @enum {string}
              */
-            version: "native-fixture-episode-v1" | "native-fixture-episode-v2";
+            version: "native-fixture-episode-v1" | "native-fixture-episode-v2" | "native-isolated-record-episode-v1";
             /**
              * Openai Surface
              * @default responses.create
@@ -4732,6 +4786,7 @@ export interface components {
              */
             transport: "native_provider" | "scripted_test_only";
             semantic_judging?: components["schemas"]["EpisodeJudgingSpec"] | null;
+            isolated_tools?: components["schemas"]["IsolatedRecordExecution"] | null;
         };
         /** EpisodeJudgingSpec */
         EpisodeJudgingSpec: {
@@ -5023,7 +5078,7 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
             retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Input"] | null;
             compression_execution?: components["schemas"]["CompressionExecutionSpec-Input"] | null;
@@ -5121,7 +5176,7 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
             retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Output"] | null;
             compression_execution?: components["schemas"]["CompressionExecutionSpec-Output"] | null;
@@ -5130,6 +5185,13 @@ export interface components {
             prompt_bindings?: components["schemas"]["PromptModelBinding"][] | null;
             /** Content Nonce */
             content_nonce?: string | null;
+        };
+        /** FieldTransition */
+        FieldTransition: {
+            /** Field */
+            field: string;
+            before: components["schemas"]["JsonValue"];
+            after: components["schemas"]["JsonValue"];
         };
         /** FixtureTool */
         FixtureTool: {
@@ -5863,6 +5925,101 @@ export interface components {
              * @default []
              */
             request_profiles: components["schemas"]["SourceBinding"][];
+        };
+        /** IsolatedRecordExecution */
+        IsolatedRecordExecution: {
+            /**
+             * Version
+             * @default isolated-record-tools-v1
+             * @constant
+             */
+            version: "isolated-record-tools-v1";
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /**
+             * Principal Id
+             * Format: uuid
+             */
+            principal_id: string;
+            /**
+             * Broker Id
+             * Format: uuid
+             */
+            broker_id: string;
+            /** Environment */
+            environment: string;
+            /** Image Id */
+            image_id: string;
+            /**
+             * Max Sessions
+             * @default 32
+             */
+            max_sessions: number;
+            /**
+             * Max Total Tool Calls
+             * @default 512
+             */
+            max_total_tool_calls: number;
+            /**
+             * Max Wall Seconds
+             * @default 60
+             */
+            max_wall_seconds: number;
+            /**
+             * Max Result Bytes
+             * @default 16000
+             */
+            max_result_bytes: number;
+            /**
+             * Content Use Approved
+             * @constant
+             */
+            content_use_approved: true;
+        };
+        /** IsolatedRecordScenario */
+        IsolatedRecordScenario: {
+            /**
+             * Schema Version
+             * @default cutback.isolated-record-episode.v1
+             * @constant
+             */
+            schema_version: "cutback.isolated-record-episode.v1";
+            /**
+             * Execution
+             * @default isolated_record_tools
+             * @constant
+             */
+            execution: "isolated_record_tools";
+            /**
+             * System
+             * @default
+             */
+            system: string;
+            /** User Followups */
+            user_followups?: string[];
+            /** Seeds */
+            seeds: components["schemas"]["RecordSeed"][];
+            /** Grants */
+            grants: components["schemas"]["RecordGrant"][];
+            /**
+             * Write Approved
+             * @default false
+             */
+            write_approved: boolean;
+            assertions?: components["schemas"]["EpisodeAssertions"];
+            /**
+             * Max Turns
+             * @default 8
+             */
+            max_turns: number;
+            /**
+             * Max Tool Calls
+             * @default 16
+             */
+            max_tool_calls: number;
         };
         JsonValue: unknown;
         /** KeyInput */
@@ -7472,6 +7629,56 @@ export interface components {
              */
             plan_id: string;
         };
+        /** RecordGrant */
+        RecordGrant: {
+            /**
+             * Resource Id
+             * Format: uuid
+             */
+            resource_id: string;
+            /**
+             * Read Fields
+             * @default []
+             */
+            read_fields: string[];
+            /**
+             * Transitions
+             * @default []
+             */
+            transitions: components["schemas"]["FieldTransition"][];
+        };
+        /** RecordSeed */
+        RecordSeed: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /**
+             * Owner Id
+             * Format: uuid
+             */
+            owner_id: string;
+            /**
+             * Environment
+             * @default staging
+             */
+            environment: string;
+            /**
+             * Version
+             * @default 0
+             */
+            version: number;
+            /** Fields */
+            fields: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+        };
         /** RequestContract */
         RequestContract: {
             /**
@@ -8951,6 +9158,11 @@ export interface components {
              */
             minimum_occurrences: number;
         };
+        /** ToolContainmentRequest */
+        ToolContainmentRequest: {
+            /** Approval Hash */
+            approval_hash: string;
+        };
         /** ToolFixture */
         ToolFixture: {
             /** Arguments */
@@ -8968,6 +9180,132 @@ export interface components {
             };
             /** Effect Id */
             effect_id?: string | null;
+        };
+        /** ToolOperationPage */
+        ToolOperationPage: {
+            /** Items */
+            items: components["schemas"]["ToolOperationReceipt"][];
+            /** Next After */
+            next_after: number | null;
+            /** Retained Operations */
+            retained_operations: number;
+            /** Tool Cost Usd */
+            tool_cost_usd?: null;
+        };
+        /** ToolOperationReceipt */
+        ToolOperationReceipt: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Session Id
+             * Format: uuid
+             */
+            session_id: string;
+            /** Sequence */
+            sequence: number;
+            /** Tool Kind */
+            tool_kind: string;
+            /** State */
+            state: string;
+            /** State Changed */
+            state_changed: boolean | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Completed At */
+            completed_at: string | null;
+        };
+        /** ToolSessionPage */
+        ToolSessionPage: {
+            /** Items */
+            items: components["schemas"]["ToolSessionReceipt"][];
+            /** Next After */
+            next_after: string | null;
+            /** Retained Sessions */
+            retained_sessions: number;
+            /** Tool Cost Usd */
+            tool_cost_usd?: null;
+            /** Complete Task Cost Usd */
+            complete_task_cost_usd?: null;
+            /**
+             * Evidence Scope
+             * @default isolated_record_tools_not_production_application_state
+             */
+            evidence_scope: string;
+        };
+        /** ToolSessionReceipt */
+        ToolSessionReceipt: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            /**
+             * Episode Id
+             * Format: uuid
+             */
+            episode_id: string;
+            /** Model Key */
+            model_key?: string | null;
+            /** Repeat Index */
+            repeat_index?: number | null;
+            /**
+             * Principal Id
+             * Format: uuid
+             */
+            principal_id: string;
+            /**
+             * Broker Id
+             * Format: uuid
+             */
+            broker_id: string;
+            /**
+             * Broker Generation
+             * Format: uuid
+             */
+            broker_generation: string;
+            /** Policy Sha256 */
+            policy_sha256: string;
+            /** Approval Hash */
+            approval_hash: string;
+            /** Image Id */
+            image_id: string;
+            /** Max Calls */
+            max_calls: number;
+            /** Calls Used */
+            calls_used: number;
+            /** Max Wall Seconds */
+            max_wall_seconds: number;
+            /** State */
+            state: string;
+            /** Cleanup Confirmed */
+            cleanup_confirmed: boolean;
+            /** Cleanup Requested */
+            cleanup_requested: boolean;
+            /** Cleanup Attempts */
+            cleanup_attempts: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Lease Until
+             * Format: date-time
+             */
+            lease_until: string;
+            /** Completed At */
+            completed_at: string | null;
         };
         /** TraceAlignment */
         TraceAlignment: {
@@ -11438,6 +11776,114 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CampaignBrief"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tool_sessions_v1_projects__project_id__experiments__run_id__tool_sessions_get: {
+        parameters: {
+            query?: {
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ToolSessionPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tool_operations_v1_projects__project_id__experiments__run_id__tool_sessions__session_id__operations_get: {
+        parameters: {
+            query?: {
+                after?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                run_id: string;
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ToolOperationPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    queue_tool_containment_v1_projects__project_id__experiments__run_id__tool_sessions__session_id__containment_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                run_id: string;
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ToolContainmentRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ToolSessionReceipt"];
                 };
             };
             /** @description Validation Error */

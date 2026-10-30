@@ -12,6 +12,8 @@ Updated 30 October 2026. Cutback is a pre-alpha product with tested, bounded wor
 
 A source merge does not update the PyPI wheel. New source commands require a source-matched installation and collector; do not mix them with an older wheel and assume compatibility.
 
+The [isolated record tool follow-up](isolated-tools.md) is under qualification in source. Its independent example uses a separate broker process, actual contained SQL effects, immutable permissions and canonical one-shot receipts. It does not run production application tools. Follow [progress](progress.md) for its remaining installed, browser, recovery and publication gates.
+
 The context-compression follow-up adds actual original-versus-compressed native input comparisons, encrypted input review and checked settings proposals. Its current qualification and remaining gates are recorded in [progress](progress.md); [the independent application](../examples/context-compression/README.md) provides the source-checkout walkthrough.
 
 The [PR 42](https://github.com/CutbackAI/cutback/pull/42) source increment extends new agent/dashboard campaigns to a frozen portfolio of up to four qualified model/output-limit alternatives, sharing one parent budget and one independent confirmation. It passed installed and all ten hosted gates recorded in [progress](progress.md). Existing saved campaigns keep their exact contracts; this does not update PyPI or combine every optimizer into one automatic system.

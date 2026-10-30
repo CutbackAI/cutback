@@ -12,6 +12,7 @@ from uuid import UUID
 from pydantic import Field, model_serializer, model_validator
 
 from cutback.core.episodes import EpisodeScenario
+from cutback.core.isolated_episodes import IsolatedRecordScenario
 from cutback.core.models import Identifier, StrictModel
 
 
@@ -91,7 +92,7 @@ class Case(StrictModel):
     reference: str | None = Field(default=None, max_length=64000)
     group: Identifier | None = None
     stratum: Identifier = "default"
-    episode: EpisodeScenario | None = None
+    episode: EpisodeScenario | IsolatedRecordScenario | None = None
 
     @model_serializer(mode="wrap")
     def preserve_existing_case_hashes(self, handler):
@@ -137,6 +138,11 @@ def infer_task(body: DatasetImport) -> dict:
             "episode_contract",
             "declared_fixture_state_and_conversation_assertions",
         )
+        if all(isinstance(case.episode, IsolatedRecordScenario) for case in body.cases):
+            kind, basis = (
+                "isolated_record_episode",
+                "declared_isolated_sql_state_and_conversation_assertions",
+            )
     elif independent and all(isinstance(label, (dict, list)) for label in labels):
         kind, metric, basis = "structured_extraction", "field_f1", "independent_structured_gold"
     elif independent and all(isinstance(label, str) for label in labels):

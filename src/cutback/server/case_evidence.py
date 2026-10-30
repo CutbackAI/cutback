@@ -10,6 +10,7 @@ from pydantic import model_validator
 from sqlalchemy import select, true
 
 from cutback.core.episodes import EpisodeScenario
+from cutback.core.isolated_episodes import IsolatedRecordScenario
 from cutback.core.models import Identifier, StrictModel
 from cutback.evals.datasets import digest
 from cutback.server.content_policy import policy_content
@@ -101,7 +102,7 @@ class CorrectionInput(StrictModel):
     purpose: Identifier
     case_id: Identifier
     gold: str | list | dict | None = None
-    episode: EpisodeScenario | None = None
+    episode: EpisodeScenario | IsolatedRecordScenario | None = None
     correction_ref: Identifier
     all_labels_reviewed: bool = False
 

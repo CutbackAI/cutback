@@ -11,6 +11,7 @@ from pydantic import Field
 from sqlalchemy import func, select
 
 from cutback.core.episode_judging import EpisodeJudgingSpec
+from cutback.core.isolated_episodes import IsolatedRecordExecution
 from cutback.core.models import Identifier, StrictModel
 from cutback.core.retrieval import RetrievalConfigurationBinding, RetrievalCorpus, RetrievalSettings
 from cutback.evals.artifacts import configured_store
@@ -116,6 +117,7 @@ class RetrievalConfirmationInput(StrictModel):
 
 
 class DraftInput(StrictModel):
+    isolated_tools: IsolatedRecordExecution | None = None
     episode_judging: EpisodeJudgingSpec | None = None
     episode_judge: ModelSpec | None = None
     episode_max_turns: int = Field(default=32, ge=1, le=32)
@@ -181,6 +183,8 @@ def dataset_manifest(session, dataset):
             {
                 "split": row.split,
                 "episode_max_turns": payload.metadata_safe.get("episode_max_turns"),
+                "episode_max_tool_calls": payload.metadata_safe.get("episode_max_tool_calls"),
+                "episode_execution": payload.metadata_safe.get("episode_execution"),
             }
             for row, payload in rows
         ],
@@ -317,7 +321,11 @@ def persist_dataset(
                     "redaction": policy.redaction_version,
                     "ordinal": ordinal,
                     **(
-                        {"episode_max_turns": item["case"]["episode"]["max_turns"]}
+                        {
+                            "episode_max_turns": item["case"]["episode"]["max_turns"],
+                            "episode_max_tool_calls": item["case"]["episode"]["max_tool_calls"],
+                            "episode_execution": item["case"]["episode"]["execution"],
+                        }
                         if item["case"].get("episode")
                         else {}
                     ),
@@ -680,6 +688,7 @@ def install_evaluation(app, sessions, authorize, scope):
                 episode_judging=body.episode_judging,
                 episode_judge=body.episode_judge,
                 episode_max_turns=body.episode_max_turns,
+                isolated_tools=body.isolated_tools,
             )
             spec = spec.model_copy(update={"name": body.name})
         except ValueError as exc:
@@ -859,6 +868,16 @@ def install_evaluation(app, sessions, authorize, scope):
                 ):
                     raise HTTPException(409, "SOURCE_REQUEST_PROFILE_NOT_REGISTERED")
             _, policy = active_policy(session, project_id, UUID(dataset.provenance["policy_id"]))
+            isolated = (
+                body.specification.episode_execution.isolated_tools
+                if body.specification.episode_execution
+                else None
+            )
+            if isolated and (
+                isolated.project_id != project_id
+                or isolated.environment != dataset.provenance["environment"]
+            ):
+                raise HTTPException(403, "ISOLATED_TOOL_PLAN_DATASET_SCOPE_DENIED")
             if body.specification.workflow != dataset.workflow_id or any(
                 p not in policy.allowed_providers for p in body.specification.approved_providers
             ):
@@ -1135,6 +1154,18 @@ def install_evaluation(app, sessions, authorize, scope):
             if row.status not in {"QUEUED", "BLOCKED", "RUNNING"}:
                 raise HTTPException(409, "RUN_TERMINAL")
             row.status = "CANCELLED"
+            from cutback.server.tool_db import ToolSessionRecord
+
+            for tool_session in session.scalars(
+                select(ToolSessionRecord)
+                .where(
+                    ToolSessionRecord.run_id == row.id,
+                    ToolSessionRecord.project_id == project_id,
+                    ToolSessionRecord.cleanup_confirmed.is_(False),
+                )
+                .with_for_update()
+            ):
+                tool_session.cleanup_requested = True
             job = session.scalar(
                 select(JobRecord).where(JobRecord.run_id == row.id).with_for_update()
             )

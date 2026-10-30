@@ -93,6 +93,32 @@ def test_semantic_local_worker_needs_no_native_key_and_batches_mount_only_select
             assert ("openai_experiment_key" in str(container)) == (container["name"] == "worker")
 
 
+def test_external_tool_cleanup_mounts_only_a_scoped_worker_key_without_model_or_daemon_authority():
+    settings = (
+        "toolBroker.containment=true,toolBroker.origin=https://tools.example.invalid,"
+        "toolBroker.projectID=11111111-1111-4111-8111-111111111111,"
+        "toolBroker.principalID=22222222-2222-4222-8222-222222222222,"
+        "toolBroker.brokerID=33333333-3333-4333-8333-333333333333,"
+        "toolBroker.imageID=sha256:" + "a" * 64 + ",toolBroker.secretName=owned-tool-client"
+    )
+    rows = render("--set", settings)
+    assert "hostPath" not in str(rows) and "docker.sock" not in str(rows)
+    assert "experiment_key" not in str(rows)
+    for row in rows:
+        if row["kind"] == "Deployment":
+            container = row["spec"]["template"]["spec"]["containers"][0]
+            env = {item["name"]: item.get("value") for item in container["env"]}
+            if container["name"] == "worker":
+                assert env["CUTBACK_TOOL_EXECUTION"] == "false"
+                assert env["CUTBACK_TOOL_CONTAINMENT"] == "true"
+                assert env["CUTBACK_TOOL_BROKER_TOKEN_FILE"] == "/run/tool-broker/token"
+            else:
+                assert not any(name.startswith("CUTBACK_TOOL_") for name in env)
+    render("--set", "toolBroker.execution=true", expect_ok=False)
+    render("--set", settings + ",worker.enabled=false", expect_ok=False)
+    render("--set", settings + ",toolBroker.secretName=cutback-runtime", expect_ok=False)
+
+
 def helm_binary():
     value = os.getenv("CUTBACK_HELM_BIN") or shutil.which("helm")
     local = ROOT / "artifacts/tools/helm-4.3.1/helm.exe"

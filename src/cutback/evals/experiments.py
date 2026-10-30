@@ -13,6 +13,7 @@ from pydantic import Field, JsonValue, PrivateAttr, model_serializer, model_vali
 from cutback.core.agent_turns import AgentTurnFrame
 from cutback.core.episode_judging import EpisodeJudgingSpec
 from cutback.core.episodes import EpisodeAssistant
+from cutback.core.isolated_episodes import IsolatedRecordExecution
 from cutback.core.models import Identifier, StrictModel
 from cutback.core.native_models import NativeModelContract, validate_luna_text_contract
 from cutback.core.observation import observation_scope
@@ -197,24 +198,33 @@ class PromptModelBinding(StrictModel):
 
 
 class EpisodeExecutionSpec(StrictModel):
-    version: Literal["native-fixture-episode-v1", "native-fixture-episode-v2"] = (
-        "native-fixture-episode-v1"
-    )
+    version: Literal[
+        "native-fixture-episode-v1",
+        "native-fixture-episode-v2",
+        "native-isolated-record-episode-v1",
+    ] = "native-fixture-episode-v1"
     openai_surface: Literal["responses.create", "chat.completions.create"] = "responses.create"
     max_turns: int = Field(default=8, ge=1, le=32)
     max_tool_calls: int = Field(default=16, ge=0, le=100)
     transport: Literal["native_provider", "scripted_test_only"] = "native_provider"
     semantic_judging: EpisodeJudgingSpec | None = None
+    isolated_tools: IsolatedRecordExecution | None = None
 
     @model_serializer(mode="wrap")
     def preserve_existing_episode_hashes(self, handler):
         result = handler(self)
         if self.semantic_judging is None:
             result.pop("semantic_judging", None)
+        if self.isolated_tools is None:
+            result.pop("isolated_tools", None)
         return result
 
     @model_validator(mode="after")
     def judging_version(self):
+        if (self.version == "native-isolated-record-episode-v1") != (
+            self.isolated_tools is not None
+        ):
+            raise ValueError("ISOLATED_EPISODE_REQUIRES_EXPLICIT_SEPARATE_EXECUTION_CONTRACT")
         if (self.version == "native-fixture-episode-v2") != (self.semantic_judging is not None):
             raise ValueError("EPISODE_SEMANTIC_JUDGING_REQUIRES_EXPLICIT_V2_EXECUTION")
         return self
@@ -259,6 +269,7 @@ class ExperimentPlan(StrictModel):
         "deterministic-v5",
         "deterministic-v6",
         "deterministic-v7",
+        "deterministic-v8",
     ] = "deterministic-v3"
     episode_execution: EpisodeExecutionSpec | None = None
     retrieval_execution: RetrievalExecutionSpec | None = None
@@ -378,8 +389,16 @@ class ExperimentPlan(StrictModel):
                     raise ValueError("RETRIEVAL_FRAME_EXCEEDS_NATIVE_INPUT_BOUND")
         if self.episode_execution:
             semantic = self.episode_execution.semantic_judging is not None
+            isolated = self.episode_execution.isolated_tools is not None
             if (
-                self.evaluator_version != ("deterministic-v5" if semantic else "deterministic-v4")
+                self.evaluator_version
+                != (
+                    "deterministic-v8"
+                    if isolated
+                    else "deterministic-v5"
+                    if semantic
+                    else "deterministic-v4"
+                )
                 or self.metric.kind != "episode_contract"
                 or self.criteria
                 or bool(self.judge) != semantic
@@ -388,6 +407,10 @@ class ExperimentPlan(StrictModel):
                 or self.prompt_bindings
             ):
                 raise ValueError("EPISODE_MODE_REQUIRES_SEPARATE_V4_CONTRACT")
+            if isolated and (
+                self.content_nonce is None or self.content_nonce.int == 0 or self.staged or semantic
+            ):
+                raise ValueError("ISOLATED_EPISODE_REQUIRES_NONCE_AND_SEPARATE_V8_APPROVAL")
             if semantic:
                 from cutback.evals.episode_judging import episode_judge_model
 
@@ -818,6 +841,7 @@ def run(
     record_case=None,
     episode_lifecycle=None,
     check_authority=None,
+    environment_factory=None,
 ) -> dict:
     summary = plan_summary(plan, dataset)
     if approval_hash != summary["plan_hash"]:
@@ -837,6 +861,7 @@ def run(
             reserve=reserve,
             episode_lifecycle=episode_lifecycle,
             check_authority=check_authority,
+            environment_factory=environment_factory,
         )
     from cutback.evals.input_groups import InputGroupingViolation, effective_input_groups
 

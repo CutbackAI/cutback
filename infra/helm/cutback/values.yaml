@@ -39,6 +39,17 @@ execution:
   # Exactly these keys are mounted on the worker, never on the collector.
   providers: []
   localEndpoint: ""
+toolBroker:
+  # This chart never deploys a Docker daemon or mounts its socket.
+  execution: false
+  containment: false
+  origin: ""
+  projectID: ""
+  principalID: ""
+  brokerID: ""
+  imageID: ""
+  secretName: ""
+  tokenKey: token
 notifications:
   enabled: false
   registryKey: destinations

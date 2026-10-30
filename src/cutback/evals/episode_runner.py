@@ -4,6 +4,7 @@ import json
 import math
 from collections import Counter
 from decimal import Decimal
+from typing import Any
 
 from cutback.core.agent_turns import AgentMessage, AgentToolDefinition, AgentTurnFrame
 from cutback.core.episodes import (
@@ -12,6 +13,7 @@ from cutback.core.episodes import (
     EpisodeUser,
     bounded_episode_value,
 )
+from cutback.core.isolated_episodes import IsolatedRecordScenario
 from cutback.evals.episode_fixtures import FixtureRunner
 from cutback.evals.episode_metrics import assess_episode
 
@@ -22,7 +24,10 @@ def selected_items(plan, dataset):
 
 
 def effective_scenario(plan, case):
-    scenario = EpisodeScenario.model_validate(case.get("episode"))
+    isolated = plan.episode_execution.isolated_tools is not None
+    scenario = (IsolatedRecordScenario if isolated else EpisodeScenario).model_validate(
+        case.get("episode")
+    )
     return scenario.model_copy(
         update={
             "max_turns": min(scenario.max_turns, plan.episode_execution.max_turns),
@@ -34,17 +39,35 @@ def effective_scenario(plan, case):
 def episode_forecast(plan, dataset):
     from cutback.evals.experiments import upper_cost
 
-    turns = 0
+    turns, tools = 0, 0
     for item in selected_items(plan, dataset):
         if "case" in item:
-            bound = effective_scenario(plan, item["case"]).max_turns
+            scenario = effective_scenario(plan, item["case"])
+            bound = scenario.max_turns
+            tools += min(scenario.max_tool_calls, plan.episode_execution.max_tool_calls)
         else:
             bound = item.get("episode_max_turns")
             if type(bound) is not int or not 1 <= bound <= 32:
                 raise ValueError("TYPED_EPISODE_CASES_REQUIRED")
             bound = min(bound, plan.episode_execution.max_turns)
+            if plan.episode_execution.isolated_tools:
+                tool_bound = item.get("episode_max_tool_calls")
+                if (
+                    item.get("episode_execution") != "isolated_record_tools"
+                    or type(tool_bound) is not int
+                    or not 1 <= tool_bound <= 100
+                ):
+                    raise ValueError("TYPED_ISOLATED_RECORD_CASES_REQUIRED")
+                tools += min(tool_bound, plan.episode_execution.max_tool_calls)
         turns += bound
     models = [plan.baseline, *plan.candidates]
+    isolated = plan.episode_execution.isolated_tools
+    if isolated and (
+        len(selected_items(plan, dataset)) * len(models) * plan.repeats > isolated.max_sessions
+        or tools * len(models) * plan.repeats > isolated.max_total_tool_calls
+        or plan.episode_execution.max_tool_calls < 1
+    ):
+        raise ValueError("ISOLATED_TOOL_SESSION_OR_CALL_FORECAST_EXCEEDS_APPROVAL")
     judge_calls = (
         len(selected_items(plan, dataset)) * len(models) * plan.repeats
         if plan.episode_execution.semantic_judging
@@ -57,9 +80,26 @@ def episode_forecast(plan, dataset):
     )
 
 
-def execute_episode(plan, model, case, ledger, executor, *, check_authority=None):
+def execute_episode(
+    plan, model, case, ledger, executor, *, check_authority=None, environment_factory=None
+):
     scenario = effective_scenario(plan, case)
-    fixtures = FixtureRunner(scenario)
+    isolated = plan.episode_execution.isolated_tools is not None
+    if isolated and environment_factory is None:
+        raise ValueError("ISOLATED_TOOL_DURABLE_ENVIRONMENT_REQUIRED_NO_FIXTURE_FALLBACK")
+    fixtures: Any = environment_factory(scenario) if isolated else FixtureRunner(scenario)
+    try:
+        return _execute_with_environment(
+            plan, model, case, ledger, executor, scenario, fixtures, check_authority
+        )
+    finally:
+        if isolated:
+            fixtures.close()
+
+
+def _execute_with_environment(
+    plan, model, case, ledger, executor, scenario, fixtures, check_authority
+):
     events = [EpisodeUser(text=case["input"])]
     messages = [AgentMessage(role="user", text=case["input"])]
     tools = [AgentToolDefinition(**tool) for tool in fixtures.visible_tools()]
@@ -150,6 +190,12 @@ def execute_episode(plan, model, case, ledger, executor, *, check_authority=None
                 outcome = "policy_denied"
                 break
             events.append(executed.event)
+            if (
+                plan.episode_execution.isolated_tools is not None
+                and executed.event.status == "uncertain"
+            ):
+                outcome = "outage"
+                break
             if executed.retrieval:
                 events.append(executed.retrieval)
             messages.append(
@@ -163,8 +209,15 @@ def execute_episode(plan, model, case, ledger, executor, *, check_authority=None
             if len(seen) > scenario.max_tool_calls:
                 outcome = "tool_limit"
                 break
-        if outcome in {"policy_denied", "tool_limit"}:
+        if outcome in {"policy_denied", "tool_limit", "outage"}:
             break
+    isolated = plan.episode_execution.isolated_tools is not None
+    truncated = False
+    if isolated:
+        try:
+            fixtures.seal()
+        except Exception:
+            outcome, truncated = "outage", True
     try:
         observation = EpisodeObservation.model_validate(
             {
@@ -173,6 +226,7 @@ def execute_episode(plan, model, case, ledger, executor, *, check_authority=None
                 "final_answer": answer,
                 "citations": list(citations),
                 "final_state": fixtures.state,
+                "truncated": truncated,
             }
         )
     except ValueError:
@@ -181,9 +235,13 @@ def execute_episode(plan, model, case, ledger, executor, *, check_authority=None
             events=[events[0]],
             outcome="content_limit",
             truncated=True,
-            final_state=scenario.initial_state,
+            final_state={} if isolated else scenario.initial_state,
         )
-    return observation, assess_episode(scenario, observation, cutoff=plan.metric.cutoff)
+    return observation, (
+        fixtures.assess(observation)
+        if isolated
+        else assess_episode(scenario, observation, cutoff=plan.metric.cutoff)
+    )
 
 
 def run_episodes(
@@ -197,6 +255,7 @@ def run_episodes(
     record_case=None,
     episode_lifecycle=None,
     check_authority=None,
+    environment_factory=None,
 ):
     from cutback.evals.experiments import BudgetLedger, plan_summary
 
@@ -237,7 +296,13 @@ def run_episodes(
                             scenario.max_turns + int(semantic is not None),
                         )
                     observed, assessment = execute_episode(
-                        plan, model, case, ledger, executor, check_authority=check_authority
+                        plan,
+                        model,
+                        case,
+                        ledger,
+                        executor,
+                        check_authority=check_authority,
+                        environment_factory=environment_factory,
                     )
                     judge_raw = None
                     if semantic:
@@ -258,6 +323,10 @@ def run_episodes(
                         check_authority()
                     if episode_lifecycle:
                         episode_lifecycle.finish_episode(observed, assessment)
+                    if plan.episode_execution.isolated_tools and not assessment.get(
+                        "containment_confirmed"
+                    ):
+                        raise ValueError("ISOLATED_TOOL_EVIDENCE_UNCERTAIN_STOP_FURTHER_REQUESTS")
                     states[assessment["status"]] += 1
                     outcomes[observed.outcome] += 1
                     failures.update(
@@ -306,7 +375,9 @@ def run_episodes(
                 "evidence_tier": 3 if semantic else 1,
                 "unknown": states["unknown"],
                 "errors": states["error"],
-                "scope": "declared_fixture_and_model_proxy"
+                "scope": "declared_isolated_sql_contract"
+                if plan.episode_execution.isolated_tools
+                else "declared_fixture_and_model_proxy"
                 if semantic
                 else "declared_synthetic_episode_contract",
             }
@@ -336,6 +407,11 @@ def run_episodes(
                 if known == requests and decided == total and states["passed"]
                 else None,
                 "production_task_cost_usd": None,
+                **(
+                    {"tool_cost_usd": None, "complete_task_cost_usd": None}
+                    if plan.episode_execution.isolated_tools
+                    else {}
+                ),
                 "population_coverage": "unknown",
                 "cost_evidence": "scripted_fixture_usage"
                 if plan.episode_execution.transport == "scripted_test_only"

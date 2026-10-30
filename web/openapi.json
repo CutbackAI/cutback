@@ -3094,6 +3094,239 @@
         }
       }
     },
+    "/v1/projects/{project_id}/experiments/{run_id}/tool-sessions": {
+      "get": {
+        "summary": "Tool Sessions",
+        "operationId": "tool_sessions_v1_projects__project_id__experiments__run_id__tool_sessions_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolSessionPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/experiments/{run_id}/tool-sessions/{session_id}/operations": {
+      "get": {
+        "summary": "Tool Operations",
+        "operationId": "tool_operations_v1_projects__project_id__experiments__run_id__tool_sessions__session_id__operations_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 0,
+              "default": 0,
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolOperationPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/experiments/{run_id}/tool-sessions/{session_id}/containment": {
+      "post": {
+        "summary": "Queue Tool Containment",
+        "operationId": "queue_tool_containment_v1_projects__project_id__experiments__run_id__tool_sessions__session_id__containment_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToolContainmentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolSessionReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{project_id}/experiments/{run_id}/calls": {
       "get": {
         "summary": "Calls",
@@ -15430,9 +15663,13 @@
                 "$ref": "#/components/schemas/EpisodeScenario"
               },
               {
+                "$ref": "#/components/schemas/IsolatedRecordScenario"
+              },
+              {
                 "type": "null"
               }
-            ]
+            ],
+            "title": "Episode"
           }
         },
         "additionalProperties": false,
@@ -15974,9 +16211,13 @@
                 "$ref": "#/components/schemas/EpisodeScenario"
               },
               {
+                "$ref": "#/components/schemas/IsolatedRecordScenario"
+              },
+              {
                 "type": "null"
               }
-            ]
+            ],
+            "title": "Episode"
           },
           "correction_ref": {
             "type": "string",
@@ -16113,6 +16354,16 @@
       },
       "DraftInput": {
         "properties": {
+          "isolated_tools": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IsolatedRecordExecution"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "episode_judging": {
             "anyOf": [
               {
@@ -16465,7 +16716,8 @@
             "type": "string",
             "enum": [
               "native-fixture-episode-v1",
-              "native-fixture-episode-v2"
+              "native-fixture-episode-v2",
+              "native-isolated-record-episode-v1"
             ],
             "title": "Version",
             "default": "native-fixture-episode-v1"
@@ -16506,6 +16758,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/EpisodeJudgingSpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "isolated_tools": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IsolatedRecordExecution"
               },
               {
                 "type": "null"
@@ -17225,7 +17487,8 @@
               "deterministic-v4",
               "deterministic-v5",
               "deterministic-v6",
-              "deterministic-v7"
+              "deterministic-v7",
+              "deterministic-v8"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -17520,7 +17783,8 @@
               "deterministic-v4",
               "deterministic-v5",
               "deterministic-v6",
-              "deterministic-v7"
+              "deterministic-v7",
+              "deterministic-v8"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -17606,6 +17870,28 @@
           "approved_providers"
         ],
         "title": "ExperimentPlan"
+      },
+      "FieldTransition": {
+        "properties": {
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "before": {
+            "$ref": "#/components/schemas/JsonValue"
+          },
+          "after": {
+            "$ref": "#/components/schemas/JsonValue"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "field",
+          "before",
+          "after"
+        ],
+        "title": "FieldTransition"
       },
       "FixtureTool": {
         "properties": {
@@ -19427,6 +19713,164 @@
           "limitations"
         ],
         "title": "Inventory"
+      },
+      "IsolatedRecordExecution": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "isolated-record-tools-v1",
+            "title": "Version",
+            "default": "isolated-record-tools-v1"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "principal_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Principal Id"
+          },
+          "broker_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Broker Id"
+          },
+          "environment": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Environment"
+          },
+          "image_id": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$",
+            "title": "Image Id"
+          },
+          "max_sessions": {
+            "type": "integer",
+            "maximum": 128.0,
+            "minimum": 1.0,
+            "title": "Max Sessions",
+            "default": 32
+          },
+          "max_total_tool_calls": {
+            "type": "integer",
+            "maximum": 4096.0,
+            "minimum": 1.0,
+            "title": "Max Total Tool Calls",
+            "default": 512
+          },
+          "max_wall_seconds": {
+            "type": "integer",
+            "maximum": 120.0,
+            "minimum": 1.0,
+            "title": "Max Wall Seconds",
+            "default": 60
+          },
+          "max_result_bytes": {
+            "type": "integer",
+            "maximum": 64000.0,
+            "minimum": 256.0,
+            "title": "Max Result Bytes",
+            "default": 16000
+          },
+          "content_use_approved": {
+            "type": "boolean",
+            "const": true,
+            "title": "Content Use Approved"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "project_id",
+          "principal_id",
+          "broker_id",
+          "environment",
+          "image_id",
+          "content_use_approved"
+        ],
+        "title": "IsolatedRecordExecution"
+      },
+      "IsolatedRecordScenario": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "cutback.isolated-record-episode.v1",
+            "title": "Schema Version",
+            "default": "cutback.isolated-record-episode.v1"
+          },
+          "execution": {
+            "type": "string",
+            "const": "isolated_record_tools",
+            "title": "Execution",
+            "default": "isolated_record_tools"
+          },
+          "system": {
+            "type": "string",
+            "maxLength": 16000,
+            "title": "System",
+            "default": ""
+          },
+          "user_followups": {
+            "items": {
+              "type": "string",
+              "maxLength": 16000,
+              "minLength": 1
+            },
+            "type": "array",
+            "maxItems": 16,
+            "title": "User Followups"
+          },
+          "seeds": {
+            "items": {
+              "$ref": "#/components/schemas/RecordSeed"
+            },
+            "type": "array",
+            "maxItems": 64,
+            "minItems": 1,
+            "title": "Seeds"
+          },
+          "grants": {
+            "items": {
+              "$ref": "#/components/schemas/RecordGrant"
+            },
+            "type": "array",
+            "maxItems": 64,
+            "minItems": 1,
+            "title": "Grants"
+          },
+          "write_approved": {
+            "type": "boolean",
+            "title": "Write Approved",
+            "default": false
+          },
+          "assertions": {
+            "$ref": "#/components/schemas/EpisodeAssertions"
+          },
+          "max_turns": {
+            "type": "integer",
+            "maximum": 32.0,
+            "minimum": 1.0,
+            "title": "Max Turns",
+            "default": 8
+          },
+          "max_tool_calls": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Max Tool Calls",
+            "default": 16
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "seeds",
+          "grants"
+        ],
+        "title": "IsolatedRecordScenario"
       },
       "JsonValue": {},
       "KeyInput": {
@@ -23399,6 +23843,88 @@
         ],
         "title": "QueueInput"
       },
+      "RecordGrant": {
+        "properties": {
+          "resource_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Resource Id"
+          },
+          "read_fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 32,
+            "title": "Read Fields",
+            "default": []
+          },
+          "transitions": {
+            "items": {
+              "$ref": "#/components/schemas/FieldTransition"
+            },
+            "type": "array",
+            "maxItems": 32,
+            "title": "Transitions",
+            "default": []
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "resource_id"
+        ],
+        "title": "RecordGrant"
+      },
+      "RecordSeed": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "owner_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Owner Id"
+          },
+          "environment": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Environment",
+            "default": "staging"
+          },
+          "version": {
+            "type": "integer",
+            "maximum": 1000000.0,
+            "minimum": 0.0,
+            "title": "Version",
+            "default": 0
+          },
+          "fields": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "maxProperties": 32,
+            "title": "Fields"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "project_id",
+          "owner_id",
+          "fields"
+        ],
+        "title": "RecordSeed"
+      },
       "RequestContract": {
         "properties": {
           "version": {
@@ -27116,6 +27642,20 @@
         ],
         "title": "ToolArgumentCheck"
       },
+      "ToolContainmentRequest": {
+        "properties": {
+          "approval_hash": {
+            "type": "string",
+            "title": "Approval Hash"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "approval_hash"
+        ],
+        "title": "ToolContainmentRequest"
+      },
       "ToolFixture": {
         "properties": {
           "arguments": {
@@ -27164,6 +27704,301 @@
           "result"
         ],
         "title": "ToolFixture"
+      },
+      "ToolOperationPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ToolOperationReceipt"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          },
+          "retained_operations": {
+            "type": "integer",
+            "title": "Retained Operations"
+          },
+          "tool_cost_usd": {
+            "type": "null",
+            "title": "Tool Cost Usd"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_after",
+          "retained_operations"
+        ],
+        "title": "ToolOperationPage"
+      },
+      "ToolOperationReceipt": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "session_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Session Id"
+          },
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence"
+          },
+          "tool_kind": {
+            "type": "string",
+            "title": "Tool Kind"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "state_changed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State Changed"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "session_id",
+          "sequence",
+          "tool_kind",
+          "state",
+          "state_changed",
+          "created_at",
+          "completed_at"
+        ],
+        "title": "ToolOperationReceipt"
+      },
+      "ToolSessionPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ToolSessionReceipt"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          },
+          "retained_sessions": {
+            "type": "integer",
+            "title": "Retained Sessions"
+          },
+          "tool_cost_usd": {
+            "type": "null",
+            "title": "Tool Cost Usd"
+          },
+          "complete_task_cost_usd": {
+            "type": "null",
+            "title": "Complete Task Cost Usd"
+          },
+          "evidence_scope": {
+            "type": "string",
+            "title": "Evidence Scope",
+            "default": "isolated_record_tools_not_production_application_state"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_after",
+          "retained_sessions"
+        ],
+        "title": "ToolSessionPage"
+      },
+      "ToolSessionReceipt": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Environment Id"
+          },
+          "episode_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Episode Id"
+          },
+          "model_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Key"
+          },
+          "repeat_index": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repeat Index"
+          },
+          "principal_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Principal Id"
+          },
+          "broker_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Broker Id"
+          },
+          "broker_generation": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Broker Generation"
+          },
+          "policy_sha256": {
+            "type": "string",
+            "title": "Policy Sha256"
+          },
+          "approval_hash": {
+            "type": "string",
+            "title": "Approval Hash"
+          },
+          "image_id": {
+            "type": "string",
+            "title": "Image Id"
+          },
+          "max_calls": {
+            "type": "integer",
+            "title": "Max Calls"
+          },
+          "calls_used": {
+            "type": "integer",
+            "title": "Calls Used"
+          },
+          "max_wall_seconds": {
+            "type": "integer",
+            "title": "Max Wall Seconds"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "cleanup_confirmed": {
+            "type": "boolean",
+            "title": "Cleanup Confirmed"
+          },
+          "cleanup_requested": {
+            "type": "boolean",
+            "title": "Cleanup Requested"
+          },
+          "cleanup_attempts": {
+            "type": "integer",
+            "title": "Cleanup Attempts"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "lease_until": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Lease Until"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "environment_id",
+          "episode_id",
+          "principal_id",
+          "broker_id",
+          "broker_generation",
+          "policy_sha256",
+          "approval_hash",
+          "image_id",
+          "max_calls",
+          "calls_used",
+          "max_wall_seconds",
+          "state",
+          "cleanup_confirmed",
+          "cleanup_requested",
+          "cleanup_attempts",
+          "created_at",
+          "lease_until",
+          "completed_at"
+        ],
+        "title": "ToolSessionReceipt"
       },
       "TraceAlignment": {
         "properties": {
