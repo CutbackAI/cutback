@@ -22,6 +22,12 @@ export const money = (value: unknown) =>
 export function explain(error: unknown) {
   const code = (error as Error)?.message || "REQUEST_FAILED";
   const messages: Record<string, string> = {
+    COMPRESSION_DRAFT_CONTRACT_INVALID:
+      "Check independent task labels, query/context JSON, source settings, the native model and its input ceiling. No provider call was made.",
+    COMPRESSION_CONFIRMATION_GATES_NOT_PASSED:
+      "Confirmation needs a completed validation, sufficient independent answer evidence, complete native usage, a declared CPU basis and a cheaper passing candidate.",
+    COMPRESSION_SOURCE_CONFIGURATION_BINDING_REQUIRED:
+      "Inspect the clean application's compression settings and prepare a new bound plan before requesting a source change.",
     RETRIEVAL_DRAFT_CONTRACT_INVALID:
       "Check independent answer labels, corpus limits, bound baseline settings, native model and input ceiling. No provider call was made.",
     RETRIEVAL_CONFIRMATION_GATES_NOT_PASSED:

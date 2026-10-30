@@ -16,10 +16,14 @@ class InputGroupingViolation(ValueError):
 def requires_projection(plan):
     from cutback.evals.experiments import provider_models
 
-    return not (plan.episode_execution or plan.retrieval_execution) and any(
-        target.request_contract
-        for model in [plan.baseline, *plan.candidates]
-        for target in provider_models(model)
+    return (
+        bool(plan.compression_execution)
+        or not (plan.episode_execution or plan.retrieval_execution)
+        and any(
+            target.request_contract
+            for model in [plan.baseline, *plan.candidates]
+            for target in provider_models(model)
+        )
     )
 
 
@@ -33,7 +37,7 @@ def _normalized(value):
     return value
 
 
-def effective_input_groups(plan, dataset, *, check=None, deadline=None):
+def effective_input_groups(plan, dataset, *, check=None, deadline=None, prepare_input=None):
     """Merge existing families when any frozen model sends equal normalized inputs.
 
     This checks the whole frozen corpus, before sampling or billing. It does not
@@ -45,6 +49,12 @@ def effective_input_groups(plan, dataset, *, check=None, deadline=None):
     models = [plan.baseline, *plan.candidates]
     if not requires_projection(plan):
         return dataset, None
+    if plan.compression_execution and prepare_input is None:
+        from cutback.evals.compression import CompressionProcessor
+
+        prepare_input = CompressionProcessor(
+            plan.compression_execution, check=check, deadline=deadline
+        ).prepare
     items = dataset["items"]
     parents = {item["group_hash"]: item["group_hash"] for item in items}
 
@@ -70,6 +80,8 @@ def effective_input_groups(plan, dataset, *, check=None, deadline=None):
             if check and index % 128 == 0:
                 check()
             text = item["case"]["input"]
+            if prepare_input:
+                text = prepare_input(model, text)
             target = route_target(model, text) if model.provider == "router" else model
             try:
                 rendered = target.request_contract.render(text) if target.request_contract else text
@@ -97,7 +109,9 @@ def effective_input_groups(plan, dataset, *, check=None, deadline=None):
         selected = selected[: plan.sample_limit]
     receipt = {
         "version": "native-input-groups-v1",
-        "scope": "frozen_text_request_templates_in_current_dataset",
+        "scope": "frozen_compressed_native_inputs_in_current_dataset"
+        if plan.compression_execution
+        else "frozen_text_request_templates_in_current_dataset",
         "cross_dataset_rendered_input_history": "unknown",
         "cross_split_check": "passed",
         "raw_groups": len(parents),

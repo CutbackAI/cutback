@@ -336,6 +336,18 @@ export function CaseEvidence({
                       : "Output not retained under policy"}
                   </pre>
                 )}
+                {row.compression && (
+                  <details>
+                    <summary>Compressed input for this native request</summary>
+                    <p>
+                      {row.compression.input_context_bytes} original context
+                      bytes; {row.compression.output_context_bytes} compressed
+                      bytes. Byte reduction does not establish token savings or
+                      semantic equivalence.
+                    </p>
+                    <pre tabIndex={0}>{row.compression.rendered_input}</pre>
+                  </details>
+                )}
                 {row.retrieval && (
                   <details>
                     <summary>

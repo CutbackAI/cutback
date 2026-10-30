@@ -12,6 +12,8 @@ Updated 29 October 2026. Cutback is a pre-alpha product with tested, bounded wor
 
 A source merge does not update the PyPI wheel. New source commands require a source-matched installation and collector; do not mix them with an older wheel and assume compatibility.
 
+The context-compression follow-up adds actual original-versus-compressed native input comparisons, encrypted input review and checked settings proposals. Its current qualification and remaining gates are recorded in [progress](progress.md); [the independent application](../examples/context-compression/README.md) provides the source-checkout walkthrough.
+
 ## What the automatic workflow does
 
 For qualified source and permitted examples, the agent can prepare source/data contracts, a frozen bounded search, candidate generation, validation and separately approved untouched confirmation. It can discover supported application checks, prepare independent base/proposed workspaces and an exact instruction/model/output-cap diff with rollback. An approved finite observation policy can compare later declared outcome windows and prepare a rollback review when they regress.
@@ -22,7 +24,7 @@ The independent [campaign application](../examples/improvement-campaign/README.m
 
 ## Engineering still required
 
-1. **Gateway breadth and reliability:** the publicly merged source implements a separately enabled, finite text-gateway contract with virtual keys, shared budgets and no uncertain replay ([scope](gateway-budgets.md)); installed-package qualification and all ten hosted checks passed in [PR 33](https://github.com/CutbackAI/cutback/pull/33). An explicit HTTP SSE/first-text-timing extension is under separate source qualification in [progress](progress.md). Additional providers/surfaces, configurable reliability/fallback behavior and operational acceptance remain unfinished.
+1. **Gateway breadth and reliability:** the publicly merged source implements a separately enabled, finite text-gateway contract with virtual keys, shared budgets and no uncertain replay ([scope](gateway-budgets.md)); installed-package qualification and all ten hosted checks passed in [PR 33](https://github.com/CutbackAI/cutback/pull/33). The explicit HTTP SSE/first-text-timing extension and source/input-fidelity controls passed installed and all ten hosted gates in [PR 39](https://github.com/CutbackAI/cutback/pull/39). Additional providers/surfaces, configurable reliability/fallback behavior and operational acceptance remain unfinished.
 2. **Broader automatic improvements:** evidence-driven strategy selection, remote/vector retrieval and learned reranking, tool/compression/batch optimization, learned routing and additional source/framework adapters. [Bounded actual local corpus retrieval](retrieval-optimization.md) now has its own candidate/confirmation/settings-check journey, merged with full installed and all ten hosted checks in [PR 34](https://github.com/CutbackAI/cutback/pull/34); exact acceptance is recorded in progress.md. It does not supply every strategy or prove a customer advantage.
 3. **Broader evaluation:** generated criteria and real-data scenarios, qualified application/tool isolation and simulation, broader adversarial/guardrail integrations, and the documented modality/cloud specialties.
 4. **Operational qualification:** evaluator/worker/gateway capacity, intended clean-host deployment and recovery modes, remaining collaboration/provisioning journeys, and their complete dashboard lifecycles.
@@ -30,9 +32,9 @@ The independent [campaign application](../examples/improvement-campaign/README.m
 
 These are implementation requirements, not requests for a maintainer to finish the engineering. They remain visible in the baseline until their user journeys and acceptance gates pass.
 
-Current source qualification also hardens [request bindings and proposed patch fidelity](source-request-safety.md): ambiguous Python scopes remain unresolved, and changing a shared model constant cannot silently change an unevaluated instruction/payload. This does not supply the remaining dynamic/shared-configuration source adapters.
+Accepted source also hardens [request bindings and proposed patch fidelity](source-request-safety.md): ambiguous Python scopes remain unresolved, and changing a shared model constant cannot silently change an unevaluated instruction/payload. This does not supply the remaining dynamic/shared-configuration source adapters.
 
-The same qualification adds [rendered native-input grouping](evaluation.md) before plan approval, provider dispatch and source review. Unused record fields cannot inflate the current dataset's independent example count; collisions across frozen splits reject. Cross-dataset rendered-request history remains unknown. Final combined installed archives and exact public CI gates are still pending; earlier passing source checks do not close that release gate.
+The accepted source also adds [rendered native-input grouping](evaluation.md) before plan approval, provider dispatch and source review. Unused record fields cannot inflate the current dataset's independent example count; collisions across frozen splits reject. Cross-dataset rendered-request history remains unknown. The combined installed archives and all ten exact public CI gates passed in PR 39; namespace model references and explicit client-setting guards subsequently passed PR 40. These bounded increments do not qualify arbitrary dynamic application code.
 
 ## External evidence still required
 

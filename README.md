@@ -10,6 +10,8 @@ Source checkouts also include [agent and RAG evaluation](https://github.com/Cutb
 
 Optional [semantic episode checks](https://github.com/CutbackAI/cutback/blob/main/docs/episode-semantic-judging.md) assess answers against declared references, actually returned documents and observed conversation constraints. The guided dashboard separates judge costs, exact-quote checks and unknown results. These are model assessments, not independent verification of customer quality.
 
+Source checkouts also include [context-compression comparisons](https://github.com/CutbackAI/cutback/blob/main/docs/context-compression.md): actual input transformations, answer-quality gates, native and declared CPU costs, untouched confirmation and a checked settings change with rollback. The [independent context application](https://github.com/CutbackAI/cutback/blob/main/examples/context-compression/README.md) and guided **Compression** page include an intentionally cheaper alternative that loses an essential fact. This is extractive compression; it does not claim semantic equivalence.
+
 ## Start with a working application
 
 The support-desk sample routes tickets by category and priority. Two workflows, ticket triage and escalation, share one native SDK call. It shows why a cheaper configuration that mishandles urgent tickets must be rejected.
@@ -70,6 +72,7 @@ The commands above target the published dev5 package. For the newer source-check
 | Account for failed tasks and optimization overhead | [Task-economics sample, source checkout](https://github.com/CutbackAI/cutback/blob/main/examples/task-economics/README.md) |
 | Try a cheaper model/cap first, then generate instructions only if needed | [Runnable campaign, confirmation and rollback, source checkout](https://github.com/CutbackAI/cutback/blob/main/examples/improvement-campaign/README.md) |
 | Optimize actual corpus chunking and retrieval context | [Independent RAG application and confirmation workflow](https://github.com/CutbackAI/cutback/blob/main/examples/retrieval-optimization/README.md) |
+| Compare original and compressed context against answer-quality requirements | [Independent context application, native/CPU costs, confirmation and checked rollback](https://github.com/CutbackAI/cutback/blob/main/examples/context-compression/README.md) |
 | Connect a reviewed change to later task outcomes | [`--outcomes` sample and agent follow-up](https://github.com/CutbackAI/cutback/blob/main/docs/campaign-outcomes.md) |
 | Prepare instruction search from a cheapest-model application | [`workflow prepare --for-campaign` and vendor scope](https://github.com/CutbackAI/cutback/blob/main/docs/improvement-campaigns.md) |
 | Keep an existing OpenAI 3.35.1 application pin | [Separate locked SDK qualification and limits](https://github.com/CutbackAI/cutback/blob/main/infra/sdk-compat/README.md) |

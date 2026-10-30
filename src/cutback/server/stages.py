@@ -44,6 +44,13 @@ def validate_confirmation(session, store, project_id, plan, *, run_id=None):
         before["retrieval_execution"]["variants"] = [
             v for v in before["retrieval_execution"]["variants"] if v["model_key"] in keys
         ]
+    if prior.compression_execution:
+        if not plan.compression_execution:
+            raise ValueError("CONFIRMATION_COMPRESSION_CONTRACT_CHANGED")
+        keys = {prior.baseline.key, plan.candidates[0].key}
+        before["compression_execution"]["variants"] = [
+            v for v in before["compression_execution"]["variants"] if v["model_key"] in keys
+        ]
     for value in (before, after):
         for key in ("name", "candidates", "split", "sample_limit", "predecessor_run_id", "budget"):
             value.pop(key, None)
@@ -62,6 +69,7 @@ def validate_confirmation(session, store, project_id, plan, *, run_id=None):
         or not decision.get("quality_gate_passed")
         or not decision.get("cheaper_on_sample")
         or (prior.retrieval_execution and not decision.get("retrieval_automation_eligible"))
+        or (prior.compression_execution and not decision.get("compression_automation_eligible"))
     ):
         raise ValueError("SELECTED_SEARCH_CANDIDATE_DID_NOT_PASS_GATES")
     # Serialize test-group consumption across different plans and concurrent queue calls.

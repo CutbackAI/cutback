@@ -17,9 +17,10 @@ from cutback.core.models import Identifier, StrictModel
 from cutback.core.native_models import NativeModelContract, validate_luna_text_contract
 from cutback.core.observation import observation_scope
 from cutback.core.request_profiles import RequestContract, SourceBinding
+from cutback.evals.compression import CompressionExecutionSpec, CompressionProcessor
 from cutback.evals.datasets import digest
 from cutback.evals.metrics import MetricSpec, evaluate, grouped_confidence
-from cutback.evals.retrieval import RetrievalExecutionSpec
+from cutback.evals.retrieval import RetrievalExecutionSpec, RetrievalProcessor
 from cutback.pricing import Catalog
 
 
@@ -253,10 +254,15 @@ class ExperimentPlan(StrictModel):
         default_factory=lambda: Catalog().sha256
     )
     evaluator_version: Literal[
-        "deterministic-v3", "deterministic-v4", "deterministic-v5", "deterministic-v6"
+        "deterministic-v3",
+        "deterministic-v4",
+        "deterministic-v5",
+        "deterministic-v6",
+        "deterministic-v7",
     ] = "deterministic-v3"
     episode_execution: EpisodeExecutionSpec | None = None
     retrieval_execution: RetrievalExecutionSpec | None = None
+    compression_execution: CompressionExecutionSpec | None = None
     source_binding: SourceBinding | None = None
     prompt_bindings: list[PromptModelBinding] | None = Field(
         default=None, min_length=1, max_length=6
@@ -272,12 +278,59 @@ class ExperimentPlan(StrictModel):
             result.pop("episode_execution", None)
         if self.retrieval_execution is None:
             result.pop("retrieval_execution", None)
+        if self.compression_execution is None:
+            result.pop("compression_execution", None)
         if self.content_nonce is None:
             result.pop("content_nonce", None)
         return result
 
     @model_validator(mode="after")
     def eligibility(self):
+        if self.compression_execution:
+            compression = self.compression_execution
+            if (
+                self.evaluator_version != "deterministic-v7"
+                or self.episode_execution
+                or self.retrieval_execution
+                or self.source_binding
+                or self.prompt_bindings
+                or self.judge
+                or self.staged
+                or self.pilot_samples
+                or self.metric.kind not in {"exact_label", "field_f1", "numeric_match"}
+                or self.content_nonce is None
+                or self.content_nonce.int == 0
+            ):
+                raise ValueError("COMPRESSION_REQUIRES_NONCE_AND_EXPLICIT_V7_CONTRACT")
+            models = [self.baseline, *self.candidates]
+            if [v.model_key for v in compression.variants] != [m.key for m in models]:
+                raise ValueError("COMPRESSION_VARIANTS_MUST_MATCH_ALL_MODEL_KEYS_IN_ORDER")
+            original = self.baseline.model_dump(mode="json", exclude={"key"})
+            for model in models:
+                if (
+                    model.provider not in {"openai", "anthropic"}
+                    or model.routes
+                    or model.prompt_cache
+                    or model.agent_turn is not None
+                    or model.model_dump(mode="json", exclude={"key"}) != original
+                ):
+                    raise ValueError("COMPRESSION_MUST_PRESERVE_NATIVE_MODEL_CONFIGURATION")
+                contract = model.request_contract
+                if contract is not None and (
+                    contract.version != "native-text-v1"
+                    or contract.sdk_surface not in {"responses.create", "messages.create"}
+                    or len(contract.parameters) != 1
+                    or contract.payload != {"op": "parameter", "name": contract.parameters[0]}
+                ):
+                    raise ValueError("COMPRESSION_REQUIRES_ONE_NATIVE_TEXT_INPUT")
+                options = json.dumps(contract.options) if contract else ""
+                if (
+                    compression.input_byte_bound()
+                    + len((model.instruction + options).encode())
+                    + 4096
+                    > model.max_input_tokens
+                ):
+                    raise ValueError("COMPRESSION_FRAME_EXCEEDS_NATIVE_INPUT_BOUND")
         if self.retrieval_execution:
             retrieval = self.retrieval_execution
             if (
@@ -354,7 +407,13 @@ class ExperimentPlan(StrictModel):
                 raise ValueError("EPISODE_NATIVE_TEXT_FUNCTION_PROFILE_REQUIRED")
         elif (
             self.evaluator_version
-            != ("deterministic-v6" if self.retrieval_execution else "deterministic-v3")
+            != (
+                "deterministic-v7"
+                if self.compression_execution
+                else "deterministic-v6"
+                if self.retrieval_execution
+                else "deterministic-v3"
+            )
             or self.metric.kind == "episode_contract"
         ):
             raise ValueError("EPISODE_METRIC_REQUIRES_EXPLICIT_EPISODE_EXECUTION")
@@ -586,6 +645,8 @@ def plan_summary(plan: ExperimentPlan, dataset: dict) -> dict:
     }
     if plan.retrieval_execution:
         summary["retrieval"] = plan.retrieval_execution.public_summary()
+    if plan.compression_execution:
+        summary["compression"] = plan.compression_execution.public_summary()
     references = [
         {
             "model_key": model.key,
@@ -788,11 +849,20 @@ def run(
         reserve_call=reserve_call,
         record_call=record_call,
     )
+    processor: CompressionProcessor | RetrievalProcessor | None = None
+    if plan.compression_execution:
+        processor = CompressionProcessor(
+            plan.compression_execution,
+            check=check_authority,
+            deadline=ledger.started + plan.budget.max_wall_seconds,
+        )
+        ledger.prepare_input = processor.prepare
     dataset, input_grouping = effective_input_groups(
         plan,
         dataset,
         check=check_authority,
         deadline=ledger.started + plan.budget.max_wall_seconds,
+        prepare_input=processor.prepare if processor else None,
     )
     if ledger.remaining_seconds() <= 0:
         raise InputGroupingViolation("NATIVE_INPUT_GROUPING_WALL_LIMIT")
@@ -800,19 +870,17 @@ def run(
     groups = [item["group_hash"] for item in dataset["items"] if item["split"] == plan.split]
     if plan.sample_limit:
         cases, groups = cases[: plan.sample_limit], groups[: plan.sample_limit]
-    processor = None
     if plan.retrieval_execution:
-        from cutback.evals.retrieval import RetrievalProcessor
-
         processor = RetrievalProcessor(plan.retrieval_execution, check=check_authority)
         ledger.prepare_input = processor.prepare
-        if record_case is not None:
-            original_recorder = record_case
+    if processor is not None and record_case is not None:
+        original_recorder = record_case
+        component = "compression" if plan.compression_execution else "retrieval"
 
-            def record_retrieval_case(value):
-                original_recorder({**value, "retrieval": processor.last})
+        def record_prepared_case(value):
+            original_recorder({**value, component: processor.last})
 
-            record_case = record_retrieval_case
+        record_case = record_prepared_case
     model_results = []
     outputs: dict[str, list[list[str | None]]] = {}
     models = [plan.baseline, *plan.candidates]
