@@ -935,6 +935,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/criteria/{criteria_id}/evidence-validity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Evidence Validity */
+        get: operations["evidence_validity_v1_projects__project_id__criteria__criteria_id__evidence_validity_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/criteria/{criteria_id}/cancel": {
         parameters: {
             query?: never;
@@ -5014,6 +5031,8 @@ export interface components {
         };
         /** CriteriaDraftInput */
         CriteriaDraftInput: {
+            /** Request Id */
+            request_id?: string | null;
             /**
              * Dataset Id
              * Format: uuid
@@ -5036,6 +5055,10 @@ export interface components {
         };
         /** CriteriaEvaluationInput */
         CriteriaEvaluationInput: {
+            /** Request Id */
+            request_id?: string | null;
+            /** Content Nonce */
+            content_nonce?: string | null;
             /**
              * Dataset Id
              * Format: uuid
@@ -8203,6 +8226,8 @@ export interface components {
         };
         /** PlanInput */
         PlanInput: {
+            /** Request Id */
+            request_id?: string | null;
             /**
              * Dataset Id
              * Format: uuid
@@ -13148,6 +13173,40 @@ export interface operations {
                 "application/json": components["schemas"]["ContentPurpose"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    evidence_validity_v1_projects__project_id__criteria__criteria_id__evidence_validity_get: {
+        parameters: {
+            query: {
+                run_id: string;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                criteria_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

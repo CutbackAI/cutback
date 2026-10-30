@@ -1,5 +1,7 @@
 # Optimize an application with your coding agent
 
+The source checkout also connects [training-only criterion generation, explicit review and independent confirmation](agent-reviewed-criteria.md) to this resumable application workflow. It prepares the technical artifacts automatically while keeping criteria review and each exact paid budget explicit. Published dev5 does not contain this extension.
+
 The coding agent prepares the technical work. You decide data rights, business quality, destinations and paid budgets. Cutback keeps a resumable metadata journal in the application's ignored `.cutback/agent/` directory; optional credentials are separate private files. A corporate account is unnecessary.
 
 The source checkout also offers a [multi-candidate search and independent confirmation workflow](optimization-search.md). It tests model/output-bound alternatives, freezes one validation candidate before untouched test groups, prepares a reviewed diff and exposes a fail-closed CI gate. Those commands are not in the published dev5 wheel; the single-plan instructions below remain compatible with dev5.

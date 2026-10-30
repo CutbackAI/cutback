@@ -1,0 +1,215 @@
+{
+  "reviewed_head": "f11da2631d3a4b26d639c2b00b475b1497b3bd65",
+  "runs": [
+    {
+      "run_id": 41112006146,
+      "jobs": [
+        {
+          "name": "infrastructure",
+          "id": 124256285830,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 7,
+              "skipped": 0,
+              "seconds": 1.62
+            }
+          ]
+        },
+        {
+          "name": "verify (3.11.18)",
+          "id": 124256286371,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1613,
+              "skipped": 40,
+              "seconds": 1425.22
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.13.18)",
+          "id": 124256286413,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1375,
+              "skipped": 9,
+              "seconds": 561.11
+            }
+          ]
+        },
+        {
+          "name": "legacy-sdk (3.11.18)",
+          "id": 124256286426,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 0.83
+            }
+          ]
+        },
+        {
+          "name": "isolated-tools",
+          "id": 124256286519,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 12,
+              "skipped": 0,
+              "seconds": 104.48
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.11.18)",
+          "id": 124256286584,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1374,
+              "skipped": 10,
+              "seconds": 448.57
+            }
+          ]
+        },
+        {
+          "name": "verify (3.13.18)",
+          "id": 124256286636,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1612,
+              "skipped": 41,
+              "seconds": 1579.98
+            }
+          ]
+        },
+        {
+          "name": "legacy-sdk (3.13.18)",
+          "id": 124256286701,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 0.84
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": 41112006200,
+      "jobs": [
+        {
+          "name": "codeql (python)",
+          "id": 124256198624,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "audit",
+          "id": 124256199110,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "codeql (javascript-typescript)",
+          "id": 124256199131,
+          "conclusion": "success",
+          "tests": []
+        }
+      ]
+    }
+  ],
+  "identical_private_public_archives": {
+    "cutback-0.1.0.dev5-py3-none-any.whl": "4a0c1f2bb58bc2ec09df6eedd5706d1347c498eb68fc68940d1fe5babdececa2",
+    "cutback-0.1.0.dev5.tar.gz": "1e1039ae0d867fa31143f72f3cfe817155a14902b68c2b2b3e6e4d6404c6b715"
+  },
+  "version": "cutback.source-acceptance.v1",
+  "scope": "reviewed-generated-deterministic-criteria",
+  "accepted_tree": "6493e89a5e8716af9092a550151857cc1fbf8652",
+  "merge_commit": "1d86a79cd9c8ad095f3bdba0caf6d1b2a89bac8a",
+  "installed_default": {
+    "passed": 1618,
+    "skipped": 35,
+    "seconds": 3852.55
+  },
+  "installed_sdk3_initial": {
+    "passed": 1388,
+    "skipped": 6,
+    "failed": 1,
+    "seconds": 2531.2,
+    "failure": "Existing one-second process-exit fixture under concurrent Windows load"
+  },
+  "installed_sdk3_corrected_fixture": {
+    "passed": 9,
+    "seconds": 22.14
+  },
+  "image_acceptance": {
+    "image": "cutback-qualification:reviewed-criteria",
+    "image_id": "sha256:0b9297d5fef84c05d79ddf4e2c4a118a760b734b59e0eaa24842126d54e5de40",
+    "uid": 10001,
+    "python": "3.11.18",
+    "migration": "0027",
+    "sample_application_calls": 23,
+    "source_linked_support_desk_calls": 12,
+    "source_workflows": 2,
+    "application_workflows": 4,
+    "paid_provider_calls": 0,
+    "native_batch_fixture_restored": true,
+    "guarded_tool_effects_and_delivery_restored": true,
+    "guarded_security_utility_and_policy_decisions_restored": true,
+    "joint_model_context_confirmation_and_source_binding_restored": true,
+    "reviewed_criteria_versions_and_confirmation_restored": true,
+    "restored_tables": 97,
+    "row_counts_match": true,
+    "restored_and_rekeyed_objects": 1564,
+    "restored_and_rekeyed_cache_objects": 1,
+    "restored_and_rekeyed_plans": 21,
+    "semantic_qualified_catalog_restored": true,
+    "isolated_tool_receipts_restored": true,
+    "paired_security_suite_restored": true,
+    "runtime_guardrail_receipts_restored": true,
+    "database_pointers_preserved": true,
+    "production_changed": false,
+    "secret_delivery": "anonymous_stdin_pipes_and_scoped_memory_clients",
+    "independent_otel_producer_and_replay": "passed",
+    "concurrent_load": {
+      "tenants": 2,
+      "accepted": 2000,
+      "duplicates": 2000,
+      "seconds": 2.078,
+      "production_sla": false
+    }
+  },
+  "image_identity": {
+    "image_id": "sha256:0b9297d5fef84c05d79ddf4e2c4a118a760b734b59e0eaa24842126d54e5de40",
+    "wheel_sha256": "4a0c1f2bb58bc2ec09df6eedd5706d1347c498eb68fc68940d1fe5babdececa2",
+    "application_files": 333,
+    "identical": true,
+    "network": "none",
+    "read_only": true
+  },
+  "boundary": {
+    "files": 987,
+    "reachable_history_objects": 4309,
+    "archive_members": 1321,
+    "findings": 0
+  },
+  "core_only_consumer": "passed",
+  "migration": "0027",
+  "paid_provider_calls": 0,
+  "production_changed": false,
+  "new_pypi_release": false,
+  "limits": [
+    "Deterministic checks generated from authorized training rows, not independent semantic ground truth",
+    "Owner review is not independent judge calibration",
+    "Synthetic acceptance does not establish customer savings",
+    "Broader market roadmap remains unfinished"
+  ]
+}

@@ -48,6 +48,26 @@ def write_private(path: Path, value, *, exclusive=False):
         temporary.unlink(missing_ok=True)
 
 
+def write_private_output(path: Path, value):
+    """Write explicitly requested private JSON without following redirected parents."""
+    import stat
+
+    path = Path(os.path.abspath(path))
+    for parent in reversed(path.parents):
+        try:
+            info = parent.lstat()
+        except FileNotFoundError:
+            parent.mkdir(mode=0o700)
+            info = parent.lstat()
+        if (
+            not stat.S_ISDIR(info.st_mode)
+            or stat.S_ISLNK(info.st_mode)
+            or getattr(info, "st_file_attributes", 0) & 1024
+        ):
+            raise ValueError("UNSAFE_PRIVATE_OUTPUT_DIRECTORY")
+    write_private(path, value)
+
+
 def read_private(path: Path):
     if path.is_symlink() or path.stat().st_size > 2097152:
         raise ValueError("UNSAFE_WORKSPACE_FILE")

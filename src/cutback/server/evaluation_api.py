@@ -4,10 +4,10 @@ import json
 import os
 from datetime import UTC, datetime, timedelta
 from typing import Literal
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import Depends, HTTPException, Query
-from pydantic import Field
+from pydantic import UUID4, Field
 from sqlalchemy import func, select
 
 from cutback.core.episode_judging import EpisodeJudgingSpec
@@ -103,6 +103,7 @@ def policy_object_count(session, policy_id):
 
 
 class PlanInput(StrictModel):
+    request_id: UUID4 | None = None
     dataset_id: UUID
     specification: ExperimentPlan
 
@@ -972,6 +973,30 @@ def install_evaluation(app, sessions, authorize, scope):
                     and code.replace("_", "").isalpha()
                     else "INVALID_DATASET_PLAN_CONTRACT",
                 ) from None
+            if body.request_id:
+                from cutback.server.dataset_lineage import lock_preparation_identity
+
+                lock_preparation_identity(session, "experiment-plan", body.request_id)
+                previous = session.get(ExperimentPlanRecord, body.request_id, with_for_update=True)
+                if previous:
+                    if (
+                        previous.project_id != project_id
+                        or previous.dataset_id != body.dataset_id
+                        or previous.specification["plan_hash"]
+                        != digest(body.specification.model_dump(mode="json"))
+                    ):
+                        raise HTTPException(409, "PLAN_REQUEST_ID_CONTENT_OR_SCOPE_CHANGED")
+                    try:
+                        load_plan(store, project_id, previous.specification)
+                    except ValueError:
+                        raise HTTPException(409, "PLAN_REQUEST_ID_CONTENT_UNAVAILABLE") from None
+                    return {
+                        "id": str(previous.id),
+                        "status": "EXISTING_PLAN",
+                        "approval_status": previous.approval_status,
+                        "existing_plan": True,
+                        **summary,
+                    }
             if (
                 session.scalar(
                     select(func.count())
@@ -999,6 +1024,7 @@ def install_evaluation(app, sessions, authorize, scope):
                 raise HTTPException(422, "PLAN_CONTENT_POLICY_DENIED") from None
             refs.append(frozen["artifact_ref"])
             row = ExperimentPlanRecord(
+                id=body.request_id or uuid4(),
                 project_id=project_id,
                 dataset_id=dataset.id,
                 specification=frozen,
