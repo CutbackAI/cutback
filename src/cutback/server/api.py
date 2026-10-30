@@ -552,6 +552,9 @@ def create_app(
     from cutback.server.execution_api import install_execution
 
     install_execution(app, sessions, authorize, scope)
+    from cutback.server.provider_batch_api import install_provider_batches
+
+    install_provider_batches(app, sessions, authorize, scope)
     from cutback.server.economics_api import install_economics
 
     install_economics(app, sessions, authorize, scope)

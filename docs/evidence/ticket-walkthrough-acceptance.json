@@ -1,0 +1,59 @@
+{
+  "contract": "cutback.ticket-walkthrough-acceptance.v1",
+  "source_only": true,
+  "complete_product": false,
+  "pull_request": "https://github.com/CutbackAI/cutback/pull/43",
+  "reviewed_head": "c1e9773c0a4d03c9a531efd46e016b0e72d81671",
+  "merge": "4acaf6267e5e833294eba84d99a2edb211c4a8f9",
+  "tree": "c189fb445d31f04daae00bfba8171f61c3ad4e2b",
+  "hosted": {
+    "ci_run": 41018187650,
+    "security_run": 41018187509,
+    "required_checks_succeeded": 10,
+    "python311": {"passed": 1272, "skipped": 30, "seconds": 1018.75},
+    "python313": {"passed": 1271, "skipped": 31, "seconds": 1156.71},
+    "sdk3_python311": {"passed": 1054, "skipped": 8, "seconds": 415.73},
+    "sdk3_python313": {"passed": 1055, "skipped": 7, "seconds": 293.72},
+    "legacy_each": 21,
+    "infrastructure": 5
+  },
+  "installed": {
+    "preceding_wheel_full_default": {
+      "wheel_sha256": "a56e0cc63248e8b34825bbd65cdd851d2ca8d870693904d92ac8be45a6499e52",
+      "passed": 1267,
+      "skipped": 33,
+      "seconds": 2459.60,
+      "exact_final_archive": false
+    },
+    "final_wheel_focused": {
+      "wheel_sha256": "48b6ac4fbaea86bc21af1f4ac50f7b3817c99a24aa27a939d8199871d7acffbf",
+      "passed": 27,
+      "seconds": 0.70,
+      "scope": "runtime contract defaults, retrieval and compression after the portable-schema correction"
+    },
+    "application_files": 242
+  },
+  "archives": {
+    "wheel_sha256": "48b6ac4fbaea86bc21af1f4ac50f7b3817c99a24aa27a939d8199871d7acffbf",
+    "sdist_sha256": "155da9be09de387a57b05135e35efd88d0f38a024b9da9e2dc7ac90f2e87cfb1",
+    "payload_identity": "passed",
+    "twine": "passed",
+    "committed_source_bytes": "passed",
+    "privacy_source_files": 782,
+    "privacy_history_objects": 3258,
+    "privacy_archive_members": 1025,
+    "privacy_findings": 0
+  },
+  "qualification_fixes": [
+    "Privacy fixture selects its exact project rather than the first paginated result.",
+    "Owned Node example uses explicit export and close deadlines.",
+    "Browser launchers require the exact locked Playwright entry.",
+    "Runtime Unicode contracts remain enforced without interpreter-specific OpenAPI defaults."
+  ],
+  "evidence_origin": "independent synthetic applications and owned transports",
+  "customer_quality_or_savings_claim": false,
+  "paid_provider_calls": 0,
+  "pypi_upload": false,
+  "pypi_version_unchanged": "0.1.0.dev5",
+  "production_changed": false
+}

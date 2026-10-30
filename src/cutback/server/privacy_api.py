@@ -73,6 +73,7 @@ from cutback.server.prompt_db import (
     PromptRecord,
     PromptVersion,
 )
+from cutback.server.provider_batch_db import ProviderBatchRecord
 from cutback.server.quality_db import QualityEvaluation, QualityPromptUse, QualityRule
 from cutback.server.review_db import (
     ReviewItem,
@@ -108,6 +109,7 @@ def install_privacy(app, sessions, authorize, scope):
         def records():
             with sessions() as session:
                 for cls in (
+                    ProviderBatchRecord,
                     GatewayPolicyRow,
                     GatewayKeyRow,
                     GatewayBudgetRow,
@@ -208,6 +210,16 @@ def install_privacy(app, sessions, authorize, scope):
             project = session.get(Project, project_id, with_for_update=True)
             if not project or confirm_slug != project.slug:
                 raise HTTPException(409, "PROJECT_DELETE_REQUIRES_EXACT_SLUG")
+            batches = session.scalars(
+                select(ProviderBatchRecord).where(ProviderBatchRecord.project_id == project_id)
+            ).all()
+            if any(
+                row.pieces and any(part.get("cleanup") != "deleted" for part in row.pieces)
+                for row in batches
+            ):
+                raise HTTPException(
+                    409, "RECONCILE_AND_CLEAN_PROVIDER_BATCH_FILES_BEFORE_PROJECT_DELETE"
+                )
             if session.scalar(
                 select(GatewayCallRow.operation_id)
                 .where(
@@ -306,6 +318,7 @@ def install_privacy(app, sessions, authorize, scope):
             from cutback.server.db import ChangeProposal, DatasetItem, RecommendationRecord
 
             for cls in (
+                ProviderBatchRecord,
                 GatewayCallRow,
                 GatewayKeyRow,
                 GatewayBudgetRow,

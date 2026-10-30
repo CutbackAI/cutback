@@ -21,6 +21,7 @@ from cutback.gateway.streaming import NativeStream
 from cutback.server.db import StoredEvent
 from cutback.server.gateway_db import GatewayBudgetRow, GatewayCallRow
 from cutback.server.gateway_service import GatewayError, finish, record_first_text_delta, reserve
+from cutback.server.migrate import CURRENT_REVISION
 
 pytestmark = pytest.mark.postgres
 
@@ -213,7 +214,8 @@ def test_additive_migration_preserves_legacy_truth_and_refuses_stream_intent_los
             assert row.state == "UNCERTAIN" and row.reserved_usd > 0
     with context["app"].state.sessions() as session:
         assert (
-            session.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0020"
+            session.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
+            == CURRENT_REVISION
         )
     policy = (
         api[0].get(context["path"] + "/policies", headers=context["headers"]).json()["items"][0]

@@ -12,6 +12,7 @@ import typer
 
 from cutback import __version__
 from cutback.cli_agent import register_agent
+from cutback.cli_batch import register_batch
 from cutback.cli_checks import register_checks
 from cutback.cli_compression import register_compression
 from cutback.cli_episodes import register_episodes
@@ -99,12 +100,13 @@ def demo(
     port: int = typer.Option(8766, min=1024, max=65535),
     open_browser: bool = True,
     ticket_router: bool = False,
+    provider_batch: bool = False,
 ):
     """Explore the complete sample. Requires Docker and Git; no API key or paid calls."""
     try:
         from cutback.demo import launch_demo
 
-        launch_demo(port, open_browser, ticket_router=ticket_router)
+        launch_demo(port, open_browser, ticket_router=ticket_router, provider_batch=provider_batch)
     except ImportError:
         fail(
             "DEMO_EXTRAS_REQUIRED",
@@ -514,6 +516,7 @@ register_qualification(app, output, fail)
 register_episodes(app, output, fail)
 register_retrieval(app, output, request, fail)
 register_compression(app, output, request, fail)
+register_batch(app, output, request, fail)
 
 if __name__ == "__main__":
     app()

@@ -222,6 +222,26 @@ export function createSDK(request:Request) {return {
     if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
     if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/experiments/${encodeURIComponent(String(args.run_id))}/episodes`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  prepare_v1_projects__project_id__provider_batches_post: (args:{project_id:string;body:components["schemas"]["BatchPrepare"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/provider-batches`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  batches_v1_projects__project_id__provider_batches_get: (args:{project_id:string;limit?:number;offset?:number}) => {
+    const query=new URLSearchParams();
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    if(args.offset!==undefined && args.offset!==null) query.set("offset",String(args.offset));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/provider-batches`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  batch_v1_projects__project_id__provider_batches__batch_id__get: (args:{project_id:string;batch_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/provider-batches/${encodeURIComponent(String(args.batch_id))}`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  approve_v1_projects__project_id__provider_batches__batch_id__approve_post: (args:{project_id:string;batch_id:string;body:components["schemas"]["BatchApprove"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/provider-batches/${encodeURIComponent(String(args.batch_id))}/approve`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  cancel_v1_projects__project_id__provider_batches__batch_id__cancel_post: (args:{project_id:string;batch_id:string;body:components["schemas"]["BatchControl"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/provider-batches/${encodeURIComponent(String(args.batch_id))}/cancel`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  reconcile_v1_projects__project_id__provider_batches__batch_id__reconcile_post: (args:{project_id:string;batch_id:string;body:components["schemas"]["BatchReconcile"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/provider-batches/${encodeURIComponent(String(args.batch_id))}/reconcile`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   ingest_v1_ingest_task_outcomes_post: (args:{body:components["schemas"]["TaskOutcomeBatch"]}) => {
     const query=new URLSearchParams();
     return request(`/ingest/task-outcomes`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},

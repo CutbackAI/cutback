@@ -84,6 +84,12 @@ class ExecutionEpisode(Base):
 class ExecutionCall(Base):
     __tablename__ = "execution_calls"
     __table_args__ = (
+        ForeignKeyConstraint(
+            ["provider_batch_id", "project_id", "run_id"],
+            ["provider_batches.id", "provider_batches.project_id", "provider_batches.run_id"],
+            ondelete="CASCADE",
+            name="fk_execution_call_provider_batch_scope",
+        ),
         Index("ix_execution_call_episode_purpose", "project_id", "run_id", "episode_id", "purpose"),
         UniqueConstraint("run_id", "sequence", name="uq_execution_call_sequence"),
         ForeignKeyConstraint(
@@ -127,6 +133,7 @@ class ExecutionCall(Base):
     environment_id: Mapped[UUID] = mapped_column(Uuid)
     run_id: Mapped[UUID] = mapped_column(Uuid)
     episode_id: Mapped[UUID | None] = mapped_column(Uuid)
+    provider_batch_id: Mapped[UUID | None] = mapped_column(Uuid)
     sequence: Mapped[int] = mapped_column(Integer)
     model_key: Mapped[str] = mapped_column(String(200))
     provider: Mapped[str] = mapped_column(String(30))

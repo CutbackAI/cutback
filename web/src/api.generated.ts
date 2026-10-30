@@ -919,6 +919,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/provider-batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Batches */
+        get: operations["batches_v1_projects__project_id__provider_batches_get"];
+        put?: never;
+        /** Prepare */
+        post: operations["prepare_v1_projects__project_id__provider_batches_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/provider-batches/{batch_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Batch */
+        get: operations["batch_v1_projects__project_id__provider_batches__batch_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/provider-batches/{batch_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve */
+        post: operations["approve_v1_projects__project_id__provider_batches__batch_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/provider-batches/{batch_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel */
+        post: operations["cancel_v1_projects__project_id__provider_batches__batch_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/provider-batches/{batch_id}/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reconcile */
+        post: operations["reconcile_v1_projects__project_id__provider_batches__batch_id__reconcile_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/ingest/task-outcomes": {
         parameters: {
             query?: never;
@@ -3176,6 +3262,47 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** BatchApprove */
+        BatchApprove: {
+            /** Approval Hash */
+            approval_hash: string;
+            /** Approval Ref */
+            approval_ref: string;
+        };
+        /** BatchControl */
+        BatchControl: Record<string, never>;
+        /** BatchPrepare */
+        BatchPrepare: {
+            /**
+             * Plan Id
+             * Format: uuid
+             */
+            plan_id: string;
+            /**
+             * Provider Storage Approved
+             * @constant
+             */
+            provider_storage_approved: true;
+            /**
+             * Max Turnaround Seconds
+             * @default 90000
+             */
+            max_turnaround_seconds: number;
+        };
+        /** BatchReconcile */
+        BatchReconcile: {
+            /** Hints */
+            hints?: components["schemas"]["BatchRecoveryHint"][];
+        };
+        /** BatchRecoveryHint */
+        BatchRecoveryHint: {
+            /** Model Key */
+            model_key: string;
+            /** File Id */
+            file_id?: string | null;
+            /** Batch Id */
+            batch_id?: string | null;
+        };
         /** BillingCaps */
         BillingCaps: {
             /** Monthly Event Cap */
@@ -3314,6 +3441,8 @@ export interface components {
             environment_id: string;
             /** Episode Id */
             episode_id: string | null;
+            /** Provider Batch Id */
+            provider_batch_id?: string | null;
             /** Sequence */
             sequence: number;
             /** Model Key */
@@ -6643,6 +6772,52 @@ export interface components {
             /** Provenance Ref */
             provenance_ref: string;
             document: components["schemas"]["PromptDocument"];
+        };
+        /** ProviderBatchReceipt */
+        ProviderBatchReceipt: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Plan Id
+             * Format: uuid
+             */
+            plan_id: string;
+            /** Run Id */
+            run_id: string | null;
+            /** State */
+            state: string;
+            /** Approval Hash */
+            approval_hash: string;
+            /** Specification */
+            specification: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Report */
+            report: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Deadline At */
+            deadline_at: string | null;
+            /** Provider Batches */
+            provider_batches: {
+                [key: string]: components["schemas"]["JsonValue"];
+            }[];
+            /** Canonical Call Reservations */
+            canonical_call_reservations: number;
+            /** Accounted Active Processing Us */
+            accounted_active_processing_us: number;
+            /** Uncertain Active Processing Us */
+            uncertain_active_processing_us: number;
+            /** Held Active Processing Us */
+            held_active_processing_us: number;
         };
         /** QualityComparison */
         QualityComparison: {
@@ -10600,6 +10775,215 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EpisodePage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    batches_v1_projects__project_id__provider_batches_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderBatchReceipt"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    prepare_v1_projects__project_id__provider_batches_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchPrepare"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderBatchReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    batch_v1_projects__project_id__provider_batches__batch_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderBatchReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_v1_projects__project_id__provider_batches__batch_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchApprove"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderBatchReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_v1_projects__project_id__provider_batches__batch_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchControl"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderBatchReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reconcile_v1_projects__project_id__provider_batches__batch_id__reconcile_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchReconcile"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderBatchReceipt"];
                 };
             };
             /** @description Validation Error */

@@ -15,6 +15,7 @@ class CallReceipt(StrictModel):
     id: UUID
     environment_id: UUID
     episode_id: UUID | None
+    provider_batch_id: UUID | None = None
     sequence: int
     model_key: str
     provider: str

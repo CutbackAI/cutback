@@ -148,7 +148,9 @@ configure_secrets()
 assert os.getuid()==10001 and sys.version_info[:3]==(3,11,18)
 app=create_app(allow_insecure_http=True)
 app.state.artifact_store=configured_store()
-manifest=seed_support_desk(app,"http://127.0.0.1:8080",os.environ["CUTBACK_ADMIN_TOKEN"],Path("/tmp/owned-support-desk"))
+manifest=seed_support_desk(app,"http://127.0.0.1:8080",os.environ["CUTBACK_ADMIN_TOKEN"],Path("/tmp/owned-support-desk"),provider_batch=True)
+assert manifest["provider_batch_sample"]["status"]=="COMPLETED"
+assert manifest["provider_batch_sample"]["vendor_files_deleted"] is True
 print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":manifest["paid_provider_calls"]}))
 """
                 manifest = json.loads(inside(container, code, values).strip().splitlines()[-1])
@@ -176,6 +178,7 @@ from sqlalchemy import select
 from sqlalchemy.engine import make_url
 from cutback.server.runtime import configure_secrets
 from cutback.server.db import database,PayloadSample,ExperimentPlanRecord
+from cutback.server.provider_batch_db import ProviderBatchRecord
 from cutback.evals.datasets import digest
 from cutback.evals.artifacts import configured_store,EncryptedFileStore
 configure_secrets()
@@ -195,6 +198,10 @@ with sessions() as session:
   before=original.get(row.project_id,row.object_ref)
   rotating.rekey(row.project_id,row.object_ref)
   assert new_only.get(row.project_id,row.object_ref)==before
+ batches=session.scalars(select(ProviderBatchRecord)).all()
+ assert len(batches)==1 and batches[0].state=="COMPLETED"
+ assert batches[0].report["billing_complete"] is True
+ assert all(part.get("cleanup")=="deleted" for part in batches[0].pieces)
  plans=session.scalars(select(ExperimentPlanRecord)).all()
  assert plans
  for row in plans:
@@ -327,6 +334,7 @@ engine.dispose()
                     "source_workflows": 2,
                     "application_workflows": 3,
                     "paid_provider_calls": 0,
+                    "native_batch_fixture_restored": True,
                     "restored_tables": len(after),
                     "row_counts_match": True,
                     **recovered,

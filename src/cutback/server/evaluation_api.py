@@ -1053,6 +1053,10 @@ def install_evaluation(app, sessions, authorize, scope):
     def cancel(project_id: UUID, run_id: UUID, auth=Depends(authorize)):
         scope(auth, project_id, ("editor",))
         with sessions.begin() as session:
+            from cutback.server.dataset_lineage import lock_lineage
+            from cutback.server.provider_batch_db import ProviderBatchRecord
+
+            lock_lineage(session, project_id)
             row = session.get(ExperimentRunRecord, run_id, with_for_update=True)
             if not row or row.project_id != project_id:
                 raise HTTPException(404, "RUN_NOT_FOUND")
@@ -1064,6 +1068,24 @@ def install_evaluation(app, sessions, authorize, scope):
             )
             if job:
                 job.status = "CANCELLED"
+            batch = session.scalar(
+                select(ProviderBatchRecord)
+                .where(
+                    ProviderBatchRecord.project_id == project_id,
+                    ProviderBatchRecord.run_id == run_id,
+                )
+                .with_for_update()
+            )
+            if batch and batch.state not in {"COMPLETED", "CANCELLED", "FAILED", "CLEANUP_PENDING"}:
+                if batch.started_at is None:
+                    batch.state, batch.completed_at = "CANCELLED", datetime.now(UTC)
+                    batch.report = {
+                        "code": "BATCH_CANCELLED_BEFORE_EXECUTION",
+                        "billing_complete": True,
+                        "final_state": "CANCELLED",
+                    }
+                else:
+                    batch.state, batch.available_at = "CANCEL_REQUESTED", datetime.now(UTC)
             session.add(
                 AuditEvent(
                     project_id=project_id,

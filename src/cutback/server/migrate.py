@@ -4,7 +4,7 @@ from importlib.resources import files
 from alembic import command
 from alembic.config import Config
 
-CURRENT_REVISION = "0020"
+CURRENT_REVISION = "0021"
 
 
 def migrate(revision="head"):
