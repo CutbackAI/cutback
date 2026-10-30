@@ -18,7 +18,7 @@ cutback security seal edited-suite.json --revision reviewed-2 --reviewed --outpu
 cutback security validate reviewed-suite.json
 ```
 
-The manifest binds all case content, suite key/revision and a fresh content nonce independently of input order. Import through **Experiments → Import a paired security suite**, or the scoped dataset API. Content requires a current synthetic capture policy and authorized encrypted store. Project-serialized registration rejects reuse of a suite key/revision with a different manifest. Change the revision when changing content. Flat-example import rejects typed security/episode content rather than dropping its execution contract. Ordinary case correction cannot silently reseal the suite.
+The manifest binds all case content, suite key/revision and a fresh content nonce independently of input order. The nonce lives exclusively inside encrypted cases; public suite identities contain only version, key, revision and manifest hash. Import through **Experiments → Import a paired security suite**, or the scoped dataset API. Content requires a current synthetic capture policy and authorized encrypted store. Project-serialized registration rejects reuse of a suite key/revision with a different manifest. Change the revision when changing content. Flat-example import rejects typed security/episode content rather than dropping its execution contract. Ordinary case correction cannot silently reseal the suite.
 
 Prepare `SecurityEvaluationSpec` JSON with `suite` from the reviewed dataset and its minimum family count, attack, utility and regression limits. Then:
 

@@ -195,12 +195,20 @@ def test_cli_is_offline_and_does_not_print_attack_or_canary_content(tmp_path):
     assert result.exit_code == 0, result.output
     before, after = json.loads(output.read_text()), json.loads(sealed.read_text())
     assert after["security_suite"]["revision"] == "reviewed-2"
-    assert after["security_suite"]["content_nonce"] != before["security_suite"]["content_nonce"]
-    assert after["cases"] == before["cases"]
+    assert "content_nonce" not in after["security_suite"]
+    assert (
+        after["cases"][0]["security"]["content_nonce"]
+        != before["cases"][0]["security"]["content_nonce"]
+    )
+    for first, second in zip(before["cases"], after["cases"], strict=True):
+        first["security"].pop("content_nonce")
+        second["security"].pop("content_nonce")
+        assert first == second
     result = CliRunner().invoke(app, ["security", "validate", str(output)])
     assert result.exit_code == 0, result.output
     summary = json.loads(result.output)
     assert summary["paid_calls"] == 0 and summary["case_n"] == 14
+    assert "content_nonce" not in result.output
     assert "CANARY" not in result.output and "OVERRIDDEN" not in result.output
 
 

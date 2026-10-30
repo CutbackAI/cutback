@@ -30,7 +30,7 @@ def validate_security_selection(plan, dataset):
             case = item["case"].get("security")
             if case is None:
                 raise ValueError("SECURITY_SUITE_CASE_METADATA_MISSING")
-            token, arm = family_token(security.suite, case["family"]), case["arm"]
+            token, arm = family_token(case["content_nonce"], case["family"]), case["arm"]
         else:
             token, arm = item.get("security_family_token"), item.get("security_arm")
         if not token or arm not in {"benign", "adversarial"}:
@@ -53,6 +53,9 @@ def validate_suite_cases(identity, cases):
     if manifest_hash(identity, cases) != identity.manifest_sha256:
         raise ValueError("SECURITY_SUITE_MANIFEST_CONTENT_CHANGED")
     families = defaultdict(list)
+    nonces = {case.security.content_nonce for case in cases if case.security is not None}
+    if len(nonces) != 1:
+        raise ValueError("SECURITY_SUITE_REQUIRES_ONE_ENCRYPTED_CONTENT_NONCE")
     for case in cases:
         if not isinstance(case.episode, IsolatedRecordScenario) or case.security is None:
             raise ValueError("SECURITY_SUITE_REQUIRES_TYPED_ISOLATED_RECORD_CASES")
@@ -347,6 +350,6 @@ def compare_security(spec, baseline, candidate, baseline_rows, candidate_rows):
 def result_row(spec, case, repeat, result):
     return {
         **result,
-        "family_token": family_token(spec.suite, case["security"]["family"]),
+        "family_token": family_token(case["security"]["content_nonce"], case["security"]["family"]),
         "repeat": repeat,
     }

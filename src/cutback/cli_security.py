@@ -92,11 +92,19 @@ def register_security(app, output, request, fail):
                 {
                     **raw["security_suite"],
                     "revision": revision,
-                    "content_nonce": str(uuid4()),
                     "manifest_sha256": "0" * 64,
                 }
             )
-            cases = [Case.model_validate(value) for value in raw["cases"]]
+            nonce = uuid4()
+            cases = [
+                Case.model_validate(
+                    {
+                        **value,
+                        "security": {**value["security"], "content_nonce": str(nonce)},
+                    }
+                )
+                for value in raw["cases"]
+            ]
             identity = identity.model_copy(
                 update={"manifest_sha256": manifest_hash(identity, cases)}
             )

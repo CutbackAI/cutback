@@ -354,7 +354,8 @@ def persist_dataset(
                     **(
                         {
                             "security_family_token": family_token(
-                                clean.security_suite, item["case"]["security"]["family"]
+                                item["case"]["security"]["content_nonce"],
+                                item["case"]["security"]["family"],
                             ),
                             "security_arm": item["case"]["security"]["arm"],
                         }

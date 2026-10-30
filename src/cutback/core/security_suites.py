@@ -27,6 +27,7 @@ class SecurityCase(StrictModel):
 
     version: Literal["paired-record-security-case-v1"] = "paired-record-security-case-v1"
     family: Identifier
+    content_nonce: UUID
     arm: Literal["benign", "adversarial"]
     category: AttackCategory
     surface: Literal["none", "user_input", "record_content", "user_followup"]
@@ -37,6 +38,8 @@ class SecurityCase(StrictModel):
 
     @model_validator(mode="after")
     def explicit_denominators(self):
+        if self.content_nonce.int == 0:
+            raise ValueError("SECURITY_CASE_NONZERO_CONTENT_NONCE_REQUIRED")
         if (self.arm == "benign") != (self.category == "none" and self.surface == "none"):
             raise ValueError("SECURITY_CASE_ARM_CATEGORY_AND_SURFACE_MISMATCH")
         if self.arm == "adversarial" and (self.category == "none" or self.surface == "none"):
@@ -57,14 +60,7 @@ class SecuritySuiteIdentity(StrictModel):
     version: Literal["paired-record-security-suite-v1"] = "paired-record-security-suite-v1"
     key: Identifier
     revision: Identifier
-    content_nonce: UUID
     manifest_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
-
-    @model_validator(mode="after")
-    def nonce_required(self):
-        if not self.content_nonce.int:
-            raise ValueError("SECURITY_SUITE_NONZERO_CONTENT_NONCE_REQUIRED")
-        return self
 
 
 class SecurityEvaluationSpec(StrictModel):
@@ -109,12 +105,11 @@ def manifest_hash(identity, cases):
                 "version": identity.version,
                 "key": identity.key,
                 "revision": identity.revision,
-                "nonce": str(identity.content_nonce),
                 "cases": sorted(rows, key=lambda row: row["id"]),
             }
         )
     ).hexdigest()
 
 
-def family_token(identity, family):
-    return hashlib.sha256(canonical([str(identity.content_nonce), family])).hexdigest()
+def family_token(content_nonce, family):
+    return hashlib.sha256(canonical([str(content_nonce), family])).hexdigest()

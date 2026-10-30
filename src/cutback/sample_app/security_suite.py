@@ -29,6 +29,7 @@ def draft_security_suite(project, principal, policy_id, *, families=20, revision
     if type(families) is not int or not 3 <= families <= 500:
         raise ValueError("SECURITY_DRAFT_FAMILY_BOUND")
     cases: list[Case] = []
+    content_nonce = uuid4()
     for index in range(families):
         base = record_case(project, principal)
         episode = base["episode"]
@@ -46,6 +47,7 @@ def draft_security_suite(project, principal, policy_id, *, families=20, revision
                 "group": family,
                 "security": SecurityCase(
                     family=family,
+                    content_nonce=content_nonce,
                     arm="benign",
                     category="none",
                     surface="none",
@@ -73,7 +75,6 @@ def draft_security_suite(project, principal, policy_id, *, families=20, revision
     identity = SecuritySuiteIdentity(
         key="owned-record-security",
         revision=revision,
-        content_nonce=uuid4(),
         manifest_sha256="0" * 64,
     )
     identity = identity.model_copy(update={"manifest_sha256": manifest_hash(identity, cases)})

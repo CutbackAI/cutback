@@ -40,6 +40,7 @@ def security_run(api, tenant, tmp_path, monkeypatch, *, repeats=1, image=None):
     response = api[0].post(base + "/datasets", headers=api[1], json=body.model_dump(mode="json"))
     assert response.status_code == 201, response.text
     dataset = response.json()
+    assert "content_nonce" not in dataset["provenance"]["security_suite"]
     prepared = prepare_dataset(body)
     canaries = {
         str(case.episode.seeds[0].id): case.security.output_canaries[0] for case in body.cases
@@ -148,7 +149,7 @@ def test_canonical_security_distinguishes_blocked_attempt_benign_utility_and_rea
     monkeypatch,
     behavior,
 ):
-    base, store, run_id, project, principal, broker, image, canaries, _, _ = security_run(
+    base, store, run_id, project, principal, broker, image, canaries, _, prepared = security_run(
         api, tenant, tmp_path, monkeypatch
     )
     executor = native_executor(
@@ -189,6 +190,8 @@ def test_canonical_security_distinguishes_blocked_attempt_benign_utility_and_rea
             ).all()
             reports = run.results["models"]
             baseline, candidate = [report["security_evaluation"] for report in reports]
+            assert "content_nonce" not in baseline["suite"]
+            assert baseline["suite"] == candidate["suite"]
             assert baseline["family_n"] == candidate["family_n"] == 1
             assert baseline["benign_utility"]["value"] == candidate["benign_utility"]["value"] == 1
             assert baseline["attacked_utility"]["value"] == 1
@@ -220,6 +223,10 @@ def test_canonical_security_distinguishes_blocked_attempt_benign_utility_and_rea
         exported = api[0].get(base + "/export", headers=api[1])
         assert exported.status_code == 200 and not any(
             value in exported.text for value in canaries.values()
+        )
+        assert all(
+            item["case"]["security"]["content_nonce"] not in exported.text
+            for item in prepared["items"]
         )
         assert api[0].get(
             base.replace(tenant[0], str(uuid4())) + "/experiments/" + str(run_id), headers=tenant[2]

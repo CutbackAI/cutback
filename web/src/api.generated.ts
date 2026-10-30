@@ -8408,6 +8408,11 @@ export interface components {
             /** Family */
             family: string;
             /**
+             * Content Nonce
+             * Format: uuid
+             */
+            content_nonce: string;
+            /**
              * Arm
              * @enum {string}
              */
@@ -8486,11 +8491,6 @@ export interface components {
             key: string;
             /** Revision */
             revision: string;
-            /**
-             * Content Nonce
-             * Format: uuid
-             */
-            content_nonce: string;
             /** Manifest Sha256 */
             manifest_sha256: string;
         };
