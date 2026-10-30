@@ -16,7 +16,9 @@ from cutback.gateway.contracts import (
 from cutback.server.db import Environment
 
 
-def prepare_gateway(api, tenant, *, cap="10", concurrency=8, actor=None, streaming=False):
+def prepare_gateway(
+    api, tenant, *, cap="10", concurrency=8, actor=None, streaming=False, guard_binding=None
+):
     client, admin, app = api
     project = UUID(tenant[0])
     with app.state.sessions() as session:
@@ -27,11 +29,18 @@ def prepare_gateway(api, tenant, *, cap="10", concurrency=8, actor=None, streami
     team = uuid4()
     limit = SpendLimit(modeled_usd=cap, requests=20, concurrent_requests=concurrency)
     specification = GatewayPolicy(
-        version="cutback.gateway-policy.v2" if streaming else "cutback.gateway-policy.v1",
+        version="cutback.gateway-policy.v3"
+        if guard_binding is not None
+        else "cutback.gateway-policy.v2"
+        if streaming
+        else "cutback.gateway-policy.v1",
         policy_id=uuid4(),
         environment_ids=[environment],
         starts_at=now - timedelta(seconds=1),
-        expires_at=now + timedelta(hours=1),
+        expires_at=min(now + timedelta(hours=1), guard_binding.expires_at)
+        if guard_binding is not None
+        else now + timedelta(hours=1),
+        runtime_guardrails=guard_binding,
         project_limit=limit,
         teams=[TeamLimit(team_id=team, limit=limit)],
         models=[

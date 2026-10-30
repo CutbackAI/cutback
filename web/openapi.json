@@ -9384,6 +9384,501 @@
         }
       }
     },
+    "/v1/projects/{project_id}/runtime-guardrails": {
+      "post": {
+        "summary": "Create",
+        "operationId": "create_v1_projects__project_id__runtime_guardrails_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardrailRegistration"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuardrailControlReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Listing",
+        "operationId": "listing_v1_projects__project_id__runtime_guardrails_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 25,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuardrailPolicyPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/runtime-guardrails/{policy_id}": {
+      "get": {
+        "summary": "Detail",
+        "operationId": "detail_v1_projects__project_id__runtime_guardrails__policy_id__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "policy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Policy Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuardrailControlReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/runtime-guardrails/{policy_id}/approve": {
+      "post": {
+        "summary": "Approve",
+        "operationId": "approve_v1_projects__project_id__runtime_guardrails__policy_id__approve_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "policy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Policy Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardrailActivation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuardrailControlReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/runtime-guardrails/{policy_id}/disable": {
+      "post": {
+        "summary": "Turn Off",
+        "operationId": "turn_off_v1_projects__project_id__runtime_guardrails__policy_id__disable_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "policy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Policy Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardrailDisable"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuardrailControlReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/runtime-guardrails/{policy_id}/content": {
+      "post": {
+        "summary": "Content",
+        "operationId": "content_v1_projects__project_id__runtime_guardrails__policy_id__content_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "policy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Policy Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentPurpose"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuardrailPolicy"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/runtime-guardrails/{policy_id}/operations": {
+      "get": {
+        "summary": "Operations",
+        "operationId": "operations_v1_projects__project_id__runtime_guardrails__policy_id__operations_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "policy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Policy Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 25,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuardrailOperationPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/runtime-guardrails/{policy_id}/operations/{operation_id}/{stage}": {
+      "get": {
+        "summary": "Operation",
+        "operationId": "operation_v1_projects__project_id__runtime_guardrails__policy_id__operations__operation_id___stage__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "policy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Policy Id"
+            }
+          },
+          {
+            "name": "operation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Operation Id"
+            }
+          },
+          {
+            "name": "stage",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Stage"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuardrailOperationReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{project_id}/export": {
       "get": {
         "summary": "Export",
@@ -18551,7 +19046,8 @@
             "type": "string",
             "enum": [
               "cutback.gateway-policy.v1",
-              "cutback.gateway-policy.v2"
+              "cutback.gateway-policy.v2",
+              "cutback.gateway-policy.v3"
             ],
             "title": "Version",
             "default": "cutback.gateway-policy.v1"
@@ -18601,6 +19097,16 @@
             "maxItems": 5,
             "minItems": 1,
             "title": "Models"
+          },
+          "runtime_guardrails": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GuardrailBinding"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -18622,7 +19128,8 @@
             "type": "string",
             "enum": [
               "cutback.gateway-policy.v1",
-              "cutback.gateway-policy.v2"
+              "cutback.gateway-policy.v2",
+              "cutback.gateway-policy.v3"
             ],
             "title": "Version",
             "default": "cutback.gateway-policy.v1"
@@ -18672,6 +19179,16 @@
             "maxItems": 5,
             "minItems": 1,
             "title": "Models"
+          },
+          "runtime_guardrails": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GuardrailBinding"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -18841,6 +19358,704 @@
           "project_id"
         ],
         "title": "GrantInput"
+      },
+      "GuardrailActivation": {
+        "properties": {
+          "approval_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Approval Hash"
+          },
+          "approval_ref": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Approval Ref"
+          },
+          "expected_state_version": {
+            "type": "integer",
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Expected State Version"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "approval_hash",
+          "approval_ref",
+          "expected_state_version"
+        ],
+        "title": "GuardrailActivation"
+      },
+      "GuardrailBinding": {
+        "properties": {
+          "binding_version": {
+            "type": "string",
+            "const": "cutback.guardrail-binding.v1",
+            "title": "Binding Version",
+            "default": "cutback.guardrail-binding.v1"
+          },
+          "version": {
+            "type": "string",
+            "const": "cutback.guardrail-policy.v1",
+            "title": "Version",
+            "default": "cutback.guardrail-policy.v1"
+          },
+          "service_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Service Id"
+          },
+          "policy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Policy Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "principal_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Principal Id"
+          },
+          "policy_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Policy Sha256"
+          },
+          "environment": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Environment"
+          },
+          "workflows": {
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Workflows"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Starts At"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "protected_stages": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "input",
+                "output",
+                "tool_input",
+                "tool_output"
+              ]
+            },
+            "type": "array",
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Protected Stages"
+          },
+          "rule_count": {
+            "type": "integer",
+            "maximum": 64.0,
+            "minimum": 1.0,
+            "title": "Rule Count"
+          },
+          "stage_rule_counts": {
+            "additionalProperties": {
+              "type": "integer",
+              "maximum": 64.0,
+              "minimum": 1.0
+            },
+            "propertyNames": {
+              "enum": [
+                "input",
+                "output",
+                "tool_input",
+                "tool_output"
+              ]
+            },
+            "type": "object",
+            "title": "Stage Rule Counts"
+          },
+          "on_unavailable": {
+            "type": "string",
+            "enum": [
+              "fail_closed",
+              "fail_open"
+            ],
+            "title": "On Unavailable",
+            "default": "fail_closed"
+          },
+          "max_content_bytes": {
+            "type": "integer",
+            "maximum": 1048576.0,
+            "minimum": 256.0,
+            "title": "Max Content Bytes"
+          },
+          "max_evaluation_ms": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Max Evaluation Ms"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "service_id",
+          "policy_id",
+          "project_id",
+          "principal_id",
+          "policy_sha256",
+          "environment",
+          "workflows",
+          "starts_at",
+          "expires_at",
+          "protected_stages",
+          "rule_count",
+          "stage_rule_counts",
+          "max_content_bytes",
+          "max_evaluation_ms"
+        ],
+        "title": "GuardrailBinding",
+        "description": "Public, approved execution scope; contains no rule literals or content nonce."
+      },
+      "GuardrailControlReceipt": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "binding": {
+            "$ref": "#/components/schemas/GuardrailBinding"
+          },
+          "capture_policy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Capture Policy Id"
+          },
+          "approval_hash": {
+            "type": "string",
+            "title": "Approval Hash"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "state_version": {
+            "type": "integer",
+            "title": "State Version"
+          },
+          "max_checks": {
+            "type": "integer",
+            "title": "Max Checks"
+          },
+          "checks_used": {
+            "type": "integer",
+            "title": "Checks Used"
+          },
+          "approved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "execution_authority": {
+            "type": "string",
+            "enum": [
+              "current",
+              "ended",
+              "inactive",
+              "unknown"
+            ],
+            "title": "Execution Authority"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "binding",
+          "capture_policy_id",
+          "approval_hash",
+          "state",
+          "state_version",
+          "max_checks",
+          "checks_used",
+          "approved_at",
+          "created_at",
+          "execution_authority"
+        ],
+        "title": "GuardrailControlReceipt"
+      },
+      "GuardrailDecision": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.guardrail-decision.v1",
+            "title": "Version",
+            "default": "cutback.guardrail-decision.v1"
+          },
+          "operation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Operation Id"
+          },
+          "policy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Policy Id"
+          },
+          "policy_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Policy Sha256"
+          },
+          "stage": {
+            "type": "string",
+            "enum": [
+              "input",
+              "output",
+              "tool_input",
+              "tool_output"
+            ],
+            "title": "Stage"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "allowed",
+              "blocked",
+              "unavailable"
+            ],
+            "title": "Status"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "allow",
+              "deny"
+            ],
+            "title": "Action"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "GUARDRAIL_ALLOWED",
+              "GUARDRAIL_LITERAL_DENIED",
+              "GUARDRAIL_SHAPE_DENIED",
+              "GUARDRAIL_TOOL_DENIED",
+              "GUARDRAIL_SCOPE_DENIED",
+              "GUARDRAIL_EXPIRED",
+              "GUARDRAIL_CHECK_UNAVAILABLE",
+              "GUARDRAIL_CONTENT_BOUND",
+              "GUARDRAIL_OPERATION_CONFLICT"
+            ],
+            "title": "Code"
+          },
+          "rule_refs": {
+            "items": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "type": "array",
+            "maxItems": 64,
+            "title": "Rule Refs",
+            "default": []
+          },
+          "checks_completed": {
+            "type": "integer",
+            "maximum": 64.0,
+            "minimum": 0.0,
+            "title": "Checks Completed"
+          },
+          "checks_expected": {
+            "type": "integer",
+            "maximum": 64.0,
+            "minimum": 0.0,
+            "title": "Checks Expected"
+          },
+          "coverage_complete": {
+            "type": "boolean",
+            "title": "Coverage Complete"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "operation_id",
+          "policy_id",
+          "policy_sha256",
+          "stage",
+          "status",
+          "action",
+          "code",
+          "checks_completed",
+          "checks_expected",
+          "coverage_complete"
+        ],
+        "title": "GuardrailDecision"
+      },
+      "GuardrailDisable": {
+        "properties": {
+          "approval_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Approval Hash"
+          },
+          "expected_state_version": {
+            "type": "integer",
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Expected State Version"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "approval_hash",
+          "expected_state_version"
+        ],
+        "title": "GuardrailDisable"
+      },
+      "GuardrailOperationPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/GuardrailOperationReceipt"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_after"
+        ],
+        "title": "GuardrailOperationPage"
+      },
+      "GuardrailOperationReceipt": {
+        "properties": {
+          "policy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Policy Id"
+          },
+          "operation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Operation Id"
+          },
+          "stage": {
+            "type": "string",
+            "enum": [
+              "input",
+              "output",
+              "tool_input",
+              "tool_output"
+            ],
+            "title": "Stage"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "RESERVED",
+              "COMPLETED",
+              "UNKNOWN"
+            ],
+            "title": "State"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GuardrailDecision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "policy_id",
+          "operation_id",
+          "stage",
+          "state",
+          "decision",
+          "created_at",
+          "completed_at"
+        ],
+        "title": "GuardrailOperationReceipt"
+      },
+      "GuardrailPolicy": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.guardrail-policy.v1",
+            "title": "Version",
+            "default": "cutback.guardrail-policy.v1"
+          },
+          "policy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Policy Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "principal_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Principal Id"
+          },
+          "environment": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Environment"
+          },
+          "workflows": {
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Workflows"
+          },
+          "content_nonce": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Content Nonce"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Starts At"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "protected_stages": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "input",
+                "output",
+                "tool_input",
+                "tool_output"
+              ]
+            },
+            "type": "array",
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Protected Stages"
+          },
+          "rules": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/LiteralDenyRule"
+                },
+                {
+                  "$ref": "#/components/schemas/JSONShapeRule"
+                },
+                {
+                  "$ref": "#/components/schemas/ToolAllowlistRule"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "kind",
+                "mapping": {
+                  "json_shape": "#/components/schemas/JSONShapeRule",
+                  "literal_deny": "#/components/schemas/LiteralDenyRule",
+                  "tool_allowlist": "#/components/schemas/ToolAllowlistRule"
+                }
+              }
+            },
+            "type": "array",
+            "maxItems": 64,
+            "minItems": 1,
+            "title": "Rules"
+          },
+          "on_unavailable": {
+            "type": "string",
+            "enum": [
+              "fail_closed",
+              "fail_open"
+            ],
+            "title": "On Unavailable",
+            "default": "fail_closed"
+          },
+          "max_content_bytes": {
+            "type": "integer",
+            "maximum": 1048576.0,
+            "minimum": 256.0,
+            "title": "Max Content Bytes",
+            "default": 64000
+          },
+          "max_evaluation_ms": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Max Evaluation Ms",
+            "default": 50
+          },
+          "content_use_approved": {
+            "type": "boolean",
+            "const": true,
+            "title": "Content Use Approved"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "policy_id",
+          "project_id",
+          "principal_id",
+          "environment",
+          "workflows",
+          "starts_at",
+          "expires_at",
+          "protected_stages",
+          "rules",
+          "content_use_approved"
+        ],
+        "title": "GuardrailPolicy"
+      },
+      "GuardrailPolicyPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/GuardrailControlReceipt"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_after"
+        ],
+        "title": "GuardrailPolicyPage"
+      },
+      "GuardrailRegistration": {
+        "properties": {
+          "service_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Service Id"
+          },
+          "capture_policy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Capture Policy Id"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/GuardrailPolicy"
+          },
+          "max_checks": {
+            "type": "integer",
+            "maximum": 10000000.0,
+            "minimum": 2.0,
+            "title": "Max Checks",
+            "default": 10000
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "service_id",
+          "capture_policy_id",
+          "policy"
+        ],
+        "title": "GuardrailRegistration"
       },
       "HTTPValidationError": {
         "properties": {
@@ -20003,6 +21218,51 @@
         "title": "IsolatedSecurityExecution",
         "description": "Larger finite suite bounds, only accepted by the distinct v9 contract."
       },
+      "JSONShapeRule": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "json_shape",
+            "title": "Kind",
+            "default": "json_shape"
+          },
+          "key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Key"
+          },
+          "stages": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "input",
+                "output",
+                "tool_input",
+                "tool_output"
+              ]
+            },
+            "type": "array",
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Stages"
+          },
+          "schema_definition": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Schema Definition"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "stages",
+          "schema_definition"
+        ],
+        "title": "JSONShapeRule"
+      },
       "JsonValue": {},
       "KeyInput": {
         "properties": {
@@ -20485,6 +21745,64 @@
           "immutable_hash"
         ],
         "title": "LineageReconciliation"
+      },
+      "LiteralDenyRule": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "literal_deny",
+            "title": "Kind",
+            "default": "literal_deny"
+          },
+          "key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Key"
+          },
+          "stages": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "input",
+                "output",
+                "tool_input",
+                "tool_output"
+              ]
+            },
+            "type": "array",
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Stages"
+          },
+          "terms": {
+            "items": {
+              "type": "string",
+              "maxLength": 256,
+              "minLength": 1
+            },
+            "type": "array",
+            "maxItems": 64,
+            "minItems": 1,
+            "title": "Terms"
+          },
+          "normalization": {
+            "type": "string",
+            "enum": [
+              "exact",
+              "nfkc_casefold"
+            ],
+            "title": "Normalization",
+            "default": "exact"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "stages",
+          "terms"
+        ],
+        "title": "LiteralDenyRule"
       },
       "LiteralInstructionEdit": {
         "properties": {
@@ -27934,6 +29252,49 @@
           "limit"
         ],
         "title": "TeamLimit"
+      },
+      "ToolAllowlistRule": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "tool_allowlist",
+            "title": "Kind",
+            "default": "tool_allowlist"
+          },
+          "key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Key"
+          },
+          "stages": {
+            "items": {
+              "type": "string",
+              "const": "tool_input"
+            },
+            "type": "array",
+            "title": "Stages",
+            "default": [
+              "tool_input"
+            ]
+          },
+          "names": {
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+            },
+            "type": "array",
+            "maxItems": 64,
+            "minItems": 1,
+            "title": "Names"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "names"
+        ],
+        "title": "ToolAllowlistRule"
       },
       "ToolArgumentCheck": {
         "properties": {

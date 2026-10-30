@@ -68,6 +68,29 @@ def policy_spec(row):
     return specification
 
 
+def runtime_guardrail_authority(session, project, envelope):
+    binding = envelope.runtime_guardrails
+    if binding is not None:
+        from fastapi import HTTPException
+
+        from cutback.server.guardrail_controls import current_authority
+
+        if binding.project_id != project:
+            raise GatewayError("GATEWAY_GUARDRAIL_PROJECT_SCOPE_DENIED", 403)
+        environments = session.scalars(
+            select(Environment).where(Environment.id.in_(envelope.environment_ids))
+        ).all()
+        if len(environments) != len(envelope.environment_ids) or any(
+            env.project_id != project or env.name != binding.environment for env in environments
+        ):
+            raise GatewayError("GATEWAY_GUARDRAIL_ENVIRONMENT_SCOPE_DENIED", 403)
+        try:
+            current_authority(session, project, binding.policy_id, binding)
+        except HTTPException:
+            raise GatewayError("GATEWAY_GUARDRAIL_APPROVAL_NOT_CURRENT", 403) from None
+    return binding
+
+
 def create_policy(session, project, specification: GatewayPolicy, actor, *, now=None):
     lock_project(session, project)
     now = now or datetime.now(UTC)
@@ -97,6 +120,7 @@ def create_policy(session, project, specification: GatewayPolicy, actor, *, now=
     )
     if found != set(specification.environment_ids):
         raise GatewayError("GATEWAY_ENVIRONMENT_SCOPE_DENIED", 403)
+    runtime_guardrail_authority(session, project, specification)
     for model in specification.models:
         qualify_model(model)
         if upper_cost(model) > min(
@@ -198,6 +222,7 @@ def approve_policy(
     for model in specification.models:
         qualify_model(model)
     consume_activation_approval(row, approval_ref)
+    runtime_guardrail_authority(session, project, specification)
     row.state_version += 1
     row.state, row.approved_by, row.approval_ref, row.approved_at = (
         "APPROVED",
@@ -426,10 +451,32 @@ def reserve(
         current_admin(session, project, policy.approved_by)
         current_admin(session, project, key.issued_by)
         envelope = policy_spec(policy)
+        binding = runtime_guardrail_authority(session, project, envelope)
         model = next((m for m in envelope.models if m.model == request.model), None)
         if model is None:
             raise GatewayError("GATEWAY_MODEL_NOT_APPROVED", 403)
         qualify_request(request, model)
+        if binding is not None:
+            from cutback.core.guardrails import GuardrailDecision
+            from cutback.server.guardrail_db import GuardrailOperationRow
+
+            guard = session.get(
+                GuardrailOperationRow, (project, binding.policy_id, operation_id, "input")
+            )
+            decision = (
+                GuardrailDecision.model_validate(guard.decision)
+                if guard and guard.decision
+                else None
+            )
+            if (
+                decision is None
+                or guard.state not in {"COMPLETED", "UNKNOWN"}
+                or decision.action != "allow"
+                or decision.policy_sha256 != binding.policy_sha256
+                or decision.status == "unavailable"
+                and binding.on_unavailable != "fail_open"
+            ):
+                raise GatewayError("GATEWAY_DURABLE_INPUT_GUARD_REQUIRED", 403)
         prior = session.get(GatewayCallRow, (project, operation_id))
         if prior is not None:
             same = hmac.compare_digest(prior.request_hmac, request_hmac) and prior.key_id == key.id

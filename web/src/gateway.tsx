@@ -11,6 +11,7 @@ type PolicyInput = components["schemas"]["GatewayPolicy-Input"];
 type KeyInput = components["schemas"]["GatewayKeyInput-Input"];
 type LimitInput = components["schemas"]["SpendLimit-Input"];
 type ModelInput = components["schemas"]["ModelLimit-Input"];
+type RuntimePolicy = components["schemas"]["GuardrailControlReceipt"];
 type Allowance = { dollars: string; requests: string; concurrent: string };
 const initialAllowance = (): Allowance => ({
   dollars: "10",
@@ -100,6 +101,8 @@ export function GatewayBudgets({
   const [output, setOutput] = useState("1024");
   const [timeout, setTimeout] = useState("60");
   const [streaming, setStreaming] = useState("disabled");
+  const [runtimePolicies, setRuntimePolicies] = useState<RuntimePolicy[]>([]);
+  const [runtimePolicy, setRuntimePolicy] = useState("");
   const [keyLimit, setKeyLimit] = useState(initialAllowance);
   const [keyTeam, setKeyTeam] = useState("");
   const [keyEnvironment, setKeyEnvironment] = useState("");
@@ -120,13 +123,14 @@ export function GatewayBudgets({
 
   const reload = useCallback(async () => {
     const epoch = generation.current;
-    const [environmentPage, policyPage, keyPage, callPage, prices] =
+    const [environmentPage, policyPage, keyPage, callPage, prices, guardrails] =
       await Promise.all([
         api(`/projects/${project}/environments`),
         api(base + "/policies"),
         api(base + "/keys"),
         api(base + "/calls"),
         api(`/projects/${project}/prices`),
+        api(`/projects/${project}/runtime-guardrails?limit=100`),
       ]);
     if (generation.current !== epoch) return;
     setEnvironments(environmentPage.items);
@@ -140,6 +144,13 @@ export function GatewayBudgets({
     setPolicies(policyPage.items);
     setKeys(keyPage.items);
     setCalls(callPage.items);
+    setRuntimePolicies(
+      guardrails.items.filter(
+        (policy: RuntimePolicy) =>
+          policy.state === "APPROVED" &&
+          policy.execution_authority === "current",
+      ),
+    );
     setCursors({
       policies: policyPage.next_after,
       keys: keyPage.next_after,
@@ -215,17 +226,31 @@ export function GatewayBudgets({
     await act(async () => {
       if (!prepared.current) {
         const starts = new Date();
+        const selectedGuard = runtimePolicies.find(
+          (policy) => policy.id === runtimePolicy,
+        );
+        if (runtimePolicy && !selectedGuard)
+          throw new Error("GATEWAY_GUARDRAIL_APPROVAL_NOT_CURRENT");
         prepared.current = {
-          version:
-            streaming === "enabled"
+          version: selectedGuard
+            ? "cutback.gateway-policy.v3"
+            : streaming === "enabled"
               ? "cutback.gateway-policy.v2"
               : "cutback.gateway-policy.v1",
           policy_id: crypto.randomUUID(),
           environment_ids: selectedEnvironments,
           starts_at: starts.toISOString(),
           expires_at: new Date(
-            starts.getTime() + Number(hours) * 3600000,
+            Math.min(
+              starts.getTime() + Number(hours) * 3600000,
+              selectedGuard
+                ? Date.parse(selectedGuard.binding.expires_at)
+                : Infinity,
+            ),
           ).toISOString(),
+          ...(selectedGuard
+            ? { runtime_guardrails: selectedGuard.binding }
+            : {}),
           project_limit: allowance(projectLimit),
           teams: teams.map((team) => ({
             team_id: team.id,
@@ -831,6 +856,38 @@ export function GatewayBudgets({
                   Allow HTTP SSE and nonstreaming text
                 </option>
               </Select>
+              <Select
+                label="Runtime input and output policy"
+                name="runtime-guardrail-policy"
+                value={runtimePolicy}
+                onChange={(e) => {
+                  setRuntimePolicy(e.target.value);
+                  const selected = runtimePolicies.find(
+                    (policy) => policy.id === e.target.value,
+                  );
+                  if (selected)
+                    setSelectedEnvironments(
+                      environments
+                        .filter(
+                          (env) => env.name === selected.binding.environment,
+                        )
+                        .map((env) => env.id),
+                    );
+                }}
+              >
+                <option value="">No runtime guardrails</option>
+                {runtimePolicies.map((policy) => (
+                  <option key={policy.id} value={policy.id}>
+                    {policy.id} · {policy.binding.on_unavailable}
+                  </option>
+                ))}
+              </Select>
+              <p>
+                Register and approve rules in Runtime guardrails first. A
+                guarded policy ends no later than those rules, requires a
+                separately configured checker, and buffers SSE before delivering
+                any content. Unknown check coverage remains visible.
+              </p>
               <p>
                 Interrupted streams keep their budget hold when final usage is
                 unknown. Streaming and nonstreaming calls share the same model
