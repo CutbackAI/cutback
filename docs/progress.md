@@ -1,5 +1,18 @@
 # Implementation progress
 
+The exact-cache PR's first Python CodeQL run failed on the direct provider-
+credential fingerprint (`py/weak-sensitive-data-hashing`). The failed public
+run and artifacts are retained. Working source replaces it with scope-bound
+PBKDF2-HMAC-SHA256 (600,000 iterations), bounded adapter-local memoization and
+explicit credential validation. Default source credential/protocol/native/
+HTTP/PostgreSQL/ledger checks passed **102 in 68.98 seconds**. SDK3, full source
+journey and corrected artifact/hosted acceptance follow; the original security
+gate remains unchanged. The prior 76a33d4 artifacts are not accepted as final.
+The corrected complete agent/source/runtime/browser scopes now pass **134 /
+one skip in 174.79 seconds on 2.29.0** and **134 / one skip in 177.49 seconds
+on 3.35.1**. These are source checks, not a replacement for the failed hosted
+security gate or acceptance of the forthcoming corrected package.
+
 The corrected exact-cache contract and complete source journey passed **130 /
 one skip on OpenAI 2.29.0 in 181.05 seconds**, and **130 / one skip on 3.35.1 in
 185.98 seconds**. This includes actual HTTP/PostgreSQL, the authenticated

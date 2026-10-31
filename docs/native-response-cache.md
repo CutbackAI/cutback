@@ -101,6 +101,18 @@ training remains unfinished in the [market baseline](market-baseline.md).
 
 ## Executed component checks
 
+The provider-credential binding now uses PBKDF2-HMAC-SHA256 with 600,000
+iterations and the independent private scope key in its domain-separated salt.
+This follows the conservative work factor in the
+[OWASP guidance](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#pbkdf2);
+it is not a password-login service or a compliance claim. The previous direct
+HMAC fingerprint was flagged by CodeQL and is retained as failed qualification.
+The security gate is unchanged. Only the current credential/scope pair is
+memoized in an adapter's memory and cleared on close; neither secret nor the
+derived intermediate value is sent to the collector. A cold adapter pays the
+derivation cost, including the private-file helper's per-call adapter; production
+latency remains unmeasured. Credential or private-key changes produce cold keys.
+
 The corrected contract and complete agent/source/runtime/browser scope passed
 130 tests with one skip on each pinned SDK: 181.05 seconds on 2.29.0 and 185.98
 seconds on 3.35.1. Old collector replies and unavailable live ciphertext stop

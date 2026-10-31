@@ -114,6 +114,35 @@ class NativeResponseCacheExecution:
 
     def __init__(self, context: NativeCacheContext):
         self.scope = context
+        self._credential_binding: tuple[SecretStr, SecretBytes, str] | None = None
+
+    def close(self):
+        self._credential_binding = None
+
+    def _provider_credential_binding(self, credential: str) -> str:
+        # Treat credentials as potentially low-entropy secrets. The independent
+        # private scope key supplies a domain-bound salt; neither secret nor
+        # this intermediate value is sent to the collector. Memoize only the
+        # current pair in this adapter's lifetime, never in a global key cache.
+        if not credential.isascii() or not 1 <= len(credential) <= 4096:
+            raise ValueError("NATIVE_CACHE_PROVIDER_CREDENTIAL_REQUIRES_REVIEW")
+        scope_key = self.scope.request_hmac_key.get_secret_value()
+        previous = self._credential_binding
+        if (
+            previous is not None
+            and hmac.compare_digest(previous[0].get_secret_value(), credential)
+            and hmac.compare_digest(previous[1].get_secret_value(), scope_key)
+        ):
+            return previous[2]
+        reference = hashlib.pbkdf2_hmac(
+            "sha256",
+            credential.encode("ascii"),
+            b"cutback-native-cache-provider-kdf-v1:" + scope_key,
+            600000,
+            dklen=32,
+        ).hex()
+        self._credential_binding = (SecretStr(credential), SecretBytes(scope_key), reference)
+        return reference
 
     def _post(self, path, body):
         raise NotImplementedError("NATIVE_CACHE_AUTHORIZED_BACKEND_REQUIRED")
@@ -184,11 +213,7 @@ class NativeResponseCacheExecution:
         provider_context = {
             "organization": client.organization,
             "project": client.project,
-            "credential_hmac": hmac.new(
-                self.scope.request_hmac_key.get_secret_value(),
-                b"cutback-native-cache-provider:" + client.api_key.encode(),
-                hashlib.sha256,
-            ).hexdigest(),
+            "credential_kdf_sha256": self._provider_credential_binding(client.api_key),
         }
         headers = {}
         for name, value in client.default_headers.items():
@@ -376,12 +401,13 @@ class NativeResponsesCache(NativeResponseCacheExecution):
             or not 0 < timeout_seconds <= 10
         ):
             raise ValueError("NATIVE_CACHE_BOUNDED_TIMEOUT_REQUIRED")
-        self.scope = scope
+        super().__init__(scope)
         self.timeout = timeout_seconds
         self.owned_client = http_client is None
         self.http = http_client or httpx.Client(trust_env=False, follow_redirects=False)
 
     def close(self):
+        super().close()
         if self.owned_client:
             self.http.close()
 

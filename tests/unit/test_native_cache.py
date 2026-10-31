@@ -377,6 +377,53 @@ def test_native_provider_account_changes_do_not_reuse_another_accounts_response(
         http.close()
 
 
+def test_credential_derivation_is_private_scope_bound_and_cleared_on_close(monkeypatch):
+    import cutback.native_cache as implementation
+
+    native, cache, transport, calls, http = clients()
+    derive = implementation.hashlib.pbkdf2_hmac
+    derivations = []
+
+    def record(algorithm, credential, salt, iterations, **kwargs):
+        derivations.append((algorithm, iterations, kwargs.get("dklen")))
+        return derive(algorithm, credential, salt, iterations, **kwargs)
+
+    monkeypatch.setattr(implementation.hashlib, "pbkdf2_hmac", record)
+    try:
+        first = cache.create(native, **REQUEST)
+        hit = cache.create(native, **REQUEST)
+        assert first.receipt.origin == "native_provider" and hit.receipt.origin == "encrypted_cache"
+        assert derivations == [("sha256", 600000, 32)] and len(calls) == 1
+        cache.scope = cache.scope.model_copy(
+            update={"request_hmac_key": implementation.SecretBytes(b"y" * 48)}
+        )
+        second = cache.create(native, **REQUEST)
+        assert second.receipt.origin == "native_provider" and len(calls) == 2
+        assert len(derivations) == 2
+        bodies = json.dumps(transport.calls)
+        assert native.api_key not in bodies and "credential_kdf" not in bodies
+        assert native.api_key not in repr(cache._credential_binding)
+        cache.close()
+        assert cache._credential_binding is None
+    finally:
+        native.close()
+        cache.close()
+        http.close()
+
+
+@pytest.mark.parametrize("credential", ["", "x" * 4097, "non-ascii-\u2603"])
+def test_unqualified_provider_credential_stops_before_any_request(credential):
+    native, cache, transport, calls, http = clients()
+    try:
+        native.api_key = credential
+        with pytest.raises(ValueError, match="PROVIDER_CREDENTIAL_REQUIRES_REVIEW"):
+            cache.create(native, **REQUEST)
+        assert not calls and not transport.calls
+    finally:
+        native.close()
+        http.close()
+
+
 @pytest.mark.parametrize(
     "field", ["content_retention_authorized", "immutable_or_safely_invalidated"]
 )
