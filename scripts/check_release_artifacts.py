@@ -296,6 +296,7 @@ def check(directory: Path):
             "src/cutback/server/migrations/versions/0009_reviews.py",
             "src/cutback/sample_app/app.py",
             "docs/reactive-users.md",
+            "docs/generated-scenarios.md",
             "examples/reactive-user/README.md",
             "examples/reactive-user/app.py",
             "src/cutback/core/user_simulation.py",
