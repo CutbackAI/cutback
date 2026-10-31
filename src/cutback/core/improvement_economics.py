@@ -1,6 +1,6 @@
 """Descriptive task-window comparisons and conservative, declared search effort."""
 
-from decimal import ROUND_CEILING, ROUND_DOWN, Decimal, localcontext
+from decimal import ROUND_CEILING, ROUND_DOWN, Context, Decimal, localcontext
 from typing import Annotated, Literal
 from uuid import UUID
 
@@ -64,8 +64,7 @@ def compare_improvement_economics(
     if len(runs) > 20 or len({r.run_id for r in runs}) != len(runs):
         raise ValueError("OPTIMIZATION_RUNS_MUST_BE_UNIQUE_AND_BOUNDED")
     reasons = []
-    with localcontext() as context:
-        context.prec = 64
+    with localcontext(Context(prec=64)):
         known_run_cost = sum((r.known_cost_subtotal_usd for r in runs), Decimal(0))
         known_other = sum(
             (
@@ -216,8 +215,7 @@ def choose_search_effort(value: SearchEffortInput) -> dict:
         reasons.append("complete_search_upper_bound_unknown")
     gross = cap = None
     count = 0
-    with localcontext() as context:
-        context.prec = 64
+    with localcontext(Context(prec=64)):
         if (
             not reasons
             and value.conservative_savings_per_success_usd is not None

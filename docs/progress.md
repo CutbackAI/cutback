@@ -1,5 +1,35 @@
 # Implementation progress
 
+31 October 2026 economic arithmetic follow-up, **working source under
+qualification**: two real PostgreSQL negatives reproduced an exact-budget
+reservation being admitted after ambient rounding and a settled total changing
+from `0.999123456790` to `0.999123456700`. Native/whole-plan upper bounds,
+reservation/settlement transactions and task/window/search economics now own
+their Decimal precision, exponents, rounding and traps. The fix preserves the
+embedding caller's context and the existing plan serialization. The combined
+task/improvement/ledger scope passed **49 in 33.11 seconds**; six dedicated
+context regressions pass. Broader native/campaign/installed/hosted gates remain
+pending. No paid request or new schema is involved.
+
+The dashboard build now pins minimatch 11.0.1 for the schema tooling's transitive
+dependency, following the maintainer's [glob amplification advisory](https://github.com/isaacs/minimatch/security/advisories/GHSA-g3hv-75wg-m249).
+Locked installation and the complete dashboard/Node SDK audits report zero
+known vulnerabilities. Regenerated OpenAPI/client/types and rebuilt dashboard
+remain unchanged; all 14 frontend units pass. This is a build-tool update,
+not a broader runtime compatibility claim.
+
+The preceding retrieval candidate completed its source and installed default
+scope: **1,412 passed / 27 explicit skips**, respectively 823.56 and 861.67
+seconds. The installed SDK3 retrieval/native/PG scope passed **97 in 478.50
+seconds**; separate SDK3 and Python 3.13 source scopes passed **44 each** in
+281.40 and 281.37 seconds. Its exact 400-entry image restored schema 0032,
+100 tables, 2,044 encrypted objects, eight profile sidecars, one cache object
+and 29 plans with rekey/preserved pointers; two-tenant 2,000-event/2,000-replay
+smoke was 2.828 seconds, not an SLA. Reproduced retrieval wheel SHA256 is
+`44a278798366be7a5faac00cef4cf5dd9532f548e61e3f4f02f21671ea9994e7`.
+That candidate predates the economic arithmetic fix above. Its scoped passing
+checks are retained, without treating them as acceptance of the newer code.
+
 31 October 2026 automatic retrieval workflow, **working source under final
 qualification**: [commands and scope](agent-retrieval.md). The agent discovers
 the independent committed corpus producer without importing it or parsing the

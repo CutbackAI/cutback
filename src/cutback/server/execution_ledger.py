@@ -5,7 +5,7 @@ import hmac
 import math
 import secrets
 from datetime import UTC, datetime
-from decimal import Decimal, InvalidOperation
+from decimal import Context, Decimal, InvalidOperation, localcontext
 from uuid import UUID, uuid4
 
 from sqlalchemy import func, select, true
@@ -107,8 +107,11 @@ def money(value):
     if not isinstance(value, Decimal) or not value.is_finite() or value < 0:
         raise ValueError("EXECUTION_MONEY_MUST_BE_FINITE_NONNEGATIVE_DECIMAL")
     try:
-        if value > Decimal("999999999999") or value != value.quantize(Decimal("0.000000000001")):
-            raise ValueError("EXECUTION_MONEY_PRECISION_NOT_QUALIFIED")
+        with localcontext(Context(prec=80)):
+            if value > Decimal("999999999999") or value != value.quantize(
+                Decimal("0.000000000001")
+            ):
+                raise ValueError("EXECUTION_MONEY_PRECISION_NOT_QUALIFIED")
     except InvalidOperation:
         raise ValueError("EXECUTION_MONEY_PRECISION_NOT_QUALIFIED") from None
     return value
@@ -213,6 +216,12 @@ class ExecutionLedger:
         return run, job
 
     def reserve(self, amount, model, purpose):
+        # The entire parent/episode/campaign transaction must use the same exact
+        # arithmetic as its bound, including calls into subordinate ledgers.
+        with localcontext(Context(prec=80)):
+            return self._reserve(amount, model, purpose)
+
+    def _reserve(self, amount, model, purpose):
         amount = money(amount)
         if purpose not in PURPOSES or self.plan.price_sha256 != Catalog().sha256:
             raise ValueError("EXECUTION_PURPOSE_OR_PRICE_CONTRACT_NOT_APPROVED")
@@ -413,6 +422,10 @@ class ExecutionLedger:
             return identifier
 
     def record(self, identifier, result, status):
+        with localcontext(Context(prec=80)):
+            return self._record(identifier, result, status)
+
+    def _record(self, identifier, result, status):
         if status not in {"completed", "uncertain", "usage_invalid", "not_started"}:
             raise ValueError("EXECUTION_CALL_RESULT_STATUS_INVALID")
         if (status in {"uncertain", "not_started"} and result is not None) or (
