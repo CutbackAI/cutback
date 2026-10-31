@@ -161,11 +161,24 @@ def synthetic_executor(*, invalid=False, outage=False, unknown_usage=False, befo
     return executor, calls
 
 
+def scenario_cases():
+    from cutback.demo import sample_cases
+
+    return [
+        {
+            **case,
+            "id": "scenario-source-" + case["id"],
+            "group": "scenario-source-family-" + case["id"],
+            "input": "Independent scenario-development ticket. " + case["input"],
+        }
+        for case in sample_cases()[:40]
+    ]
+
+
 def seed_scenarios(app, control, project_id, *, execute=True):
     from datetime import UTC, datetime, timedelta
     from uuid import UUID, uuid4
 
-    from cutback.demo import sample_cases
     from cutback.server.scenario_worker import run_scenario_one
     from cutback.server.worker import run_one
 
@@ -203,7 +216,7 @@ def seed_scenarios(app, control, project_id, *, execute=True):
             "provenance_ref": "independent-generated-scenarios-v1",
             "independent_labels": False,
             "representative": False,
-            "cases": sample_cases()[:40],
+            "cases": scenario_cases(),
         },
     )
     drafted = post(

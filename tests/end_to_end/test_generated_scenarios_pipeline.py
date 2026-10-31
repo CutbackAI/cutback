@@ -2,17 +2,20 @@
 
 import os
 import subprocess
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import UUID
 
 import httpx
 import pytest
+from sqlalchemy import select
 from support_browser import browser_command
 from test_pipeline import server
 
+from cutback.demo import sample_cases
 from cutback.demo_scenarios import seed_scenarios
 from cutback.evals.artifacts import EncryptedFileStore
-from cutback.server.db import ExperimentRunRecord, Project
+from cutback.server.db import DatasetItem, ExperimentRunRecord, PayloadSample, Project
 
 pytestmark = [pytest.mark.postgres, pytest.mark.e2e]
 
@@ -26,6 +29,53 @@ def test_independent_scenarios_generate_review_import_and_validate(
         server(api[2]) as endpoint,
         httpx.Client(base_url=endpoint, headers=api[1], trust_env=False, timeout=30) as control,
     ):
+        # The combined demo already has protected families from the larger ticket sample.
+        # Scenario development cases must remain independent of that cohort.
+        base = f"/v1/projects/{tenant[0]}"
+        assert control.post(base + "/environments", json={"name": "staging"}).status_code == 201
+        policy = control.post(
+            base + "/capture-policies",
+            json={
+                "enabled": True,
+                "approval_ref": "synthetic-original-demo-source",
+                "rights_basis": "synthetic",
+                "environments": ["staging"],
+                "workflows": ["synthetic-existing-ticket-cohort"],
+                "allowed_providers": ["openai"],
+                "sample_rate": 1,
+                "max_samples": 200,
+                "expires_at": (datetime.now(UTC) + timedelta(days=1)).isoformat(),
+            },
+        )
+        assert policy.status_code == 201, policy.text
+        existing = control.post(
+            base + "/datasets",
+            json={
+                "workflow": "synthetic-existing-ticket-cohort",
+                "policy_id": policy.json()["id"],
+                "source_type": "synthetic_fixture",
+                "provenance_ref": "synthetic-existing-ticket-source",
+                "independent_labels": False,
+                "cases": sample_cases()[:80],
+                "split_seed": 29,
+            },
+        )
+        assert existing.status_code == 201, existing.text
+        with api[2].state.sessions() as session:
+            protected_ordinals = session.scalars(
+                select(PayloadSample.metadata_safe)
+                .join(DatasetItem, DatasetItem.payload_id == PayloadSample.id)
+                .where(
+                    DatasetItem.dataset_id == UUID(existing.json()["id"]),
+                    DatasetItem.split == "test",
+                )
+            ).all()
+        protected = [sample_cases()[value["ordinal"]] for value in protected_ordinals]
+        assert protected
+        with monkeypatch.context() as scoped:
+            scoped.setattr("cutback.demo_scenarios.scenario_cases", lambda: protected)
+            with pytest.raises(ValueError, match="SYNTHETIC_SCENARIO_CONTROL_FAILED_422"):
+                seed_scenarios(api[2], control, tenant[0], execute=False)
         receipt = seed_scenarios(api[2], control, tenant[0])
         assert receipt["paid_provider_calls"] == 0
         assert receipt["production_changed"] is False and receipt["test_evidence"] is False
