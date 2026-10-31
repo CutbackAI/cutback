@@ -314,6 +314,7 @@ class ExperimentPlan(StrictModel):
         "deterministic-v11",
         "deterministic-v12",
         "deterministic-v13",
+        "deterministic-v14",
     ] = "deterministic-v3"
     episode_execution: EpisodeExecutionSpec | None = None
     retrieval_execution: RetrievalExecutionSpec | None = None
@@ -344,7 +345,26 @@ class ExperimentPlan(StrictModel):
 
     @model_validator(mode="after")
     def eligibility(self):
-        if self.criteria_binding and (
+        if self.criteria_binding and self.evaluator_version == "deterministic-v14":
+            if (
+                not self.episode_execution
+                or not self.episode_execution.semantic_judging
+                or self.episode_execution.isolated_tools
+                or self.episode_execution.security_suite
+                or self.retrieval_execution
+                or self.compression_execution
+                or self.source_binding
+                or self.prompt_bindings
+                or self.staged
+                or self.pilot_samples
+                or (self.split == "test" and not self.predecessor_run_id)
+                or self.content_nonce is None
+                or self.content_nonce.int == 0
+                or self.criteria
+                or self.metric.kind != "episode_contract"
+            ):
+                raise ValueError("REVIEWED_SEMANTIC_RUBRICS_REQUIRE_SEPARATE_NATIVE_EPISODE_V14")
+        elif self.criteria_binding and (
             self.evaluator_version != "deterministic-v13"
             or self.episode_execution
             or self.retrieval_execution
@@ -489,7 +509,7 @@ class ExperimentPlan(StrictModel):
                     if self.episode_execution.security_suite
                     else "deterministic-v8"
                     if isolated
-                    else "deterministic-v5"
+                    else ("deterministic-v14" if self.criteria_binding else "deterministic-v5")
                     if semantic
                     else "deterministic-v4"
                 )

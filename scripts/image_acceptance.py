@@ -159,6 +159,7 @@ def main(
     guarded_security=False,
     joint_model_context=False,
     reviewed_criteria=False,
+    semantic_rubrics=False,
 ):
     from cutback.server.migrate import CURRENT_REVISION
 
@@ -274,7 +275,11 @@ assert os.getuid()==10001 and sys.version_info[:3]==(3,11,18)
 app=create_app(allow_insecure_http=True)
 app.state.artifact_store=configured_store()
 os.environ["CUTBACK_SEMANTIC_CACHE_ENABLED"]="true"
-manifest=seed_support_desk(app,"http://127.0.0.1:8080",os.environ["CUTBACK_ADMIN_TOKEN"],Path("/tmp/owned-support-desk"),provider_batch=True,semantic_cache=True,runtime_guardrails=RUNTIME_GUARDS,joint_model_context=JOINT_EXPECTED,reviewed_criteria=CRITERIA_EXPECTED)
+manifest=seed_support_desk(app,"http://127.0.0.1:8080",os.environ["CUTBACK_ADMIN_TOKEN"],Path("/tmp/owned-support-desk"),provider_batch=True,semantic_cache=True,runtime_guardrails=RUNTIME_GUARDS,joint_model_context=JOINT_EXPECTED,reviewed_criteria=CRITERIA_EXPECTED,semantic_rubrics=RUBRICS_EXPECTED)
+if RUBRICS_EXPECTED:
+ assert manifest["semantic_rubrics_sample"]["native_fixture_calls"]>1
+ assert manifest["semantic_rubrics_sample"]["paid_provider_calls"]==0
+ assert manifest["semantic_rubrics_sample"]["source_patch_eligible"] is False
 if CRITERIA_EXPECTED:
  assert manifest["reviewed_criteria_sample"]["native_sdk_calls"]>1
  assert manifest["reviewed_criteria_sample"]["paid_provider_calls"]==0
@@ -295,6 +300,7 @@ print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":mani
 """
                 code = code.replace("RUNTIME_GUARDS", repr(runtime_guardrails))
                 code = code.replace("CRITERIA_EXPECTED", repr(reviewed_criteria))
+                code = code.replace("RUBRICS_EXPECTED", repr(semantic_rubrics))
                 code = code.replace("JOINT_EXPECTED", repr(joint_model_context))
                 manifest = json.loads(inside(container, code, values).strip().splitlines()[-1])
                 base = "/v1/projects/" + manifest["project_id"]
@@ -466,34 +472,46 @@ with sessions() as session:
   assert confirmed.results["lineage"]["fresh_test_claim"] is True
   decision=confirmed.results["recommendations"][0]
   assert decision["joint_model_context_confirmation_eligible"] is True
- if CRITERIA_EXPECTED:
+ if CRITERIA_EXPECTED or RUBRICS_EXPECTED:
   from cutback.server.criteria_db import CriteriaVersionRecord,CriteriaExperimentUse
   from cutback.server.criteria_service import (
    load_generation,reviewed_content,validate_binding,receipt)
   from cutback.server.plan_artifacts import load_plan
   versions=session.scalars(select(CriteriaVersionRecord)).all()
-  assert len(versions)==1
-  version=versions[0]
-  assert version.state=="COMPLETED" and version.review_status=="APPROVED"
-  generated=session.get(ExperimentPlanRecord,version.generation_plan_id)
-  generation=load_generation(new_only,version.project_id,generated.specification)
-  assert generation.criteria_id==version.id
-  requirements,proposal,_=reviewed_content(session,new_only,version)
-  assert requirements.minimum==0.9 and len(proposal.criteria)==1
-  uses=session.scalars(select(CriteriaExperimentUse)).all()
-  assert len(uses)==2
-  for use in uses:
-   planned=session.get(ExperimentPlanRecord,use.plan_id)
-   restored=load_plan(new_only,use.project_id,planned.specification)
-   assert validate_binding(session,new_only,use.project_id,restored).id==version.id
-   assert restored.criteria_binding.review_approval_id==use.review_approval_id
-   assert restored.source_binding is not None
-   executed=session.scalar(select(ExperimentRunRecord).where(ExperimentRunRecord.plan_id==planned.id))
-   assert executed.status=="COMPLETED"
-   expected=receipt(session,use.project_id,restored)
-   assert all(executed.results.get(key)==value for key,value in expected.items())
-   if restored.split=="test":
-    assert executed.results["lineage"]["fresh_test_claim"] is True
+  assert len(versions)==int(CRITERIA_EXPECTED)+int(RUBRICS_EXPECTED)
+  generation_kinds=[]
+  for version in versions:
+   assert version.state=="COMPLETED" and version.review_status=="APPROVED"
+   generated=session.get(ExperimentPlanRecord,version.generation_plan_id)
+   generation=load_generation(new_only,version.project_id,generated.specification)
+   assert generation.criteria_id==version.id
+   generation_kinds.append(generation.operation)
+   requirements,proposal,_=reviewed_content(session,new_only,version)
+   assert requirements.minimum==0.9 and len(proposal.criteria)==1
+   uses=session.scalars(select(CriteriaExperimentUse).where(
+    CriteriaExperimentUse.criteria_id==version.id)).all()
+   assert len(uses)==2
+   for use in uses:
+    planned=session.get(ExperimentPlanRecord,use.plan_id)
+    restored=load_plan(new_only,use.project_id,planned.specification)
+    assert validate_binding(session,new_only,use.project_id,restored).id==version.id
+    assert restored.criteria_binding.review_approval_id==use.review_approval_id
+    if generation.operation=="criteria-generation-v2":
+     assert restored.source_binding is None and restored.evaluator_version=="deterministic-v14"
+     assert restored.episode_execution.semantic_judging.criteria[0].minimum==1.0
+    else:
+     assert restored.source_binding is not None
+    executed=session.scalar(select(ExperimentRunRecord).where(ExperimentRunRecord.plan_id==planned.id))
+    assert executed.status=="COMPLETED"
+    expected=receipt(session,use.project_id,restored)
+    assert all(executed.results.get(key)==value for key,value in expected.items())
+    if generation.operation=="criteria-generation-v2":
+     assert all(r["source_patch_eligible"] is False for r in executed.results["recommendations"])
+     assert all(r["semantic_quality"]=="NOT VERIFIED" for r in executed.results["recommendations"])
+    if restored.split=="test":
+     assert executed.results["lineage"]["fresh_test_claim"] is True
+  assert generation_kinds.count("criteria-generation-v1")==int(CRITERIA_EXPECTED)
+  assert generation_kinds.count("criteria-generation-v2")==int(RUBRICS_EXPECTED)
 print(json.dumps({"restored_and_rekeyed_objects":len(rows)+len(caches),"restored_and_rekeyed_cache_objects":len(caches),"restored_and_rekeyed_plans":len(plans),"semantic_qualified_catalog_restored":True,"isolated_tool_receipts_restored":bool(TOOLS_EXPECTED),"paired_security_suite_restored":bool(SECURITY_EXPECTED),"runtime_guardrail_receipts_restored":bool(RUNTIME_GUARDS),"database_pointers_preserved":True}))
 engine.dispose()
 """.replace("RECOVERED", repr(names[1]))
@@ -504,6 +522,7 @@ engine.dispose()
                     .replace("GUARDED_SECURITY", repr(guarded_security))
                     .replace("JOINT_EXPECTED", repr(joint_model_context))
                     .replace("CRITERIA_EXPECTED", repr(reviewed_criteria))
+                    .replace("RUBRICS_EXPECTED", repr(semantic_rubrics))
                 )
                 recovered = json.loads(inside(container, recovery, values).strip().splitlines()[-1])
 
@@ -633,6 +652,7 @@ engine.dispose()
                         joint_model_context
                     ),
                     "reviewed_criteria_versions_and_confirmation_restored": reviewed_criteria,
+                    "generated_semantic_rubrics_and_proxy_confirmation_restored": semantic_rubrics,
                     "restored_tables": len(after),
                     "row_counts_match": True,
                     **recovered,
@@ -676,6 +696,7 @@ if __name__ == "__main__":
     parser.add_argument("--guarded-security", action="store_true")
     parser.add_argument("--joint-model-context", action="store_true")
     parser.add_argument("--reviewed-criteria", action="store_true")
+    parser.add_argument("--semantic-rubrics", action="store_true")
     args = parser.parse_args()
     main(
         args.image,
@@ -686,4 +707,5 @@ if __name__ == "__main__":
         guarded_security=args.guarded_security,
         joint_model_context=args.joint_model_context,
         reviewed_criteria=args.reviewed_criteria,
+        semantic_rubrics=args.semantic_rubrics,
     )

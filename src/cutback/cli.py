@@ -114,6 +114,7 @@ def demo(
     guarded_security: bool = False,
     joint_model_context: bool = False,
     reviewed_criteria: bool = False,
+    semantic_rubrics: bool = False,
 ):
     """Explore the complete sample. Requires Docker and Git; no API key or paid calls."""
     try:
@@ -132,6 +133,7 @@ def demo(
             guarded_security=guarded_security,
             joint_model_context=joint_model_context,
             reviewed_criteria=reviewed_criteria,
+            semantic_rubrics=semantic_rubrics,
         )
     except ImportError:
         fail(

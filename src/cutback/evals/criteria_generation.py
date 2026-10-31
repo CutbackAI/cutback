@@ -8,6 +8,7 @@ from pydantic import Field, StrictInt, model_validator
 
 from cutback.core.models import Identifier, StrictModel
 from cutback.core.request_profiles import RequestContract
+from cutback.core.semantic_rubrics import SemanticRubricRequirements
 from cutback.evals.datasets import digest
 from cutback.evals.experiments import Budget, CriterionSpec, ModelSpec, qualified_native_model
 from cutback.evals.metrics import MetricSpec
@@ -45,6 +46,28 @@ class CriteriaRequirements(StrictModel):
         ):
             raise ValueError("CRITERIA_REQUIREMENTS_BYTE_OR_METRIC_BOUND")
         return self
+
+
+CriteriaRequirementsType = CriteriaRequirements | SemanticRubricRequirements
+
+
+def parse_requirements(value):
+    if isinstance(value, SemanticRubricRequirements) or (
+        isinstance(value, dict) and value.get("kind") == "episode_semantic_rubrics_v1"
+    ):
+        return SemanticRubricRequirements.model_validate(value)
+    return CriteriaRequirements.model_validate(value)
+
+
+def generation_contract(requirements):
+    if isinstance(requirements, SemanticRubricRequirements):
+        from cutback.evals.rubric_generation import RUBRIC_GENERATOR_CONTRACT_SHA256
+
+        return {
+            "operation": "criteria-generation-v2",
+            "contract_sha256": RUBRIC_GENERATOR_CONTRACT_SHA256,
+        }
+    return {"operation": "criteria-generation-v1", "contract_sha256": GENERATOR_CONTRACT_SHA256}
 
 
 class ProposedCriterion(StrictModel):
@@ -85,7 +108,7 @@ GENERATOR_CONTRACT_SHA256 = digest(
 )
 
 
-def generator_model(model: ModelSpec):
+def generator_model(model: ModelSpec, *, semantic=False):
     qualified_native_model(model)
     if (
         model.provider != "openai"
@@ -96,10 +119,15 @@ def generator_model(model: ModelSpec):
         or model.prompt_cache
     ):
         raise ValueError("CRITERIA_GENERATOR_REQUIRES_QUALIFIED_NATIVE_RESPONSES_MODEL")
+    instruction = GENERATOR_INSTRUCTION
+    if semantic:
+        from cutback.evals.rubric_generation import RUBRIC_GENERATOR_INSTRUCTION
+
+        instruction = RUBRIC_GENERATOR_INSTRUCTION
     return model.model_copy(
         update={
             "key": "criteria-generator",
-            "instruction": GENERATOR_INSTRUCTION,
+            "instruction": instruction,
             "request_contract": RequestContract(
                 sdk_surface="responses.create",
                 payload={"op": "parameter", "name": "criteria_input"},
@@ -113,7 +141,9 @@ def generator_model(model: ModelSpec):
 class CriteriaGenerationPlan(StrictModel):
     """One exact generation call, separately approved from target evaluation."""
 
-    operation: Literal["criteria-generation-v1"] = "criteria-generation-v1"
+    operation: Literal["criteria-generation-v1", "criteria-generation-v2"] = (
+        "criteria-generation-v1"
+    )
     transport: Literal["native_provider", "scripted_test_only"] = "native_provider"
     criteria_id: UUID
     workflow: Identifier
@@ -139,8 +169,15 @@ class CriteriaGenerationPlan(StrictModel):
 
     @model_validator(mode="after")
     def exact(self):
+        from cutback.evals.rubric_generation import RUBRIC_GENERATOR_CONTRACT_SHA256
+
+        expected_contract = (
+            RUBRIC_GENERATOR_CONTRACT_SHA256
+            if self.operation == "criteria-generation-v2"
+            else GENERATOR_CONTRACT_SHA256
+        )
         if (
-            self.contract_sha256 != GENERATOR_CONTRACT_SHA256
+            self.contract_sha256 != expected_contract
             or self.price_sha256 != Catalog().sha256
             or self.budget.max_requests != 1
             or not self.criteria_id.int
@@ -148,14 +185,15 @@ class CriteriaGenerationPlan(StrictModel):
         ):
             raise ValueError("CRITERIA_GENERATION_REQUIRES_CURRENT_ONE_CALL_APPROVAL")
         owned = generator_model(
-            self.baseline.model_copy(update={"instruction": "", "request_contract": None})
+            self.baseline.model_copy(update={"instruction": "", "request_contract": None}),
+            semantic=self.operation == "criteria-generation-v2",
         )
         if owned != self.baseline:
             raise ValueError("CRITERIA_GENERATOR_REQUEST_CONTRACT_CHANGED")
         return self
 
 
-def generation_input(requirements: CriteriaRequirements, training):
+def generation_input(requirements: CriteriaRequirementsType, training):
     if not isinstance(training, list) or not 1 <= len(training) <= 8:
         raise ValueError("CRITERIA_REQUIRES_ONE_TO_EIGHT_PERMITTED_TRAINING_ROWS")
     if any(
@@ -173,13 +211,21 @@ def generation_input(requirements: CriteriaRequirements, training):
         "training": training,
         "unseen_test_rows_supplied": False,
     }
+    if isinstance(requirements, SemanticRubricRequirements):
+        from cutback.evals.rubric_generation import rubric_dimensions
+
+        value["dimensions"] = rubric_dimensions(requirements)
     text = json.dumps(value, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
     if len(text.encode()) > 48000:
         raise ValueError("CRITERIA_GENERATOR_INPUT_BYTE_BOUND")
     return text
 
 
-def decode(text, requirements: CriteriaRequirements, anchors):
+def decode(text, requirements: CriteriaRequirementsType, anchors):
+    if isinstance(requirements, SemanticRubricRequirements):
+        from cutback.evals.rubric_generation import decode_rubrics
+
+        return decode_rubrics(text, requirements, anchors)
     if not isinstance(text, str) or len(text.encode()) > 32768:
         raise ValueError("GENERATED_CRITERIA_OUTPUT_BYTE_BOUND")
 

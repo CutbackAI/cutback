@@ -31,7 +31,7 @@ def reserve_campaign_call(
     parent, link = campaign_for_run(session, run)
     if parent is None:
         if purpose == "optimization":
-            if operation != "criteria-generation-v1":
+            if operation not in {"criteria-generation-v1", "criteria-generation-v2"}:
                 raise ValueError("PROPOSER_REQUIRES_APPROVED_CAMPAIGN")
             from cutback.server.criteria_service import reserve_criteria_generation
 

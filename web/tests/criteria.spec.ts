@@ -13,6 +13,7 @@ test("reviewed criteria use distinct budget, content, validation and confirmatio
   );
   test.setTimeout(120000);
   const errors: string[] = [];
+  const semantic = process.env.CUTBACK_CRITERIA_SEMANTIC === "true";
   page.on("pageerror", (e) => errors.push(e.message));
   const base = `/v1/projects/${process.env.CUTBACK_UI_PROJECT}`;
   const headers = { Authorization: `Bearer ${process.env.CUTBACK_UI_KEY}` };
@@ -67,7 +68,11 @@ test("reviewed criteria use distinct budget, content, validation and confirmatio
   await selected
     .getByRole("button", { name: "Read authorized content", exact: true })
     .click();
-  await expect(selected).toContainText("Compare category and priority");
+  await expect(selected).toContainText(
+    semantic
+      ? "Review the reference against the returned answer"
+      : "Compare category and priority",
+  );
   await selected
     .getByRole("combobox", { name: "Criteria decision", exact: true })
     .selectOption("approve");
@@ -91,6 +96,10 @@ test("reviewed criteria use distinct budget, content, validation and confirmatio
   await selected
     .getByLabel("Validation budget USD", { exact: true })
     .fill("10");
+  if (semantic)
+    await selected
+      .getByLabel("Maximum native turns per episode", { exact: true })
+      .fill("1");
   await selected
     .getByRole("button", { name: "Freeze validation plan", exact: true })
     .click();
@@ -165,6 +174,12 @@ test("reviewed criteria use distinct budget, content, validation and confirmatio
     /[a-f0-9-]{36}/,
   )![0];
   const confirmed = await executePlan(confirmationId);
+  if (semantic)
+    expect(
+      confirmed.result.results.models.every(
+        (row: any) => row.cost_evidence === "scripted_fixture_usage",
+      ),
+    ).toBe(true);
   expect(confirmed.result.results.lineage.fresh_test_claim).toBe(true);
   expect(
     confirmed.result.results.criteria_generation_cost.amortized_per_task_usd,
@@ -179,12 +194,33 @@ test("reviewed criteria use distinct budget, content, validation and confirmatio
     name: "Prepare criteria generation",
     exact: true,
   });
+  if (semantic) {
+    await preparation
+      .getByRole("combobox", { name: "Generated check type", exact: true })
+      .selectOption("episode_semantic_rubrics");
+    await preparation
+      .getByLabel("Dimension 1 owner requirement", { exact: true })
+      .fill("Owned browser reference requirement");
+  }
   await preparation
     .getByRole("combobox", { name: "Training dataset", exact: true })
     .selectOption(process.env.CUTBACK_CRITERIA_DATASET!);
   await preparation
     .getByLabel("Task and desired behavior")
     .fill("Owned browser preparation without inference");
+  const identities: string[] = [];
+  let createdId = "";
+  await page.route("**" + base + "/criteria/drafts", async (route) => {
+    identities.push(route.request().postDataJSON().request_id);
+    const response = await route.fetch();
+    createdId = (await response.json()).id;
+    if (identities.length === 1) await route.abort("failed");
+    else await route.fulfill({ response });
+  });
+  await preparation
+    .getByRole("button", { name: "Freeze generation plan", exact: true })
+    .click();
+  await expect(preparation.getByRole("alert")).toBeVisible();
   await preparation
     .getByRole("button", { name: "Freeze generation plan", exact: true })
     .click();
@@ -192,6 +228,9 @@ test("reviewed criteria use distinct budget, content, validation and confirmatio
     "Generation plan frozen",
   );
   await expect(selected).toContainText("PENDING");
+  expect(identities.length).toBe(2);
+  expect(identities[0]).toBe(identities[1]);
+  await expect(selected).toContainText(createdId);
   await selected
     .getByLabel("Cancellation reason")
     .fill("owned-unapproved-draft-cancellation");

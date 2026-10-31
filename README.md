@@ -85,6 +85,7 @@ The commands above target the published dev5 package. For the newer source-check
 | Follow this journey | Start here |
 |---|---|
 | Propose checks from training examples, review them, then validate and confirm | [Reviewed criteria sample, source qualification](https://github.com/CutbackAI/cutback/blob/main/examples/reviewed-criteria/README.md) |
+| Generate semantic episode rubrics, pin owner review and compare untouched groups | [Independent proxy sample, source under qualification](https://github.com/CutbackAI/cutback/blob/main/examples/semantic-rubrics/README.md) |
 | Investigate a whole workflow or session | [Tracing walkthrough](https://github.com/CutbackAI/cutback/blob/main/docs/workflow-tracing.md) |
 | Check whether a tool guard also stops legitimate work | [Guarded security/utility sample, source qualification](https://github.com/CutbackAI/cutback/blob/main/examples/guarded-security/README.md) |
 | Account for failed tasks and optimization overhead | [Task-economics sample, source checkout](https://github.com/CutbackAI/cutback/blob/main/examples/task-economics/README.md) |

@@ -33,4 +33,4 @@ Reports keep the shared one-time generation cost separate from target evaluation
 
 The corresponding project-scoped routes are `/criteria/drafts`, `/criteria/{id}`, `/criteria/{id}/approve-generation`, `/runs`, `/content`, `/review`, `/evaluation-draft`, `/confirmation` and `/cancel`. `evaluation-draft` takes the exact `criteria_binding`, explicit baseline/candidates and a separate budget. Confirmation derives its single candidate from completed validation; arbitrary changes to criteria, native requests or the selected candidate are refused. Metadata GETs and draft preparation make no provider request.
 
-The current workflow does not generate semantic judges, simulation personas or multi-turn scenarios. It does not select across cache, routing, retrieval and training engines. Those roadmap items remain separate and unfinished.
+The separate [semantic episode rubric extension](semantic-rubrics.md), under source qualification, adds reviewed rubrics and evidence-constrained native model proxies. Independent calibration, simulation personas, generated multi-turn scenarios and selection across cache, routing, retrieval and training remain separate unfinished work.

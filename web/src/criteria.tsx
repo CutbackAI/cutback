@@ -11,6 +11,35 @@ import {
   money,
 } from "./ui";
 
+type PreparationIdentity = {
+  fingerprint: string;
+  request_id: string;
+  content_nonce: string;
+};
+async function preparationIdentity(
+  body: Data,
+  state: { current: PreparationIdentity | null },
+) {
+  if (!crypto.subtle || !crypto.randomUUID)
+    throw new Error(
+      "Use HTTPS or the loopback collector for private preparation.",
+    );
+  const hash = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(JSON.stringify(body)),
+  );
+  const fingerprint = Array.from(new Uint8Array(hash), (b) =>
+    b.toString(16).padStart(2, "0"),
+  ).join("");
+  if (state.current?.fingerprint !== fingerprint)
+    state.current = {
+      fingerprint,
+      request_id: crypto.randomUUID(),
+      content_nonce: crypto.randomUUID(),
+    };
+  return state.current;
+}
+
 export function ReviewedCriteria({
   api,
   base,
@@ -33,7 +62,22 @@ export function ReviewedCriteria({
   const [content, setContent] = useState<Data | null>(null);
   const [error, setError] = useState("");
   const [offset, setOffset] = useState(0);
+  const [generationKind, setGenerationKind] = useState("deterministic");
+  const [dimensionCount, setDimensionCount] = useState(1);
+  const draftIdentity = useRef<PreparationIdentity | null>(null);
+  const validationIdentity = useRef<PreparationIdentity | null>(null);
+  const confirmationIdentity = useRef<PreparationIdentity | null>(null);
+  const semanticSelected =
+    selected?.criteria_kind === "episode_semantic_rubrics";
   const generation = useRef(0);
+  useEffect(() => {
+    draftIdentity.current =
+      validationIdentity.current =
+      confirmationIdentity.current =
+        null;
+    setSelected(null);
+    setContent(null);
+  }, [base]);
   useEffect(() => {
     const request = ++generation.current;
     api(`${base}/criteria?limit=25&offset=${offset}`)
@@ -79,9 +123,9 @@ export function ReviewedCriteria({
       <h2>Reviewed evaluation criteria</h2>
       <p>
         Describe your task and keep your quality requirements fixed. Cutback can
-        propose deterministic checks from up to eight authorized training
-        examples. You review the checks, validate candidate models, then confirm
-        one candidate on untouched test groups.
+        propose deterministic checks or episode semantic rubrics from up to
+        eight authorized training examples. You review the checks, validate
+        candidate models, then confirm one candidate on untouched test groups.
       </p>
       <p className="hint">
         Generation uses one separately approved provider call. A generated check
@@ -149,7 +193,8 @@ export function ReviewedCriteria({
             submit="Freeze generation plan"
             description="This step stores an encrypted training snapshot and forecasts one call. It sends no provider request."
             onSubmit={async (data) => {
-              const row = await json(api, `${base}/criteria/drafts`, {
+              const semantic = generationKind === "episode_semantic_rubrics";
+              const body = {
                 dataset_id: data.dataset,
                 requirements: {
                   task_brief: data.brief,
@@ -157,16 +202,40 @@ export function ReviewedCriteria({
                   max_regression: Number(data.regression),
                   min_test_samples: Number(data.samples),
                   min_test_groups: Number(data.groups),
+                  ...(semantic
+                    ? {
+                        kind: "episode_semantic_rubrics_v1",
+                        dimensions: Array.from(
+                          { length: dimensionCount },
+                          (_, i) => ({
+                            kind: data[`dimension_kind_${i}`],
+                            requirement: data[`dimension_requirement_${i}`],
+                            minimum: Number(data[`dimension_minimum_${i}`]),
+                          }),
+                        ),
+                        judge: {
+                          model: data.judge,
+                          provider: "openai",
+                          max_input_tokens: Number(data.judge_input),
+                          max_output_tokens: Number(data.judge_output),
+                        },
+                      }
+                    : {}),
                 },
                 generator: {
                   key: "criteria-generator",
                   provider: "openai",
                   model: data.generator,
                   max_input_tokens: 24000,
-                  max_output_tokens: 2048,
+                  max_output_tokens: semantic ? 4096 : 2048,
                 },
                 budget: { max_usd: data.budget, max_requests: 1 },
                 max_training_examples: Number(data.examples),
+              };
+              const identity = await preparationIdentity(body, draftIdentity);
+              const row = await json(api, `${base}/criteria/drafts`, {
+                ...body,
+                request_id: identity.request_id,
               });
               setSelected(row);
               setContent(null);
@@ -174,6 +243,17 @@ export function ReviewedCriteria({
               return "Generation plan frozen. An admin must approve this exact plan before it can run.";
             }}
           >
+            <Select
+              label="Generated check type"
+              name="kind"
+              value={generationKind}
+              onChange={(event) => setGenerationKind(event.target.value)}
+            >
+              <option value="deterministic">Deterministic checks</option>
+              <option value="episode_semantic_rubrics">
+                Episode semantic rubrics
+              </option>
+            </Select>
             <CriteriaSelect
               label="Training dataset"
               name="dataset"
@@ -194,6 +274,93 @@ export function ReviewedCriteria({
                 ["gpt-4.1", "gpt-4.1"],
               ]}
             />
+            {generationKind === "episode_semantic_rubrics" && (
+              <>
+                <p className="hint">
+                  Choose an episode dataset with declared reference labels. A
+                  rubric evaluates a model proxy using permitted reference,
+                  returned retrieval or observed conversation sources. It does
+                  not establish independent semantic truth or authorize a source
+                  patch.
+                </p>
+                <Select
+                  label="Semantic dimensions"
+                  name="dimensions"
+                  value={dimensionCount}
+                  onChange={(event) =>
+                    setDimensionCount(Number(event.target.value))
+                  }
+                >
+                  {[1, 2, 3].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </Select>
+                {Array.from({ length: dimensionCount }, (_, i) => (
+                  <fieldset key={i} className="editor">
+                    <legend>Dimension {i + 1}</legend>
+                    <CriteriaSelect
+                      label={`Dimension ${i + 1} evidence`}
+                      name={`dimension_kind_${i}`}
+                      options={[
+                        ["answer_correctness", "Reference correctness"],
+                        [
+                          "retrieval_groundedness",
+                          "Returned retrieval evidence",
+                        ],
+                        [
+                          "conversation_constraints",
+                          "Observed conversation requirements",
+                        ],
+                      ]}
+                    />
+                    <Field
+                      label={`Dimension ${i + 1} owner requirement`}
+                      name={`dimension_requirement_${i}`}
+                      required
+                      maxLength={2000}
+                    />
+                    <Field
+                      label={`Dimension ${i + 1} minimum judge score`}
+                      name={`dimension_minimum_${i}`}
+                      type="number"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      defaultValue="1"
+                      required
+                    />
+                  </fieldset>
+                ))}
+                <CriteriaSelect
+                  label="Semantic judge model"
+                  name="judge"
+                  options={[
+                    ["gpt-4.1-mini", "gpt-4.1-mini"],
+                    ["gpt-4.1", "gpt-4.1"],
+                  ]}
+                />
+                <Field
+                  label="Judge maximum input tokens"
+                  name="judge_input"
+                  type="number"
+                  min="256"
+                  max="262144"
+                  defaultValue="64000"
+                  required
+                />
+                <Field
+                  label="Judge maximum output tokens"
+                  name="judge_output"
+                  type="number"
+                  min="128"
+                  max="8192"
+                  defaultValue="2048"
+                  required
+                />
+              </>
+            )}
             <Field
               label="Minimum quality score"
               name="minimum"
@@ -409,7 +576,7 @@ export function ReviewedCriteria({
               title="Validate models with approved criteria"
               submit="Freeze validation plan"
               onSubmit={async (data) => {
-                const row = await json(api, path + "/evaluation-draft", {
+                const body = {
                   dataset_id: data.dataset,
                   criteria_binding: binding,
                   baseline: {
@@ -432,6 +599,18 @@ export function ReviewedCriteria({
                     max_usd: data.budget,
                     max_requests: Number(data.requests),
                   },
+                  ...(semanticSelected
+                    ? { episode_execution: { max_turns: Number(data.turns) } }
+                    : {}),
+                };
+                const identity = await preparationIdentity(
+                  body,
+                  validationIdentity,
+                );
+                const row = await json(api, path + "/evaluation-draft", {
+                  ...body,
+                  request_id: identity.request_id,
+                  content_nonce: identity.content_nonce,
                 });
                 reload();
                 return `Validation plan ${row.id} frozen. Approve and queue it below in Experiment plans.`;
@@ -458,9 +637,28 @@ export function ReviewedCriteria({
               <Field
                 label="Validation budget USD"
                 name="budget"
-                defaultValue="1"
+                defaultValue={semanticSelected ? "5" : "1"}
                 required
               />
+              {semanticSelected && (
+                <>
+                  <p className="hint">
+                    Every episode has a separate reserved judge call in addition
+                    to its bounded native turns. The exact plan forecasts all
+                    target and judge costs before approval. Invalid or missing
+                    judgments remain unknown.
+                  </p>
+                  <Field
+                    label="Maximum native turns per episode"
+                    name="turns"
+                    type="number"
+                    min="1"
+                    max="32"
+                    defaultValue="3"
+                    required
+                  />
+                </>
+              )}
               <Field
                 label="Validation maximum calls"
                 name="requests"
@@ -477,13 +675,21 @@ export function ReviewedCriteria({
               title="Confirm one validated candidate"
               submit="Freeze untouched-test confirmation"
               onSubmit={async (data) => {
-                const row = await json(api, path + "/confirmation", {
+                const body = {
                   validation_run_id: data.run,
                   candidate_key: data.candidate,
                   budget: {
                     max_usd: data.budget,
                     max_requests: Number(data.requests),
                   },
+                };
+                const identity = await preparationIdentity(
+                  body,
+                  confirmationIdentity,
+                );
+                const row = await json(api, path + "/confirmation", {
+                  ...body,
+                  request_id: identity.request_id,
                 });
                 reload();
                 return `Confirmation plan ${row.id} frozen. Its budget needs separate approval. Test groups may be consumed only once.`;

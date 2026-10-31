@@ -1,0 +1,168 @@
+{
+  "reviewed_head": "f7a72337df46b5744976ca03ceaa055ac2ffe1f3",
+  "runs": [
+    {
+      "run_id": 41117204812,
+      "jobs": [
+        {
+          "name": "isolated-tools",
+          "id": 124274416826,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 12,
+              "skipped": 0,
+              "seconds": 92.55
+            }
+          ]
+        },
+        {
+          "name": "verify (3.13.18)",
+          "id": 124274416976,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1630,
+              "skipped": 41,
+              "seconds": 1163.74
+            }
+          ]
+        },
+        {
+          "name": "infrastructure",
+          "id": 124274416989,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 7,
+              "skipped": 0,
+              "seconds": 2.12
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.11.18)",
+          "id": 124274417001,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1392,
+              "skipped": 10,
+              "seconds": 644.65
+            }
+          ]
+        },
+        {
+          "name": "legacy-sdk (3.11.18)",
+          "id": 124274417089,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 0.79
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.13.18)",
+          "id": 124274417138,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1393,
+              "skipped": 9,
+              "seconds": 607.0
+            }
+          ]
+        },
+        {
+          "name": "verify (3.11.18)",
+          "id": 124274417169,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1631,
+              "skipped": 40,
+              "seconds": 1795.71
+            }
+          ]
+        },
+        {
+          "name": "legacy-sdk (3.13.18)",
+          "id": 124274417221,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 0.72
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": 41117204907,
+      "jobs": [
+        {
+          "name": "audit",
+          "id": 124274416715,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "codeql (python)",
+          "id": 124274417090,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "codeql (javascript-typescript)",
+          "id": 124274417144,
+          "conclusion": "success",
+          "tests": []
+        }
+      ]
+    }
+  ],
+  "identical_private_public_archives": {
+    "cutback-0.1.0.dev5-py3-none-any.whl": "31dbaa8b094566f92f7865cef0c37f43f8d440a4dd15a54264e4d7a6104c383c",
+    "cutback-0.1.0.dev5.tar.gz": "ef2aa73649a0b3077ea70780c5c50d95d9988ba98b4dd56fdba463ccc1915a44"
+  },
+  "status": "accepted_bounded_source_increment",
+  "pull_request": "https://github.com/CutbackAI/cutback/pull/53",
+  "merge_commit": "13ca7da58aeff638c7502e2a83930cca3f314803",
+  "installed_default": {
+    "passed": 1635,
+    "skipped": 36,
+    "seconds": 3867.17
+  },
+  "installed_sdk3": {
+    "passed": 1406,
+    "skipped": 7,
+    "seconds": 2592.75
+  },
+  "image": {
+    "sha256": "cc820fbc824a919070a86f7ac268f462f919ee42acf2b15a70a8d4bdba7865e0",
+    "matched_application_files": 334,
+    "recovered_tables": 97,
+    "rekeyed_objects": 1564,
+    "plans": 21
+  },
+  "final_boundary": {
+    "source_files": 994,
+    "history_objects": 4319,
+    "archive_members": 1329,
+    "findings": 0
+  },
+  "pypi_release": "0.1.0.dev5 unchanged",
+  "paid_provider_calls": 0,
+  "production_deployed": false,
+  "limits": [
+    "Deterministic criteria only; semantic rubrics have a separate acceptance gate",
+    "Owner review and exact stage budgets remain required",
+    "No independent customer quality or adoption claim",
+    "Broader market roadmap remains unfinished"
+  ]
+}

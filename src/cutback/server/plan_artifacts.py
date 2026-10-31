@@ -22,6 +22,7 @@ def target_evaluation_clause():
     return and_(
         operation.is_distinct_from("candidate-generation-v1"),
         operation.is_distinct_from("criteria-generation-v1"),
+        operation.is_distinct_from("criteria-generation-v2"),
     )
 
 

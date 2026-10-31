@@ -2,7 +2,9 @@ export type Evidence = Record<string, any>;
 
 export function decisionLabel(item: Evidence): string {
   const reviewed =
-    item.evaluator_version === "deterministic-v13" &&
+    ["deterministic-v13", "deterministic-v14"].includes(
+      item.evaluator_version,
+    ) &&
     /^[a-f0-9]{64}$/.test(item.criteria_binding?.version_sha256 ?? "") &&
     item.criteria_binding?.review_approval_id &&
     item.criteria_review_assurance ===
@@ -12,6 +14,18 @@ export function decisionLabel(item: Evidence): string {
     return "Evaluation version requires a new comparison";
   if (item.decision_reason === "test_group_lineage_not_fresh")
     return "Test groups already exposed or unknown; new confirmation required";
+  if (item.evaluator_version === "deterministic-v14") {
+    if (
+      item.evidence_tier !== 3 ||
+      item.semantic_quality !== "NOT VERIFIED" ||
+      item.source_patch_eligible !== false
+    )
+      return "Reviewed semantic proxy evidence is incomplete";
+    if (!item.quality_gate_passed) return "Proxy comparison not eligible";
+    return item.criteria_confirmation_predecessor_run_id
+      ? "Reviewed proxy confirmed on untouched groups; semantic quality unverified"
+      : "Reviewed proxy passes validation; untouched-test confirmation required";
+  }
   if (
     !item.failed_criteria?.length &&
     (item.insufficient_criteria?.length ||

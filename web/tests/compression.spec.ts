@@ -115,9 +115,17 @@ test("context compression, lost queue acknowledgement, confirmation and scoped s
     .click();
   await expect(cases).toContainText("original context bytes");
   await expect(cases).toContainText("deadline-days=");
+  const confirmationResponse = page.waitForResponse(
+    (response) =>
+      /\/(?:compression|model-context)\/confirmation$/.test(response.url()) &&
+      response.request().method() === "POST",
+  );
   await page
     .getByRole("button", { name: "Prepare selected candidate confirmation" })
     .click();
+  const confirmationPrepared = await confirmationResponse;
+  expect(confirmationPrepared.status()).toBe(201);
+  expect((await confirmationPrepared.json()).split).toBe("test");
   await expect(review).toContainText("Review untouched-test confirmation");
   await review
     .getByRole("button", { name: "Approve this exact compression budget" })

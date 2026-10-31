@@ -214,6 +214,7 @@ def register_criteria(app, output, request, fail):
         max_usd: Annotated[str, typer.Option("--max-usd")],
         max_requests: Annotated[int, typer.Option("--max-requests")],
         destination: Annotated[Path, typer.Option("--output")],
+        request_id: Annotated[str | None, typer.Option("--request-id")] = None,
     ):
         """Freeze one passing validation candidate against untouched test groups."""
         from cutback.evals.experiments import Budget
@@ -221,6 +222,10 @@ def register_criteria(app, output, request, fail):
         try:
             budget = Budget.model_validate({"max_usd": max_usd, "max_requests": max_requests})
             validation_run_id = str(UUID(validation_run_id))
+            if request_id is not None:
+                request_id = str(UUID(request_id))
+                if UUID(request_id).version != 4:
+                    raise ValueError
         except ValueError:
             fail(
                 "CRITERIA_CONFIRMATION_INPUT_INVALID",
@@ -234,6 +239,7 @@ def register_criteria(app, output, request, fail):
                 "validation_run_id": validation_run_id,
                 "candidate_key": candidate,
                 "budget": budget.model_dump(mode="json"),
+                **({"request_id": request_id} if request_id else {}),
             },
             destination,
         )

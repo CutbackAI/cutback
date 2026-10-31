@@ -483,6 +483,7 @@ def run_episodes(
                 "population_coverage": "unknown",
                 "cost_evidence": "scripted_fixture_usage"
                 if plan.episode_execution.transport == "scripted_test_only"
+                or getattr(executor, "synthetic_transport", False) is True
                 else "provider_usage_with_pinned_public_rate",
             }
             if semantic:
@@ -544,6 +545,11 @@ def run_episodes(
                 result["security_evaluation"] = security
                 security_rows_by_model.append(security_rows)
             model_results.append(result)
+        recommendations = []
+        if plan.evaluator_version == "deterministic-v14":
+            from cutback.evals.rubric_generation import reviewed_proxy_comparisons
+
+            recommendations = reviewed_proxy_comparisons(plan, model_results)
         return {
             "schema_version": "1.0",
             "status": "COMPLETED",
@@ -554,7 +560,7 @@ def run_episodes(
             "dataset_hash": plan.dataset_hash,
             "models": model_results,
             "judges": [],
-            "recommendations": [],
+            "recommendations": recommendations,
             "recommendation_gate": "synthetic_episode_results_require_application_confirmation",
             "reserved_usd": str(ledger.reserved),
             "spent_modeled_usd": str(ledger.spent) if ledger.billing_complete else None,

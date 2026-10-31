@@ -5020,6 +5020,8 @@ export interface components {
         };
         /** CriteriaConfirmationInput */
         CriteriaConfirmationInput: {
+            /** Request Id */
+            request_id?: string | null;
             /**
              * Validation Run Id
              * Format: uuid
@@ -5038,7 +5040,8 @@ export interface components {
              * Format: uuid
              */
             dataset_id: string;
-            requirements: components["schemas"]["CriteriaRequirements"];
+            /** Requirements */
+            requirements: components["schemas"]["CriteriaRequirements"] | components["schemas"]["SemanticRubricRequirements"];
             generator: components["schemas"]["ModelSpec-Input"];
             budget: components["schemas"]["Budget-Input"];
             /**
@@ -5080,6 +5083,7 @@ export interface components {
              */
             retain_case_outputs: boolean;
             source_binding?: components["schemas"]["SourceBinding"] | null;
+            episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
             /**
              * Name
              * @default reviewed-criteria-validation
@@ -5635,7 +5639,7 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13" | "deterministic-v14";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
             retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Input"] | null;
             /** Compression Execution */
@@ -5735,7 +5739,7 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13" | "deterministic-v14";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
             retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Output"] | null;
             /** Compression Execution */
@@ -9727,6 +9731,33 @@ export interface components {
             /** Split Policy */
             split_policy?: "task-aware-v2" | null;
         };
+        /** SemanticDimension */
+        SemanticDimension: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "answer_correctness" | "retrieval_groundedness" | "conversation_constraints";
+            /** Requirement */
+            requirement: string;
+            /** Minimum */
+            minimum: number;
+        };
+        /** SemanticJudgeChoice */
+        SemanticJudgeChoice: {
+            /**
+             * Provider
+             * @default openai
+             * @constant
+             */
+            provider: "openai";
+            /** Model */
+            model: string;
+            /** Max Input Tokens */
+            max_input_tokens: number;
+            /** Max Output Tokens */
+            max_output_tokens: number;
+        };
         /** SemanticLookup */
         SemanticLookup: {
             /**
@@ -9772,6 +9803,37 @@ export interface components {
             source_group?: string | null;
             /** Ttl Seconds */
             ttl_seconds: number;
+        };
+        /** SemanticRubricRequirements */
+        SemanticRubricRequirements: {
+            /**
+             * Kind
+             * @default episode_semantic_rubrics_v1
+             * @constant
+             */
+            kind: "episode_semantic_rubrics_v1";
+            /** Task Brief */
+            task_brief: string;
+            /** Dimensions */
+            dimensions: components["schemas"]["SemanticDimension"][];
+            judge: components["schemas"]["SemanticJudgeChoice"];
+            /** Minimum */
+            minimum: number;
+            /**
+             * Max Regression
+             * @default 0
+             */
+            max_regression: number;
+            /**
+             * Min Test Samples
+             * @default 30
+             */
+            min_test_samples: number;
+            /**
+             * Min Test Groups
+             * @default 3
+             */
+            min_test_groups: number;
         };
         /** SemanticUploadAppend */
         SemanticUploadAppend: {

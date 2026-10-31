@@ -96,6 +96,8 @@ jobs:
           tests/unit tests/contract/test_migrations.py
           tests/integration/test_reviewed_criteria_workflow.py
           tests/integration/test_agent_reviewed_criteria.py
+          tests/integration/test_generated_semantic_rubric_workflow.py
+          tests/end_to_end/test_semantic_rubric_sample.py
           tests/integration/test_criteria_draft_reconciliation.py
           tests/integration/test_reviewed_criteria_migrations.py
           tests/end_to_end/test_reviewed_criteria_pipeline.py
