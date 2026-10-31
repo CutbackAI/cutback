@@ -120,6 +120,7 @@ def demo(
     learned_routing: bool = False,
     source_routing: bool = False,
     generated_scenarios: bool = False,
+    reactive_users: bool = False,
 ):
     """Explore the complete sample. Requires Docker and Git; no API key or paid calls."""
     try:
@@ -142,6 +143,7 @@ def demo(
             learned_routing=learned_routing,
             source_routing=source_routing,
             generated_scenarios=generated_scenarios,
+            reactive_users=reactive_users,
         )
     except ImportError:
         fail(

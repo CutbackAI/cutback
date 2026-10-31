@@ -208,10 +208,29 @@ class PromptModelBinding(StrictModel):
         return self
 
 
+class UserSimulationInput(StrictModel):
+    version: Literal["reactive-user-v1"] = "reactive-user-v1"
+    model: ModelSpec
+    persona: Literal["curious", "skeptical", "hurried", "needs_clarification"]
+    max_turns: int = Field(default=2, strict=True, ge=1, le=3)
+    max_transcript_bytes: int = Field(default=16000, strict=True, ge=1000, le=32000)
+
+
+class UserSimulationSpec(UserSimulationInput):
+    @model_validator(mode="after")
+    def frozen_contract(self):
+        from cutback.evals.user_simulation import user_simulation_model
+
+        if self.model != user_simulation_model(self.model):
+            raise ValueError("REACTIVE_USER_REQUIRES_OWNED_FROZEN_NATIVE_CONTRACT")
+        return self
+
+
 class EpisodeExecutionSpec(StrictModel):
     version: Literal[
         "native-fixture-episode-v1",
         "native-fixture-episode-v2",
+        "native-fixture-reactive-user-v1",
         "native-isolated-record-episode-v1",
         "native-isolated-record-security-v1",
         "native-isolated-record-guarded-v1",
@@ -226,6 +245,7 @@ class EpisodeExecutionSpec(StrictModel):
         IsolatedRecordExecution | IsolatedSecurityExecution | GuardedRecordExecution | None
     ) = None
     security_suite: SecurityEvaluationSpec | None = None
+    user_simulation: UserSimulationSpec | None = None
 
     @model_serializer(mode="wrap")
     def preserve_existing_episode_hashes(self, handler):
@@ -236,10 +256,18 @@ class EpisodeExecutionSpec(StrictModel):
             result.pop("isolated_tools", None)
         if self.security_suite is None:
             result.pop("security_suite", None)
+        if self.user_simulation is None:
+            result.pop("user_simulation", None)
         return result
 
     @model_validator(mode="after")
     def judging_version(self):
+        if (self.version == "native-fixture-reactive-user-v1") != bool(self.user_simulation):
+            raise ValueError("REACTIVE_USER_REQUIRES_SEPARATE_EXECUTION_CONTRACT")
+        if self.user_simulation and (
+            self.semantic_judging or self.isolated_tools or self.security_suite
+        ):
+            raise ValueError("REACTIVE_USER_INITIAL_PROFILE_IS_FIXTURE_ONLY")
         if (
             self.version
             in {
@@ -318,6 +346,7 @@ class ExperimentPlan(StrictModel):
         "deterministic-v14",
         "deterministic-v15",
         "deterministic-v16",
+        "deterministic-v17",
     ] = "deterministic-v3"
     episode_execution: EpisodeExecutionSpec | None = None
     retrieval_execution: RetrievalExecutionSpec | None = None
@@ -562,7 +591,9 @@ class ExperimentPlan(StrictModel):
             if (
                 self.evaluator_version
                 != (
-                    "deterministic-v11"
+                    "deterministic-v17"
+                    if self.episode_execution.user_simulation
+                    else "deterministic-v11"
                     if isinstance(self.episode_execution.isolated_tools, GuardedRecordExecution)
                     and self.episode_execution.security_suite is not None
                     else "deterministic-v10"
@@ -587,6 +618,10 @@ class ExperimentPlan(StrictModel):
                 self.content_nonce is None or self.content_nonce.int == 0 or self.staged or semantic
             ):
                 raise ValueError("ISOLATED_EPISODE_REQUIRES_NONCE_AND_SEPARATE_V8_APPROVAL")
+            if self.episode_execution.user_simulation and (
+                self.content_nonce is None or self.criteria_binding or self.staged
+            ):
+                raise ValueError("REACTIVE_USER_REQUIRES_NONCE_AND_SEPARATE_V17_APPROVAL")
             if (
                 isinstance(self.episode_execution.isolated_tools, GuardedRecordExecution)
                 and self.workflow
@@ -663,7 +698,16 @@ class ExperimentPlan(StrictModel):
             raise ValueError("DUPLICATE_CRITERION_KEYS")
         if self.pilot_samples and (self.split != "test" or self.pilot_minimum is None):
             raise ValueError("PILOT_REQUIRES_TEST_SPLIT_AND_DECLARED_VALIDATION_THRESHOLD")
-        models = [self.baseline, *self.candidates, *([self.judge] if self.judge else [])]
+        models = [
+            self.baseline,
+            *self.candidates,
+            *([self.judge] if self.judge else []),
+            *(
+                [self.episode_execution.user_simulation.model]
+                if self.episode_execution and self.episode_execution.user_simulation
+                else []
+            ),
+        ]
         keys = [model.key for model in models]
         if len(keys) != len(set(keys)):
             raise ValueError("model keys must be unique")

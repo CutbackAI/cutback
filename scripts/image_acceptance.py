@@ -163,6 +163,7 @@ def main(
     learned_routing=False,
     source_routing=False,
     generated_scenarios=False,
+    reactive_users=False,
 ):
     from cutback.server.migrate import CURRENT_REVISION
 
@@ -283,7 +284,11 @@ manifest=seed_support_desk(
  provider_batch=True,semantic_cache=True,runtime_guardrails=RUNTIME_GUARDS,
  joint_model_context=JOINT_EXPECTED,reviewed_criteria=CRITERIA_EXPECTED,
  semantic_rubrics=RUBRICS_EXPECTED,learned_routing=ROUTING_EXPECTED and not SOURCE_BOUND_EXPECTED,
- source_routing=SOURCE_BOUND_EXPECTED,generated_scenarios=SCENARIOS_EXPECTED)
+ source_routing=SOURCE_BOUND_EXPECTED,generated_scenarios=SCENARIOS_EXPECTED,
+ reactive_users=REACTIVE_EXPECTED)
+if REACTIVE_EXPECTED:
+ assert manifest["agent_episode_reactive_user_simulation"] is True
+ assert manifest["paid_provider_calls"]==0
 if SCENARIOS_EXPECTED:
  assert manifest["generated_scenarios_sample"]["native_sdk_calls"]==11
  assert manifest["generated_scenarios_sample"]["idempotent_import_checked"] is True
@@ -327,6 +332,7 @@ print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":mani
                 code = code.replace("ROUTING_EXPECTED", repr(learned_routing or source_routing))
                 code = code.replace("SOURCE_BOUND_EXPECTED", repr(source_routing))
                 code = code.replace("SCENARIOS_EXPECTED", repr(generated_scenarios))
+                code = code.replace("REACTIVE_EXPECTED", repr(reactive_users))
                 code = code.replace("JOINT_EXPECTED", repr(joint_model_context))
                 manifest = json.loads(inside(container, code, values).strip().splitlines()[-1])
                 base = "/v1/projects/" + manifest["project_id"]
@@ -480,6 +486,33 @@ with sessions() as session:
   rotating.rekey(row.project_id,row.specification["artifact_ref"])
   after=new_only.get(row.project_id,row.specification["artifact_ref"])
   assert before==after
+ if REACTIVE_EXPECTED:
+  from cutback.server.execution_db import ExecutionCall
+  from cutback.server.plan_artifacts import load_plan
+  from cutback.core.episodes import EpisodeObservation
+  reactive_plans=[row for row in plans if
+   row.specification["public_specification"].get("evaluator_version")=="deterministic-v17"]
+  assert len(reactive_plans)==1
+  planned=reactive_plans[0]
+  frozen=load_plan(new_only,planned.project_id,planned.specification)
+  assert frozen.episode_execution.user_simulation.max_turns==1
+  executed=session.scalar(select(ExperimentRunRecord).where(ExperimentRunRecord.plan_id==planned.id))
+  assert executed.status=="COMPLETED" and executed.results["billing_complete"] is True
+  calls=session.scalars(select(ExecutionCall).where(ExecutionCall.run_id==executed.id)).all()
+  simulated=[call for call in calls if call.purpose=="simulation"]
+  assert len(simulated)==sum(
+   row["user_simulation"]["requests"] for row in executed.results["models"])
+  assert all(call.model_key==frozen.episode_execution.user_simulation.model.key
+   for call in simulated)
+  observed=0
+  for row in rows:
+   if row.metadata_safe.get("run_id")==str(executed.id):
+    content=json.loads(new_only.get(row.project_id,row.object_ref))
+    observation=EpisodeObservation.model_validate(content["output"])
+    assert observation.user_simulation.generated_turns==1
+    assert observation.user_simulation.requests==observation.user_simulation.known_cost_requests==1
+    observed+=1
+  assert observed>0
  if JOINT_EXPECTED:
   from cutback.evals.compression import JointModelContextExecutionSpec
   from cutback.server.plan_artifacts import load_plan
@@ -603,6 +636,7 @@ engine.dispose()
                     .replace("ROUTING_EXPECTED", repr(learned_routing or source_routing))
                     .replace("SOURCE_BOUND_EXPECTED", repr(source_routing))
                     .replace("SCENARIOS_EXPECTED", repr(generated_scenarios))
+                    .replace("REACTIVE_EXPECTED", repr(reactive_users))
                 )
                 recovered = json.loads(inside(container, recovery, values).strip().splitlines()[-1])
 
@@ -737,6 +771,7 @@ engine.dispose()
                     or source_routing,
                     "source_bound_routing_and_both_tree_checks": source_routing,
                     "reviewed_generated_development_scenarios_restored": generated_scenarios,
+                    "reactive_user_contracts_receipts_and_trajectories_restored": reactive_users,
                     "restored_tables": len(after),
                     "row_counts_match": True,
                     **recovered,
@@ -784,6 +819,7 @@ if __name__ == "__main__":
     parser.add_argument("--learned-routing", action="store_true")
     parser.add_argument("--source-routing", action="store_true")
     parser.add_argument("--generated-scenarios", action="store_true")
+    parser.add_argument("--reactive-users", action="store_true")
     args = parser.parse_args()
     main(
         args.image,
@@ -798,4 +834,5 @@ if __name__ == "__main__":
         learned_routing=args.learned_routing,
         source_routing=args.source_routing,
         generated_scenarios=args.generated_scenarios,
+        reactive_users=args.reactive_users,
     )

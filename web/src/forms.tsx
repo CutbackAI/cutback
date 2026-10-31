@@ -455,6 +455,7 @@ export function PlanForm({
   const [strategy, setStrategy] = useState("model_swap");
   const [criterionCount, setCriterionCount] = useState(0);
   const [semanticEnabled, setSemanticEnabled] = useState(false);
+  const [reactiveEnabled, setReactiveEnabled] = useState(false);
   const [semanticCount, setSemanticCount] = useState(1);
   const [toolGuards, setToolGuards] = useState(false);
   const current = datasets.find((row) => row.id === dataset);
@@ -577,6 +578,22 @@ export function PlanForm({
             ...(episode
               ? { episode_max_turns: Number(data.episode_turns) }
               : {}),
+            ...(episode && reactiveEnabled && !isolated
+              ? {
+                  user_simulation: {
+                    model: {
+                      key: "simulated-user",
+                      provider: "openai",
+                      model: String(data.simulator_model),
+                      max_input_tokens: Number(data.simulator_input),
+                      max_output_tokens: Number(data.simulator_output),
+                    },
+                    persona: String(data.simulator_persona),
+                    max_turns: Number(data.simulator_turns),
+                    max_transcript_bytes: Number(data.simulator_transcript),
+                  },
+                }
+              : {}),
             ...(isolated
               ? {
                   isolated_tools: {
@@ -662,6 +679,7 @@ export function PlanForm({
             setDataset(event.target.value);
             setStrategy("model_swap");
             setSemanticEnabled(false);
+            setReactiveEnabled(false);
           }}
           required
         >
@@ -890,14 +908,102 @@ export function PlanForm({
               </fieldset>
             )}
             {!isolated && (
-              <label className="check">
-                <input
-                  type="checkbox"
-                  checked={semanticEnabled}
-                  onChange={(event) => setSemanticEnabled(event.target.checked)}
-                />
-                Add a semantic model judge
-              </label>
+              <>
+                <label className="check">
+                  <input
+                    type="checkbox"
+                    checked={reactiveEnabled}
+                    onChange={(event) => {
+                      setReactiveEnabled(event.target.checked);
+                      if (event.target.checked) setSemanticEnabled(false);
+                    }}
+                  />
+                  Add a reactive simulated user
+                </label>
+                {reactiveEnabled && (
+                  <fieldset>
+                    <legend>Reactive simulated user</legend>
+                    <p>
+                      After the scripted conversation, this model reacts to the
+                      observed replies and returned tool data. Each user-model
+                      call consumes a separate request and money reservation
+                      inside the same run budget. Generated messages cannot
+                      grant permissions. These trajectories do not represent
+                      real human behavior.
+                    </p>
+                    <Select label="User simulator model" name="simulator_model">
+                      <option value="gpt-4.1-mini">
+                        OpenAI · GPT-4.1 mini
+                      </option>
+                      <option value="gpt-4.1">OpenAI · GPT-4.1</option>
+                    </Select>
+                    <Select
+                      label="Simulated user persona"
+                      name="simulator_persona"
+                    >
+                      <option value="curious">Curious</option>
+                      <option value="skeptical">Skeptical</option>
+                      <option value="hurried">Hurried</option>
+                      <option value="needs_clarification">
+                        Needs clarification
+                      </option>
+                    </Select>
+                    <Field
+                      label="Maximum reactive user turns"
+                      name="simulator_turns"
+                      type="number"
+                      min="1"
+                      max="3"
+                      defaultValue="2"
+                      required
+                    />
+                    <Field
+                      label="Simulator input token bound"
+                      name="simulator_input"
+                      type="number"
+                      min="8192"
+                      max="100000"
+                      defaultValue="32768"
+                      required
+                    />
+                    <Field
+                      label="Simulator output token bound"
+                      name="simulator_output"
+                      type="number"
+                      min="16"
+                      max="16384"
+                      defaultValue="512"
+                      required
+                    />
+                    <Field
+                      label="Maximum observed transcript bytes"
+                      name="simulator_transcript"
+                      type="number"
+                      min="1000"
+                      max="32000"
+                      defaultValue="16000"
+                      required
+                    />
+                    <p className="hint">
+                      The original case and plan turn limits still apply. Gold
+                      answers, hidden fixtures and assertions are excluded from
+                      simulator inputs. Compare total evaluation cost and target
+                      cost separately.
+                    </p>
+                  </fieldset>
+                )}
+                <label className="check">
+                  <input
+                    type="checkbox"
+                    checked={semanticEnabled}
+                    onChange={(event) => {
+                      setSemanticEnabled(event.target.checked);
+                      if (event.target.checked) setReactiveEnabled(false);
+                    }}
+                  />
+                  Add a semantic model judge
+                </label>
+              </>
             )}
             {semanticEnabled && !isolated && (
               <>
@@ -1073,7 +1179,7 @@ export function PlanForm({
           required
         />
         <Field
-          label="Maximum requests including judges"
+          label="Maximum requests including judges and simulated users"
           name="max_requests"
           type="number"
           min="1"

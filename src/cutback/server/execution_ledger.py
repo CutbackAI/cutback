@@ -26,7 +26,7 @@ from cutback.server.execution_db import ExecutionCall, ExecutionEpisode
 from cutback.server.principals import principal_role
 
 MAX_EXECUTION_CALLS = 100000
-PURPOSES = {"evaluation", "judge", "optimization"}
+PURPOSES = {"evaluation", "judge", "optimization", "simulation"}
 
 
 def recover_execution_leases(sessions, *, only_run_id=None, now=None):
@@ -131,6 +131,10 @@ class ExecutionLedger:
             max_requests
         ) is not int or not 1 <= max_requests <= self.plan.episode_execution.max_turns + int(
             self.plan.episode_execution.semantic_judging is not None
+        ) + (
+            self.plan.episode_execution.user_simulation.max_turns
+            if self.plan.episode_execution.user_simulation
+            else 0
         ):
             raise ValueError("EXECUTION_EPISODE_REQUEST_BOUND_INVALID")
         identifier = uuid4()
@@ -229,6 +233,11 @@ class ExecutionLedger:
                 self.plan.baseline,
                 *self.plan.candidates,
                 *([self.plan.judge] if self.plan.judge else []),
+                *(
+                    [self.plan.episode_execution.user_simulation.model]
+                    if self.plan.episode_execution and self.plan.episode_execution.user_simulation
+                    else []
+                ),
             ]
             for target in provider_models(candidate)
         ]
@@ -260,6 +269,13 @@ class ExecutionLedger:
         semantic = bool(
             self.plan.episode_execution and self.plan.episode_execution.semantic_judging
         )
+        simulation = (
+            self.plan.episode_execution.user_simulation if self.plan.episode_execution else None
+        )
+        if (purpose == "simulation") != bool(simulation and model.key == simulation.model.key):
+            raise ValueError("SIMULATED_USER_PURPOSE_AND_MODEL_MUST_MATCH_APPROVAL")
+        if purpose == "simulation" and self.episode_id is None:
+            raise ValueError("SIMULATED_USER_REQUIRES_ACTIVE_TARGET_EPISODE")
         if semantic and ((purpose == "judge") != (model.key == self.plan.judge.key)):
             raise ValueError("EPISODE_JUDGE_PURPOSE_AND_MODEL_MUST_MATCH_APPROVAL")
         if semantic and self.episode_id is None:
@@ -342,13 +358,12 @@ class ExecutionLedger:
                 ) != (run.id, run.project_id, self.environment_id, "running"):
                     raise ValueError("EXECUTION_EPISODE_SCOPE_OR_STATE_MISMATCH")
                 if episode.model_key != model.key and not (
-                    semantic
-                    and purpose == "judge"
+                    ((semantic and purpose == "judge") or (simulation and purpose == "simulation"))
                     and episode.model_key
                     in {m.key for m in [self.plan.baseline, *self.plan.candidates]}
                 ):
                     raise ValueError("EXECUTION_EPISODE_SCOPE_OR_STATE_MISMATCH")
-                if semantic:
+                if semantic or simulation:
                     used = session.scalar(
                         select(func.count())
                         .select_from(ExecutionCall)
@@ -359,7 +374,15 @@ class ExecutionLedger:
                             ExecutionCall.purpose == purpose,
                         )
                     )
-                    cap = 1 if purpose == "judge" else episode.max_requests - 1
+                    cap = (
+                        1
+                        if purpose == "judge"
+                        else simulation.max_turns
+                        if purpose == "simulation" and simulation
+                        else episode.max_requests
+                        - int(semantic)
+                        - (simulation.max_turns if simulation else 0)
+                    )
                     if used >= cap:
                         raise ValueError("EXECUTION_EPISODE_PURPOSE_REQUEST_BOUND_EXHAUSTED")
                 if episode.requests_used >= episode.max_requests:

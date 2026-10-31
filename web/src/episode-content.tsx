@@ -7,6 +7,7 @@ const labels: Record<string, string> = {
   no_duplicate_effect_attempt: "State-changing actions not repeated",
   allowed_tool_path: "One permitted tool path used",
   declared_user_turn_order: "Scripted user turns in order",
+  simulated_user_turn_bound: "Generated user turns match the approved bound",
   declared_answer_reference: "Answer matches an accepted reference",
   literal_citation_support: "Quotation belongs to the cited retrieved document",
 };
@@ -31,6 +32,24 @@ export function EpisodeContent({
         <strong>Task outcome:</strong> {value.outcome ?? "Unknown"}.{" "}
         <strong>Declared checks:</strong> {assessment?.status ?? "Unknown"}.
       </p>
+      {value.user_simulation && (
+        <div role="group" aria-label="Reactive user simulation receipt">
+          <h5>Reactive simulated user</h5>
+          <p>
+            Status: {value.user_simulation.status} ·{" "}
+            {value.user_simulation.generated_turns} generated user turns ·{" "}
+            {value.user_simulation.requests} requests ·{" "}
+            {value.user_simulation.known_cost_requests} with known cost ·{" "}
+            {value.user_simulation.known_cost_subtotal_usd} USD known subtotal.
+          </p>
+          <p className="hint">
+            A model generated these user messages from the observed
+            conversation. This does not establish representative human behavior.
+            Target and simulator calls share the approved budget and have
+            separate receipts.
+          </p>
+        </div>
+      )}
       <p className="hint">
         {assessment?.containment_confirmed
           ? "Actual isolated SQL state, confirmed container cleanup and declared references. This does not verify "

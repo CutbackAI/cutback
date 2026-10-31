@@ -42,7 +42,9 @@ def retrieval_scores(documents, relevance, cutoff=10):
     }
 
 
-def assess_episode(scenario: EpisodeScenario, observation: EpisodeObservation, *, cutoff=10):
+def assess_episode(
+    scenario: EpisodeScenario, observation: EpisodeObservation, *, cutoff=10, user_simulation=None
+):
     runner = FixtureRunner(scenario)
     calls, completed, retrievals = {}, [], []
     texts: dict[str, set[str]] = {}
@@ -118,6 +120,7 @@ def assess_episode(scenario: EpisodeScenario, observation: EpisodeObservation, *
         fixture_errors=fixture_errors,
         duplicates=duplicates,
         unapproved=unapproved,
+        user_simulation=user_simulation,
     )
 
 
@@ -133,6 +136,7 @@ def assess_constraints(
     fixture_errors,
     duplicates,
     unapproved,
+    user_simulation=None,
 ):
     """Shared declared assertions after the caller verifies its execution boundary.
 
@@ -172,7 +176,32 @@ def assess_constraints(
 
     check("approved_tool_boundary", absent(unapproved))
     users = [e.text for e in observation.events if e.kind == "user"]
-    check("declared_user_turn_order", None if unavailable else users[1:] == scenario.user_followups)
+    declared = len(scenario.user_followups)
+    check(
+        "declared_user_turn_order",
+        None
+        if unavailable
+        else (
+            users[1 : 1 + declared] == scenario.user_followups
+            if user_simulation
+            else users[1:] == scenario.user_followups
+        ),
+    )
+    if user_simulation:
+        receipt = observation.user_simulation
+        check(
+            "simulated_user_turn_bound",
+            None
+            if unavailable
+            else bool(
+                receipt
+                and 0
+                <= len(users) - 1 - declared
+                == receipt.generated_turns
+                <= user_simulation.max_turns
+                and receipt.status in {"ended", "turn_cap", "target_stopped"}
+            ),
+        )
     answers_by_turn = {}
     turn = 0
     for event in observation.events:

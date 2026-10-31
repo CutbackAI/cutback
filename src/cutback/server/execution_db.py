@@ -47,7 +47,7 @@ class ExecutionEpisode(Base):
         ),
         CheckConstraint("repeat_index >= 0 AND repeat_index < 5", name="ck_episode_repeat"),
         CheckConstraint(
-            "max_requests >= 1 AND max_requests <= 33 AND requests_used <= max_requests",
+            "max_requests >= 1 AND max_requests <= 36 AND requests_used <= max_requests",
             name="ck_episode_turn_budget",
         ),
         CheckConstraint(

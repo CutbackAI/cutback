@@ -243,6 +243,11 @@ def run_one(
                         plan.baseline,
                         *plan.candidates,
                         *([plan.judge] if plan.judge else []),
+                        *(
+                            [plan.episode_execution.user_simulation.model]
+                            if plan.episode_execution and plan.episode_execution.user_simulation
+                            else []
+                        ),
                     ]
                     for target in provider_models(model)
                 }

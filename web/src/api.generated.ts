@@ -5356,7 +5356,7 @@ export interface components {
              */
             retain_case_outputs: boolean;
             source_binding?: components["schemas"]["SourceBinding"] | null;
-            episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
+            episode_execution?: components["schemas"]["EpisodeExecutionSpec-Input"] | null;
             /**
              * Name
              * @default reviewed-criteria-validation
@@ -5477,6 +5477,7 @@ export interface components {
         };
         /** DraftInput */
         DraftInput: {
+            user_simulation?: components["schemas"]["UserSimulationInput"] | null;
             /** Isolated Tools */
             isolated_tools?: components["schemas"]["IsolatedRecordExecution"] | components["schemas"]["IsolatedSecurityExecution"] | components["schemas"]["GuardedRecordExecution"] | null;
             security_suite?: components["schemas"]["SecurityEvaluationSpec"] | null;
@@ -5588,13 +5589,13 @@ export interface components {
             min_citation_support?: number | string | null;
         };
         /** EpisodeExecutionSpec */
-        EpisodeExecutionSpec: {
+        "EpisodeExecutionSpec-Input": {
             /**
              * Version
              * @default native-fixture-episode-v1
              * @enum {string}
              */
-            version: "native-fixture-episode-v1" | "native-fixture-episode-v2" | "native-isolated-record-episode-v1" | "native-isolated-record-security-v1" | "native-isolated-record-guarded-v1" | "native-isolated-record-guarded-security-v1";
+            version: "native-fixture-episode-v1" | "native-fixture-episode-v2" | "native-fixture-reactive-user-v1" | "native-isolated-record-episode-v1" | "native-isolated-record-security-v1" | "native-isolated-record-guarded-v1" | "native-isolated-record-guarded-security-v1";
             /**
              * Openai Surface
              * @default responses.create
@@ -5621,6 +5622,43 @@ export interface components {
             /** Isolated Tools */
             isolated_tools?: components["schemas"]["IsolatedRecordExecution"] | components["schemas"]["IsolatedSecurityExecution"] | components["schemas"]["GuardedRecordExecution"] | null;
             security_suite?: components["schemas"]["SecurityEvaluationSpec"] | null;
+            user_simulation?: components["schemas"]["UserSimulationSpec-Input"] | null;
+        };
+        /** EpisodeExecutionSpec */
+        "EpisodeExecutionSpec-Output": {
+            /**
+             * Version
+             * @default native-fixture-episode-v1
+             * @enum {string}
+             */
+            version: "native-fixture-episode-v1" | "native-fixture-episode-v2" | "native-fixture-reactive-user-v1" | "native-isolated-record-episode-v1" | "native-isolated-record-security-v1" | "native-isolated-record-guarded-v1" | "native-isolated-record-guarded-security-v1";
+            /**
+             * Openai Surface
+             * @default responses.create
+             * @enum {string}
+             */
+            openai_surface: "responses.create" | "chat.completions.create";
+            /**
+             * Max Turns
+             * @default 8
+             */
+            max_turns: number;
+            /**
+             * Max Tool Calls
+             * @default 16
+             */
+            max_tool_calls: number;
+            /**
+             * Transport
+             * @default native_provider
+             * @enum {string}
+             */
+            transport: "native_provider" | "scripted_test_only";
+            semantic_judging?: components["schemas"]["EpisodeJudgingSpec"] | null;
+            /** Isolated Tools */
+            isolated_tools?: components["schemas"]["IsolatedRecordExecution"] | components["schemas"]["IsolatedSecurityExecution"] | components["schemas"]["GuardedRecordExecution"] | null;
+            security_suite?: components["schemas"]["SecurityEvaluationSpec"] | null;
+            user_simulation?: components["schemas"]["UserSimulationSpec-Output"] | null;
         };
         /** EpisodeJudgingSpec */
         EpisodeJudgingSpec: {
@@ -5912,8 +5950,8 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13" | "deterministic-v14" | "deterministic-v15" | "deterministic-v16";
-            episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13" | "deterministic-v14" | "deterministic-v15" | "deterministic-v16" | "deterministic-v17";
+            episode_execution?: components["schemas"]["EpisodeExecutionSpec-Input"] | null;
             retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Input"] | null;
             /** Compression Execution */
             compression_execution?: components["schemas"]["CompressionExecutionSpec-Input"] | components["schemas"]["JointModelContextExecutionSpec-Input"] | null;
@@ -6014,8 +6052,8 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13" | "deterministic-v14" | "deterministic-v15" | "deterministic-v16";
-            episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13" | "deterministic-v14" | "deterministic-v15" | "deterministic-v16" | "deterministic-v17";
+            episode_execution?: components["schemas"]["EpisodeExecutionSpec-Output"] | null;
             retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Output"] | null;
             /** Compression Execution */
             compression_execution?: components["schemas"]["CompressionExecutionSpec-Output"] | components["schemas"]["JointModelContextExecutionSpec-Output"] | null;
@@ -11607,6 +11645,81 @@ export interface components {
              * @default 7
              */
             retention_days: number;
+        };
+        /** UserSimulationInput */
+        UserSimulationInput: {
+            /**
+             * Version
+             * @default reactive-user-v1
+             * @constant
+             */
+            version: "reactive-user-v1";
+            model: components["schemas"]["ModelSpec-Input"];
+            /**
+             * Persona
+             * @enum {string}
+             */
+            persona: "curious" | "skeptical" | "hurried" | "needs_clarification";
+            /**
+             * Max Turns
+             * @default 2
+             */
+            max_turns: number;
+            /**
+             * Max Transcript Bytes
+             * @default 16000
+             */
+            max_transcript_bytes: number;
+        };
+        /** UserSimulationSpec */
+        "UserSimulationSpec-Input": {
+            /**
+             * Version
+             * @default reactive-user-v1
+             * @constant
+             */
+            version: "reactive-user-v1";
+            model: components["schemas"]["ModelSpec-Input"];
+            /**
+             * Persona
+             * @enum {string}
+             */
+            persona: "curious" | "skeptical" | "hurried" | "needs_clarification";
+            /**
+             * Max Turns
+             * @default 2
+             */
+            max_turns: number;
+            /**
+             * Max Transcript Bytes
+             * @default 16000
+             */
+            max_transcript_bytes: number;
+        };
+        /** UserSimulationSpec */
+        "UserSimulationSpec-Output": {
+            /**
+             * Version
+             * @default reactive-user-v1
+             * @constant
+             */
+            version: "reactive-user-v1";
+            model: components["schemas"]["ModelSpec-Output"];
+            /**
+             * Persona
+             * @enum {string}
+             */
+            persona: "curious" | "skeptical" | "hurried" | "needs_clarification";
+            /**
+             * Max Turns
+             * @default 2
+             */
+            max_turns: number;
+            /**
+             * Max Transcript Bytes
+             * @default 16000
+             */
+            max_transcript_bytes: number;
         };
         /** ValidationError */
         ValidationError: {

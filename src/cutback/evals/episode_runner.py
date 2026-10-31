@@ -75,10 +75,17 @@ def episode_forecast(plan, dataset):
         if plan.episode_execution.semantic_judging
         else 0
     )
+    simulation = plan.episode_execution.user_simulation
+    simulation_calls = (
+        len(selected_items(plan, dataset)) * len(models) * plan.repeats * simulation.max_turns
+        if simulation
+        else 0
+    )
     return (
-        turns * len(models) * plan.repeats + judge_calls,
+        turns * len(models) * plan.repeats + judge_calls + simulation_calls,
         turns * plan.repeats * sum((upper_cost(m) for m in models), Decimal(0))
-        + (judge_calls * upper_cost(plan.judge) if plan.judge else Decimal(0)),
+        + (judge_calls * upper_cost(plan.judge) if plan.judge else Decimal(0))
+        + (simulation_calls * upper_cost(simulation.model) if simulation else Decimal(0)),
     )
 
 
@@ -106,9 +113,13 @@ def _execute_with_environment(
     messages = [AgentMessage(role="user", text=case["input"])]
     tools = [AgentToolDefinition(**tool) for tool in fixtures.visible_tools()]
     followups = iter(scenario.user_followups)
+    from cutback.evals.user_simulation import SimulationState
+
+    simulation = plan.episode_execution.user_simulation
+    simulated = SimulationState() if simulation else None
     outcome, answer, citations = "turn_limit", None, ()
     seen = set()
-    for _ in range(scenario.max_turns):
+    for turn_index in range(scenario.max_turns):
         if ledger.remaining_seconds() <= 0:
             outcome = "timeout"
             break
@@ -175,7 +186,29 @@ def _execute_with_environment(
             outcome = "incomplete"
             break
         if event.finish in {"completed", "refused"}:
+            if simulated and event.finish == "refused":
+                simulated.status = "target_stopped"
             next_user = next(followups, None) if event.finish == "completed" else None
+            if next_user is None and event.finish == "completed" and simulated:
+                if (
+                    turn_index + 1 >= scenario.max_turns
+                    and simulated.generated_turns < simulation.max_turns
+                ):
+                    simulated.status, outcome = "turn_cap", "turn_limit"
+                    break
+                try:
+                    next_user = simulated.next_turn(
+                        simulation, events, ledger, executor, check_authority
+                    )
+                except Exception:
+                    if ledger.receipt_uncertain:
+                        raise ValueError("CALL_RECEIPT_WRITE_UNCERTAIN_NO_REQUEST_RETRY") from None
+                    outcome = (
+                        "unknown_usage"
+                        if simulated.known_cost_requests != simulated.requests
+                        else "error"
+                    )
+                    break
             if next_user is None:
                 outcome, answer, citations = event.finish, event.text, result.agent_citations
                 break
@@ -232,6 +265,7 @@ def _execute_with_environment(
                 "citations": list(citations),
                 "final_state": fixtures.state,
                 "truncated": truncated,
+                **({"user_simulation": simulated.receipt()} if simulated else {}),
             }
         )
     except ValueError:
@@ -241,11 +275,14 @@ def _execute_with_environment(
             outcome="content_limit",
             truncated=True,
             final_state={} if isolated else scenario.initial_state,
+            user_simulation=simulated.receipt() if simulated else None,
         )
     assessment = (
         fixtures.assess(observation)
         if isolated
-        else assess_episode(scenario, observation, cutoff=plan.metric.cutoff)
+        else assess_episode(
+            scenario, observation, cutoff=plan.metric.cutoff, user_simulation=simulation
+        )
     )
     if plan.episode_execution.security_suite:
         from cutback.evals.security_suites import assess_security_case
@@ -339,6 +376,8 @@ def run_episodes(
             latencies: list[float] = []
             semantic = plan.episode_execution.semantic_judging
             judge_requests, judge_spend = 0, Decimal(0)
+            simulation_requests, simulation_known, simulation_spend = 0, 0, Decimal(0)
+            simulation_states: Counter[str] = Counter()
             semantic_results = []
             security_rows = []
             for repeat in range(plan.repeats):
@@ -350,7 +389,13 @@ def run_episodes(
                             model,
                             case["id"],
                             repeat,
-                            scenario.max_turns + int(semantic is not None),
+                            scenario.max_turns
+                            + int(semantic is not None)
+                            + (
+                                plan.episode_execution.user_simulation.max_turns
+                                if plan.episode_execution.user_simulation
+                                else 0
+                            ),
                         )
                     observed, assessment = execute_episode(
                         plan,
@@ -362,6 +407,12 @@ def run_episodes(
                         environment_factory=environment_factory,
                     )
                     judge_raw = None
+                    if observed.user_simulation:
+                        receipt = observed.user_simulation
+                        simulation_requests += receipt.requests
+                        simulation_known += receipt.known_cost_requests
+                        simulation_spend += receipt.known_cost_subtotal_usd
+                        simulation_states[receipt.status] += 1
                     if semantic:
                         from cutback.evals.episode_judging import (
                             combine_assessment,
@@ -425,6 +476,11 @@ def run_episodes(
                         )
                     if semantic and judged.get("stop_execution"):
                         raise ValueError("EPISODE_JUDGE_BILLING_UNCERTAIN_NO_FURTHER_REQUESTS")
+                    if observed.user_simulation and (
+                        observed.user_simulation.requests
+                        != observed.user_simulation.known_cost_requests
+                    ):
+                        raise ValueError("SIMULATED_USER_BILLING_UNCERTAIN_NO_FURTHER_REQUESTS")
             total = len(items) * plan.repeats
             decided = states["passed"] + states["failed"]
             score = states["passed"] / total if decided == total and total else None
@@ -447,6 +503,8 @@ def run_episodes(
                 if plan.episode_execution.isolated_tools
                 else "declared_fixture_and_model_proxy"
                 if semantic
+                else "declared_fixture_with_model_simulated_user"
+                if plan.episode_execution.user_simulation
                 else "declared_synthetic_episode_contract",
             }
             result = {
@@ -467,11 +525,14 @@ def run_episodes(
                 "requests": requests,
                 "known_cost_requests": known,
                 "latency_ms": latencies,
-                "latency_coverage": len(latencies) / (requests - judge_requests)
-                if requests - judge_requests
+                "latency_coverage": len(latencies)
+                / (requests - judge_requests - simulation_requests)
+                if requests - judge_requests - simulation_requests
                 else None,
                 "latency_scope": "native_responses_excludes_tool_and_worker_time",
-                "model_cost_per_declared_success_usd": str((cost - judge_spend) / states["passed"])
+                "model_cost_per_declared_success_usd": str(
+                    (cost - judge_spend - simulation_spend) / states["passed"]
+                )
                 if known == requests and decided == total and states["passed"]
                 else None,
                 "production_task_cost_usd": None,
@@ -486,6 +547,23 @@ def run_episodes(
                 or getattr(executor, "synthetic_transport", False) is True
                 else "provider_usage_with_pinned_public_rate",
             }
+            if plan.episode_execution.user_simulation:
+                result["user_simulation"] = {
+                    "version": "reactive-user-v1",
+                    "persona": plan.episode_execution.user_simulation.persona,
+                    "requests": simulation_requests,
+                    "known_cost_requests": simulation_known,
+                    "known_cost_subtotal_usd": str(simulation_spend),
+                    "states": dict(simulation_states),
+                    "evidence": "model_simulated_user_not_representative_human_behavior",
+                    "paired_trajectory_identity": False,
+                }
+                result["target_requests"] = requests - judge_requests - simulation_requests
+                result["total_evaluation_cost_per_declared_success_usd"] = (
+                    str(cost / states["passed"])
+                    if known == requests and decided == total and states["passed"]
+                    else None
+                )
             if semantic:
                 result["semantic_judging"] = {
                     "version": semantic.version,

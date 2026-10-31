@@ -15,6 +15,8 @@ from cutback.evals.experiments import (
     EpisodeExecutionSpec,
     ExperimentPlan,
     ModelSpec,
+    UserSimulationInput,
+    UserSimulationSpec,
     provider_models,
 )
 from cutback.evals.metrics import MetricSpec
@@ -49,6 +51,7 @@ def draft_plan(
     | GuardedRecordExecution
     | None = None,
     security_suite: SecurityEvaluationSpec | None = None,
+    user_simulation: UserSimulationInput | None = None,
 ):
     provenance = dataset["provenance"]
     if (provenance.get("security_suite") is not None) != (security_suite is not None) or (
@@ -81,6 +84,24 @@ def draft_plan(
         raise ValueError("NO_COMPATIBLE_CHEAPER_MODEL_SUBMIT_REVIEWED_PROMPT_VARIANT")
     inferred = provenance.get("task_inference", {}).get("suggested_metric", "nonempty")
     kind = metric_kind or inferred
+    simulation = None
+    if user_simulation:
+        if (
+            kind != "episode_contract"
+            or isolated_tools
+            or security_suite
+            or episode_judging
+            or episode_judge
+        ):
+            raise ValueError("REACTIVE_USER_REQUIRES_SEPARATE_TYPED_FIXTURE_EPISODES")
+        from cutback.evals.user_simulation import user_simulation_model
+
+        simulation = UserSimulationSpec.model_validate(
+            {
+                **user_simulation.model_dump(mode="json"),
+                "model": user_simulation_model(user_simulation.model).model_dump(mode="json"),
+            }
+        )
     if (
         isolated_tools is not None
         and kind != "episode_contract"
@@ -137,14 +158,16 @@ def draft_plan(
                 for target in provider_models(model)
                 if target.provider != "router"
             }
-            | ({"openai"} if episode_judge else set())
+            | ({"openai"} if episode_judge or simulation else set())
         ),
         repeats=repeats,
         pilot_samples=pilot_samples,
         pilot_minimum=pilot_minimum,
         criteria=criteria or [],
         retain_case_outputs=retain_case_outputs,
-        evaluator_version="deterministic-v11"
+        evaluator_version="deterministic-v17"
+        if simulation
+        else "deterministic-v11"
         if isinstance(isolated_tools, GuardedRecordExecution) and security_suite is not None
         else "deterministic-v10"
         if isinstance(isolated_tools, GuardedRecordExecution)
@@ -157,10 +180,12 @@ def draft_plan(
         else "deterministic-v4"
         if kind == "episode_contract"
         else "deterministic-v3",
-        content_nonce=uuid4() if episode_judging or isolated_tools else None,
+        content_nonce=uuid4() if episode_judging or isolated_tools or simulation else None,
         judge=episode_judge,
         episode_execution=EpisodeExecutionSpec(
-            version="native-isolated-record-guarded-security-v1"
+            version="native-fixture-reactive-user-v1"
+            if simulation
+            else "native-isolated-record-guarded-security-v1"
             if isinstance(isolated_tools, GuardedRecordExecution) and security_suite is not None
             else "native-isolated-record-guarded-v1"
             if isinstance(isolated_tools, GuardedRecordExecution)
@@ -176,6 +201,7 @@ def draft_plan(
             semantic_judging=episode_judging,
             isolated_tools=isolated_tools,
             security_suite=security_suite,
+            user_simulation=simulation,
         )
         if kind == "episode_contract"
         else None,

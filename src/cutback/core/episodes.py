@@ -9,9 +9,10 @@ import math
 from decimal import Decimal
 from typing import Annotated, Literal
 
-from pydantic import Field, JsonValue, StrictBool, StrictInt, model_validator
+from pydantic import Field, JsonValue, StrictBool, StrictInt, model_serializer, model_validator
 
 from cutback.core.models import Identifier, StrictModel
+from cutback.core.user_simulation import UserSimulationReceipt
 
 
 def bounded_episode_value(value, *, max_bytes=256000):
@@ -297,6 +298,14 @@ class EpisodeObservation(StrictModel):
     citations: list[EpisodeCitation] = Field(default_factory=list, max_length=1000)
     final_state: dict[str, JsonValue] = Field(default_factory=dict)
     truncated: StrictBool = False
+    user_simulation: UserSimulationReceipt | None = None
+
+    @model_serializer(mode="wrap")
+    def preserve_existing_observation_hashes(self, handler):
+        result = handler(self)
+        if self.user_simulation is None:
+            result.pop("user_simulation", None)
+        return result
 
     @model_validator(mode="after")
     def pairing(self):

@@ -25,6 +25,7 @@ def prepared_episode(
     *,
     transport_contract="native_provider",
     semantic=False,
+    reactive=False,
     max_turns=3,
 ):
     client, admin, app = api
@@ -90,6 +91,23 @@ def prepared_episode(
         from support_episode_judge import with_semantic_judge
 
         spec = with_semantic_judge(spec)
+    if reactive:
+        from test_user_simulation import reactive_plan
+
+        raw = reactive_plan().model_dump(mode="json")
+        raw.update(
+            dataset_hash=spec.dataset_hash,
+            sample_limit=spec.sample_limit,
+            split=spec.split,
+            workflow=spec.workflow,
+            retain_case_outputs=True,
+            baseline=spec.baseline.model_dump(mode="json"),
+            candidates=[m.model_dump(mode="json") for m in spec.candidates],
+            approved_providers=sorted({*spec.approved_providers, "openai"}),
+        )
+        raw["episode_execution"]["openai_surface"] = spec.episode_execution.openai_surface
+        raw["episode_execution"]["max_turns"] = max_turns
+        spec = type(spec).model_validate(raw)
     response = client.post(
         base + "/experiments/plans",
         headers=admin,
@@ -97,7 +115,7 @@ def prepared_episode(
     )
     assert response.status_code == 201, response.text
     plan = response.json()
-    assert plan["requests"] == (2 * (max_turns + int(semantic)))
+    assert plan["requests"] == (2 * (max_turns + int(semantic) + int(reactive)))
     response = client.post(
         base + "/experiments/plans/" + plan["id"] + "/approve",
         headers=admin,
