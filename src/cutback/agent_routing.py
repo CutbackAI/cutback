@@ -1,7 +1,6 @@
 """Source-bound routing preparation and durable stage transitions for application agents."""
 
 import hashlib
-from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 from cutback.core.request_profiles import fingerprint
@@ -96,7 +95,7 @@ def prepare(
     project = str(UUID(str(project)))
     with workspace_lock(directory):
         state = load_session(root)
-        if state["phase"] not in {"ANALYZED", "SOURCE_CHANGED", "PLAN_READY"}:
+        if state["phase"] not in {"ANALYZED", "SOURCE_CHANGED", "PLAN_READY", "PREPARING"}:
             raise ValueError("ROUTING_PREPARATION_ALREADY_STARTED_INSPECT_STATUS")
         baseline, source, workflow_id = selected_source(root, state, workflow)
         if not independent_labels or minimum is None:
@@ -105,6 +104,9 @@ def prepare(
             raise ValueError("ROUTING_FIXTURE_TRANSPORT_REQUIRES_SYNTHETIC_RIGHTS")
         if not files or len(files) > 20:
             raise ValueError("ONE_TO_TWENTY_PERMITTED_FILES_REQUIRED")
+        from cutback.agent_preparation import begin, expiry
+
+        preparation = begin(directory, state, "source_routing")
         policy = CapturePolicy(
             enabled=True,
             approval_ref=rights_ref,
@@ -112,7 +114,7 @@ def prepare(
             environments=["staging"],
             workflows=[workflow_id],
             allowed_providers=["openai"],
-            expires_at=datetime.now(UTC) + timedelta(days=1),
+            expires_at=expiry(preparation),
             retention_days=1,
             sample_rate=1,
             max_samples=4000,
@@ -180,6 +182,8 @@ def prepare(
                 transport="scripted_test_only" if fixture_transport else "native_provider",
             ),
         )
+        if preparation:
+            plan = plan.model_copy(update={"content_nonce": UUID(preparation["content_nonce"])})
         if not plan_summary(plan, prepared)["fits_budget"]:
             raise ValueError("ROUTING_TRAINING_EXCEEDS_STAGE_CEILING_OR_HAS_NO_TRAIN_CASES")
         # Check every split before any upload; no unhandled rows may be dropped.
@@ -200,16 +204,20 @@ def prepare(
                 "mapping": mapping,
             }
         )
-        if state["phase"] == "PLAN_READY":
+        from cutback.agent_preparation import bind
+
+        intent = bind(intent, preparation, body, policy)
+        if state["phase"] in {"PLAN_READY", "PREPARING"}:
             if (
                 state.get("search_mode") != "source_routing"
                 or state.get("preparation_sha256") != intent
             ):
                 raise ValueError("FROZEN_ROUTING_INTENT_CHANGED_START_NEW_SESSION")
-            return public_session(state)
+            if state["phase"] == "PLAN_READY":
+                return public_session(state)
         selected_source(root, state, workflow_id)
         request = {
-            "request_id": str(uuid4()),
+            "request_id": preparation["requests"]["plan"],
             "content_nonce": str(plan.content_nonce),
             "baseline": baseline.model_dump(mode="json"),
             "candidates": [candidate.model_dump(mode="json") for candidate in candidates],
@@ -232,17 +240,45 @@ def prepare(
                 "budget": budget.model_dump(mode="json"),
             },
         )
+        state["preparation_command"] = {
+            "files": files,
+            "rights_basis": rights_basis,
+            "rights_ref": rights_ref,
+            "max_usd": str(max_usd),
+            "max_requests": max_requests,
+            "workflow": workflow_id,
+            "minimum": minimum,
+            "independent_labels": independent_labels,
+            "representative": representative,
+            "mapping": mapping,
+            "learned_routing": True,
+            "fixture_transport": fixture_transport,
+            "min_test_samples": min_test_samples,
+        }
         save_session(directory, state, "PREPARING")
+        from cutback import agent_preparation as setup
+
+        setup.require_protocol(control)
         base = f"/v1/projects/{project}"
-        # These writes make no provider call. An uncertain policy/dataset creation
-        # stops in PREPARING, rather than silently creating duplicate imports.
-        created_policy = control("POST", base + "/capture-policies", policy.model_dump(mode="json"))
+        created_policy = setup.create(
+            control,
+            base,
+            "capture-policies",
+            policy.model_dump(mode="json"),
+            preparation,
+            state=state,
+            directory=directory,
+        )
         state["policy_id"] = created_policy["id"]
         save_session(directory, state)
-        dataset = control(
-            "POST",
-            base + "/datasets",
+        dataset = setup.create(
+            control,
+            base,
+            "datasets",
             body.model_copy(update={"policy_id": created_policy["id"]}).model_dump(mode="json"),
+            preparation,
+            state=state,
+            directory=directory,
         )
         state["dataset_id"] = dataset["id"]
         state["dataset_split_counts"] = dataset["provenance"]["split_counts"]

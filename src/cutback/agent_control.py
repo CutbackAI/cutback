@@ -48,6 +48,9 @@ def connect(root: Path, *, local=False, endpoint=None, project=None):
     connection = location / "connection.json"
     if connection.exists():
         value = read_private(connection)
+        from cutback.agent_bootstrap import validate_connection
+
+        validate_connection(root, value)
         if (endpoint and endpoint != value["endpoint"]) or (
             project and project != value["project"]
         ):
@@ -64,26 +67,10 @@ def connect(root: Path, *, local=False, endpoint=None, project=None):
             raise ValueError("START_LOCAL_COLLECTOR_WITH_EXPLICIT_ALLOW_PAYLOADS")
         endpoint = config["endpoint"]
         control = Control(endpoint, config["admin"])
-        created = control(
-            "POST",
-            "/v1/projects",
-            {
-                "slug": "application-"
-                + location.parent.parent.name[:35].replace(" ", "-")
-                + "-"
-                + __import__("uuid").uuid4().hex[:8]
-            },
-        )
-        project = created["id"]
-        token = control("POST", f"/v1/projects/{project}/keys", {"role": "project_admin"})["token"]
-        ingest = control("POST", f"/v1/projects/{project}/keys", {"role": "ingest"})["token"]
-        # Credential file is separate from metadata sessions and never emitted by status.
-        write_private(
-            connection,
-            {"endpoint": endpoint, "project": project, "token": token, "ingest_token": ingest},
-            exclusive=True,
-        )
-        return Control(endpoint, token), project
+        from cutback.agent_bootstrap import bootstrap_connection
+
+        value = bootstrap_connection(root, control, owner=config["owner"])
+        return Control(endpoint, value["token"]), value["project"]
     if not endpoint or not project or not os.getenv("CUTBACK_CONTROL_TOKEN"):
         raise ValueError("EXPLICIT_COLLECTOR_AND_PROJECT_OR_LOCAL_REQUIRED")
     write_private(

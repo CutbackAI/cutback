@@ -5,7 +5,7 @@ import os
 import secrets
 import subprocess
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import httpx
 import pytest
@@ -120,16 +120,17 @@ def test_support_desk_decisions_stages_encrypted_cases_and_browser(
                     .replace(viewer, "<credential-omitted>")
                 )
                 pytest.fail(safe, pytrace=False)
-        from cutback.server.db import CapturePolicyRecord
+        from cutback.server.db import CapturePolicyRecord, ExperimentPlanRecord, ExperimentRunRecord
 
         with app.state.sessions.begin() as session:
-            from sqlalchemy import select
-
-            policy = session.scalar(
-                select(CapturePolicyRecord).where(
-                    CapturePolicyRecord.project_id == manifest["project_id"]
-                )
-            )
+            # The guided sample contains several independent policies. Revoke
+            # the one authorizing these exact case outputs, not an unordered
+            # first policy that may belong to a different demonstration.
+            run = session.get(ExperimentRunRecord, UUID(run_id))
+            assert run is not None and run.project_id == UUID(manifest["project_id"])
+            plan = session.get(ExperimentPlanRecord, run.plan_id)
+            policy = session.get(CapturePolicyRecord, UUID(plan.specification["policy_id"]))
+            assert policy is not None and policy.project_id == run.project_id and policy.enabled
             policy.enabled = False
         assert (
             client.post(

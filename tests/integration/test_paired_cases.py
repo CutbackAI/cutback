@@ -4,10 +4,67 @@ from uuid import UUID
 import pytest
 from support_evaluation import SyntheticExecutor, authorized_dataset, plan_for
 
-from cutback.server.db import DatasetRecord, PayloadSample
+from cutback.server.db import CapturePolicyRecord, DatasetRecord, PayloadSample
 from cutback.server.worker import run_one
 
 pytestmark = pytest.mark.postgres
+
+
+def test_case_content_rechecks_its_exact_policy_when_a_project_has_other_policies(
+    api, tenant, tmp_path, monkeypatch
+):
+    client, admin, app = api
+    base, store, dataset, _ = authorized_dataset(api, tenant, tmp_path, monkeypatch)
+    spec = plan_for({"immutable_hash": dataset["immutable_hash"]}, retain_case_outputs=True)
+    frozen_response = client.post(
+        base + "/experiments/plans",
+        headers=admin,
+        json={"dataset_id": dataset["id"], "specification": spec.model_dump(mode="json")},
+    )
+    assert frozen_response.status_code == 201
+    frozen = frozen_response.json()
+    approved = client.post(
+        base + f"/experiments/plans/{frozen['id']}/approve",
+        headers=admin,
+        json={"plan_hash": frozen["plan_hash"], "approval_ref": "owned-case-policy-scope"},
+    )
+    assert approved.status_code == 200
+    queued = client.post(base + "/experiments", headers=admin, json={"plan_id": frozen["id"]})
+    assert queued.status_code == 202
+    run_id = queued.json()["id"]
+    assert (
+        run_one(
+            app.state.sessions,
+            store,
+            executor=SyntheticExecutor(),
+            execution_enabled=True,
+            only_run_id=run_id,
+        )["status"]
+        == "COMPLETED"
+    )
+    target_policy = UUID(dataset["provenance"]["policy_id"])
+    with app.state.sessions() as session:
+        policy_body = dict(session.get(CapturePolicyRecord, target_policy).policy)
+    unrelated = client.post(
+        base + "/capture-policies",
+        headers=admin,
+        json={**policy_body, "approval_ref": "owned-unrelated-case-policy"},
+    )
+    assert unrelated.status_code == 201
+    unrelated_id = UUID(unrelated.json()["id"])
+    assert unrelated_id != target_policy
+    with app.state.sessions.begin() as session:
+        session.get(CapturePolicyRecord, unrelated_id).enabled = False
+    path = base + f"/experiments/{run_id}/cases/content"
+    content = client.post(path, headers=admin, json={"purpose": "owned-case-policy-scope"})
+    assert content.status_code == 200 and content.json()["cases"]
+    with app.state.sessions.begin() as session:
+        session.get(CapturePolicyRecord, target_policy).enabled = False
+    assert (
+        client.post(path, headers=admin, json={"purpose": "owned-case-policy-scope"}).status_code
+        == 403
+    )
+    assert client.get(base + f"/experiments/{run_id}", headers=admin).status_code == 200
 
 
 def test_failure_first_pairs_and_correction_create_new_version(api, tenant, tmp_path, monkeypatch):

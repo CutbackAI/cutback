@@ -11,10 +11,11 @@ from uuid import UUID, uuid4
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, Response
-from pydantic import Field, SecretStr, StringConstraints
+from pydantic import UUID4, Field, SecretStr, StringConstraints
 from sqlalchemy import select, text
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
+from cutback.core.bootstrap import BOOTSTRAP_CONTRACT, ScopedRole
 from cutback.core.models import EventBatch, StrictModel
 from cutback.server.db import (
     AccessKey,
@@ -42,7 +43,7 @@ class ProjectInput(StrictModel):
 
 
 class KeyInput(StrictModel):
-    role: Literal["ingest", "viewer", "analyst", "editor", "project_admin", "prompt_reader"]
+    role: ScopedRole
     environment: ShortName = "staging"
     expires_in_days: int = Field(default=30, ge=1, le=365)
 
@@ -254,16 +255,84 @@ def create_app(
             revision = session.execute(text("SELECT version_num FROM alembic_version")).scalar()
             if revision != CURRENT_REVISION:
                 raise HTTPException(503, "MIGRATION_REQUIRED")
-        return {"status": "ready", "schema_revision": revision}
+        from cutback.core.native_fixture import NATIVE_FIXTURE_CONTRACT
+        from cutback.core.preparation import PREPARATION_CONTRACT
+
+        return {
+            "status": "ready",
+            "schema_revision": revision,
+            "preparation_contract": PREPARATION_CONTRACT,
+            "bootstrap_contract": BOOTSTRAP_CONTRACT,
+            "native_fixture_contract": NATIVE_FIXTURE_CONTRACT,
+        }
 
     @app.post("/v1/projects", status_code=201)
-    def project_create(body: ProjectInput, auth=Depends(authorize)):
+    def project_create(
+        body: ProjectInput, auth=Depends(authorize), *, request_id: UUID4 | None = None
+    ):
         if auth["role"] == "oidc":
             if auth["organizations"].get(body.organization_id) not in {"owner", "admin"}:
                 raise HTTPException(403, "ORGANIZATION_ADMIN_REQUIRED")
         else:
             scope(auth, None, ("admin",))
         with sessions.begin() as session:
+            from cutback.core.request_profiles import fingerprint
+            from cutback.server.dataset_lineage import lock_preparation_identity
+
+            request_hash = fingerprint(body.model_dump(mode="json"))
+            if request_id:
+                lock_preparation_identity(session, "project-bootstrap", request_id)
+                from cutback.server.dataset_lineage import lock_lineage
+
+                lock_lineage(session, request_id)
+                deleted = session.scalar(
+                    select(AuditEvent.id)
+                    .where(
+                        AuditEvent.project_id.is_(None),
+                        AuditEvent.action == "project_deleted",
+                        AuditEvent.details["project_id"].as_string() == str(request_id),
+                    )
+                    .limit(1)
+                )
+                if deleted:
+                    raise HTTPException(409, "PROJECT_BOOTSTRAP_WAS_DELETED")
+                existing = session.get(Project, request_id)
+                if existing:
+                    if auth["role"] == "oidc" and auth["organizations"].get(
+                        existing.organization_id
+                    ) not in {"owner", "admin"}:
+                        raise HTTPException(404, "PROJECT_NOT_FOUND")
+                    prior = session.scalar(
+                        select(AuditEvent.id)
+                        .where(
+                            AuditEvent.project_id == existing.id,
+                            AuditEvent.action == "project_created",
+                            AuditEvent.details["bootstrap_request_sha256"].as_string()
+                            == request_hash,
+                        )
+                        .limit(1)
+                    )
+                    environment = session.scalar(
+                        select(Environment.id).where(
+                            Environment.project_id == existing.id,
+                            Environment.name == body.environment,
+                        )
+                    )
+                    if (
+                        not prior
+                        or not environment
+                        or existing.slug != body.slug
+                        or body.organization_id is not None
+                        and existing.organization_id != body.organization_id
+                    ):
+                        raise HTTPException(409, "PROJECT_BOOTSTRAP_IDENTITY_CONFLICT")
+                    return {
+                        "id": str(existing.id),
+                        "slug": existing.slug,
+                        "environment": body.environment,
+                    }
+            if body.organization_id is None:
+                lock_preparation_identity(session, "organization-bootstrap", UUID(int=0))
             organization = (
                 session.get(Organization, body.organization_id)
                 if body.organization_id
@@ -276,6 +345,8 @@ def create_app(
                 session.add(organization)
                 session.flush()
             project = Project(organization_id=organization.id, slug=body.slug)
+            if request_id:
+                project.id = request_id
             session.add(project)
             try:
                 session.flush()
@@ -284,7 +355,10 @@ def create_app(
             session.add(Environment(project_id=project.id, name=body.environment))
             session.add(
                 AuditEvent(
-                    project_id=project.id, actor=auth["actor"], action="project_created", details={}
+                    project_id=project.id,
+                    actor=auth["actor"],
+                    action="project_created",
+                    details={"bootstrap_request_sha256": request_hash} if request_id else {},
                 )
             )
         return {"id": str(project.id), "slug": project.slug, "environment": body.environment}
@@ -328,6 +402,9 @@ def create_app(
         with sessions.begin() as session:
             if not session.get(Project, project_id):
                 raise HTTPException(404, "PROJECT_NOT_FOUND")
+            from cutback.server.bootstrap_api import enforce_key_quota
+
+            enforce_key_quota(session, project_id)
             environment = session.scalar(
                 select(Environment).where(
                     Environment.project_id == project_id, Environment.name == body.environment
@@ -602,6 +679,9 @@ def create_app(
     from cutback.server.billing import install_billing
 
     install_billing(app, sessions, authorize, scope)
+    from cutback.server.bootstrap_api import install_bootstrap_keys
+
+    install_bootstrap_keys(app, sessions, authorize, scope)
     from cutback.server.cache_api import install_cache
 
     install_cache(app, sessions, authorize, scope)

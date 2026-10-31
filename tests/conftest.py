@@ -1,5 +1,6 @@
 """All provider responses are synthetic. Tests never call a public inference endpoint."""
 
+import json
 import os
 from datetime import UTC, datetime
 from uuid import uuid4
@@ -111,14 +112,56 @@ def api_database_url(postgres_url):
 
 @pytest.fixture
 def api(api_database_url):
+    import re
     import secrets
 
     from fastapi.testclient import TestClient
+    from sqlalchemy.exc import SQLAlchemyError
 
     from cutback.server.api import create_app
 
     admin = secrets.token_urlsafe(48)
     app = create_app(database_url=api_database_url, admin_token=admin, allow_insecure_http=True)
+    app.state.fixture_storage_diagnostics = []
+    original_handler = app.exception_handlers[SQLAlchemyError]
+
+    async def storage_diagnostic(request, exc):
+        original = getattr(exc, "orig", None)
+        state = getattr(original, "sqlstate", None)
+        if not isinstance(state, str) or not re.fullmatch(r"[0-9A-Z]{5}", state):
+            state = None
+        message = str(original).casefold() if original is not None else ""
+        category = next(
+            (
+                code
+                for phrase, code in (
+                    ("timeout expired", "connection_timeout"),
+                    ("connection timeout", "connection_timeout"),
+                    ("server closed the connection", "connection_closed"),
+                    ("connection refused", "connection_refused"),
+                    ("too many clients", "connection_limit"),
+                    ("does not exist", "missing_database_or_relation"),
+                    ("statement timeout", "statement_timeout"),
+                    ("deadlock", "deadlock"),
+                    ("authentication failed", "authentication"),
+                )
+                if phrase in message
+            ),
+            "not_classified",
+        )
+        diagnostics = app.state.fixture_storage_diagnostics
+        diagnostics.append(
+            {
+                "exception_type": type(exc).__name__,
+                "driver_type": type(original).__name__ if original is not None else None,
+                "sqlstate": state,
+                "category": category,
+            }
+        )
+        del diagnostics[:-8]
+        return await original_handler(request, exc)
+
+    app.add_exception_handler(SQLAlchemyError, storage_diagnostic)
     with TestClient(app, raise_server_exceptions=False) as client:
         yield client, {"Authorization": f"Bearer {admin}"}, app
 
@@ -126,16 +169,23 @@ def api(api_database_url):
 @pytest.fixture
 def tenant(api):
     client, admin, _ = api
-    project = client.post(
+    project_response = client.post(
         "/v1/projects", json={"slug": "synthetic-" + uuid4().hex}, headers=admin
-    ).json()
-    project_id = project["id"]
-    write = client.post(
+    )
+    assert project_response.status_code == 201, "PROJECT_FIXTURE_CREATE_FAILED " + json.dumps(
+        api[2].state.fixture_storage_diagnostics
+    )
+    project_id = project_response.json()["id"]
+    write_response = client.post(
         f"/v1/projects/{project_id}/keys", json={"role": "ingest"}, headers=admin
-    ).json()
-    read = client.post(
+    )
+    assert write_response.status_code == 201, "INGEST_FIXTURE_KEY_CREATE_FAILED"
+    write = write_response.json()
+    read_response = client.post(
         f"/v1/projects/{project_id}/keys", json={"role": "viewer"}, headers=admin
-    ).json()
+    )
+    assert read_response.status_code == 201, "VIEWER_FIXTURE_KEY_CREATE_FAILED"
+    read = read_response.json()
     return (
         project_id,
         {"Authorization": f"Bearer {write['token']}"},

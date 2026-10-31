@@ -183,3 +183,120 @@ def test_changed_source_map_file_never_claims_old_identity(tmp_path):
     source.write_text(source.read_text() + "\n# changed revision\n")
     mapping = SourceMap(path)
     assert not mapping.sites and mapping.resolve() == {}
+
+
+@pytest.mark.parametrize("asynchronous", [False, True])
+@pytest.mark.parametrize("streaming", [False, True])
+@pytest.mark.parametrize("alias_conflict", [False, True])
+def test_src_package_workflows_keep_scanner_identity(
+    tmp_path, monkeypatch, asynchronous, streaming, alias_conflict
+):
+    import importlib
+    import sys
+
+    from cutback.core.inventory import workflow_identity
+    from cutback.instrumentation.attribution import SourceMap, build_source_map
+    from cutback.instrumentation.openai import OpenAIInstrumentation
+
+    monkeypatch.setattr("cutback.instrumentation.openai.Exporter", MemoryExporter)
+    package = tmp_path / "src/synthetic_tickets"
+    package.mkdir(parents=True)
+    (package / "__init__.py").write_text("")
+    reply = {
+        "id": "resp_synthetic",
+        "object": "response",
+        "created_at": 1,
+        "status": "completed",
+        "model": "gpt-4.1",
+        "output": [],
+        "usage": {"input_tokens": 10, "output_tokens": 1, "total_tokens": 11},
+    }
+    response = f"httpx.Response(200, json={reply!r})"
+    if streaming:
+        data = (
+            "data: "
+            + json.dumps({"type": "response.completed", "sequence_number": 0, "response": reply})
+            + "\n\ndata: [DONE]\n\n"
+        )
+        response = (
+            f"httpx.Response(200, text={data!r}, headers={{'content-type':'text/event-stream'}})"
+        )
+    constructor = "AsyncOpenAI" if asynchronous else "OpenAI"
+    client = "AsyncClient" if asynchronous else "Client"
+    prefix, wait = ("async ", "await ") if asynchronous else ("", "")
+    (package / "native.py").write_text(
+        f"import httpx\nfrom openai import {constructor}\n"
+        f"client={constructor}(api_key='synthetic-key',max_retries=0,"
+        f"http_client=httpx.{client}(transport=httpx.MockTransport(lambda request:{response})))\n"
+        f"{prefix}def classify(text):\n"
+        f" return {wait}client.responses.create(model='gpt-4.1',input=text,stream={streaming})\n"
+    )
+    (package / "api.py").write_text(
+        "from .native import classify\n"
+        f"{prefix}def first(text):\n return {wait}classify(text)\n"
+        f"{prefix}def second(text):\n return {wait}classify(text)\n"
+    )
+    inventory = scan(tmp_path)
+    (site,) = inventory["call_sites"]
+    expected = {
+        workflow_identity(entry["file"], entry["symbol"])[0] for entry in site["entry_points"]
+    }
+    assert len(expected) == 2
+    private = tmp_path / ".cutback"
+    private.mkdir()
+    path = private / "source-map.json"
+    mapping = build_source_map(tmp_path, inventory)
+    if alias_conflict:
+        for entry in mapping["files"]:
+            if entry["path"] == "src/synthetic_tickets/api.py":
+                entry["workflows"] += [
+                    {
+                        "symbol": item["symbol"].removeprefix("synthetic_tickets.api."),
+                        "workflow_id": "workflow:" + "0" * 24,
+                    }
+                    for item in entry["workflows"]
+                ]
+    path.write_text(json.dumps(mapping))
+    monkeypatch.syspath_prepend(str(tmp_path / "src"))
+    api = importlib.import_module("synthetic_tickets.api")
+    observer = OpenAIInstrumentation(
+        service_name="synthetic-consumer",
+        environment="staging",
+        endpoint="http://127.0.0.1:8080/v1/ingest/events",
+        project_id=str(uuid4()),
+        token="synthetic-" + "x" * 40,
+        identity=("synthetic-package",),
+        attribution=SourceMap(path),
+    )
+
+    async def call_async():
+        for function in (api.first, api.second):
+            result = await function("SYNTHETIC_PRIVATE_TICKET_CANARY")
+            if streaming:
+                async with result:
+                    assert len([chunk async for chunk in result]) == 1
+
+    try:
+        if asynchronous:
+            asyncio.run(call_async())
+        else:
+            for function in (api.first, api.second):
+                result = function("SYNTHETIC_PRIVATE_TICKET_CANARY")
+                if streaming:
+                    with result:
+                        assert len(list(result)) == 1
+        events = observer.exporter.events
+        assert {event.call_site_id for event in events} == {site["call_site_id"]}
+        assert {event.workflow_id for event in events} == ({None} if alias_conflict else expected)
+        assert "SYNTHETIC_PRIVATE_TICKET_CANARY" not in json.dumps(
+            [event.model_dump(mode="json") for event in events]
+        )
+    finally:
+        observer.close()
+        if asynchronous:
+            asyncio.run(api.classify.__globals__["client"].close())
+        else:
+            api.classify.__globals__["client"].close()
+        for name in tuple(sys.modules):
+            if name == "synthetic_tickets" or name.startswith("synthetic_tickets."):
+                sys.modules.pop(name, None)

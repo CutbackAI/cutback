@@ -46,6 +46,22 @@ def save_session(directory, state, phase=None, code=None):
 
 def next_action(state):
     phase = state["phase"]
+    if phase == "PREPARING" and state.get("preparation_intent"):
+        if state.get("preparation_conflict"):
+            return {
+                "code": "RECONCILE_PREPARATION_IDENTITY_WITH_OPERATOR",
+                "tool": "cutback workflow status",
+                "requires": ["explicit_server_identity_or_content_reconciliation"],
+                "provider_calls": 0,
+                "automatic_billable_retry": False,
+            }
+        return {
+            "code": "RESUME_SAME_NONBILLABLE_PREPARATION",
+            "tool": "cutback workflow resume-preparation",
+            "requires": [],
+            "provider_calls": 0,
+            "automatic_billable_retry": False,
+        }
     if state.get("search_mode") == "source_routing":
         from cutback.agent_routing import next_action as routing_action
 
@@ -239,13 +255,17 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
             entries = site["entry_points"] or [
                 {"file": site["source_file"], "symbol": site["source_symbol"]}
             ]
-            selected = []
+            selected = {}
             for entry in entries:
                 identity, _ = workflow_identity(entry["file"], entry["symbol"])
                 if not workflow or identity == workflow:
-                    selected.append((entry, identity))
+                    # A function-root and HTTP-route hint can name the same
+                    # entry. Preserve its identity without creating ambiguous
+                    # duplicate native profiles for an ordinary web application.
+                    if identity not in selected or entry.get("kind") == "http_route":
+                        selected[identity] = (entry, identity)
             if selected:
-                matching.append((site, selected))
+                matching.append((site, list(selected.values())))
         profile_analysis = {
             "detected_call_sites": len(inventory["call_sites"]),
             "matching_call_sites": len(matching),
@@ -411,6 +431,9 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
             "provider_calls": 0,
         }
         state["strategies"] = strategy_assessments(profiles)
+        from cutback.agent_strategy import preparation_options
+
+        state["preparation_options"] = preparation_options(state)
         if previous_id:
             state["previous_session_id"] = previous_id
         if not profiles and not context_producers and not routing_producers:
@@ -584,10 +607,9 @@ def prepare(
     criteria_generator_provider=None,
     learned_routing=False,
     fixture_transport=False,
+    automatic=False,
 ):
     """Read only explicitly permitted files; upload to the chosen encrypted collector; no calls."""
-    from datetime import timedelta
-
     from cutback.core.models import Identifier
     from cutback.evals.datasets import CapturePolicy, DatasetImport, prepare_dataset
     from cutback.evals.experiments import CriterionSpec, ExperimentPlan, ModelSpec, plan_summary
@@ -595,6 +617,29 @@ def prepare(
     from cutback.evals.planning import draft_plan
     from cutback.evals.records import read_records
 
+    if type(automatic) is not bool:
+        raise ValueError("AUTOMATIC_PREPARATION_FLAG_MUST_BE_BOOLEAN")
+    if type(min_test_samples) is not int or not 1 <= min_test_samples <= 10000:
+        raise ValueError("EVIDENCE_SAMPLE_MINIMUM_ONE_TO_TEN_THOUSAND_REQUIRED")
+    if automatic:
+        if any(
+            (
+                search,
+                for_campaign,
+                joint_context,
+                learned_routing,
+                campaign_generator_provider is not None,
+                criteria_generator_provider is not None,
+            )
+        ):
+            raise ValueError("AUTOMATIC_PREPARATION_CANNOT_OVERRIDE_EXPLICIT_ENGINE")
+        from cutback.agent_strategy import freeze_preparation
+
+        selected = freeze_preparation(root, workflow)
+        workflow = selected["workflow_id"]
+        search = selected["mode"] == "native_search"
+        joint_context = selected["mode"] == "joint_model_context"
+        learned_routing = selected["mode"] == "source_routing"
     if learned_routing:
         if (
             joint_context
@@ -623,8 +668,10 @@ def prepare(
             min_test_samples=min_test_samples,
             fixture_transport=fixture_transport,
         )
-    if fixture_transport:
-        raise ValueError("FIXTURE_TRANSPORT_REQUIRES_LEARNED_ROUTING")
+    if fixture_transport and (
+        rights_basis != "synthetic" or joint_context or for_campaign or criteria_generator_provider
+    ):
+        raise ValueError("NATIVE_FIXTURE_REQUIRES_SYNTHETIC_NATIVE_SOURCE_SEARCH")
     if joint_context:
         if search or for_campaign or campaign_generator_provider or criteria_generator_provider:
             raise ValueError("JOINT_CONTEXT_REQUIRES_ITS_OWN_FROZEN_SEARCH")
@@ -654,7 +701,7 @@ def prepare(
     project = str(UUID(str(project)))
     with workspace_lock(directory):
         state = load_session(root)
-        if state["phase"] not in {"ANALYZED", "SOURCE_CHANGED", "PLAN_READY"}:
+        if state["phase"] not in {"ANALYZED", "SOURCE_CHANGED", "PLAN_READY", "PREPARING"}:
             raise ValueError("WORKFLOW_PREPARATION_ALREADY_STARTED_INSPECT_STATUS")
         profile = selected_profile(root, state, workflow)
         if type(for_campaign) is not bool or for_campaign and search:
@@ -684,6 +731,9 @@ def prepare(
                 raise ValueError("EXPLICIT_OPENAI_GENERATOR_VENDOR_AUTHORIZATION_REQUIRED")
         if not files or len(files) > 20:
             raise ValueError("ONE_TO_TWENTY_PERMITTED_FILES_REQUIRED")
+        from cutback.agent_preparation import begin, expiry
+
+        preparation = begin(directory, state, "native")
         rights = CapturePolicy(
             enabled=True,
             approval_ref=rights_ref,
@@ -691,7 +741,7 @@ def prepare(
             environments=["staging"],
             workflows=[profile.binding.workflow_id],
             allowed_providers=sorted(providers),
-            expires_at=datetime.now(UTC) + timedelta(days=1),
+            expires_at=expiry(preparation),
             retention_days=1,
             sample_rate=1,
             max_samples=10000,
@@ -758,6 +808,8 @@ def prepare(
             if search
             else None,
         )
+        if preparation and spec.content_nonce is not None:
+            spec = spec.model_copy(update={"content_nonce": UUID(preparation["content_nonce"])})
         criteria = []
         if (
             spec.metric.kind == "field_f1"
@@ -773,17 +825,29 @@ def prepare(
                         CriterionSpec(
                             key=field,
                             metric=MetricSpec(
-                                kind="exact_label", output_field=field, minimum=minimum
+                                kind="exact_label",
+                                output_field=field,
+                                minimum=minimum,
+                                min_test_samples=min_test_samples,
                             ),
                         )
                     )
         spec = ExperimentPlan.model_validate(
             {
                 **spec.model_dump(mode="json"),
+                "metric": {
+                    **spec.metric.model_dump(mode="json"),
+                    "min_test_samples": min_test_samples,
+                },
                 "source_binding": profile.binding.model_dump(mode="json"),
                 "criteria": [c.model_dump(mode="json") for c in criteria],
                 "retain_case_outputs": retain_case_outputs,
                 "split": "validation" if search or for_campaign else "test",
+                **(
+                    {"native_fixture": {"version": "native-source-fixture-v1"}}
+                    if fixture_transport
+                    else {}
+                ),
                 **({"name": "Campaign preparation basis"} if for_campaign else {}),
             }
         )
@@ -803,11 +867,14 @@ def prepare(
             intent["campaign_basis"] = {"allowed_providers": rights.allowed_providers}
         if criteria_generator_provider:
             intent["criteria_generation"] = {"allowed_providers": rights.allowed_providers}
-        identity = fingerprint(intent)
-        if state["phase"] == "PLAN_READY":
+        from cutback.agent_preparation import bind
+
+        identity = bind(fingerprint(intent), preparation, body, rights)
+        if state["phase"] in {"PLAN_READY", "PREPARING"}:
             if state["preparation_sha256"] != identity:
                 raise ValueError("FROZEN_PLAN_CHANGED_START_NEW_SESSION")
-            return public_session(state)
+            if state["phase"] == "PLAN_READY":
+                return public_session(state)
         base = f"/v1/projects/{project}"
         state.update(
             project_id=project,
@@ -829,24 +896,69 @@ def prepare(
             state["campaign_allowed_providers"] = rights.allowed_providers
         if criteria_generator_provider:
             state["criteria_allowed_providers"] = rights.allowed_providers
+        state["preparation_command"] = {
+            "files": files,
+            "rights_basis": rights_basis,
+            "rights_ref": rights_ref,
+            "max_usd": str(max_usd),
+            "max_requests": max_requests,
+            "workflow": body.workflow,
+            "minimum": minimum,
+            "independent_labels": independent_labels,
+            "representative": representative,
+            "retain_case_outputs": retain_case_outputs,
+            "mapping": mapping,
+            "search": search,
+            "for_campaign": for_campaign,
+            "campaign_generator_provider": campaign_generator_provider,
+            "criteria_generator_provider": criteria_generator_provider,
+            "min_test_samples": min_test_samples,
+            "fixture_transport": fixture_transport,
+        }
         save_session(directory, state, "PREPARING")
+        from cutback import agent_preparation as setup
+
+        setup.require_protocol(control, native_fixture=fixture_transport)
         inventory = read_private(directory / "inventory.json")
-        control("POST", base + "/scans", inventory)
-        policy = control("POST", base + "/capture-policies", rights.model_dump(mode="json"))
+        setup.create(
+            control,
+            base,
+            "scans",
+            inventory,
+            preparation,
+            state=state,
+            directory=directory,
+            response_key="scan_id",
+        )
+        policy = setup.create(
+            control,
+            base,
+            "capture-policies",
+            rights.model_dump(mode="json"),
+            preparation,
+            state=state,
+            directory=directory,
+        )
         state["policy_id"] = policy["id"]
         save_session(directory, state)
         body = body.model_copy(update={"policy_id": policy["id"]})
-        dataset = control("POST", base + "/datasets", body.model_dump(mode="json"))
+        dataset = setup.create(
+            control,
+            base,
+            "datasets",
+            body.model_dump(mode="json"),
+            preparation,
+            state=state,
+            directory=directory,
+        )
         state["dataset_id"] = dataset["id"]
         state["dataset_split_counts"] = dataset["provenance"]["split_counts"]
         save_session(directory, state)
         spec = ExperimentPlan.model_validate(
             {**spec.model_dump(mode="json"), "dataset_hash": dataset["immutable_hash"]}
         )
-        plan = control(
-            "POST",
-            base + "/experiments/plans",
-            {"dataset_id": dataset["id"], "specification": spec.model_dump(mode="json")},
+        plan = setup.plan(
+            control, base, dataset["id"], spec, preparation, state=state, directory=directory
         )
         state["plan"] = plan
         save_session(directory, state, "PLAN_READY")

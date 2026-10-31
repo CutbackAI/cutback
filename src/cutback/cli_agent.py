@@ -84,6 +84,7 @@ def register_agent(app, output, fail):
         min_test_samples: int = typer.Option(30, min=1, max=10000),
         learned_routing: bool = False,
         fixture_transport: bool = False,
+        automatic: bool = False,
     ):
         """Prepare permitted examples and the request in an approved encrypted store."""
         from cutback.agent import prepare as run
@@ -116,8 +117,19 @@ def register_agent(app, output, fail):
                 min_test_samples=min_test_samples,
                 learned_routing=learned_routing,
                 fixture_transport=fixture_transport,
+                automatic=automatic,
             )
         )
+
+    @group.command("resume-preparation")
+    @guarded
+    def resume_preparation(target: Path = Path(".")):
+        """Resume the same nonbillable setup; never approve or dispatch inference."""
+        from cutback.agent_control import connect
+        from cutback.agent_preparation import resume
+
+        control, _ = connect(target)
+        output(resume(target, control))
 
     @group.command("criteria-prepare")
     @guarded

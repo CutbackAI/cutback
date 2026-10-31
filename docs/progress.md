@@ -1,5 +1,212 @@
 # Implementation progress
 
+The older bootstrap wheel's complete local SDK3 run stopped with **1,697 passes /
+eight skips / one failure in 3,719.84 seconds**. Its support-desk revocation test
+selected an unordered first policy from a project containing several independent
+examples, then expected that unrelated revocation to block the comparison's
+content. The test now resolves the exact run's frozen plan and policy before
+revoking it; the required 403 assertion remains. A separate PostgreSQL regression
+proves unrelated-policy revocation preserves authorized reads while exact-policy
+revocation denies them. Current installed default paired-case plus actual
+HTTP/authenticated-browser support-desk checks pass **three in 153.17 seconds**.
+This changes test targeting, not content authorization. The full failed run
+remains failed; current complete installed qualification is still open.
+
+The current native-fixture wheel's installed default recovery, agent, migrations
+and authenticated browser scope passes **107 in 355.93 seconds**, after exact
+identity validation of 376 application files / 352 Python modules. The first
+SDK3 installed scope passed 26 units before a session database setup connection
+timeout cascaded into 81 setup errors; it is not accepted. A serial rerun is in
+progress. Private/public archives reproduce, release checks pass and the public
+boundary checked **1,108 files / 5,128 history objects / 2,972 archive members /
+zero findings**. No package was uploaded.
+
+Native source fixture execution is under qualification; see
+[the contract and evidence limits](native-fixtures.md). The core, API, worker and
+agent preserve an explicit synthetic-only frozen plan, recheck actual data rights
+at admission and each call, and block live executors before SDK construction or
+reservation. The real quality gate stays closed. The authenticated dashboard
+labels this evidence as scripted. Final strategy/contract guards, eleven
+PostgreSQL workflows and the real TCP/admin/viewer/mobile/accessibility journey
+pass together under pinned SDK3 (**38 / 95.38 seconds**). Default scoped checks
+also pass. The broader pre-option-fix source passed **1,281 / 34 skips in 583.33
+seconds**. The independent lesson passed search, separate confirmation, source
+diff, both-tree application checks and exact rollback, rejecting both bad
+16-token alternatives. Final installed/archive/image/hosted acceptance and the
+example's new public source pin/read-only view remain open. No package upload,
+paid inference or deployment occurred.
+
+The independent consumer exposed duplicate HTTP-route/function-root hints for
+one source entry. A failing regression reproduced the resulting ambiguous pair
+of native profiles; analysis now deduplicates only identical workflow identities
+within one call site and retains its HTTP hint. Workflow identities are unchanged.
+Two failing PostgreSQL regressions also showed native preparation ignored a
+requested minimum case count. Label and per-field structured criteria now freeze
+that declared option; four PostgreSQL checks pass, including repeat preparation
+with the same plan hash. Existing default thirty-case plans retain their values.
+
+The previous consolidated bootstrap/public sample-link source passed all eleven
+actual hosted jobs at `163a6396ad3af34f881862c6f2f678ad8601b307`. A separate local
+full Windows/default run of the older attribution wheel stopped at a database
+setup error (**565 passes / 11 skips / one error**). The exact quality/migration
+scope then passed **nine in 56.74 seconds**. That rerun does not explain the
+full-run failure. Content-free SQL exception diagnostics have been added to test
+setup; current complete installed qualification is still required.
+
+The independent application is public at
+[CutbackAI/support-desk-example](https://github.com/CutbackAI/support-desk-example).
+Its original application checks pass without Cutback; optional observation uses
+an explicit unreleased public source pin and closed native SDK transports. All
+five hosted jobs passed for `bfe9cd2ec91b5491992bea25824507ccf1cdeec8`: application
+checks on Windows/Linux and Python 3.11/3.13, plus the real collector/PostgreSQL/
+desktop/mobile/accessibility journey. The collector checks made six synthetic
+native calls, preserved missing usage and scanner workflow identity, and recorded
+zero accessibility violations with payload capture off. The fresh installed
+application wheel works without Cutback (**14 passes / three explicit optional
+skips / one upstream deprecation warning**); optional source checks pass **17**.
+Its source/history/wheel/sdist boundary checked **21 files / 29 history objects /
+35 archive members / zero findings**. These are independent consumer mechanics,
+not real model-quality, customer-savings or production claims.
+
+The broader bootstrap source regression passed **1,269 / 34 skips in 538.36
+seconds**, including all units/contracts and real PostgreSQL collector, privacy,
+lineage, retention and preparation recovery. Corrected preparation PR 59's exact
+head also passed all eleven actual hosted jobs. The separate attribution PR 60
+retains a failed hosted routing-authoring confirmation (**one failure / 1,865
+passes / 40 skips**); isolated and paired current installed reruns pass, but do
+not explain that full-run failure. Investigation and complete installed Windows
+qualification remain open.
+
+Routing diagnostics now bind the confirmation form and POST to the actual queued
+validation UUID and explicitly check retained billing, quality and cost gates.
+A refused acknowledgement reports only a bounded uppercase collector code.
+The first diagnostic-only attempt used an incorrect expected queue status
+(201 rather than the API's 202); it failed and was corrected. The corrected
+whole installed routing sample passed **three in 104.93 seconds**, after earlier
+isolated/paired passes. These stronger checks improve diagnosis; they do not
+establish a root-cause fix for the retained hosted 409.
+
+Local connection recovery is under source qualification; see
+[the bootstrap contract and recovery instructions](bootstrap-recovery.md).
+Before project or key writes, the agent privately saves a root/owner/destination-
+bound intent, project/key identities, generated credentials and fixed one-day
+expiry. Matching acknowledgements resume those same resources after response
+loss; conflicting, revoked, expired, missing-history or deleted identities stop.
+The completed connection rechecks its original project, credential and key
+fingerprint before network use. The collector returns credential metadata only,
+stores hashes, and shares locking and the retained-key quota with legacy issuance.
+No new schema migration or billable retry is involved.
+
+Executed source evidence: new default unit/PostgreSQL/real-TCP recovery checks
+passed **56 in 39.50 seconds**, followed by the actual original CLI command
+recovering into a frozen plan (**one in 6.74 seconds**, two scoped keys, zero
+inference runs). Final SDK 3 recovery, existing agent workflow, paired-case
+correction, real migration contract, authenticated administrator/viewer/mobile/
+accessibility and owned persistent local-stack lifecycle checks passed **71 in
+164.38 seconds**. OpenAPI/client/types, React production build and fourteen
+frontend units pass; the existing 502.60 kB entry-chunk warning remains. Ruff/
+format and mypy **350 modules** pass. Portable workflow references and source
+archive reproducibility requirements include the new contract. Broader source,
+final installed/archive/image and hosted acceptance remain pending. This is
+unreleased engineering, not a claim that the entire roadmap is complete. No
+provider request, production deployment or package upload occurred.
+
+Independent-consumer qualification exposed a source-attribution gap for Python
+`src/` package layouts: four sync/async/stream regressions preserved the exact
+call site but lost its scanner workflow identity. Runtime matching now accepts
+the executing file's exact module-qualified function name as well as its local
+qualified name, retaining existing inventory IDs. Conflicting aliases and changed
+source remain unknown. Default observer/exporter/runtime qualification passed
+**32 in 8.87 seconds**; SDK 3 passed **49 in 9.69 seconds**, including native SDK 3
+checks. Ruff/format and mypy **347 modules** pass. This is a separate unreleased
+follow-up; final installed artifacts, consumer pipeline and hosted gates remain
+pending. No inference was sent to a provider.
+
+Preparation compatibility follow-up: the full installed Windows attempt was
+stopped after a deterministic support-desk correction failure; it is not a full
+pass. The unchanged installed focused journey failed in **119.02 seconds**, and
+the existing paired-case PostgreSQL regression independently reproduced HTTP 500
+in **9.00 seconds**. An optional request-ID parameter had displaced the internal
+callback's positional authorization argument. Authorization is again the third
+argument, request identity is keyword-only, and the callback passes `auth=auth`.
+The existing correction plus preparation checks now pass **ten in 14.84 seconds**
+on default SDK and **ten in 15.36 seconds** on SDK 3. The actual support-desk,
+encrypted-case revision, administrator/viewer/mobile/accessibility browser journey
+passes **one in 104.97 seconds**. API/type generation and React build pass with
+unchanged generated application bytes; Ruff/mypy **347 modules** pass. SDK 3 CI
+now explicitly includes the existing correction regression. Automatic failure
+screenshots are disabled for private review surfaces. Fresh artifacts and full
+installed/current-head hosted qualification remain required.
+
+The first hosted preparation SDK 3.13 run retained **one failure / 1,612 passes /
+14 skips in 974.60 seconds**: its CLI-help test searched raw colored output for
+an option split by ANSI styling. An owned network-disabled Linux container
+reproduced a successful help command with a noncontiguous raw flag and the
+correct visible option. The test now strips ANSI control sequences and checks
+both plain and forced-color modes. This changes test support only; application
+bytes are unchanged. Replacement exact-head hosted qualification is required;
+the failed run is not passing acceptance.
+
+Current source baseline: reviewed synthetic scenarios are merged in
+[PR 57](https://github.com/CutbackAI/cutback/pull/57), and reactive-user evaluation,
+known-cost dispatch stops and observed response-model evidence are merged in
+[PR 58](https://github.com/CutbackAI/cutback/pull/58), merge
+`0136d7e11351ea86642a58acf1af2711e275bd5d`. All eleven actual hosted jobs passed
+for PR 58's reviewed head. The failed local full installed runs remain failures;
+their passing scoped reruns do not close complete Windows qualification.
+Automatic adapter selection and resumable nonbillable preparation below are
+newer, unreleased work. Seven preparation-journal unit checks also pass, including
+three malformed-response privacy cases. No new PyPI upload, paid inference or
+production deployment occurred. The independent consumer application and broader
+cross-engine economic selection remain unfinished.
+
+Preparation identity-violation follow-up reproduced four unsafe retry paths
+when a server/proxy discarded the requested IDs. A bounded private conflict
+receipt now stops both direct preparation and resume before another upload;
+unknown/malformed returned IDs are withheld. All four regressions passed after
+the guard (**12.04 seconds**). Full focused default recovery/HTTP/authenticated
+browser checks passed **33 in 106.00 seconds**; SDK 3 recovery checks passed
+**32 in 127.88 seconds**. The preceding complete source regression passed
+**1,187 / 26 skips in 919.37 seconds**. Fresh artifacts must contain this final
+guard; the preceding f68 wheel does not. Root-cause analysis did not reproduce
+the earlier local gateway trial: all **32** stream cases passed in **44.89
+seconds**, and the owned PostgreSQL summary reported no capacity/deadlock/disk/
+memory/statement-timeout errors. That is a scoped rerun, not a clean full-suite
+claim. Complete Windows installed acceptance remains open.
+
+Nonbillable preparation recovery is under source qualification. Stable scoped
+request IDs serialize scan, capture-policy and dataset creation; dataset import
+identity is included in its existing immutable provenance extension. No released
+migration or schema revision changes. Retry reads recheck current rights, content
+retention and hashes. The agent journals fixed expiry, source/data/rights/budget
+bindings, nonces and bounded setup options before writes; `resume-preparation`
+reuses those identities and cannot approve or queue inference. An incompatible
+collector is refused before upload; expired rights and changed intent reject.
+The three initial PostgreSQL regressions failed before implementation. API,
+concurrency, tenant/RBAC, expiry and journal-recovery checks passed **27 in 104.99
+seconds**; real TCP response-loss recovery passed **one in 11.52 seconds**;
+existing agent flow, real migration drift/roundtrip and authenticated
+admin/viewer/mobile/axe checks passed **12 in 98.51 seconds**. API/types/React,
+Ruff and mypy **347 modules** pass. SDK 3 focused recovery checks passed **28 in
+105.07 seconds**. Broader installed/image/hosted gates are still pending. This
+does not authorize automatic paid retries or complete the
+remaining cross-engine economic selection roadmap.
+
+Automatic source-adapter preparation is under source qualification. Discovery
+lists qualified workflow adapters; `workflow prepare --automatic` freezes one
+source-analysis-bound choice before collector requests and selects native
+model/output-cap search, joint model/context search or source-bound routing.
+Explicit conflicting flags and ambiguous workflows/adapters reject. Existing
+rights, native support, complete-cost, approval and independent confirmation
+gates still apply. This selects a supported preparation contract; complete
+workload-economic selection across cache, routing, prompt and training remains
+unfinished. Automatic/explicit native, context and routing qualification passed
+**30 / one host symlink skip in 437.98 seconds**, including source proposals,
+untouched confirmation, failed-quality refusal and lost-response stage recovery.
+The CLI/offline selection checks passed **nine in 2.48 seconds**. Ruff/format and
+mypy **345 modules** pass; SDK 3 and final installed/archive/hosted gates remain
+pending for this separate change.
+
 Current reactive qualification retained three hosted SDK 3 failures (**1,564
 passed / 14 skips**) caused by the older guarded-tool migration test expecting
 its guard before the newly added observed-model guard. The corrected test checks

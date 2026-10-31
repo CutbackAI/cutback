@@ -21,6 +21,7 @@ from cutback.core.isolated_episodes import (
     IsolatedSecurityExecution,
 )
 from cutback.core.models import Identifier, StrictModel
+from cutback.core.native_fixture import NativeFixtureExecution
 from cutback.core.native_models import NativeModelContract, validate_luna_text_contract
 from cutback.core.observation import observation_scope
 from cutback.core.request_profiles import RequestContract, SourceBinding
@@ -358,6 +359,7 @@ class ExperimentPlan(StrictModel):
     content_nonce: UUID | None = None
     criteria_binding: ReviewedCriteriaBinding | None = None
     routing_execution: RoutingTrainingExecution | LearnedRoutingBinding | None = None
+    native_fixture: NativeFixtureExecution | None = None
 
     @model_serializer(mode="wrap")
     def preserve_existing_plan_hashes(self, handler):
@@ -376,10 +378,38 @@ class ExperimentPlan(StrictModel):
             result.pop("criteria_binding", None)
         if self.routing_execution is None:
             result.pop("routing_execution", None)
+        if self.native_fixture is None:
+            result.pop("native_fixture", None)
         return result
 
     @model_validator(mode="after")
     def eligibility(self):
+        if self.native_fixture is not None:
+            if (
+                self.evaluator_version != "deterministic-v3"
+                or self.source_binding is None
+                or self.episode_execution
+                or self.retrieval_execution
+                or self.compression_execution
+                or self.routing_execution
+                or self.prompt_bindings
+                or self.criteria_binding
+                or self.judge
+                or any(
+                    metric.kind == "llm_judge"
+                    for metric in [self.metric, *[c.metric for c in self.criteria]]
+                )
+                or any(
+                    model.provider != "openai"
+                    or model.routes
+                    or model.native_contract
+                    or model.prompt_cache
+                    or model.request_contract is None
+                    or model.request_contract.sdk_surface != "responses.create"
+                    for model in [self.baseline, *self.candidates]
+                )
+            ):
+                raise ValueError("NATIVE_FIXTURE_REQUIRES_QUALIFIED_PLAIN_RESPONSES_SOURCE")
         routing_training = isinstance(self.routing_execution, RoutingTrainingExecution)
         if self.routing_execution is not None:
             source_routing = self.routing_execution.source
@@ -915,6 +945,8 @@ def plan_summary(plan: ExperimentPlan, dataset: dict) -> dict:
     }
     if plan.retrieval_execution:
         summary["retrieval"] = plan.retrieval_execution.public_summary()
+    if plan.native_fixture is not None:
+        summary["native_fixture"] = plan.native_fixture.public_summary()
     if plan.compression_execution:
         summary["compression"] = plan.compression_execution.public_summary()
     references = [
@@ -1100,6 +1132,10 @@ def run(
     environment_factory=None,
 ) -> dict:
     summary = plan_summary(plan, dataset)
+    if plan.native_fixture is not None:
+        if getattr(executor, "synthetic_transport", False) is not True:
+            raise ValueError("SCRIPTED_NATIVE_REQUIRES_EXPLICIT_SYNTHETIC_EXECUTOR")
+        representative = False
     if approval_hash != summary["plan_hash"]:
         raise ValueError("NO_API_BUDGET: frozen plan approval required")
     if not summary["fits_budget"]:
@@ -1397,7 +1433,7 @@ def run(
                     "routing_compute_cost_usd": None,
                     "application_hosting_cost_usd": None,
                     "cost_evidence": "scripted_fixture_usage"
-                    if plan.routing_execution is not None
+                    if (plan.routing_execution is not None or plan.native_fixture is not None)
                     and getattr(executor, "synthetic_transport", False) is True
                     else "customer_compute_upper_bound"
                     if model.provider == "local"
@@ -1569,6 +1605,10 @@ def run(
                 "routing_hosting_cost_usd": None,
                 "automatic_application_change": False,
             }
+        if plan.native_fixture is not None:
+            report["native_fixture"] = plan.native_fixture.public_summary()
+            for recommendation in report["recommendations"]:
+                recommendation["native_fixture"] = plan.native_fixture.public_summary()
         if input_grouping is not None:
             report["input_grouping"] = input_grouping
             for recommendation in report["recommendations"]:

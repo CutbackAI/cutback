@@ -1,5 +1,42 @@
 # Optimize an application with your coding agent
 
+Local project/key creation also has a [recoverable bootstrap contract](bootstrap-recovery.md).
+It privately saves credentials and identities before writes, then reuses them
+after a lost acknowledgement. For an initial connection interruption, rerun the
+original `workflow prepare --local` command with the same options; the later
+`resume-preparation` command applies after those options have been frozen.
+Neither path renews authority or retries inference. This source extension is
+under qualification and is absent from published dev5.
+
+The source-only resumable preparation contract saves bounded setup options and
+stable scan/policy/dataset/plan identities before collector writes. If the
+connection drops during setup, run `cutback workflow resume-preparation --target
+.`. It reuses that exact intent and does not approve, queue or retry inference.
+The collector must advertise the matching protocol; older collectors are
+refused before upload. Changed source, transformed examples, rights or budgets
+reject; expired rights require a new review instead of automatic renewal.
+Historical incomplete setup without durable identities requires reconciliation.
+An unexpected returned identity or an immutable creation/content conflict is a
+hard stop. Inspect the bounded conflict receipt with `workflow status` and
+reconcile with the collector operator; do not mint replacement IDs, erase the
+journal or repeatedly upload the same content to bypass that stop.
+This extension is under qualification and is absent from published dev5.
+
+The source-only `workflow prepare --automatic` selects the qualified preparation
+adapter for one workflow: native model/output-cap search, joint model/context
+search, or source-bound learned routing. It freezes that choice before collector
+requests and resumes the same intent. Use `--workflow` when discovery finds more
+than one workflow. Keep the same permitted examples, rights reference, quality
+criteria and cost/request ceiling; preparing never approves inference. Automatic
+selection refuses conflicting explicit engine flags and ambiguous adapters.
+
+This is source eligibility, not a comparison of measured strategy economics.
+Cache reuse still needs repeat/freshness and private-response evidence; training
+still needs rights, compute and serving evidence. Their absence remains visible.
+The final plan and every separately required training, validation or untouched
+confirmation budget still require their exact approval. Published dev5 does not
+include this source addition.
+
 The source checkout also connects [training-only criterion generation, explicit review and independent confirmation](agent-reviewed-criteria.md) to this resumable application workflow. It prepares the technical artifacts automatically while keeping criteria review and each exact paid budget explicit. Published dev5 does not contain this extension.
 
 The coding agent prepares the technical work. You decide data rights, business quality, destinations and paid budgets. Cutback keeps a resumable metadata journal in the application's ignored `.cutback/agent/` directory; optional credentials are separate private files. A corporate account is unnecessary.

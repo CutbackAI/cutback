@@ -17,8 +17,9 @@ from cutback.server.worker import run_one
 pytestmark = pytest.mark.postgres
 
 
+@pytest.mark.parametrize("automatic", [False, True])
 def test_joint_agent_prepares_once_reconciles_lost_queue_and_reviews_exact_source(
-    api, tenant, tmp_path, monkeypatch
+    api, tenant, tmp_path, monkeypatch, automatic
 ):
     root = application(tmp_path)
     path = root / "app.py"
@@ -39,7 +40,8 @@ def test_joint_agent_prepares_once_reconciles_lost_queue_and_reviews_exact_sourc
         workflow=workflow,
         minimum=0.9,
         independent_labels=True,
-        joint_context=True,
+        joint_context=not automatic,
+        automatic=automatic,
         assumed_usd_per_cpu_hour="0.01",
         min_test_samples=3,
     )

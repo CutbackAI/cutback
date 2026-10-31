@@ -1,7 +1,6 @@
 """Resumable preparation of an explicitly qualified joint model/context experiment."""
 
 import hashlib
-from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 from cutback.core.request_profiles import fingerprint
@@ -60,13 +59,16 @@ def prepare(
     project = str(UUID(str(project)))
     with workspace_lock(directory):
         state = load_session(root)
-        if state["phase"] not in {"ANALYZED", "SOURCE_CHANGED", "PLAN_READY"}:
+        if state["phase"] not in {"ANALYZED", "SOURCE_CHANGED", "PLAN_READY", "PREPARING"}:
             raise ValueError("WORKFLOW_PREPARATION_ALREADY_STARTED_INSPECT_STATUS")
         source = selected_source(root, state, workflow)
         if not independent_labels or minimum is None:
             raise ValueError("JOINT_SEARCH_REQUIRES_EXPLICIT_INDEPENDENT_QUALITY_CRITERIA")
         if not files or len(files) > 20:
             raise ValueError("ONE_TO_TWENTY_PERMITTED_FILES_REQUIRED")
+        from cutback.agent_preparation import begin, expiry
+
+        preparation = begin(directory, state, "joint_model_context")
         policy = CapturePolicy(
             enabled=True,
             approval_ref=rights_ref,
@@ -74,7 +76,7 @@ def prepare(
             environments=["staging"],
             workflows=[source["workflow_id"]],
             allowed_providers=["openai"],
-            expires_at=datetime.now(UTC) + timedelta(days=1),
+            expires_at=expiry(preparation),
             retention_days=1,
             sample_rate=1,
             max_samples=10000,
@@ -129,13 +131,17 @@ def prepare(
                 "retain_case_outputs": retain_case_outputs,
             }
         )
-        if state["phase"] == "PLAN_READY":
+        from cutback.agent_preparation import bind
+
+        intent = bind(intent, preparation, body, policy)
+        if state["phase"] in {"PLAN_READY", "PREPARING"}:
             if (
                 state.get("search_mode") != "joint_model_context"
                 or state.get("preparation_sha256") != intent
             ):
                 raise ValueError("FROZEN_PLAN_CHANGED_START_NEW_SESSION")
-            return public_session(state)
+            if state["phase"] == "PLAN_READY":
+                return public_session(state)
         baseline = ModelSpec(
             key="baseline",
             provider="openai",
@@ -158,6 +164,10 @@ def prepare(
             configuration_binding=binding,
             producer_binding=producer,
         )
+        if preparation:
+            specification = specification.model_copy(
+                update={"content_nonce": UUID(preparation["content_nonce"])}
+            )
         if not plan_summary(specification, prepared)["fits_budget"]:
             raise ValueError("PROPOSED_JOINT_PLAN_EXCEEDS_BUDGET_OR_HAS_NO_VALIDATION_CASES")
         # Recheck clean source after reading examples and before any upload.
@@ -172,16 +182,58 @@ def prepare(
             rights_ref=rights_ref,
             quality_scope="heldout_independent_labels",
         )
+        state["preparation_command"] = {
+            "files": files,
+            "rights_basis": rights_basis,
+            "rights_ref": rights_ref,
+            "max_usd": str(max_usd),
+            "max_requests": max_requests,
+            "workflow": body.workflow,
+            "minimum": minimum,
+            "independent_labels": independent_labels,
+            "representative": representative,
+            "retain_case_outputs": retain_case_outputs,
+            "mapping": mapping,
+            "joint_context": True,
+            "assumed_usd_per_cpu_hour": None
+            if assumed_usd_per_cpu_hour is None
+            else str(assumed_usd_per_cpu_hour),
+            "min_test_samples": min_test_samples,
+        }
         save_session(directory, state, "PREPARING")
+        from cutback import agent_preparation as setup
+
+        setup.require_protocol(control)
         base = f"/v1/projects/{project}"
-        control("POST", base + "/scans", read_private(directory / "inventory.json"))
-        created_policy = control("POST", base + "/capture-policies", policy.model_dump(mode="json"))
+        setup.create(
+            control,
+            base,
+            "scans",
+            read_private(directory / "inventory.json"),
+            preparation,
+            state=state,
+            directory=directory,
+            response_key="scan_id",
+        )
+        created_policy = setup.create(
+            control,
+            base,
+            "capture-policies",
+            policy.model_dump(mode="json"),
+            preparation,
+            state=state,
+            directory=directory,
+        )
         state["policy_id"] = created_policy["id"]
         save_session(directory, state)
-        dataset = control(
-            "POST",
-            base + "/datasets",
+        dataset = setup.create(
+            control,
+            base,
+            "datasets",
             body.model_copy(update={"policy_id": created_policy["id"]}).model_dump(mode="json"),
+            preparation,
+            state=state,
+            directory=directory,
         )
         state["dataset_id"] = dataset["id"]
         state["dataset_split_counts"] = dataset["provenance"]["split_counts"]
@@ -189,10 +241,14 @@ def prepare(
         specification = ExperimentPlan.model_validate(
             {**specification.model_dump(mode="json"), "dataset_hash": dataset["immutable_hash"]}
         )
-        plan = control(
-            "POST",
-            base + "/experiments/plans",
-            {"dataset_id": dataset["id"], "specification": specification.model_dump(mode="json")},
+        plan = setup.plan(
+            control,
+            base,
+            dataset["id"],
+            specification,
+            preparation,
+            state=state,
+            directory=directory,
         )
         state["plan"] = plan
         save_session(directory, state, "PLAN_READY")

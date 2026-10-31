@@ -8,7 +8,7 @@ from typing import Literal
 from uuid import NAMESPACE_URL, UUID, uuid5
 
 from fastapi import Depends, HTTPException, Query
-from pydantic import Field, model_validator
+from pydantic import UUID4, Field, model_validator
 from sqlalchemy import case, delete, func, select, text, true
 from sqlalchemy.dialects.postgresql import insert
 
@@ -421,13 +421,27 @@ def install_operations(app, sessions, authorize, scope, repository):
             }
 
     @app.post("/v1/projects/{project_id}/scans", status_code=201)
-    def upload_scan(project_id: UUID, body: Inventory, auth=Depends(authorize)):
+    def upload_scan(
+        project_id: UUID, body: Inventory, request_id: UUID4 | None = None, auth=Depends(authorize)
+    ):
         scope(auth, project_id, ("editor", "admin"))
         inventory = body.model_dump(mode="json")
         inventory["project"]["root"] = "."  # Do not expose developer machine paths to other users.
         with sessions.begin() as session:
+            if request_id is not None:
+                from cutback.server.dataset_lineage import lock_preparation_identity
+
+                lock_preparation_identity(session, "source-scan", request_id)
+                previous = session.get(ScanRun, request_id, with_for_update=True)
+                if previous is not None:
+                    if previous.project_id != project_id or previous.inventory != inventory:
+                        raise HTTPException(409, "PREPARATION_IDENTITY_CONFLICT")
+                    return {"scan_id": str(previous.id), "sites": len(body.call_sites)}
             row = ScanRun(
-                project_id=project_id, commit_sha=body.project.get("commit"), inventory=inventory
+                **({"id": request_id} if request_id is not None else {}),
+                project_id=project_id,
+                commit_sha=body.project.get("commit"),
+                inventory=inventory,
             )
             session.add(row)
             session.flush()

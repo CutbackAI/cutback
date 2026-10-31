@@ -141,6 +141,8 @@ def sample_frontier(report: dict) -> dict:
 def regression_gate(report, *, expected_plan_hash, candidate=None, sample_only=False):
     """Fail closed for CI. Passing this gate never approves or deploys a change."""
     reasons = []
+    if report.get("native_fixture") and not sample_only:
+        reasons.append("fixture_transport_cannot_verify_real_model_quality")
     from cutback.core.evaluation_criteria import source_evaluator_eligible
 
     if report.get("status") != "COMPLETED" or report.get("billing_complete") is not True:

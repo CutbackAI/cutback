@@ -207,12 +207,20 @@ test("routing training, private fitting, independent validation and confirmation
     .click();
   expect((await validationResponse).status()).toBe(201);
   await approve();
+  const validationQueued = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/experiments") &&
+      response.request().method() === "POST",
+  );
   await page
     .getByRole("button", {
       name: "Queue this approved routing stage",
       exact: true,
     })
     .click();
+  const queuedValidation = await validationQueued;
+  expect(queuedValidation.status()).toBe(202);
+  const validationRunId = (await queuedValidation.json()).id;
   await completed();
   const confirmation = page.getByRole("form", {
     name: "Prepare untouched routing confirmation",
@@ -223,6 +231,28 @@ test("routing training, private fitting, independent validation and confirmation
       .getByLabel("Completed routing validation run")
       .locator("option"),
   ).toHaveCount(1);
+  await expect(
+    confirmation.getByLabel("Completed routing validation run"),
+  ).toHaveValue(validationRunId);
+  const validationReport = await page.request.get(
+    `${process.env.CUTBACK_UI_URL}/v1/projects/${process.env.CUTBACK_UI_PROJECT}/experiments/${validationRunId}`,
+    { headers: { Authorization: "Bearer " + process.env.CUTBACK_UI_KEY } },
+  );
+  expect(validationReport.status()).toBe(200);
+  const retained = await validationReport.json();
+  expect(retained.status).toBe("COMPLETED");
+  expect(
+    retained.results.billing_complete,
+    "VALIDATION_BILLING_INCOMPLETE",
+  ).toBe(true);
+  expect(
+    retained.results.recommendations[0]?.quality_gate_passed,
+    "VALIDATION_QUALITY_GATE_NOT_PASSED",
+  ).toBe(true);
+  expect(
+    retained.results.recommendations[0]?.cheaper_on_sample,
+    "VALIDATION_COST_GATE_NOT_PASSED",
+  ).toBe(true);
   await confirmation.getByLabel("Maximum USD for this stage").fill("2");
   await confirmation.getByLabel("Maximum requests for this stage").fill("500");
   let preparationAttempts = 0;
@@ -232,10 +262,17 @@ test("routing training, private fitting, independent validation and confirmation
   await page.route(confirmationPath, async (route) => {
     preparationAttempts++;
     const body = route.request().postDataJSON();
+    expect(body.validation_run_id).toBe(validationRunId);
     if (preparationAttempts === 1) {
       preparedRequest = body.request_id;
       const committed = await route.fetch();
-      expect(committed.status()).toBe(201);
+      const acknowledgement = await committed.json().catch(() => ({}));
+      const code =
+        typeof acknowledgement.code === "string" &&
+        /^[A-Z_]{5,120}$/.test(acknowledgement.code)
+          ? acknowledgement.code
+          : "UNAVAILABLE";
+      expect(committed.status(), "CONFIRMATION_DRAFT_" + code).toBe(201);
       preparedId = (await committed.json()).id;
       return route.fulfill({
         status: 503,

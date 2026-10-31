@@ -2,6 +2,8 @@
 
 Find where an AI application spends money. Test cheaper alternatives against its quality requirements. Review the evidence before changing anything.
 
+**Start with a small application:** [the independent support desk](https://github.com/CutbackAI/support-desk-example) routes tickets with local model fixtures. Run it first, connect the metadata collector, and see what reaches the report. No provider account or paid inference is needed; it works without Cutback too.
+
 Cutback is an Apache-2.0 Python tool with an offline scanner and a self-hosted collector, PostgreSQL worker and dashboard. **Pre-alpha: synthetic tests demonstrate the workflow; production behavior and real customer savings are not validated.**
 
 [What works, which version to install, and what remains](https://github.com/CutbackAI/cutback/blob/main/docs/status.md). The GitHub source contains workflows that are not yet in the published PyPI package. The source-built demo also requires Git on PATH to prepare its source-bound retrieval application; the collector image includes a pinned Git package.
