@@ -1,5 +1,21 @@
 # Implementation progress
 
+Preparation compatibility follow-up: the full installed Windows attempt was
+stopped after a deterministic support-desk correction failure; it is not a full
+pass. The unchanged installed focused journey failed in **119.02 seconds**, and
+the existing paired-case PostgreSQL regression independently reproduced HTTP 500
+in **9.00 seconds**. An optional request-ID parameter had displaced the internal
+callback's positional authorization argument. Authorization is again the third
+argument, request identity is keyword-only, and the callback passes `auth=auth`.
+The existing correction plus preparation checks now pass **ten in 14.84 seconds**
+on default SDK and **ten in 15.36 seconds** on SDK 3. The actual support-desk,
+encrypted-case revision, administrator/viewer/mobile/accessibility browser journey
+passes **one in 104.97 seconds**. API/type generation and React build pass with
+unchanged generated application bytes; Ruff/mypy **347 modules** pass. SDK 3 CI
+now explicitly includes the existing correction regression. Automatic failure
+screenshots are disabled for private review surfaces. Fresh artifacts and full
+installed/current-head hosted qualification remain required.
+
 The first hosted preparation SDK 3.13 run retained **one failure / 1,612 passes /
 14 skips in 974.60 seconds**: its CLI-help test searched raw colored output for
 an option split by ANSI styling. An owned network-disabled Linux container
