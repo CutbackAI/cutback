@@ -238,6 +238,7 @@ def main(
     joint_model_context=False,
     joint_model_retrieval=False,
     workload_portfolio=False,
+    workload_portfolio_demo=False,
     reviewed_criteria=False,
     semantic_rubrics=False,
     learned_routing=False,
@@ -365,7 +366,13 @@ manifest=seed_support_desk(
  joint_model_context=JOINT_EXPECTED,reviewed_criteria=CRITERIA_EXPECTED,
  semantic_rubrics=RUBRICS_EXPECTED,learned_routing=ROUTING_EXPECTED and not SOURCE_BOUND_EXPECTED,
  source_routing=SOURCE_BOUND_EXPECTED,generated_scenarios=SCENARIOS_EXPECTED,
- reactive_users=REACTIVE_EXPECTED,joint_model_retrieval=RETRIEVAL_EXPECTED)
+ reactive_users=REACTIVE_EXPECTED,joint_model_retrieval=RETRIEVAL_EXPECTED,
+ workload_portfolio=WORKLOAD_DEMO_EXPECTED)
+if WORKLOAD_DEMO_EXPECTED:
+ sample=manifest["workload_portfolio_sample"]
+ assert sample["observed_native_calls"]==8 and sample["modeled_potential_hits"]==3
+ assert sample["rollback_verified"] is True and sample["runtime_cache_activated"] is False
+ assert sample["paid_provider_calls"]==0 and sample["real_model_quality_verified"] is False
 if RETRIEVAL_EXPECTED:
  assert manifest["agent_retrieval_sample"]["review_status"]=="READY_FOR_LOCAL_REVIEW"
  assert manifest["agent_retrieval_sample"]["rollback_verified"] is True
@@ -420,14 +427,21 @@ print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":mani
                 code = code.replace("REACTIVE_EXPECTED", repr(reactive_users))
                 code = code.replace("JOINT_EXPECTED", repr(joint_model_context))
                 code = code.replace("RETRIEVAL_EXPECTED", repr(joint_model_retrieval))
+                code = code.replace("WORKLOAD_DEMO_EXPECTED", repr(workload_portfolio_demo))
                 manifest = json.loads(inside(container, code, values).strip().splitlines()[-1])
                 base = "/v1/projects/" + manifest["project_id"]
                 usage = client.get(
                     base + "/usage?traffic_kind=application&group_by=workflow"
                 ).json()
-                assert usage["summary"]["observed_attempts"] == 19 + 4 * runtime_guardrails
-                assert len(usage["groups"]) == 3 + runtime_guardrails
-                source_groups = [group for group in usage["groups"] if "app.py" in group["label"]]
+                assert usage["summary"]["observed_attempts"] == (
+                    19 + 4 * runtime_guardrails + 8 * workload_portfolio_demo
+                )
+                assert len(usage["groups"]) == 3 + runtime_guardrails + workload_portfolio_demo
+                source_groups = [
+                    group
+                    for group in usage["groups"]
+                    if "app.py" in group["label"] and "classify_reuse" not in group["label"]
+                ]
                 assert len(source_groups) == 2
                 assert sum(group["observed_attempts"] for group in source_groups) == 12
                 assert client.get(base + "/changes").json()
@@ -500,17 +514,18 @@ with sessions() as session:
    rotating.rekey(row.project_id,row.native_profile_ref)
    assert new_only.get(row.project_id,row.native_profile_ref)==profile_before
  profile_objects=sum(row.native_profile_ref is not None for row in rows)
- assert profile_objects==8
+ assert profile_objects==8+8*WORKLOAD_DEMO_EXPECTED
  analyses=session.scalars(select(NativeProfileAnalysis)).all()
- assert len(analyses)==1 and analyses[0].state=="COMPLETED"
- assert analyses[0].summary["profiled_attempts"]==8
- assert analyses[0].summary["modeled_potential_hits"]==3
- assert analyses[0].summary["realized_savings_usd"] is None
- restored_metadata=metadata_digest(retained_metadata(session,analyses[0],as_of=False))
- assert restored_metadata==analyses[0].summary["metadata_evidence_sha256"]
- profile_rows=[row for row in rows
-               if row.project_id==analyses[0].project_id and row.native_profile_ref]
- assert analyses[0].expires_at<=min(row.expires_at for row in profile_rows)
+ assert len(analyses)==1+WORKLOAD_DEMO_EXPECTED
+ for analysis in analyses:
+  assert analysis.state=="COMPLETED" and analysis.summary["profiled_attempts"]==8
+  assert analysis.summary["modeled_potential_hits"]==3
+  assert analysis.summary["realized_savings_usd"] is None
+  restored_metadata=metadata_digest(retained_metadata(session,analysis,as_of=False))
+  assert restored_metadata==analysis.summary["metadata_evidence_sha256"]
+  profile_rows=[row for row in rows
+                if row.project_id==analysis.project_id and row.native_profile_ref]
+  assert analysis.expires_at<=min(row.expires_at for row in profile_rows)
  caches=session.scalars(select(CacheEntry)).all()
  assert caches
  for row in caches:
@@ -600,7 +615,8 @@ with sessions() as session:
   from cutback.server.plan_artifacts import load_plan
   from cutback.server.workload_portfolio import validate_binding
   workload_plans=[row for row in plans
-                  if row.specification["public_specification"].get("workload_portfolio")]
+                  if row.specification["public_specification"].get("workload_portfolio")
+                  and not row.specification["public_specification"].get("native_fixture")]
   assert len(workload_plans)==1
   planned=workload_plans[0]
   assert planned.approval_status=="pending"
@@ -612,6 +628,31 @@ with sessions() as session:
   assert current==frozen.workload_portfolio.assessment
   assert any(candidate.exact_cache for candidate in frozen.candidates)
   assert current.paid_calls_authorized is False and current.realized_savings_usd is None
+ if WORKLOAD_DEMO_EXPECTED:
+  from cutback.server.plan_artifacts import load_plan
+  from cutback.server.workload_portfolio import validate_binding,economic_receipt
+  from cutback.evals.search import regression_gate
+  demo_plans=[row for row in plans
+              if row.specification["public_specification"].get("workload_portfolio")
+              and row.specification["public_specification"].get("native_fixture")]
+  assert len(demo_plans)==2
+  for planned in demo_plans:
+   frozen=load_plan(new_only,planned.project_id,planned.specification)
+   assert frozen.native_fixture is not None and frozen.workload_portfolio is not None
+   assert validate_binding(session,planned.project_id,frozen)==frozen.workload_portfolio.assessment
+   executed=session.scalar(select(ExperimentRunRecord).where(
+    ExperimentRunRecord.plan_id==planned.id))
+   assert executed.status=="COMPLETED" and executed.results["billing_complete"] is True
+   assert executed.results["synthetic_execution"]["real_model_quality_verified"] is False
+   expected=economic_receipt(session,planned.project_id,frozen,executed.results)
+   assert executed.results["workload_portfolio"]==expected["workload_portfolio"]
+   if frozen.split=="test":
+    assert executed.results["lineage"]["fresh_test_claim"] is True
+    assert frozen.candidates[0].exact_cache is not None
+    assert regression_gate(executed.results,expected_plan_hash=planned.specification["plan_hash"],
+                           sample_only=True)["passed"] is True
+    assert regression_gate(executed.results,expected_plan_hash=planned.specification["plan_hash"])[
+     "passed"] is False
  if REACTIVE_EXPECTED:
   from cutback.server.execution_db import ExecutionCall
   from cutback.server.plan_artifacts import load_plan
@@ -774,6 +815,7 @@ engine.dispose()
                     .replace("JOINT_EXPECTED", repr(joint_model_context))
                     .replace("RETRIEVAL_EXPECTED", repr(joint_model_retrieval))
                     .replace("WORKLOAD_EXPECTED", repr(workload_portfolio))
+                    .replace("WORKLOAD_DEMO_EXPECTED", repr(workload_portfolio_demo))
                     .replace("CRITERIA_EXPECTED", repr(reviewed_criteria))
                     .replace("RUBRICS_EXPECTED", repr(semantic_rubrics))
                     .replace("ROUTING_EXPECTED", repr(learned_routing or source_routing))
@@ -916,6 +958,7 @@ engine.dispose()
                     "source_bound_routing_and_both_tree_checks": source_routing,
                     "joint_retrieval_confirmation_and_both_tree_checks": joint_model_retrieval,
                     "pending_workload_portfolio_and_source_window_restored": workload_portfolio,
+                    "complete_workload_fixture_confirmation_restored": workload_portfolio_demo,
                     "reviewed_generated_development_scenarios_restored": generated_scenarios,
                     "reactive_user_contracts_receipts_and_trajectories_restored": reactive_users,
                     "restored_tables": len(after),
@@ -962,6 +1005,7 @@ if __name__ == "__main__":
     parser.add_argument("--joint-model-context", action="store_true")
     parser.add_argument("--joint-model-retrieval", action="store_true")
     parser.add_argument("--workload-portfolio", action="store_true")
+    parser.add_argument("--workload-portfolio-demo", action="store_true")
     parser.add_argument("--reviewed-criteria", action="store_true")
     parser.add_argument("--semantic-rubrics", action="store_true")
     parser.add_argument("--learned-routing", action="store_true")
@@ -979,6 +1023,7 @@ if __name__ == "__main__":
         joint_model_context=args.joint_model_context,
         joint_model_retrieval=args.joint_model_retrieval,
         workload_portfolio=args.workload_portfolio,
+        workload_portfolio_demo=args.workload_portfolio_demo,
         reviewed_criteria=args.reviewed_criteria,
         semantic_rubrics=args.semantic_rubrics,
         learned_routing=args.learned_routing,
