@@ -13,7 +13,7 @@ uv run python examples/retrieval-optimization/app.py "refund return deadline for
 uv run python examples/retrieval-optimization/check_application.py
 ```
 
-The first command prints the actual reference frame. The second checks that retrieval still supplies the independent synthetic answer fact. It makes no inference call and does not establish real model quality. `app.answer(client, question)` is the separately callable native Responses integration; only use it with an explicitly authorized client and budget. Cutback does not obtain provider credentials from this example.
+The first command prints the actual reference frame. The second checks retrieval and calls `app.answer` through the pinned native Responses SDK with an intercepted success and outage. Both HTTP replies are synthetic; no inference endpoint is contacted and real model quality is not established. To call a real provider, supply a separately authorized client and budget. Cutback does not obtain provider credentials from this example.
 
 ## Try the complete guided workflow
 
@@ -31,9 +31,16 @@ the actual corpus and questions after explicit authorization. Validation,
 separate confirmation and source proposal use the same resumable workflow.
 This extension is under qualification and is absent from published dev5.
 
-`cutback demo --agent-retrieval` runs that automatic path with synthetic native
+`cutback demo --agent-retrieval` runs the fixed-model path with synthetic native
 responses, real PostgreSQL, checks on both application trees and verified
 rollback. Inspect its separate validation and confirmation in Retrieval history.
+
+`cutback demo --joint-model-retrieval` runs the new joint model/output/retrieval
+path, including native SDK success/outage checks against both committed trees.
+The [joint walkthrough](../../docs/joint-retrieval.md) explains explicit corpus
+authorization, exact approval, candidate selection, confirmation and combined
+source patch/rollback. The manual steps below preserve the fixed-model workflow;
+automatic source preparation now selects the joint engine.
 
 For your own local synthetic trial, copy this directory outside Cutback and initialize a clean Git repository there. Keep generated requests/receipts outside that source tree. The application has no dependency on another private product.
 

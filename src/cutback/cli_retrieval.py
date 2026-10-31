@@ -6,11 +6,81 @@ from typing import Annotated
 import typer
 
 
-def register_retrieval(app, output, request, fail):
+def register_retrieval(app, output, request, fail, *, joint=False):
     group = typer.Typer(
         no_args_is_help=True, help="Prepare corpus retrieval search and review changes."
     )
-    app.add_typer(group, name="retrieval")
+    route = "model-retrieval" if joint else "retrieval"
+    app.add_typer(group, name=route)
+
+    def private_output(value, destination):
+        from cutback.core.workspace import write_private_output
+
+        write_private_output(destination, value)
+
+    if joint:
+        output = private_output
+
+    def prepare_change(root, value):
+        if joint:
+            from cutback.joint_retrieval_changes import JointRetrievalProposal
+            from cutback.joint_retrieval_changes import prepare_patch as prepare_joint
+
+            return prepare_joint(root, JointRetrievalProposal.model_validate(value))
+        from cutback.retrieval_changes import RetrievalProposal, prepare_patch
+
+        return prepare_patch(root, RetrievalProposal.model_validate(value))
+
+    def artifact_output(value, destination):
+        from cutback.core.workspace import write_private_text_output
+
+        output(value, destination)
+        write_private_text_output(destination.with_suffix(".patch"), value["diff"])
+        write_private_text_output(
+            destination.with_suffix(".rollback.patch"), value["rollback_diff"]
+        )
+
+    def preflight(destination, root):
+        from cutback.core.workspace import prepare_private_output
+
+        paths = [
+            destination,
+            destination.with_suffix(".patch"),
+            destination.with_suffix(".rollback.patch"),
+        ]
+        if len(set(path.absolute() for path in paths)) != 3 or any(
+            path.resolve().is_relative_to(root.resolve()) for path in paths
+        ):
+            raise ValueError("OUTPUT_MUST_STAY_OUTSIDE_SOURCE_TREE")
+        for path in paths:
+            prepare_private_output(path)
+
+    if joint:
+
+        @group.command("inspect-producer")
+        def inspect_native(
+            root: Path, producer: str, destination: Annotated[Path, typer.Option("--output")]
+        ):
+            """Parse the exact native consumer and tracked corpus identity. Never executes."""
+            from cutback.retrieval_source import inspect_producer
+
+            try:
+                preflight(destination, root)
+                settings, binding, native = inspect_producer(root, producer)
+                output(
+                    {
+                        "settings": settings.model_dump(mode="json"),
+                        "configuration_binding": binding.model_dump(mode="json"),
+                        "producer_binding": native.model_dump(mode="json"),
+                    },
+                    destination,
+                )
+            except (ValueError, OSError):
+                fail(
+                    "JOINT_RETRIEVAL_PRODUCER_NOT_QUALIFIED",
+                    "Use a clean tracked qualified corpus consumer "
+                    "and private output outside its tree.",
+                )
 
     @group.command("inspect-config")
     def inspect(
@@ -61,10 +131,14 @@ def register_retrieval(app, output, request, fail):
         try:
             body = read(request_file)
             project = str(UUID(project))
+            if joint:
+                from cutback.core.workspace import prepare_private_output
+
+                prepare_private_output(destination)
         except (OSError, ValueError):
             fail("RETRIEVAL_DRAFT_INPUT_INVALID", "Use the documented retrieval draft contract.")
         output(
-            request("POST", endpoint, f"/v1/projects/{project}/retrieval/draft", json=body),
+            request("POST", endpoint, f"/v1/projects/{project}/{route}/draft", json=body),
             destination,
         )
 
@@ -78,12 +152,18 @@ def register_retrieval(app, output, request, fail):
         max_usd: Annotated[str, typer.Option("--max-usd")],
         max_requests: int = 100,
         max_wall_seconds: int = 300,
+        candidate: str | None = None,
     ):
         """Derive one selected alternative on untouched groups. Approval is still required."""
         from uuid import UUID
 
         from cutback.evals.experiments import Budget
 
+        if candidate is not None and not joint:
+            fail(
+                "EXPLICIT_CANDIDATE_REQUIRES_JOINT_RETRIEVAL",
+                "Use the joint contract to select an explicit candidate.",
+            )
         try:
             project = str(UUID(project))
             run = str(UUID(validation_run))
@@ -94,6 +174,10 @@ def register_retrieval(app, output, request, fail):
                     "max_wall_seconds": max_wall_seconds,
                 }
             )
+            if joint:
+                from cutback.core.workspace import prepare_private_output
+
+                prepare_private_output(destination)
         except ValueError:
             fail(
                 "RETRIEVAL_CONFIRMATION_INPUT_INVALID",
@@ -103,8 +187,12 @@ def register_retrieval(app, output, request, fail):
             request(
                 "POST",
                 endpoint,
-                f"/v1/projects/{project}/retrieval/confirmation",
-                json={"validation_run_id": run, "budget": budget.model_dump(mode="json")},
+                f"/v1/projects/{project}/{route}/confirmation",
+                json={
+                    "validation_run_id": run,
+                    "budget": budget.model_dump(mode="json"),
+                    **({"candidate": candidate} if joint else {}),
+                },
             ),
             destination,
         )
@@ -125,33 +213,27 @@ def register_retrieval(app, output, request, fail):
         from pydantic import TypeAdapter
 
         from cutback.core.models import Identifier
-        from cutback.retrieval_changes import RetrievalProposal, prepare_patch
 
         try:
             project = str(UUID(project))
             run = str(UUID(confirmation_run))
             purpose = TypeAdapter(Identifier).validate_python(purpose)
-            if destination.resolve().is_relative_to(root.resolve()):
-                raise ValueError("output")
+            preflight(destination, root)
             source = request(
                 "POST",
                 endpoint,
-                f"/v1/projects/{project}/retrieval/{run}/proposal",
+                f"/v1/projects/{project}/{route}/{run}/proposal",
                 json={"purpose": purpose},
                 token_env="CUTBACK_ADMIN_TOKEN",
             )
-            change = prepare_patch(root, RetrievalProposal.model_validate(source))
+            change = prepare_change(root, source)
         except (ValueError, OSError):
             fail(
                 "RETRIEVAL_PROPOSAL_NOT_QUALIFIED",
                 "Verify untouched confirmation, current policy and exact clean source. "
                 "Write output outside that tree.",
             )
-        output(change, destination)
-        destination.with_suffix(".patch").write_text(change["diff"], encoding="utf-8", newline="")
-        destination.with_suffix(".rollback.patch").write_text(
-            change["rollback_diff"], encoding="utf-8", newline=""
-        )
+        artifact_output(change, destination)
 
     @group.command("patch")
     def patch(
@@ -161,15 +243,15 @@ def register_retrieval(app, output, request, fail):
     ):
         """Materialize a proposal or exact agent change as diff/rollback. Never applies."""
         from cutback.cli_checks import read
-        from cutback.retrieval_changes import RetrievalProposal, prepare_patch
 
         try:
-            if destination.resolve().is_relative_to(root.resolve()):
-                raise ValueError("output")
+            preflight(destination, root)
             downloaded = read(proposal_file)
-            agent_change = downloaded.get("version") == "cutback.retrieval-change.v1"
+            agent_change = downloaded.get("version") == (
+                "cutback.joint-retrieval-change.v1" if joint else "cutback.retrieval-change.v1"
+            )
             proposed = downloaded.get("proposal") if agent_change else downloaded
-            result = prepare_patch(root, RetrievalProposal.model_validate(proposed))
+            result = prepare_change(root, proposed)
             if agent_change and downloaded != result:
                 raise ValueError("RETRIEVAL_AGENT_CHANGE_MODIFIED")
         except (ValueError, OSError):
@@ -178,11 +260,7 @@ def register_retrieval(app, output, request, fail):
                 "Use the exact clean application and downloaded proposal. "
                 "A local JSON file is not an independent server attestation.",
             )
-        output(result, destination)
-        destination.with_suffix(".patch").write_text(result["diff"], encoding="utf-8", newline="")
-        destination.with_suffix(".rollback.patch").write_text(
-            result["rollback_diff"], encoding="utf-8", newline=""
-        )
+        artifact_output(result, destination)
 
     @group.command("review")
     def review(
@@ -197,7 +275,11 @@ def register_retrieval(app, output, request, fail):
     ):
         """Verify exact local checks and optionally create a review ref. Never pushes."""
         from cutback.cli_checks import read
-        from cutback.retrieval_changes import review_change
+
+        if joint:
+            from cutback.joint_retrieval_changes import review_change
+        else:
+            from cutback.retrieval_changes import review_change
 
         try:
             if any(

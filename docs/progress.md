@@ -1,5 +1,36 @@
 # Implementation progress
 
+31 October 2026 joint native/retrieval extension, **working source under
+qualification**: [walkthrough](joint-retrieval.md). Automatic source preparation
+now compares qualified native model/output-only, retrieval-only and combined
+alternatives on the same questions. A separate v18 contract preserves the v6
+golden plan hash. Current-policy confirmation, exact budget recovery, canonical
+report identity, both-file source diffs, native consumer success/outage checks,
+nonoverwriting local review references and byte-exact rollback are connected.
+Unknown CPU/native costs cannot select a candidate. Preparation advertises any
+budget-reduced candidate count without shrinking examples or quality criteria.
+
+The dashboard routes historical runs by their stored contract, permits explicit
+joint-candidate/confirmation-budget review, and uses producer inspection to
+freeze source-bound baseline fields. Authenticated fixed-model and joint browser
+journeys both passed, including desktop/mobile accessibility, viewer denial,
+interrupted queue reconciliation and stale asynchronous inspection handling.
+The build and all **14 frontend units** pass. Source typing passes **380 modules**;
+lint/format and the outside-policy publication-input check pass with zero findings.
+The joint core/source-patch/CLI checkpoint passed **19 in 94.55 seconds**.
+Initial integration runs caught incorrect test axis names and an incorrect
+revocation request. The corrected joint PostgreSQL/security/core/source-patch/CLI
+scope passed **22 in 167.96 seconds**. Pinned SDK3 qualification is still running;
+the earlier failures remain recorded separately.
+
+The guided demo now executes either the original retrieval comparison or the
+agent comparison, avoiding duplicate use of the same protected holdout groups.
+The full image/rekey recovery gate is extended to the joint contract; execution
+of that new gate, installed artifacts and hosted acceptance remain pending.
+This does not close cross-engine cache/routing/compression/training selection,
+full task economics, the remaining market baseline or customer qualification.
+No paid call, production deployment or new PyPI release occurred.
+
 31 October 2026 economic arithmetic follow-up, **working source under
 qualification**: two real PostgreSQL negatives reproduced an exact-budget
 reservation being admitted after ambient rounding and a settled total changing

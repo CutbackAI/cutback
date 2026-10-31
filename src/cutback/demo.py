@@ -115,6 +115,7 @@ def seed_support_desk(
     generated_scenarios=False,
     reactive_users=False,
     agent_retrieval=False,
+    joint_model_retrieval=False,
 ):
     """Use actual scoped HTTP APIs and the durable worker, retaining the sample project."""
     require_demo_git()
@@ -381,14 +382,18 @@ def seed_support_desk(
             campaign_sample = seed_campaign(app, control, project["id"], ingest, workspace)
             from cutback.demo_retrieval import seed_retrieval
 
-            retrieval_sample = seed_retrieval(app, control, project["id"], workspace)
             agent_retrieval_sample = None
-            if agent_retrieval:
+            if agent_retrieval or joint_model_retrieval:
                 from cutback.demo_agent_retrieval import seed_agent_retrieval
 
                 agent_retrieval_sample = seed_agent_retrieval(
-                    app, control, project["id"], workspace
+                    app, control, project["id"], workspace, joint=joint_model_retrieval
                 )
+                retrieval_sample = agent_retrieval_sample
+            else:
+                # These paths share held-out corpus groups. Never run both and
+                # present a second use of the same questions as fresh confirmation.
+                retrieval_sample = seed_retrieval(app, control, project["id"], workspace)
             from cutback.demo_compression import seed_compression
 
             # These modes share a corpus. Execute one comparison so its protected
@@ -647,9 +652,12 @@ def launch_demo(
     generated_scenarios=False,
     reactive_users=False,
     agent_retrieval=False,
+    joint_model_retrieval=False,
 ):
     """Own one temporary Docker database. Never connect to production or reuse app keys."""
     require_demo_git()
+    if agent_retrieval and joint_model_retrieval:
+        raise ValueError("CHOOSE_FIXED_OR_JOINT_RETRIEVAL_DEMO")
     if learned_routing and source_routing:
         raise ValueError("CHOOSE_LEARNED_ROUTING_OR_SOURCE_ROUTING_DEMO")
     if security_suite and tool_image_id is None:
@@ -792,6 +800,7 @@ def launch_demo(
                 generated_scenarios=generated_scenarios,
                 reactive_users=reactive_users,
                 agent_retrieval=agent_retrieval,
+                joint_model_retrieval=joint_model_retrieval,
             )
             if learned_routing or source_routing:
                 from cutback.demo_routing import routing_worker

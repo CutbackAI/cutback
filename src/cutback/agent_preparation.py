@@ -189,6 +189,7 @@ def resume(root, control):
             "exact_cache_contract",
             "retrieval",
             "retrieval_corpus_authorized",
+            "joint_retrieval",
         }
         if set(options) - allowed:
             raise ValueError("PREPARATION_OPTIONS_INVALID")

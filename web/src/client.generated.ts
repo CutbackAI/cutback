@@ -193,6 +193,15 @@ export function createSDK(request:Request) {return {
   proposal_v1_projects__project_id__model_context__run_id__proposal_post: (args:{project_id:string;run_id:string;body:components["schemas"]["ContentPurpose"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/model-context/${encodeURIComponent(String(args.run_id))}/proposal`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  draft_v1_projects__project_id__model_retrieval_draft_post: (args:{project_id:string;body:components["schemas"]["JointRetrievalDraftInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/model-retrieval/draft`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  confirm_v1_projects__project_id__model_retrieval_confirmation_post: (args:{project_id:string;body:components["schemas"]["JointRetrievalConfirmationInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/model-retrieval/confirmation`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  proposal_v1_projects__project_id__model_retrieval__run_id__proposal_post: (args:{project_id:string;run_id:string;body:components["schemas"]["ContentPurpose"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/model-retrieval/${encodeURIComponent(String(args.run_id))}/proposal`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   draft_v1_projects__project_id__criteria_drafts_post: (args:{project_id:string;body:components["schemas"]["CriteriaDraftInput"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/criteria/drafts`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},

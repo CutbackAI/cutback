@@ -2,13 +2,18 @@
 
 When discovery reports a qualified retrieval producer, inspect the installed
 `workflow prepare --help` and `docs/agent-retrieval.md`. The source extension
-supports `--automatic` or explicit `--retrieval`, with separate
+supports joint model/output/retrieval with `--automatic` or `--joint-retrieval`,
+and the original fixed-model v6 engine with explicit `--retrieval`. Read
+`docs/joint-retrieval.md` before preparing a combined change. Both require separate
 `--retrieval-corpus-authorized`, permitted labeled questions, corpus rights,
 quality criteria and native budget. Never infer corpus permission from a scan.
 Prepare first, approve the exact validation hash, then freeze one eligible
 candidate for separately approved untouched confirmation. Unknown CPU/native
 cost cannot select a winner. Resume the same nonbillable setup or confirmation
-intent after a lost reply; never retry uncertain paid execution. The settings
+intent after a lost reply; never retry uncertain paid execution. Match each
+artifact's contract: joint changes use `model-retrieval patch/review`, v6 changes
+use `retrieval patch/review`. Joint proposals bind native literals and settings;
+neither route can silently drop a changed file. The source
 proposal still requires checks on both source trees, declared consumer coverage
 and exact rollback. Synthetic evidence remains local review only. This extension
 is absent from published dev5 and does not cover arbitrary retrieval frameworks.

@@ -9,6 +9,8 @@ from cutback.core.inventory import workflow_identity
 from cutback.core.request_profiles import fingerprint, prepare_profile
 from cutback.core.workspace import private_directory, read_private, workspace_lock, write_private
 
+RETRIEVAL_SEARCH_MODES = {"retrieval_search", "joint_model_retrieval"}
+
 
 def now():
     return datetime.now(UTC).isoformat()
@@ -69,6 +71,7 @@ def next_action(state):
     if phase == "PREPARING_CONFIRMATION" and state.get("search_mode") in {
         "reviewed_criteria",
         "retrieval_search",
+        "joint_model_retrieval",
     }:
         return {
             "code": "RESUME_SAME_CONFIRMATION_PREPARATION",
@@ -120,7 +123,7 @@ def next_action(state):
         if state.get("retrieval_producers") and not state.get("profiles"):
             return {
                 "code": "REVIEW_DATA_RIGHTS_AND_PREPARE_RETRIEVAL",
-                "tool": "cutback workflow prepare --retrieval",
+                "tool": "cutback workflow prepare --automatic",
                 "requires": [
                     "permitted_questions_and_bound_corpus",
                     "explicit_corpus_authorization",
@@ -225,6 +228,7 @@ def next_action(state):
             "joint_model_context",
             "reviewed_criteria",
             "retrieval_search",
+            "joint_model_retrieval",
         } and not state.get("confirmation"):
             return {
                 "code": "SELECT_CANDIDATE_AND_FREEZE_CONFIRMATION",
@@ -547,7 +551,7 @@ def strategy_assessments(profiles):
 
 
 def selected_profile(root, state, workflow=None):
-    if state.get("search_mode") == "retrieval_search":
+    if state.get("search_mode") in RETRIEVAL_SEARCH_MODES:
         from cutback.agent_retrieval import selected_source
 
         return selected_source(root, state, workflow)
@@ -655,6 +659,7 @@ def prepare(
     exact_cache_contract=None,
     retrieval=False,
     retrieval_corpus_authorized=False,
+    joint_retrieval=False,
 ):
     """Read only explicitly permitted files; upload to the chosen encrypted collector; no calls."""
     from cutback.core.models import Identifier
@@ -674,6 +679,7 @@ def prepare(
             or joint_context
             or learned_routing
             or retrieval
+            or joint_retrieval
             or criteria_generator_provider
         ):
             raise ValueError("EXACT_CACHE_REQUIRES_NATIVE_MODEL_PORTFOLIO")
@@ -692,6 +698,7 @@ def prepare(
                 joint_context,
                 learned_routing,
                 retrieval,
+                joint_retrieval,
                 campaign_generator_provider is not None,
                 criteria_generator_provider is not None,
             )
@@ -705,9 +712,12 @@ def prepare(
         joint_context = selected["mode"] == "joint_model_context"
         learned_routing = selected["mode"] == "source_routing"
         retrieval = selected["mode"] == "retrieval_search"
+        joint_retrieval = selected["mode"] == "joint_model_retrieval"
         if cache_contract is not None and selected["mode"] != "native_search":
             raise ValueError("EXACT_CACHE_REQUIRES_NATIVE_MODEL_PORTFOLIO")
-    if retrieval:
+    if retrieval or joint_retrieval:
+        if retrieval and joint_retrieval:
+            raise ValueError("CHOOSE_FIXED_MODEL_OR_JOINT_RETRIEVAL_SEARCH")
         if any(
             (
                 search,
@@ -740,6 +750,7 @@ def prepare(
             assumed_usd_per_cpu_hour=assumed_usd_per_cpu_hour,
             min_test_samples=min_test_samples,
             corpus_authorized=retrieval_corpus_authorized,
+            joint=joint_retrieval,
         )
     if retrieval_corpus_authorized:
         raise ValueError("CORPUS_AUTHORIZATION_REQUIRES_RETRIEVAL_PREPARATION")
@@ -1156,7 +1167,7 @@ def advance(root, control, *, plan_hash=None, approval_ref=None):
             state["decisions"] = report["results"].get("recommendations", [])
             from cutback.evals.search import sample_frontier
 
-            if state.get("search_mode") == "retrieval_search":
+            if state.get("search_mode") in RETRIEVAL_SEARCH_MODES:
                 from cutback.agent_retrieval import component_frontier
 
                 state["search_results"] = component_frontier(report["results"])
@@ -1184,6 +1195,7 @@ def advance(root, control, *, plan_hash=None, approval_ref=None):
                         "joint_model_context",
                         "reviewed_criteria",
                         "retrieval_search",
+                        "joint_model_retrieval",
                     }
                     and not state.get("confirmation")
                     else "cutback workflow proposal --purpose-reference REVIEW"
@@ -1233,6 +1245,17 @@ def gate(root, control, *, candidate=None, sample_only=False):
                 candidate=candidate,
                 sample_only=sample_only,
             )
+        if state.get("search_mode") == "joint_model_retrieval":
+            from cutback.evals.joint_retrieval_planning import (
+                regression_gate as retrieval_joint_gate,
+            )
+
+            return retrieval_joint_gate(
+                report["results"],
+                expected_plan_hash=state["plan"]["plan_hash"],
+                candidate=candidate,
+                sample_only=sample_only,
+            )
         if state.get("search_mode") == "retrieval_search":
             from cutback.agent_retrieval import regression_gate as retrieval_gate
 
@@ -1252,7 +1275,7 @@ def gate(root, control, *, candidate=None, sample_only=False):
 
 def confirm(root, control, *, candidate, max_usd, max_requests=100, purpose):
     """Freeze one validation winner for a separately approved untouched test run."""
-    if load_session(root).get("search_mode") == "retrieval_search":
+    if load_session(root).get("search_mode") in RETRIEVAL_SEARCH_MODES:
         from cutback.agent_retrieval import confirm as confirm_retrieval
 
         return confirm_retrieval(
@@ -1356,6 +1379,10 @@ def confirm(root, control, *, candidate, max_usd, max_requests=100, purpose):
 
 def proposal(root, control, *, purpose, candidate=None):
     """Regenerate a concrete local diff in memory; no acceptance, upload or apply implied."""
+    if load_session(root).get("search_mode") == "joint_model_retrieval":
+        from cutback.agent_joint_retrieval import proposal as joint_retrieval_proposal
+
+        return joint_retrieval_proposal(root, control, purpose=purpose, candidate=candidate)
     if load_session(root).get("search_mode") == "source_routing":
         from cutback.agent_routing import proposal as routing_proposal
 

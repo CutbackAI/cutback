@@ -23,6 +23,48 @@ test("real corpus retrieval authoring, independent confirmation and scoped propo
   await expect(
     page.getByRole("heading", { name: "Retrieval optimization", exact: true }),
   ).toBeVisible();
+  const joint = process.env.CUTBACK_JOINT_RETRIEVAL_BROWSER === "true";
+  const jointMode = page.getByLabel(
+    "Compare model choice and output limits too",
+  );
+  await jointMode.check();
+  await page.evaluate(() => {
+    const original = File.prototype.text;
+    File.prototype.text = function () {
+      return new Promise<string>((resolve) => {
+        (globalThis as any).releaseInspection = () => {
+          File.prototype.text = original;
+          resolve(
+            JSON.stringify({
+              configuration_binding: {
+                source_tree_hash: "a".repeat(64),
+                retrieval_contract_sha256: "b".repeat(64),
+              },
+              producer_binding: { source_tree_hash: "a".repeat(64) },
+            }),
+          );
+        };
+      });
+    };
+  });
+  await page
+    .getByLabel("Source configuration inspection (optional)")
+    .setInputFiles({
+      name: "slow.json",
+      mimeType: "application/json",
+      buffer: Buffer.from("{}"),
+    });
+  await expect
+    .poll(() =>
+      page.evaluate(() => typeof (globalThis as any).releaseInspection),
+    )
+    .toBe("function");
+  await jointMode.uncheck();
+  await page.evaluate(() => (globalThis as any).releaseInspection());
+  await expect(
+    page.getByRole("status").filter({ hasText: "Bound source configuration:" }),
+  ).toHaveCount(0);
+  if (joint) await jointMode.check();
   await page
     .getByLabel("Corpus JSON", { exact: true })
     .setInputFiles(process.env.CUTBACK_RETRIEVAL_CORPUS!);
@@ -97,6 +139,15 @@ test("real corpus retrieval authoring, independent confirmation and scoped propo
     await expect(results).toContainText("COMPLETED");
   }).toPass({ timeout: 60000 });
   await expect(results).toContainText("answer quality requires review");
+  if (joint) {
+    await expect(results).toContainText("Changed axes:");
+    await expect(
+      results.getByRole("columnheader", {
+        name: "Native model / output ceiling",
+      }),
+    ).toBeVisible();
+    await expect(page.getByLabel("Confirmation candidate")).toBeVisible();
+  }
   await page
     .getByLabel("Purpose for reading case evidence")
     .fill("synthetic-retrieved-context-review");
@@ -142,6 +193,10 @@ test("real corpus retrieval authoring, independent confirmation and scoped propo
   await expect(
     page.getByRole("complementary", { name: "Retrieval source proposal" }),
   ).toContainText("synthetic local review only");
+  if (joint)
+    await expect(
+      page.getByRole("complementary", { name: "Retrieval source proposal" }),
+    ).toContainText("model-retrieval patch");
   expect(
     await page.evaluate(() =>
       [localStorage, sessionStorage].some((storage) =>

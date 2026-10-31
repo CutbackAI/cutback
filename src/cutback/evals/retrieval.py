@@ -3,7 +3,7 @@
 import time
 from collections import defaultdict
 from decimal import ROUND_CEILING, ROUND_HALF_EVEN, Context, Decimal, InvalidOperation, localcontext
-from typing import Annotated, Any, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal
 
 from pydantic import BeforeValidator, Field, model_validator
 
@@ -16,6 +16,9 @@ from cutback.core.retrieval import (
     RetrievalCorpus,
     RetrievalVariant,
 )
+
+if TYPE_CHECKING:
+    from cutback.evals.retrieval_joint import JointModelRetrievalExecutionSpec
 
 
 def exact_decimal(value):
@@ -91,7 +94,9 @@ class RetrievalExecutionSpec(StrictModel):
 
 
 class RetrievalProcessor:
-    def __init__(self, spec: RetrievalExecutionSpec, *, check=None):
+    def __init__(
+        self, spec: "RetrievalExecutionSpec | JointModelRetrievalExecutionSpec", *, check=None
+    ):
         self.spec = spec
         self.check = check
         self.settings = {item.model_key: item.settings for item in spec.variants}
@@ -178,6 +183,8 @@ class RetrievalProcessor:
             return self._finalize(report)
 
     def _finalize(self, report):
+        from cutback.evals.retrieval_joint import JointModelRetrievalExecutionSpec
+
         totals: dict[str, dict[str, Any]] = {}
         for key, stats in self.stats.items():
             cpu_cost = self._assumed_cost(stats["index_cpu_ns"] + stats["query_cpu_ns"])
@@ -221,6 +228,26 @@ class RetrievalProcessor:
             recommendation["economics_scope"] = (
                 "native_api_plus_declared_cpu_components_not_full_task_or_invoice"
             )
+            if isinstance(self.spec, JointModelRetrievalExecutionSpec):
+                recommendation["joint_model_retrieval_confirmation_eligible"] = recommendation[
+                    "retrieval_automation_eligible"
+                ]
+                baseline_model = (report.get("models") or [{}])[0].get("model", {})
+                target = recommendation["candidate"]
+                settings = {value.model_key: value.settings for value in self.spec.variants}
+                recommendation["search_axes_changed"] = [
+                    axis
+                    for axis, changed in (
+                        ("native_model", target.get("model") != baseline_model.get("model")),
+                        (
+                            "output_ceiling",
+                            target.get("max_output_tokens")
+                            != baseline_model.get("max_output_tokens"),
+                        ),
+                        ("retrieval_settings", settings[target["key"]] != settings[baseline]),
+                    )
+                    if changed
+                ]
             if not known:
                 recommendation.update(
                     status="NEEDS_VALIDATION",
@@ -234,6 +261,12 @@ class RetrievalProcessor:
             "full_task_cost_known": False,
             "one_time_index_cost_included_in_sample_components": True,
         }
+        if isinstance(self.spec, JointModelRetrievalExecutionSpec):
+            report["joint_model_retrieval"] = {
+                "version": self.spec.version,
+                "full_task_cost_known": False,
+                "scope": "same_labeled_questions_native_api_and_declared_retrieval_cpu_components",
+            }
         report["recommendations"] = sorted(
             report.get("recommendations", []),
             key=lambda r: Decimal(r.get("sample_modeled_cost_difference_usd") or "-Infinity"),

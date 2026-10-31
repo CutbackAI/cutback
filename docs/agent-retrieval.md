@@ -32,12 +32,14 @@ cutback workflow prepare --local --automatic \
   --assumed-usd-per-cpu-hour 0.01 --max-usd 5 --max-requests 500
 ```
 
-Inspect installed help before running these commands. `--retrieval` selects this
-engine explicitly instead of `--automatic`; do not combine both. The corpus
+Inspect installed help before running these commands. Automatic preparation now
+selects the [joint model/retrieval engine](joint-retrieval.md). `--retrieval`
+selects the original fixed-model engine explicitly instead of `--automatic`;
+do not combine both. The corpus
 authorization is separate from question rights and remains required with either
 choice. The illustrative CPU rate is an assumption, not a measured invoice.
 Preparation creates an expiring encrypted plan and makes no inference call.
-The native model and output ceiling stay unchanged; the bounded search changes
+With explicit `--retrieval`, the native model and output ceiling stay unchanged; the bounded search changes
 chunk size, overlap, top-k and lexical reranking only.
 
 Inspect `workflow status` and the exact plan. With explicit inference authorization,
@@ -66,7 +68,9 @@ After confirmation, use `workflow gate --sample-only` to inspect synthetic
 evidence, then `workflow proposal --purpose-reference owned-review --output
 ../retrieval-change.json`. The proposal leaves the application unchanged and
 contains a forward diff and exact rollback. Materialize their files with
-`cutback retrieval patch . ../retrieval-change.json --output ../review-change.json`.
+`cutback retrieval patch . ../retrieval-change.json --output ../review-change.json`
+for fixed-model sessions, or `cutback model-retrieval patch` with the same
+arguments for joint sessions.
 It rechecks both the source and exact artifact before writing `.patch` and
 `.rollback.patch` beside that output. Follow the example's `checks discover`,
 `checks run` and `retrieval review` steps for both committed source trees and

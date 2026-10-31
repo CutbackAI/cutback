@@ -89,6 +89,13 @@ Implementation: task outcomes, complete declared task-cost windows and cumulativ
 
 The additional [actual local corpus workflow](retrieval-optimization.md) prepares bounded chunk/overlap/top-k/lexical-reranking alternatives, native answer evaluation, untouched confirmation and source-bound settings diffs with application-check review. Its acceptance/publication is tracked separately in progress.md. Remote/vector retrieval, tool selection, learned routing and other strategies remain unfinished.
 
+The new [joint native/retrieval extension](joint-retrieval.md), under qualification,
+compares model/output-only, retrieval-only and combined alternatives on the same
+questions. Its v18 contract preserves v6 hashes and connects automatic setup,
+independent confirmation and both-file review/rollback. This reduces one isolated
+engine boundary; it does not close unified caching/routing/compression/training
+selection or complete task economics.
+
 The [extractive compression workflow](context-compression.md) now transforms actual native inputs and measures declared CPU/native components; learned/generative compression and arbitrary dynamic consumers remain unqualified. New v3 text campaigns prepare a budget-fitting frozen model/output-cap portfolio, use instruction search only if needed, and retain one independent confirmation. Their exact acceptance is separate in progress.md. Cross-engine automatic selection, caching, learned routing and provider batch optimization remain engineering requirements.
 
 Add pluggable candidate generators/optimizers with a strict adapter boundary. Start with qualified prompt and parameter search, then workload-eligible caching/routing/retrieval/compression/training. Every proposer/evaluator/target/simulator call uses the canonical ledger; no optimizer may make hidden out-of-band calls. Translate external optimizer budgets into this envelope rather than treating an in-process callback count as durable dollar control. Log exact candidate versions and rejection reasons without leaking permitted examples.

@@ -100,6 +100,7 @@ The commands above target the published dev5 package. For the newer source-check
 | Account for failed tasks and optimization overhead | [Task-economics sample, source checkout](https://github.com/CutbackAI/cutback/blob/main/examples/task-economics/README.md) |
 | Try a cheaper model/cap first, then generate instructions only if needed | [Runnable campaign, confirmation and rollback, source checkout](https://github.com/CutbackAI/cutback/blob/main/examples/improvement-campaign/README.md) |
 | Optimize actual corpus chunking and retrieval context | [Independent RAG application and confirmation workflow](https://github.com/CutbackAI/cutback/blob/main/examples/retrieval-optimization/README.md) |
+| Compare model choice, output limits and retrieval settings together | [Joint source workflow, under qualification](https://github.com/CutbackAI/cutback/blob/main/docs/joint-retrieval.md) |
 | Compare original and compressed context against answer-quality requirements | [Independent context application, native/CPU costs, confirmation and checked rollback](https://github.com/CutbackAI/cutback/blob/main/examples/context-compression/README.md) |
 | Search model and context choices together, then review one combined source change | [Independent joint-search application and agent walkthrough](https://github.com/CutbackAI/cutback/blob/main/examples/model-context-search/README.md) |
 | Connect a reviewed change to later task outcomes | [`--outcomes` sample and agent follow-up](https://github.com/CutbackAI/cutback/blob/main/docs/campaign-outcomes.md) |

@@ -8,6 +8,9 @@ type Draft = components["schemas"]["RetrievalDraftInput"];
 type Corpus = components["schemas"]["RetrievalCorpus"];
 type Binding = NonNullable<Draft["configuration_binding"]>;
 type Proposal = components["schemas"]["RetrievalProposal"];
+type JointDraft = components["schemas"]["JointRetrievalDraftInput"];
+type Producer = NonNullable<JointDraft["producer_binding"]>;
+type JointProposal = components["schemas"]["JointRetrievalProposal"];
 
 export function Retrieval({
   api,
@@ -29,9 +32,16 @@ export function Retrieval({
   const [loading, setLoading] = useState(true);
   const [corpus, setCorpus] = useState<Corpus | null>(null);
   const [binding, setBinding] = useState<Binding | null>(null);
+  const [joint, setJoint] = useState(false);
+  const [producer, setProducer] = useState<Producer | null>(null);
+  const [candidate, setCandidate] = useState("");
+  const [confirmationBudget, setConfirmationBudget] = useState("1");
+  const [confirmationRequests, setConfirmationRequests] = useState(200);
   const [plan, setPlan] = useState<Data | null>(null);
   const [run, setRun] = useState<Data | null>(null);
-  const [proposal, setProposal] = useState<Proposal | null>(null);
+  const [proposal, setProposal] = useState<Proposal | JointProposal | null>(
+    null,
+  );
   const [approved, setApproved] = useState(false);
   const [queueAttempted, setQueueAttempted] = useState(false);
   const [error, setError] = useState("");
@@ -95,6 +105,18 @@ export function Retrieval({
     const value = await api(`${base}/experiments/${id}`);
     if (alive.current && version === selection.current) {
       setRun(value);
+      const isJoint =
+        value.specification?.retrieval_execution?.version ===
+        "cutback.joint-model-retrieval.v1";
+      setCandidate(
+        value.results?.recommendations?.find((row: Data) =>
+          isJoint
+            ? row.joint_model_retrieval_confirmation_eligible
+            : row.retrieval_automation_eligible,
+        )?.candidate.key || "",
+      );
+      setConfirmationBudget(value.specification?.budget?.max_usd || "1");
+      setConfirmationRequests(value.specification?.budget?.max_requests || 200);
       if (fromHistory) {
         setPlan(null);
         setApproved(false);
@@ -137,6 +159,7 @@ export function Retrieval({
   async function loadBinding(file?: File) {
     const version = ++bindingVersion.current;
     setBinding(null);
+    setProducer(null);
     try {
       if (!file || file.size > 16384)
         throw new Error("Choose the small inspect-config JSON receipt.");
@@ -146,8 +169,14 @@ export function Retrieval({
         !value.configuration_binding?.retrieval_contract_sha256
       )
         throw new Error("Run inspect-config first.");
-      if (alive.current && version === bindingVersion.current)
+      if (joint && !value.producer_binding?.source_tree_hash)
+        throw new Error(
+          "Joint source review requires model-retrieval inspect-producer output.",
+        );
+      if (alive.current && version === bindingVersion.current) {
         setBinding(value.configuration_binding);
+        setProducer(joint ? value.producer_binding : null);
+      }
     } catch (e) {
       if (alive.current && version === bindingVersion.current)
         setError(explain(e));
@@ -168,14 +197,18 @@ export function Retrieval({
   }
   const results = run?.results;
   const confirmation = Boolean(run?.specification?.predecessor_run_id);
+  const runJoint =
+    run?.specification?.retrieval_execution?.version ===
+    "cutback.joint-model-retrieval.v1";
+  const runRoute = runJoint ? "model-retrieval" : "retrieval";
   return (
     <section aria-labelledby="retrieval-title">
       <h1 id="retrieval-title">Retrieval optimization</h1>
       <p>
-        Compare real local corpus retrieval while keeping the native model and
-        request settings fixed. Cutback prepares chunking, overlap, top-k and
-        lexical reranking alternatives, then tests one selected configuration on
-        untouched questions. No provider call starts when a plan is prepared.
+        Compare real local corpus retrieval, optionally searching native model
+        choice and output limits together. Cutback prepares bounded alternatives
+        and tests one selected configuration on untouched questions. No provider
+        call starts when a plan is prepared.
       </p>
       <p>
         Answer labels and an authorized encrypted capture policy are required.
@@ -186,7 +219,7 @@ export function Retrieval({
       {loading && <p role="status">Loading retrieval datasets and runs…</p>}
       {canWrite && !loading && (
         <form
-          key={binding?.sha256 || "unbound"}
+          key={`${joint}-${binding?.sha256 || "unbound"}`}
           onSubmit={(event) => {
             event.preventDefault();
             const form = new FormData(event.currentTarget);
@@ -195,17 +228,19 @@ export function Retrieval({
                 throw new Error("Select an authorized corpus first.");
               const provider = String(form.get("provider")) as
                 "openai" | "anthropic";
-              const body: Draft = {
+              const body: Draft | JointDraft = {
                 dataset_id: dataset,
                 corpus,
                 configuration_binding: binding,
                 baseline: {
                   key: "baseline",
-                  provider,
-                  model: String(form.get("model")),
+                  provider: producer?.provider || provider,
+                  model: producer?.model || String(form.get("model")),
                   instruction: String(form.get("instruction") || ""),
                   max_input_tokens: Number(form.get("inputLimit")),
-                  max_output_tokens: Number(form.get("outputLimit")),
+                  max_output_tokens:
+                    producer?.max_output_tokens ||
+                    Number(form.get("outputLimit")),
                 },
                 settings: {
                   chunk_chars: Number(form.get("chunk")),
@@ -233,8 +268,17 @@ export function Retrieval({
                 assumed_usd_per_cpu_hour: String(form.get("cpu")) || null,
                 retain_case_outputs: form.get("retain") === "on",
                 max_query_bytes: 1024,
+                ...(joint
+                  ? { producer_binding: producer, max_candidates: 5 }
+                  : {}),
               };
-              prepared(await json(api, `${base}/retrieval/draft`, body));
+              prepared(
+                await json(
+                  api,
+                  `${base}/${joint ? "model-retrieval" : "retrieval"}/draft`,
+                  body,
+                ),
+              );
               if (alive.current) {
                 corpusVersion.current++;
                 setCorpus(null);
@@ -243,6 +287,24 @@ export function Retrieval({
           }}
         >
           <h2>1. Prepare a comparison</h2>
+          <label>
+            <input
+              type="checkbox"
+              checked={joint}
+              onChange={(event) => {
+                bindingVersion.current++;
+                setBinding(null);
+                setProducer(null);
+                setJoint(event.target.checked);
+              }}
+            />{" "}
+            Compare model choice and output limits too
+          </label>
+          <p>
+            {joint
+              ? "Joint comparison: qualified model, output ceiling and actual retrieval settings. At most five alternatives; no prompt generator calls."
+              : "Retrieval-only comparison: native model and output ceiling stay fixed."}
+          </p>
           {!datasets.length && (
             <p>
               Import independently labeled questions in Integrations before
@@ -321,8 +383,11 @@ export function Retrieval({
           <p>
             For a source diff, first run{" "}
             <code>
-              cutback retrieval inspect-config APP_ROOT retrieval.json --output
-              ../inspection.json
+              cutback{" "}
+              {joint
+                ? "model-retrieval inspect-producer APP_ROOT app.py"
+                : "retrieval inspect-config APP_ROOT retrieval.json"}{" "}
+              --output ../inspection.json
             </code>
             . Enter the same baseline settings below. The exact source tree is
             checked again before a diff is prepared.
@@ -333,7 +398,11 @@ export function Retrieval({
           <div className="form-grid">
             <label>
               Provider
-              <select name="provider" defaultValue="openai">
+              <select
+                name="provider"
+                defaultValue={producer?.provider || "openai"}
+                disabled={Boolean(producer)}
+              >
                 <option>openai</option>
                 <option>anthropic</option>
               </select>
@@ -342,14 +411,19 @@ export function Retrieval({
               Native model
               <input
                 name="model"
-                defaultValue="gpt-4.1-mini"
+                defaultValue={producer?.model || "gpt-4.1-mini"}
+                readOnly={Boolean(producer)}
                 required
                 maxLength={200}
               />
             </label>
             <label>
               Application instruction (optional)
-              <textarea name="instruction" maxLength={16000} />
+              <textarea
+                name="instruction"
+                maxLength={16000}
+                readOnly={Boolean(producer)}
+              />
             </label>
             <label>
               Native input ceiling
@@ -369,7 +443,8 @@ export function Retrieval({
                 type="number"
                 min={16}
                 max={16384}
-                defaultValue={128}
+                defaultValue={producer?.max_output_tokens || 128}
+                readOnly={Boolean(producer)}
                 required
               />
             </label>
@@ -381,6 +456,7 @@ export function Retrieval({
                 min={1024}
                 max={48000}
                 defaultValue={binding?.settings.max_context_bytes || 12000}
+                readOnly={Boolean(binding)}
                 required
               />
             </label>
@@ -392,6 +468,7 @@ export function Retrieval({
                 min={128}
                 max={4096}
                 defaultValue={binding?.settings.chunk_chars || 512}
+                readOnly={Boolean(binding)}
                 required
               />
             </label>
@@ -403,6 +480,7 @@ export function Retrieval({
                 min={0}
                 max={1024}
                 defaultValue={binding?.settings.overlap_chars || 0}
+                readOnly={Boolean(binding)}
                 required
               />
             </label>
@@ -414,6 +492,7 @@ export function Retrieval({
                 min={1}
                 max={12}
                 defaultValue={binding?.settings.top_k || 1}
+                readOnly={Boolean(binding)}
                 required
               />
             </label>
@@ -602,6 +681,7 @@ export function Retrieval({
                 <thead>
                   <tr>
                     <th>Configuration</th>
+                    <th>Native model / output ceiling</th>
                     <th>Total context bytes</th>
                     <th>Index CPU ms</th>
                     <th>Total query CPU ms</th>
@@ -614,6 +694,15 @@ export function Retrieval({
                   ).map(([key, value]) => (
                     <tr key={key}>
                       <th scope="row">{key}</th>
+                      <td>
+                        {results.models?.find(
+                          (row: Data) => row.model.key === key,
+                        )?.model.model || "Unknown"}{" "}
+                        /{" "}
+                        {results.models?.find(
+                          (row: Data) => row.model.key === key,
+                        )?.model.max_output_tokens ?? "Unknown"}
+                      </td>
                       <td>{value.context_bytes}</td>
                       <td>{(value.index_cpu_ns / 1e6).toFixed(3)}</td>
                       <td>{(value.query_cpu_ns / 1e6).toFixed(3)}</td>
@@ -642,6 +731,13 @@ export function Retrieval({
                   ? "passed"
                   : "not established"}
                 .
+                {runJoint && (
+                  <>
+                    {" "}
+                    Changed axes:{" "}
+                    {decision.search_axes_changed?.join(", ") || "none"}.
+                  </>
+                )}
               </li>
             ))}
           </ul>
@@ -653,29 +749,82 @@ export function Retrieval({
             <CaseEvidence key={run.id} api={api} base={base} runId={run.id} />
           )}
           {!confirmation && canWrite && run.status === "COMPLETED" && (
-            <button
-              disabled={
-                busy ||
-                !results?.recommendations?.some(
-                  (r: Data) => r.retrieval_automation_eligible,
-                )
-              }
-              onClick={() =>
-                void act(async () => {
-                  prepared(
-                    await json(api, `${base}/retrieval/confirmation`, {
-                      validation_run_id: run.id,
-                      budget: {
-                        max_usd: run.specification.budget.max_usd,
-                        max_requests: run.specification.budget.max_requests,
-                      },
-                    }),
-                  );
-                })
-              }
-            >
-              Prepare selected candidate confirmation
-            </button>
+            <>
+              {runJoint && (
+                <label>
+                  Confirmation candidate
+                  <select
+                    value={candidate}
+                    onChange={(event) => setCandidate(event.target.value)}
+                  >
+                    <option value="">Choose an eligible candidate</option>
+                    {results?.recommendations
+                      ?.filter(
+                        (row: Data) =>
+                          row.joint_model_retrieval_confirmation_eligible,
+                      )
+                      .map((row: Data) => (
+                        <option
+                          key={row.candidate.key}
+                          value={row.candidate.key}
+                        >
+                          {row.candidate.key}: {row.candidate.model},{" "}
+                          {row.candidate.max_output_tokens} output tokens
+                        </option>
+                      ))}
+                  </select>
+                </label>
+              )}
+              <label>
+                Confirmation API budget (USD)
+                <input
+                  value={confirmationBudget}
+                  onChange={(event) =>
+                    setConfirmationBudget(event.target.value)
+                  }
+                  inputMode="decimal"
+                />
+              </label>
+              <label>
+                Confirmation request ceiling
+                <input
+                  type="number"
+                  min={1}
+                  max={10000}
+                  value={confirmationRequests}
+                  onChange={(event) =>
+                    setConfirmationRequests(Number(event.target.value))
+                  }
+                />
+              </label>
+              <button
+                disabled={
+                  busy ||
+                  !results?.recommendations?.some((r: Data) =>
+                    runJoint
+                      ? r.joint_model_retrieval_confirmation_eligible &&
+                        r.candidate.key === candidate
+                      : r.retrieval_automation_eligible,
+                  )
+                }
+                onClick={() =>
+                  void act(async () => {
+                    prepared(
+                      await json(api, `${base}/${runRoute}/confirmation`, {
+                        validation_run_id: run.id,
+                        ...(runJoint ? { candidate } : {}),
+                        budget: {
+                          max_usd: confirmationBudget,
+                          max_requests: confirmationRequests,
+                        },
+                      }),
+                    );
+                  })
+                }
+              >
+                Prepare selected candidate confirmation
+              </button>
+            </>
           )}
           {confirmation && canApprove && run.status === "COMPLETED" && (
             <>
@@ -694,7 +843,7 @@ export function Retrieval({
                   void act(async () => {
                     const value = await json(
                       api,
-                      `${base}/retrieval/${run.id}/proposal`,
+                      `${base}/${runRoute}/${run.id}/proposal`,
                       { purpose },
                     );
                     if (alive.current) setProposal(value);
@@ -713,15 +862,23 @@ export function Retrieval({
                 remains required.
               </p>
               <p>
-                Only <code>{proposal.binding.file}</code> is qualified. Run
-                application checks against the exact base and proposed Git trees
-                before review.
+                Qualified files: <code>{proposal.binding.file}</code>
+                {"producer" in proposal && (
+                  <>
+                    {" "}
+                    and <code>{proposal.producer.file}</code>
+                  </>
+                )}
+                . Run application checks against the exact base and proposed Git
+                trees before review.
               </p>
               <button onClick={download}>Download retrieval proposal</button>
               <p>
                 <code>
-                  cutback retrieval patch APP_ROOT retrieval-proposal.json
-                  --output ../retrieval-change.json
+                  cutback{" "}
+                  {"producer" in proposal ? "model-retrieval" : "retrieval"}{" "}
+                  patch APP_ROOT retrieval-proposal.json --output
+                  ../retrieval-change.json
                 </code>
               </p>
             </aside>

@@ -9,7 +9,7 @@ def preparation_options(state):
     for field, mode in (
         ("context_producers", "joint_model_context"),
         ("routing_producers", "source_routing"),
-        ("retrieval_producers", "retrieval_search"),
+        ("retrieval_producers", "joint_model_retrieval"),
     ):
         for value in state.get(field, []):
             workflow = value["workflow_id"]

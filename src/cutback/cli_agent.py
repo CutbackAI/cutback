@@ -88,6 +88,7 @@ def register_agent(app, output, fail):
         exact_cache_contract: Path | None = None,
         retrieval: bool = False,
         retrieval_corpus_authorized: bool = False,
+        joint_retrieval: bool = False,
     ):
         """Prepare permitted examples and the request in an approved encrypted store."""
         from cutback.agent import prepare as run
@@ -131,6 +132,7 @@ def register_agent(app, output, fail):
                 exact_cache_contract=cache_contract,
                 retrieval=retrieval,
                 retrieval_corpus_authorized=retrieval_corpus_authorized,
+                joint_retrieval=joint_retrieval,
             )
         )
 
@@ -288,6 +290,11 @@ def register_agent(app, output, fail):
         source_routing = load_session(target).get("search_mode") == "source_routing"
         if source_routing and destination is None:
             raise ValueError("ROUTING_SOURCE_PROPOSAL_REQUIRES_PRIVATE_OUTPUT")
+        if (
+            load_session(target).get("search_mode") == "joint_model_retrieval"
+            and destination is None
+        ):
+            raise ValueError("JOINT_RETRIEVAL_SOURCE_PROPOSAL_REQUIRES_PRIVATE_OUTPUT")
         if destination is not None and destination.resolve().is_relative_to(target.resolve()):
             raise ValueError("PROPOSAL_OUTPUT_MUST_BE_OUTSIDE_APPLICATION")
         control, _ = connect(target)
