@@ -1,5 +1,26 @@
 # Implementation progress
 
+The older bootstrap wheel's complete local SDK3 run stopped with **1,697 passes /
+eight skips / one failure in 3,719.84 seconds**. Its support-desk revocation test
+selected an unordered first policy from a project containing several independent
+examples, then expected that unrelated revocation to block the comparison's
+content. The test now resolves the exact run's frozen plan and policy before
+revoking it; the required 403 assertion remains. A separate PostgreSQL regression
+proves unrelated-policy revocation preserves authorized reads while exact-policy
+revocation denies them. Current installed default paired-case plus actual
+HTTP/authenticated-browser support-desk checks pass **three in 153.17 seconds**.
+This changes test targeting, not content authorization. The full failed run
+remains failed; current complete installed qualification is still open.
+
+The current native-fixture wheel's installed default recovery, agent, migrations
+and authenticated browser scope passes **107 in 355.93 seconds**, after exact
+identity validation of 376 application files / 352 Python modules. The first
+SDK3 installed scope passed 26 units before a session database setup connection
+timeout cascaded into 81 setup errors; it is not accepted. A serial rerun is in
+progress. Private/public archives reproduce, release checks pass and the public
+boundary checked **1,108 files / 5,128 history objects / 2,972 archive members /
+zero findings**. No package was uploaded.
+
 Native source fixture execution is under qualification; see
 [the contract and evidence limits](native-fixtures.md). The core, API, worker and
 agent preserve an explicit synthetic-only frozen plan, recheck actual data rights
