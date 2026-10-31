@@ -145,6 +145,11 @@ approval boundary. A completed search still needs separate untouched
 confirmation. This does not authorize all routing stages under one approval or
 choose a winner across every optimization engine.
 
+If another worker already owns the run, or claims it during the local handoff,
+the runner keeps observing that same identity. It does not construct another
+provider client for a known active worker, repeat its local invocation, mint a
+new run or reuse approval for another stage.
+
 Stdout contains one JSON object with `workflow` and `operator`; the operator's
 version is `cutback.workflow-operator.v1`. Stderr contains
 bounded numeric/boolean `workflow_progress` records, without example content,

@@ -194,8 +194,17 @@ def run_workflow(
                 expected_plan_hash=original_hash,
                 expected_run=original_run,
             )
-            if outcome.get("status") not in {"COMPLETED", "FAILED", "CANCELLED", "EXPIRED"}:
+            if outcome.get("status") not in {
+                "COMPLETED",
+                "FAILED",
+                "CANCELLED",
+                "EXPIRED",
+                "RUNNING",
+                "IDLE",
+            }:
                 return result(current(), "LOCAL_WORKER_STOPPED_INSPECT_CANONICAL_RUN")
+            # An existing worker, or one that won the handoff race, owns this
+            # same run. Observe it without another local invocation or approval.
             continue
         if state["phase"] not in active:
             continue

@@ -78,6 +78,19 @@ session is running with per-test progress and bounded faulthandler diagnostics.
 It uses new disposable identities, not a retry of any customer/billable operation.
 Hosted acceptance remains required and is recorded on the containing PR.
 
+Additional real PostgreSQL/native-worker races reproduced an incorrect operator
+stop for an already running peer and a peer that claimed the queued job during
+handoff: **two failed in 47.84 seconds** against the preceding runtime. The
+operator now keeps observing that same canonical run after `RUNNING`/`IDLE`,
+without another worker invocation, approval or queue. Both source regressions
+passed **two in 35.64 seconds**; they verify one run, exact native request/ledger
+reconciliation and no client construction when an active peer is known. This
+runtime change requires a new wheel and focused installed qualification; the
+preceding 114-test result is not attributed to that new artifact. Other blocked
+or unconfigured work still stops for inspection. Long-run diagnostics observed
+source-tree snapshot verification during joint-retrieval review; this is not
+evidence that a provider call hung or that source checks may be relaxed.
+
 The runtime's exact non-root image
 `sha256:e73b28cb2432f11bf756b9024d2e9a51d63d5116921cbdecf6d12db5bc2c804e`
 passed the complete schema-0032 recovery gate: all **100 table counts**, **2,654**

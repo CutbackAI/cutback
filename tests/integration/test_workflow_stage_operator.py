@@ -442,3 +442,95 @@ def test_local_database_identity_refuses_before_recovery_or_client_creation(
         ValueError, match="LOCAL_OPERATOR_(RUN_SCOPE_MISMATCH|CANONICAL_PLAN_HASH_CHANGED)"
     ):
         work_local(root)
+
+
+@pytest.mark.parametrize("peer_state", ["already_running", "claims_during_handoff"])
+def test_local_runner_observes_peer_worker_without_second_dispatch_or_new_approval(
+    api,
+    tenant,
+    tmp_path,
+    monkeypatch,
+    postgres_url,
+    peer_state,
+):
+    import threading
+
+    from cutback import workflow_operator
+    from cutback.evals import executors
+    from cutback.server import worker
+
+    root, control, state, _, calls = setup(api, tenant, tmp_path, monkeypatch, postgres_url)
+    queued = advance(
+        root, control, plan_hash=state["plan"]["plan_hash"], approval_ref="owned-peer-worker"
+    )
+    factory = executors.ConfiguredExecutor
+    peer_executor = factory()
+    started, release = threading.Event(), threading.Event()
+    original_run_one = worker.run_one
+    results = []
+
+    class HeldPeer:
+        synthetic_transport = True
+
+        def execute(self, *args, **kwargs):
+            started.set()  # Native worker has already reserved its exact call.
+            assert release.wait(30), "OWNED_PEER_HANDOFF_NOT_RELEASED"
+            return peer_executor.execute(*args, **kwargs)
+
+    def execute_peer():
+        results.append(
+            original_run_one(
+                api[2].state.sessions,
+                api[2].state.artifact_store,
+                executor=HeldPeer(),
+                execution_enabled=True,
+                only_run_id=UUID(queued["run_id"]),
+            )
+        )
+
+    peer = threading.Thread(target=execute_peer, daemon=True)
+    original_work_local = workflow_operator.work_local
+    observations = []
+
+    def observe_local(*args, **kwargs):
+        result = original_work_local(*args, **kwargs)
+        observations.append(result["status"])
+        release.set()
+        return result
+
+    monkeypatch.setattr(workflow_operator, "work_local", observe_local)
+    if peer_state == "already_running":
+        peer.start()
+        assert started.wait(30), "OWNED_PEER_DID_NOT_RESERVE"
+        monkeypatch.setattr(
+            executors,
+            "ConfiguredExecutor",
+            lambda: pytest.fail("NO_CLIENT_CONSTRUCTION_FOR_ACTIVE_PEER"),
+        )
+    else:
+
+        def handoff(*args, **kwargs):
+            peer.start()
+            assert started.wait(30), "OWNED_PEER_DID_NOT_CLAIM_HANDOFF"
+            return original_run_one(*args, **kwargs)
+
+        monkeypatch.setattr(worker, "run_one", handoff)
+    try:
+        receipt = run_workflow(
+            root, control, local_worker=True, poll_seconds=0.1, max_wait_seconds=60, max_polls=100
+        )
+        assert receipt["operator"]["code"] == "STAGE_FINISHED"
+        assert receipt["operator"]["local_worker_attempts"] == 1
+        assert receipt["operator"]["approval_performed"] is False
+        assert receipt["operator"]["queue_performed"] is False
+        assert observations == ["RUNNING" if peer_state == "already_running" else "IDLE"]
+    finally:
+        release.set()
+        if peer.ident is not None:
+            peer.join(timeout=60)
+        peer_executor.close()
+    assert not peer.is_alive() and len(results) == 1 and results[0]["status"] == "COMPLETED"
+    with api[2].state.sessions() as session:
+        rows = session.query(ExperimentRunRecord).filter_by(project_id=UUID(tenant[0])).all()
+        assert len(rows) == 1 and rows[0].requests_used == len(calls) > 0
+        assert rows[0].results["billing_complete"] is True
