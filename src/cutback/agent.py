@@ -46,6 +46,10 @@ def save_session(directory, state, phase=None, code=None):
 
 def next_action(state):
     phase = state["phase"]
+    if state.get("search_mode") == "source_routing":
+        from cutback.agent_routing import next_action as routing_action
+
+        return routing_action(state)
     if phase == "PREPARING_CONFIRMATION" and state.get("search_mode") == "reviewed_criteria":
         return {
             "code": "RESUME_SAME_CONFIRMATION_PREPARATION",
@@ -94,6 +98,19 @@ def next_action(state):
             "provider_calls": 0,
         }
     if phase in {"ANALYZED", "SOURCE_CHANGED"}:
+        if state.get("routing_producers") and not state.get("profiles"):
+            return {
+                "code": "PREPARE_SOURCE_BOUND_ROUTING",
+                "tool": "cutback workflow prepare --learned-routing",
+                "requires": [
+                    "permitted_labeled_examples",
+                    "rights_reference",
+                    "approved_collector",
+                    "stage_budget_ceiling",
+                    "independent_quality_threshold",
+                ],
+                "provider_calls": 0,
+            }
         if state.get("context_producers") and not state.get("profiles"):
             return {
                 "code": "REVIEW_DATA_RIGHTS_AND_PREPARE_JOINT_CONTEXT",
@@ -282,7 +299,26 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
             "file_limit": 200,
             "qualification": "exact_wrapper_in_clean_git_source_only",
         }
+        routing_producers = []
+        from cutback.core.routing_producer import qualify as qualify_routing
+        from cutback.routing_changes import inspect_configuration
+
         for name in context_files[:200]:
+            identity, _ = workflow_identity(name, "classify")
+            if not workflow or identity == workflow:
+                try:
+                    path = permitted_file(root, name)
+                    if path.stat().st_size <= 65536:
+                        qualify_routing(path.read_bytes())
+                        _, routing_source = inspect_configuration(root, name)
+                        routing_producers.append(
+                            {
+                                "workflow_id": identity,
+                                "source": routing_source.model_dump(mode="json"),
+                            }
+                        )
+                except (ValueError, OSError):
+                    pass
             identity, _ = workflow_identity(name, "answer")
             if workflow and identity != workflow:
                 continue
@@ -313,6 +349,7 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
                 "profile_analysis": profile_analysis,
                 "context_producers": context_producers,
                 "context_profile_analysis": context_analysis,
+                "routing_producers": routing_producers,
             }
         )
         prior = (
@@ -363,6 +400,7 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
             "checkpoints": prior["checkpoints"] if prior else [],
             "profiles": profiles,
             "context_producers": context_producers,
+            "routing_producers": routing_producers,
             "context_profile_analysis": context_analysis,
             "profile_analysis": profile_analysis,
             "unresolved": unresolved,
@@ -375,7 +413,7 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
         state["strategies"] = strategy_assessments(profiles)
         if previous_id:
             state["previous_session_id"] = previous_id
-        if not profiles and not context_producers:
+        if not profiles and not context_producers and not routing_producers:
             state["decisions_required"].append("request_contract_qualification")
         if not fixtures:
             state["decisions_required"].append("permitted_examples_or_observation_scope")
@@ -544,6 +582,8 @@ def prepare(
     assumed_usd_per_cpu_hour=None,
     min_test_samples=30,
     criteria_generator_provider=None,
+    learned_routing=False,
+    fixture_transport=False,
 ):
     """Read only explicitly permitted files; upload to the chosen encrypted collector; no calls."""
     from datetime import timedelta
@@ -555,6 +595,36 @@ def prepare(
     from cutback.evals.planning import draft_plan
     from cutback.evals.records import read_records
 
+    if learned_routing:
+        if (
+            joint_context
+            or search
+            or for_campaign
+            or campaign_generator_provider
+            or criteria_generator_provider
+        ):
+            raise ValueError("LEARNED_ROUTING_REQUIRES_ITS_OWN_FROZEN_SEARCH")
+        from cutback.agent_routing import prepare as prepare_routing
+
+        return prepare_routing(
+            root,
+            control,
+            project,
+            files=files,
+            rights_basis=rights_basis,
+            rights_ref=rights_ref,
+            max_usd=max_usd,
+            workflow=workflow,
+            max_requests=max_requests,
+            minimum=minimum,
+            independent_labels=independent_labels,
+            representative=representative,
+            mapping=mapping,
+            min_test_samples=min_test_samples,
+            fixture_transport=fixture_transport,
+        )
+    if fixture_transport:
+        raise ValueError("FIXTURE_TRANSPORT_REQUIRES_LEARNED_ROUTING")
     if joint_context:
         if search or for_campaign or campaign_generator_provider or criteria_generator_provider:
             raise ValueError("JOINT_CONTEXT_REQUIRES_ITS_OWN_FROZEN_SEARCH")
@@ -785,6 +855,10 @@ def prepare(
 
 def advance(root, control, *, plan_hash=None, approval_ref=None):
     """One exact approval, one run, subsequent invocations only poll that run."""
+    if load_session(root).get("search_mode") == "source_routing":
+        from cutback.agent_routing import advance as routing_advance
+
+        return routing_advance(root, control, plan_hash=plan_hash, approval_ref=approval_ref)
     if load_session(root)["phase"] in {
         "CRITERIA_PLAN_READY",
         "APPROVING_CRITERIA",
@@ -878,6 +952,8 @@ def advance(root, control, *, plan_hash=None, approval_ref=None):
 
 def gate(root, control, *, candidate=None, sample_only=False):
     """Read current canonical evidence and current source; no inference or content reads."""
+    if load_session(root).get("search_mode") == "source_routing":
+        raise ValueError("SOURCE_ROUTING_REQUIRES_CURRENT_PROPOSAL_AND_BOTH_TREE_REVIEW")
     from cutback.evals.search import regression_gate
 
     root, directory = workspace(root)
@@ -925,6 +1001,8 @@ def gate(root, control, *, candidate=None, sample_only=False):
 
 def confirm(root, control, *, candidate, max_usd, max_requests=100, purpose):
     """Freeze one validation winner for a separately approved untouched test run."""
+    if load_session(root).get("search_mode") == "source_routing":
+        raise ValueError("ROUTING_CONFIRMATION_IS_PREPARED_BY_RESUMABLE_CONTINUE")
     if load_session(root).get("search_mode") == "reviewed_criteria":
         from cutback.agent_criteria import confirm as confirm_criteria
 
@@ -1012,6 +1090,12 @@ def confirm(root, control, *, candidate, max_usd, max_requests=100, purpose):
 
 def proposal(root, control, *, purpose, candidate=None):
     """Regenerate a concrete local diff in memory; no acceptance, upload or apply implied."""
+    if load_session(root).get("search_mode") == "source_routing":
+        from cutback.agent_routing import proposal as routing_proposal
+
+        if candidate is not None:
+            raise ValueError("ROUTING_CONFIRMATION_CANDIDATE_ALREADY_FROZEN")
+        return routing_proposal(root, control, purpose=purpose)
     from cutback.changes import model_patch
 
     root, directory = workspace(root)

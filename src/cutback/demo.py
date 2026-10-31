@@ -111,6 +111,7 @@ def seed_support_desk(
     reviewed_criteria=False,
     semantic_rubrics=False,
     learned_routing=False,
+    source_routing=False,
 ):
     """Use actual scoped HTTP APIs and the durable worker, retaining the sample project."""
     require_demo_git()
@@ -397,7 +398,13 @@ def seed_support_desk(
 
                 rubric_sample = seed_rubrics(app, control, project["id"])
             routing_sample = None
-            if learned_routing:
+            if source_routing:
+                from cutback.demo_source_routing import seed_source_routing
+
+                routing_sample = seed_source_routing(
+                    app, control, project["id"], workspace, demo=True
+                )
+            elif learned_routing:
                 from cutback.demo_routing import seed_routing
 
                 routing_sample = seed_routing(app, control, project["id"], demo=True)
@@ -614,9 +621,12 @@ def launch_demo(
     reviewed_criteria=False,
     semantic_rubrics=False,
     learned_routing=False,
+    source_routing=False,
 ):
     """Own one temporary Docker database. Never connect to production or reuse app keys."""
     require_demo_git()
+    if learned_routing and source_routing:
+        raise ValueError("CHOOSE_LEARNED_ROUTING_OR_SOURCE_ROUTING_DEMO")
     if security_suite and tool_image_id is None:
         raise ValueError("SECURITY_DEMO_REQUIRES_EXPLICIT_LOCAL_TOOL_IMAGE_ID")
     if guarded_tools and tool_image_id is None:
@@ -752,8 +762,9 @@ def launch_demo(
                 reviewed_criteria=reviewed_criteria,
                 semantic_rubrics=semantic_rubrics,
                 learned_routing=learned_routing,
+                source_routing=source_routing,
             )
-            if learned_routing:
+            if learned_routing or source_routing:
                 from cutback.demo_routing import routing_worker
 
                 routing_context = routing_worker(app, manifest["project_id"])

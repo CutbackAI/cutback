@@ -145,6 +145,16 @@ export function SampleGuide({
             are synthetic; these results establish no real model quality or
             customer savings.
           </p>
+          {demo.learned_routing_sample.source_bound && (
+            <p>
+              This run also binds the policy to a clean independent application.
+              Its agent prepared all three stages, checked the original and
+              proposed native consumers, verified byte-exact rollback and
+              created a local review branch. Review files are in the sample
+              workspace; no remote application or production service was
+              changed.
+            </p>
+          )}
           <button onClick={() => navigate("Routing")}>
             Inspect the trained routing policy
           </button>

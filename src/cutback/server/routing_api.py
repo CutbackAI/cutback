@@ -12,10 +12,12 @@ from sqlalchemy import select
 
 from cutback.core.input_routing import LearnedRoutingBinding, RoutingTrainingExecution
 from cutback.core.models import StrictModel
+from cutback.core.routing_producer import RoutingSourceBinding
 from cutback.evals.datasets import digest
 from cutback.evals.experiments import Budget, CriterionSpec, ExperimentPlan, ModelSpec
 from cutback.evals.learned_routing import RoutingFitOptions, fit_routes
 from cutback.evals.metrics import MetricSpec
+from cutback.routing_changes import RoutingSourceProposal
 from cutback.server.campaign_content import content_transaction
 from cutback.server.content_policy import policy_content
 from cutback.server.dataset_lineage import lock_lineage, lock_preparation_identity
@@ -55,6 +57,7 @@ class RoutingTrainingDraftInput(StrictModel):
     budget: Budget
     max_cases: int = Field(default=256, strict=True, ge=2, le=256)
     transport: Literal["native_provider", "scripted_test_only"] = "native_provider"
+    source: RoutingSourceBinding | None = None
 
 
 class RoutingFitInput(ContentPurpose):
@@ -73,6 +76,10 @@ class RoutingConfirmationDraftInput(ContentPurpose):
     request_id: UUID4
     validation_run_id: UUID
     budget: Budget
+
+
+class RoutingSourceProposalInput(ContentPurpose):
+    confirmation_run_id: UUID
 
 
 def summary(sample):
@@ -120,11 +127,11 @@ def install_routing(app, sessions, authorize, scope, create_plan):
                     budget=body.budget,
                     approved_providers=providers,
                     split="train",
-                    evaluator_version="deterministic-v15",
+                    evaluator_version="deterministic-v16" if body.source else "deterministic-v15",
                     content_nonce=body.content_nonce,
                     retain_case_outputs=True,
                     routing_execution=RoutingTrainingExecution(
-                        max_cases=body.max_cases, transport=body.transport
+                        max_cases=body.max_cases, transport=body.transport, source=body.source
                     ),
                 )
             except ValueError:
@@ -228,7 +235,14 @@ def install_routing(app, sessions, authorize, scope, create_plan):
                 evidence, training, dataset, policy_id, policy, expiry = authenticated_training(
                     session, store, project_id, body.training_run_id
                 )
-                result = fit_routes(evidence, body.options)
+                if training.routing_execution.source:
+                    from cutback.evals.routing_source import fit_source_routes
+
+                    result = fit_source_routes(
+                        evidence, body.options, training.routing_execution.source
+                    )
+                else:
+                    result = fit_routes(evidence, body.options)
                 # Fitting has no vendor call; unknown host/compute costs remain
                 # unknown instead of claiming that this operation was free.
                 value = {
@@ -349,6 +363,7 @@ def install_routing(app, sessions, authorize, scope, create_plan):
                             fit_sha256=sample.content_hash,
                             training_run_id=UUID(value["training_run_id"]),
                             transport=training.routing_execution.transport,
+                            source=training.routing_execution.source,
                         ).model_dump(mode="json"),
                     }
                 )
@@ -362,6 +377,88 @@ def install_routing(app, sessions, authorize, scope, create_plan):
             PlanInput(request_id=body.request_id, dataset_id=dataset_id, specification=plan),
             auth,
         )
+
+    @app.post(
+        "/v1/projects/{project_id}/routing/fits/{fit_id}/source-proposal",
+        response_model=RoutingSourceProposal,
+    )
+    def source_proposal(
+        project_id: UUID, fit_id: UUID, body: RoutingSourceProposalInput, auth=authorized
+    ):
+        from cutback.server.db import ExperimentPlanRecord, ExperimentRunRecord
+        from cutback.server.evaluation_api import active_policy
+        from cutback.server.plan_artifacts import load_plan, public_config
+        from cutback.server.routing_service import validate_binding
+        from cutback.server.stages import validate_confirmation
+
+        scope(auth, project_id, ("admin",))
+        store = require_store(app)
+        with sessions.begin() as session:
+            lock_lineage(session, project_id)
+            run = session.get(ExperimentRunRecord, body.confirmation_run_id)
+            if not run or run.project_id != project_id or run.status != "COMPLETED":
+                raise HTTPException(404, "COMPLETED_ROUTING_CONFIRMATION_NOT_FOUND")
+            row = session.get(ExperimentPlanRecord, run.plan_id)
+            active_policy(session, project_id, UUID(row.specification["policy_id"]))
+            try:
+                plan = load_plan(store, project_id, row.specification)
+                binding = plan.routing_execution
+                if (
+                    not isinstance(binding, LearnedRoutingBinding)
+                    or binding.fit_id != fit_id
+                    or not binding.source
+                    or not plan.predecessor_run_id
+                ):
+                    raise ValueError
+                validate_binding(session, store, project_id, plan, dataset_id=row.dataset_id)
+                validate_confirmation(session, store, project_id, plan, run_id=run.id)
+            except ValueError:
+                raise HTTPException(409, "ROUTING_CURRENT_SOURCE_CONFIRMATION_REQUIRED") from None
+            decision: dict = next(
+                (
+                    item
+                    for item in run.results.get("recommendations", [])
+                    if item.get("candidate")
+                    == public_config(
+                        plan.candidates[0].model_dump(mode="json"), redact_content_hashes=True
+                    )
+                ),
+                {},
+            )
+            if (
+                not run.results.get("billing_complete")
+                or decision.get("quality_gate_passed") is not True
+                or decision.get("cheaper_on_sample") is not True
+                or run.results.get("lineage", {}).get("fresh_test_claim") is not True
+            ):
+                raise HTTPException(409, "ROUTING_SOURCE_CONFIRMATION_GATES_NOT_PASSED")
+            dataset = session.get(DatasetRecord, row.dataset_id)
+            result = RoutingSourceProposal(
+                run_id=run.id,
+                plan_hash=row.specification["plan_hash"],
+                dataset_hash=plan.dataset_hash,
+                binding=binding.source,
+                baseline=plan.baseline,
+                proposed=plan.candidates[0],
+                decision="synthetic_local_review_only"
+                if dataset.provenance["source_type"] == "synthetic_fixture"
+                else "heldout_review_required"
+                if decision.get("status") == "VERIFIED_ON_HELDOUT_DATASET"
+                else "sample_review_required",
+            )
+            session.add(
+                AuditEvent(
+                    project_id=project_id,
+                    actor=auth["actor"],
+                    action="routing_source_proposal_read",
+                    details={
+                        "fit_id": str(fit_id),
+                        "run_id": str(run.id),
+                        "purpose": body.purpose,
+                    },
+                )
+            )
+            return result
 
     @app.post(
         "/v1/projects/{project_id}/routing/fits/{fit_id}/confirmation-drafts", status_code=201

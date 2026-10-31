@@ -161,6 +161,7 @@ def main(
     reviewed_criteria=False,
     semantic_rubrics=False,
     learned_routing=False,
+    source_routing=False,
 ):
     from cutback.server.migrate import CURRENT_REVISION
 
@@ -276,11 +277,22 @@ assert os.getuid()==10001 and sys.version_info[:3]==(3,11,18)
 app=create_app(allow_insecure_http=True)
 app.state.artifact_store=configured_store()
 os.environ["CUTBACK_SEMANTIC_CACHE_ENABLED"]="true"
-manifest=seed_support_desk(app,"http://127.0.0.1:8080",os.environ["CUTBACK_ADMIN_TOKEN"],Path("/tmp/owned-support-desk"),provider_batch=True,semantic_cache=True,runtime_guardrails=RUNTIME_GUARDS,joint_model_context=JOINT_EXPECTED,reviewed_criteria=CRITERIA_EXPECTED,semantic_rubrics=RUBRICS_EXPECTED,learned_routing=ROUTING_EXPECTED)
+manifest=seed_support_desk(
+ app,"http://127.0.0.1:8080",os.environ["CUTBACK_ADMIN_TOKEN"],Path("/tmp/owned-support-desk"),
+ provider_batch=True,semantic_cache=True,runtime_guardrails=RUNTIME_GUARDS,
+ joint_model_context=JOINT_EXPECTED,reviewed_criteria=CRITERIA_EXPECTED,
+ semantic_rubrics=RUBRICS_EXPECTED,learned_routing=ROUTING_EXPECTED and not SOURCE_BOUND_EXPECTED,
+ source_routing=SOURCE_BOUND_EXPECTED)
 if ROUTING_EXPECTED:
  assert manifest["learned_routing_sample"]["actual_declared_checks_passed"] is True
  assert manifest["learned_routing_sample"]["paid_provider_calls"]==0
- assert manifest["learned_routing_sample"]["source_patch_eligible"] is False
+ if SOURCE_BOUND_EXPECTED:
+  assert manifest["learned_routing_sample"]["source_bound"] is True
+  assert manifest["learned_routing_sample"]["source_review_ready"] is True
+  assert manifest["learned_routing_sample"]["both_application_trees_checked"] is True
+  assert manifest["learned_routing_sample"]["byte_exact_rollback_checked"] is True
+ else:
+  assert manifest["learned_routing_sample"]["source_patch_eligible"] is False
 if RUBRICS_EXPECTED:
  assert manifest["semantic_rubrics_sample"]["native_fixture_calls"]>1
  assert manifest["semantic_rubrics_sample"]["paid_provider_calls"]==0
@@ -306,7 +318,8 @@ print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":mani
                 code = code.replace("RUNTIME_GUARDS", repr(runtime_guardrails))
                 code = code.replace("CRITERIA_EXPECTED", repr(reviewed_criteria))
                 code = code.replace("RUBRICS_EXPECTED", repr(semantic_rubrics))
-                code = code.replace("ROUTING_EXPECTED", repr(learned_routing))
+                code = code.replace("ROUTING_EXPECTED", repr(learned_routing or source_routing))
+                code = code.replace("SOURCE_BOUND_EXPECTED", repr(source_routing))
                 code = code.replace("JOINT_EXPECTED", repr(joint_model_context))
                 manifest = json.loads(inside(container, code, values).strip().splitlines()[-1])
                 base = "/v1/projects/" + manifest["project_id"]
@@ -526,6 +539,11 @@ with sessions() as session:
   fits=[row for row in rows if row.metadata_safe.get("kind")=="learned_routing_fit"]
   assert len(fits)==1
   sample,value,training,dataset=read_fit(session,new_only,fits[0].project_id,fits[0].id)
+  if SOURCE_BOUND_EXPECTED:
+   assert training.evaluator_version=="deterministic-v16"
+   assert training.routing_execution.source is not None
+   bound_hash=digest(training.routing_execution.source.model_dump(mode="json"))
+   assert value["fit"]["source_binding_sha256"]==bound_hash
   source=session.get(ExperimentRunRecord,UUID(value["training_run_id"]))
   assert source.status=="COMPLETED" and source.results["billing_complete"] is True
   calls=session.scalars(select(ExecutionCall).where(ExecutionCall.run_id==source.id)).all()
@@ -560,7 +578,8 @@ engine.dispose()
                     .replace("JOINT_EXPECTED", repr(joint_model_context))
                     .replace("CRITERIA_EXPECTED", repr(reviewed_criteria))
                     .replace("RUBRICS_EXPECTED", repr(semantic_rubrics))
-                    .replace("ROUTING_EXPECTED", repr(learned_routing))
+                    .replace("ROUTING_EXPECTED", repr(learned_routing or source_routing))
+                    .replace("SOURCE_BOUND_EXPECTED", repr(source_routing))
                 )
                 recovered = json.loads(inside(container, recovery, values).strip().splitlines()[-1])
 
@@ -691,7 +710,9 @@ engine.dispose()
                     ),
                     "reviewed_criteria_versions_and_confirmation_restored": reviewed_criteria,
                     "generated_semantic_rubrics_and_proxy_confirmation_restored": semantic_rubrics,
-                    "routing_fits_and_canonical_training_restored": learned_routing,
+                    "routing_fits_and_canonical_training_restored": learned_routing
+                    or source_routing,
+                    "source_bound_routing_and_both_tree_checks": source_routing,
                     "restored_tables": len(after),
                     "row_counts_match": True,
                     **recovered,
@@ -737,6 +758,7 @@ if __name__ == "__main__":
     parser.add_argument("--reviewed-criteria", action="store_true")
     parser.add_argument("--semantic-rubrics", action="store_true")
     parser.add_argument("--learned-routing", action="store_true")
+    parser.add_argument("--source-routing", action="store_true")
     args = parser.parse_args()
     main(
         args.image,
@@ -749,4 +771,5 @@ if __name__ == "__main__":
         reviewed_criteria=args.reviewed_criteria,
         semantic_rubrics=args.semantic_rubrics,
         learned_routing=args.learned_routing,
+        source_routing=args.source_routing,
     )

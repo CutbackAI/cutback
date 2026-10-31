@@ -250,14 +250,71 @@ def test_incomplete_native_training_retains_unknown_cost_without_automatic_repla
         executor.close()
 
 
-@pytest.mark.parametrize("surface", ["responses.create", "messages.create"])
+def test_decrypted_routing_dataset_limits_stop_reading_without_inference(
+    api, tenant, tmp_path, monkeypatch
+):
+    from cutback.server.db import DatasetRecord
+    from cutback.server.worker import load_dataset
+
+    _, store, dataset, _, _, executor, calls = prepared(api, tenant, tmp_path, monkeypatch)
+    reads = []
+    original = store.get
+
+    def counted(*args, **kwargs):
+        reads.append(1)
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(store, "get", counted)
+    try:
+        with api[2].state.sessions() as session:
+            row = session.get(DatasetRecord, UUID(dataset["id"]))
+            with pytest.raises(ValueError, match="^DATASET_READ_CASE_BOUND$"):
+                load_dataset(session, row, store, max_cases=119, max_content_bytes=16 * 1024 * 1024)
+            assert reads == []
+            with pytest.raises(ValueError, match="^DATASET_READ_CONTENT_BOUND$"):
+                load_dataset(session, row, store, max_cases=120, max_content_bytes=1)
+            assert reads == [1] and not calls
+    finally:
+        executor.close()
+
+
+@pytest.mark.parametrize(
+    "surface,source_bound",
+    [("responses.create", False), ("messages.create", False), ("responses.create", True)],
+)
 def test_native_training_fitting_validation_and_untouched_confirmation(
-    api, tenant, tmp_path, monkeypatch, surface
+    api, tenant, tmp_path, monkeypatch, surface, source_bound
 ):
     base, store, dataset, policy_id, body, executor, calls = prepared(
         api, tenant, tmp_path, monkeypatch, surface=surface
     )
     client, admin, app = api
+    if source_bound:
+        from support_compression_application import git
+
+        from cutback.core.routing_producer import PROGRAM
+        from cutback.evals.experiments import ModelSpec
+        from cutback.routing_changes import inspect_configuration, prepare_patch
+
+        source = tmp_path / "independent-application"
+        source.mkdir()
+        (source / "app.py").write_text(PROGRAM, encoding="utf-8")
+        initial = ModelSpec(
+            key="application-policy",
+            provider="router",
+            model="input-size-v1",
+            routes=[{"max_input_bytes": 4000, "target": body["baseline"]}],
+        )
+        (source / "routing.json").write_text(
+            initial.model_dump_json(indent=2) + "\n", encoding="utf-8"
+        )
+        git(source, "init")
+        git(source, "config", "user.name", "Synthetic Cutback Test")
+        git(source, "config", "user.email", "synthetic@example.invalid")
+        git(source, "add", ".")
+        git(source, "commit", "-m", "Independent native baseline")
+        _, binding = inspect_configuration(source, "app.py")
+        body["source"] = binding.model_dump(mode="json")
     try:
         assert (
             client.post(base + "/routing/training-drafts", headers=tenant[2], json=body).status_code
@@ -372,9 +429,53 @@ def test_native_training_fitting_validation_and_untouched_confirmation(
         assert confirmed["results"]["lineage"]["fresh_test_claim"] is True
         assert confirmed["results"]["recommendations"][0]["quality_gate_passed"] is True
         assert confirmed["results"]["routing"]["automatic_application_change"] is False
+        proposal_path = fit_path + "/source-proposal"
+        proposal_body = {
+            "confirmation_run_id": confirmed["run_id"],
+            "purpose": "owned-source-review",
+        }
+        count = len(calls)
+        assert client.post(proposal_path, headers=tenant[2], json=proposal_body).status_code == 403
+        assert client.post(proposal_path, headers=admin, json={}).status_code == 422
+        response = client.post(proposal_path, headers=admin, json=proposal_body)
+        assert response.status_code == (200 if source_bound else 409), response.text
+        if source_bound:
+            from cutback.routing_changes import RoutingSourceProposal
+
+            value = RoutingSourceProposal.model_validate(response.json())
+            assert value.binding == binding
+            assert value.decision == "synthetic_local_review_only"
+            assert value.full_task_cost_known is False
+            change = prepare_patch(source, value)
+            assert not change["applied"] and "routing.json" in change["diff"]
+            for other_run in [training["run_id"], validation["run_id"], str(uuid4())]:
+                denied = client.post(
+                    proposal_path,
+                    headers=admin,
+                    json={**proposal_body, "confirmation_run_id": other_run},
+                )
+                assert denied.status_code in {404, 409}
+            assert (
+                client.post(
+                    other_base + "/routing/fits/" + fitted["id"] + "/source-proposal",
+                    headers=admin,
+                    json=proposal_body,
+                ).status_code
+                == 404
+            )
+            with app.state.sessions.begin() as session:
+                row = session.get(ExperimentRunRecord, UUID(confirmed["run_id"]))
+                original = row.results
+                row.results = {**original, "billing_complete": False}
+            assert client.post(proposal_path, headers=admin, json=proposal_body).status_code == 409
+            with app.state.sessions.begin() as session:
+                row = session.get(ExperimentRunRecord, UUID(confirmed["run_id"]))
+                row.results = original
+        assert len(calls) == count
         assert (
             client.delete(base + "/capture-policies/" + policy_id, headers=admin).status_code == 200
         )
+        assert client.post(proposal_path, headers=admin, json=proposal_body).status_code != 200
         assert (
             client.post(
                 fit_path + "/content", headers=admin, json={"purpose": "revoked"}

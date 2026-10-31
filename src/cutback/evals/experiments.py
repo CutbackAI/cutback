@@ -317,6 +317,7 @@ class ExperimentPlan(StrictModel):
         "deterministic-v13",
         "deterministic-v14",
         "deterministic-v15",
+        "deterministic-v16",
     ] = "deterministic-v3"
     episode_execution: EpisodeExecutionSpec | None = None
     retrieval_execution: RetrievalExecutionSpec | None = None
@@ -352,8 +353,10 @@ class ExperimentPlan(StrictModel):
     def eligibility(self):
         routing_training = isinstance(self.routing_execution, RoutingTrainingExecution)
         if self.routing_execution is not None:
+            source_routing = self.routing_execution.source
             if (
-                self.evaluator_version != "deterministic-v15"
+                self.evaluator_version
+                != ("deterministic-v16" if source_routing else "deterministic-v15")
                 or self.episode_execution
                 or self.retrieval_execution
                 or self.compression_execution
@@ -392,6 +395,16 @@ class ExperimentPlan(StrictModel):
                     if target.provider not in {"openai", "anthropic"}:
                         raise ValueError("LEARNED_ROUTING_REQUIRES_QUALIFIED_NATIVE_TARGETS")
                     qualified_native_model(target)
+            if source_routing:
+                from cutback.routing_changes import validate_source_models
+
+                validate_source_models(source_routing, self.baseline, self.candidates)
+                if (
+                    not routing_training
+                    and self.candidates[0].routes[-1].max_input_bytes
+                    != source_routing.max_input_bytes
+                ):
+                    raise ValueError("ROUTING_SOURCE_POLICY_MUST_PRESERVE_APPLICATION_INPUT_BOUND")
         elif self.split == "train":
             raise ValueError("TRAIN_EXECUTION_REQUIRES_EXPLICIT_ROUTING_TRAINING_CONTRACT")
         if self.criteria_binding and self.evaluator_version == "deterministic-v14":
@@ -608,7 +621,7 @@ class ExperimentPlan(StrictModel):
                 if self.retrieval_execution
                 else "deterministic-v13"
                 if self.criteria_binding
-                else "deterministic-v15"
+                else ("deterministic-v16" if self.routing_execution.source else "deterministic-v15")
                 if self.routing_execution
                 else "deterministic-v3"
             )
@@ -791,6 +804,17 @@ def plan_summary(plan: ExperimentPlan, dataset: dict) -> dict:
     ):
         raise ValueError("EPISODE_DATASET_REQUIRES_EXPLICIT_EPISODE_MODE")
     n = sum(item["split"] == plan.split for item in dataset["items"])
+    if (
+        plan.routing_execution
+        and plan.routing_execution.source
+        and any(
+            len(item["case"]["input"].encode("utf-8"))
+            > plan.routing_execution.source.max_input_bytes
+            for item in dataset["items"]
+            if item["split"] == plan.split
+        )
+    ):
+        raise ValueError("ROUTING_SOURCE_INPUT_OUTSIDE_APPROVED_APPLICATION_BOUND")
     if isinstance(plan.routing_execution, RoutingTrainingExecution) and not (
         2 <= n <= plan.routing_execution.max_cases
     ):
@@ -1082,6 +1106,15 @@ def run(
     if ledger.remaining_seconds() <= 0:
         raise InputGroupingViolation("NATIVE_INPUT_GROUPING_WALL_LIMIT")
     cases = [item["case"] for item in dataset["items"] if item["split"] == plan.split]
+    if (
+        plan.routing_execution
+        and plan.routing_execution.source
+        and any(
+            len(case["input"].encode("utf-8")) > plan.routing_execution.source.max_input_bytes
+            for case in cases
+        )
+    ):
+        raise ValueError("ROUTING_SOURCE_INPUT_OUTSIDE_APPROVED_APPLICATION_BOUND")
     groups = [item["group_hash"] for item in dataset["items"] if item["split"] == plan.split]
     if plan.sample_limit:
         cases, groups = cases[: plan.sample_limit], groups[: plan.sample_limit]

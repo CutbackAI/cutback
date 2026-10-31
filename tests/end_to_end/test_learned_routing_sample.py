@@ -77,8 +77,9 @@ def test_native_routing_sample_has_distinct_stages_known_setup_and_private_clean
             store.get(project, fit_ref)
 
 
+@pytest.mark.parametrize("source_bound", [False, True])
 def test_authenticated_routing_authoring_mobile_accessibility_and_viewer_boundary(
-    api, tenant, tmp_path, monkeypatch
+    api, tenant, tmp_path, monkeypatch, source_bound
 ):
     if os.getenv("CUTBACK_TEST_BROWSER") != "true":
         pytest.skip("set CUTBACK_TEST_BROWSER=true for authenticated routing acceptance")
@@ -101,7 +102,26 @@ def test_authenticated_routing_authoring_mobile_accessibility_and_viewer_boundar
         server(app) as endpoint,
         httpx.Client(base_url=endpoint, headers=api[1], trust_env=False, timeout=30) as control,
     ):
-        seed_routing(app, control, tenant[0], execute=False, demo=True)
+        extra = {}
+        if source_bound:
+            from support_routing_application import application
+
+            from cutback.routing_changes import inspect_configuration
+
+            baseline, source = inspect_configuration(application(tmp_path), "app.py")
+            extra = {"source": source, "baseline": baseline}
+            inspection = tmp_path / "routing-inspection.json"
+            inspection.write_text(
+                json.dumps(
+                    {
+                        "baseline": baseline.model_dump(mode="json"),
+                        "source": source.model_dump(mode="json"),
+                    }
+                ),
+                encoding="utf-8",
+            )
+            monkeypatch.setenv("CUTBACK_ROUTING_INSPECTION", str(inspection))
+        seed_routing(app, control, tenant[0], execute=False, demo=True, **extra)
         token = api[1]["Authorization"][7:]
         viewer = tenant[2]["Authorization"][7:]
         web = Path(__file__).resolve().parents[2] / "web"
@@ -130,7 +150,10 @@ def test_authenticated_routing_authoring_mobile_accessibility_and_viewer_boundar
             (tmp_path / "routing-storage-diagnostics.json").write_text(
                 json.dumps(storage_errors), encoding="utf-8"
             )
-            assert result.returncode == 0, (safe, storage_errors)
+            if result.returncode:
+                (tmp_path / "routing-browser-diagnostics.txt").write_text(safe, encoding="utf-8")
+            if result.returncode:
+                pytest.fail(json.dumps({"browser": safe, "storage": storage_errors}))
         assert worker["calls"] and not worker["errors"]
         with app.state.sessions() as session:
             plans = session.scalars(
@@ -141,7 +164,9 @@ def test_authenticated_routing_authoring_mobile_accessibility_and_viewer_boundar
             runs = session.scalars(
                 select(ExperimentRunRecord).where(ExperimentRunRecord.project_id == UUID(tenant[0]))
             ).all()
-            assert len(plans) == len(runs) == 3
+            assert len(plans) == (4 if source_bound else 3) and len(runs) == 3
+            if source_bound:
+                assert sum(row.approval_status == "pending" for row in plans) == 1
             assert all(
                 row.status == "COMPLETED" and row.results["billing_complete"] is True
                 for row in runs

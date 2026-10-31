@@ -38,8 +38,9 @@ def routing_worker(app, project_id):
                             == "scripted_test_only",
                             ExperimentPlanRecord.specification["public_specification"][
                                 "evaluator_version"
-                            ].as_string()
-                            == "deterministic-v15",
+                            ]
+                            .as_string()
+                            .in_(["deterministic-v15", "deterministic-v16"]),
                         )
                         .order_by(ExperimentRunRecord.created_at)
                         .limit(1)
@@ -169,7 +170,7 @@ def synthetic_executor():
     return OwnedRoutingExecutor(), calls
 
 
-def seed_routing(app, control, project_id, *, execute=True, demo=False):
+def seed_routing(app, control, project_id, *, execute=True, demo=False, source=None, baseline=None):
     """Seed only synthetic data; each plan is cryptographically fixture-only."""
     from cutback.server.worker import run_one
 
@@ -219,6 +220,13 @@ def seed_routing(app, control, project_id, *, execute=True, demo=False):
         "max_input_tokens": 8192,
         "max_output_tokens": 64,
     }
+    if source is not None:
+        from cutback.routing_changes import validate_source_models
+
+        if baseline is None:
+            raise ValueError("SOURCE_ROUTING_DEMO_BASELINE_REQUIRED")
+        validate_source_models(source, baseline, [baseline])
+        model = baseline.model_dump(mode="json")
     training_plan = post(
         base + "/routing/training-drafts",
         {
@@ -237,6 +245,7 @@ def seed_routing(app, control, project_id, *, execute=True, demo=False):
             "budget": {"max_usd": "2", "max_requests": 500},
             "transport": "scripted_test_only",
             "max_cases": 256,
+            **({"source": source.model_dump(mode="json")} if source else {}),
         },
     )
     state = {

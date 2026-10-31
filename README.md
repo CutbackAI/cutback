@@ -85,6 +85,7 @@ The commands above target the published dev5 package. For the newer source-check
 | Follow this journey | Start here |
 |---|---|
 | Fit input-size routes on training receipts, then validate and independently confirm | [Independent ticket application, source acceptance in progress](https://github.com/CutbackAI/cutback/blob/main/examples/learned-routing/README.md) |
+| Prepare a source-bound routing change and check both application trees | [Independent application-agent example, under qualification](https://github.com/CutbackAI/cutback/blob/main/examples/source-routing/README.md) |
 | Propose checks from training examples, review them, then validate and confirm | [Reviewed criteria sample, source qualification](https://github.com/CutbackAI/cutback/blob/main/examples/reviewed-criteria/README.md) |
 | Generate semantic episode rubrics, pin owner review and compare untouched groups | [Independent proxy sample, source under qualification](https://github.com/CutbackAI/cutback/blob/main/examples/semantic-rubrics/README.md) |
 | Investigate a whole workflow or session | [Tracing walkthrough](https://github.com/CutbackAI/cutback/blob/main/docs/workflow-tracing.md) |

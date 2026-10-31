@@ -107,6 +107,9 @@ export function LearnedRouting({
     [error, setError] = useState("");
   const [report, setReport] = useState<Data | null>(null);
   const [provider, setProvider] = useState("openai");
+  const [sourceInspection, setSourceInspection] = useState<Data | null>(null);
+  const [sourceProposal, setSourceProposal] = useState<Data | null>(null);
+  const sourceRead = useRef(0);
   const trainingIdentity = useRef<Identity | null>(null),
     fitIdentity = useRef<Identity | null>(null);
   const validationIdentity = useRef<Identity | null>(null),
@@ -160,6 +163,9 @@ export function LearnedRouting({
     setReviewedHash("");
     setExecution(null);
     setReport(null);
+    setSourceInspection(null);
+    setSourceProposal(null);
+    sourceRead.current += 1;
     trainingIdentity.current =
       fitIdentity.current =
       validationIdentity.current =
@@ -168,6 +174,7 @@ export function LearnedRouting({
     refresh().catch((value) => setError(explain(value)));
     return () => {
       generation.current += 1;
+      sourceRead.current += 1;
     };
   }, [base, admin]);
   function selectedPlan(next: Data) {
@@ -178,6 +185,7 @@ export function LearnedRouting({
     setReviewedHash("");
     setExecution(null);
     setReport(null);
+    setSourceProposal(null);
     reload();
   }
   function clearPlan() {
@@ -188,6 +196,7 @@ export function LearnedRouting({
     setReviewedHash("");
     setExecution(null);
     setReport(null);
+    setSourceProposal(null);
   }
   function selectedFit(next: Data | null) {
     selection.current += 1;
@@ -201,6 +210,7 @@ export function LearnedRouting({
     setFit(next);
     setPrivateContent(null);
     setReviewedHash("");
+    setSourceProposal(null);
   }
   const models =
     provider === "openai"
@@ -258,7 +268,71 @@ export function LearnedRouting({
       {admin && (
         <details>
           <summary>1. Prepare a training comparison</summary>
+          <label className="field">
+            Qualified application inspection (optional JSON)
+            <input
+              type="file"
+              accept="application/json,.json"
+              onChange={async (event) => {
+                const revision = ++sourceRead.current;
+                const file = event.target.files?.[0];
+                event.target.value = "";
+                setSourceInspection(null);
+                clearPlan();
+                if (!file) return;
+                try {
+                  if (file.size > 262144)
+                    throw new Error("APPLICATION_INSPECTION_FILE_TOO_LARGE");
+                  const value = JSON.parse(await file.text());
+                  if (revision !== sourceRead.current) return;
+                  if (
+                    value.source?.version !== "cutback.routing-source.v1" ||
+                    value.baseline?.provider !== "openai"
+                  )
+                    throw new Error("QUALIFIED_ROUTING_INSPECTION_REQUIRED");
+                  setSourceInspection(value);
+                  setProvider("openai");
+                  setError("");
+                } catch {
+                  if (revision === sourceRead.current)
+                    setError(
+                      "Use the bounded JSON output from cutback routing inspect-source. File contents omitted.",
+                    );
+                }
+              }}
+            />
+          </label>
+          <p className="hint">
+            To bind a change to your application, generate this private file
+            with{" "}
+            <code>
+              cutback routing inspect-source APP app.py --output PRIVATE.json
+            </code>
+            . The baseline instruction and bounds stay fixed. The file is held
+            in memory and sent only when you freeze a plan.
+          </p>
+          {sourceInspection && (
+            <div role="status">
+              <p>
+                Application bound: {sourceInspection.source.producer_file};
+                baseline {sourceInspection.baseline.model}; maximum{" "}
+                {sourceInspection.source.max_input_bytes} UTF-8 input bytes.
+              </p>
+              <button
+                onClick={() => {
+                  sourceRead.current += 1;
+                  setSourceInspection(null);
+                  clearPlan();
+                }}
+              >
+                Clear application inspection
+              </button>
+            </div>
+          )}
           <Form
+            key={
+              sourceInspection?.source?.source_tree_hash || "unbound-routing"
+            }
             title="Prepare routing training"
             submit="Freeze training plan"
             description="Use permitted labeled text cases. Preparing makes no provider request."
@@ -267,7 +341,7 @@ export function LearnedRouting({
               const body = {
                 dataset_id: String(data.dataset_id),
                 transport: String(data.transport),
-                baseline: {
+                baseline: sourceInspection?.baseline || {
                   key: "routing-baseline",
                   provider,
                   model: String(data.baseline),
@@ -276,14 +350,20 @@ export function LearnedRouting({
                   max_output_tokens: Number(data.max_output),
                 },
                 candidates: [
-                  {
-                    key: "routing-alternative",
-                    provider,
-                    model: String(data.candidate),
-                    instruction: String(data.instruction),
-                    max_input_tokens: Number(data.max_input),
-                    max_output_tokens: Number(data.max_output),
-                  },
+                  sourceInspection
+                    ? {
+                        ...sourceInspection.baseline,
+                        key: "routing-alternative",
+                        model: String(data.candidate),
+                      }
+                    : {
+                        key: "routing-alternative",
+                        provider,
+                        model: String(data.candidate),
+                        instruction: String(data.instruction),
+                        max_input_tokens: Number(data.max_input),
+                        max_output_tokens: Number(data.max_output),
+                      },
                 ],
                 metric: {
                   kind: "exact_label",
@@ -294,6 +374,9 @@ export function LearnedRouting({
                 },
                 budget: ceiling(data),
                 max_cases: Number(data.max_cases),
+                ...(sourceInspection
+                  ? { source: sourceInspection.source }
+                  : {}),
               };
               const identity = await identify(body, trainingIdentity);
               const next = await prepareRouting(
@@ -321,6 +404,7 @@ export function LearnedRouting({
               label="Routing provider"
               name="provider"
               value={provider}
+              disabled={!!sourceInspection}
               onChange={(event) => setProvider(event.target.value)}
             >
               <option value="openai">OpenAI</option>
@@ -340,15 +424,17 @@ export function LearnedRouting({
               Fixture responses require the matching local sample worker. A live
               provider worker cannot execute a fixture-only plan.
             </p>
-            <Select
-              key={provider + "baseline"}
-              label="Routing baseline model"
-              name="baseline"
-            >
-              {models.map((value) => (
-                <option key={value}>{value}</option>
-              ))}
-            </Select>
+            {!sourceInspection && (
+              <Select
+                key={provider + "baseline"}
+                label="Routing baseline model"
+                name="baseline"
+              >
+                {models.map((value) => (
+                  <option key={value}>{value}</option>
+                ))}
+              </Select>
+            )}
             <Select
               key={provider + "candidate"}
               label="Routing alternative model"
@@ -359,28 +445,32 @@ export function LearnedRouting({
                 <option key={value}>{value}</option>
               ))}
             </Select>
-            <label className="field">
-              Shared task instruction
-              <textarea name="instruction" required maxLength={16000} />
-            </label>
-            <Field
-              label="Maximum input tokens per target"
-              name="max_input"
-              type="number"
-              min="4097"
-              max="100000"
-              defaultValue="8192"
-              required
-            />
-            <Field
-              label="Maximum output tokens per target"
-              name="max_output"
-              type="number"
-              min="16"
-              max="16384"
-              defaultValue="256"
-              required
-            />
+            {!sourceInspection && (
+              <>
+                <label className="field">
+                  Shared task instruction
+                  <textarea name="instruction" required maxLength={16000} />
+                </label>
+                <Field
+                  label="Maximum input tokens per target"
+                  name="max_input"
+                  type="number"
+                  min="4097"
+                  max="100000"
+                  defaultValue="8192"
+                  required
+                />
+                <Field
+                  label="Maximum output tokens per target"
+                  name="max_output"
+                  type="number"
+                  min="16"
+                  max="16384"
+                  defaultValue="256"
+                  required
+                />
+              </>
+            )}
             <Field
               label="Required exact-label score"
               name="minimum"
@@ -833,6 +923,85 @@ export function LearnedRouting({
         </>
       )}
       {report && <RoutingResult report={report} />}
+      {admin &&
+        fit &&
+        report?.status === "COMPLETED" &&
+        report.specification?.split === "test" &&
+        report.specification?.routing_execution?.source && (
+          <section aria-label="Application routing proposal">
+            <h3>Prepare the application change</h3>
+            <p>
+              Read a current source-bound proposal, then let your application
+              agent verify its exact Git files and run checks on both trees. No
+              application file is changed here. Fitting, hosting and full-task
+              costs remain unknown.
+            </p>
+            <Form
+              title="Read source-bound routing proposal"
+              submit="Read application routing proposal"
+              onSubmit={async (data) => {
+                const revision = selection.current;
+                const value = await json(
+                  api,
+                  base + `/routing/fits/${fit.id}/source-proposal`,
+                  {
+                    purpose: String(data.purpose),
+                    confirmation_run_id: report.id,
+                  },
+                );
+                if (revision !== selection.current)
+                  throw new Error("ROUTING_SELECTION_CHANGED");
+                setSourceProposal(value);
+                return "Current confirmation checked. Verify the exact clean application and both-tree checks before review.";
+              }}
+            >
+              <Field
+                label="Routing source proposal purpose"
+                name="purpose"
+                required
+              />
+            </Form>
+            {sourceProposal && (
+              <div>
+                <p>
+                  {sourceProposal.decision}. Production approval required.
+                  Full-task cost unknown.
+                </p>
+                <details>
+                  <summary>
+                    Inspect private application routing proposal
+                  </summary>
+                  <pre>{JSON.stringify(sourceProposal, null, 2)}</pre>
+                </details>
+                <button
+                  onClick={() => {
+                    const url = URL.createObjectURL(
+                      new Blob(
+                        [JSON.stringify(sourceProposal, null, 2) + "\n"],
+                        { type: "application/json" },
+                      ),
+                    );
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = "routing-source-proposal.json";
+                    link.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                >
+                  Download private routing proposal
+                </button>
+                <button
+                  onClick={() => {
+                    selection.current += 1;
+                    setSourceProposal(null);
+                  }}
+                >
+                  Clear private application proposal
+                </button>
+              </div>
+            )}
+          </section>
+        )}
       {admin && privateContent && (
         <div>
           <h3>Private routing review</h3>

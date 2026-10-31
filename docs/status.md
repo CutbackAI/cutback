@@ -44,8 +44,10 @@ and 53. Generated [semantic episode rubrics](semantic-rubrics.md) are accepted i
 [PR 54](https://github.com/CutbackAI/cutback/pull/54); even confirmed scores remain model proxies. The new
 [learned input-size routing sample](../examples/learned-routing/README.md) is under
 source/installed qualification, with separate training, fitting, validation and
-untouched confirmation. It does not yet qualify an automatic routing source patch
-or measured hosting/full task economics.
+untouched confirmation. A [source-bound application-agent extension](source-routing.md)
+now prepares reversible configuration changes and checks both actual application
+trees; its final installed/image/public acceptance is pending. Measured hosting
+and full-task economics remain unknown.
 
 The [PR 42](https://github.com/CutbackAI/cutback/pull/42) source increment extends new agent/dashboard campaigns to a frozen portfolio of up to four qualified model/output-limit alternatives, sharing one parent budget and one independent confirmation. It passed installed and all ten hosted gates recorded in [progress](progress.md). Existing saved campaigns keep their exact contracts; this does not update PyPI or combine every optimizer into one automatic system.
 

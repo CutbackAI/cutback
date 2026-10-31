@@ -61,6 +61,131 @@ def register_routing(app, output, request, fail):
         else:
             output(result, destination)
 
+    def private_result(destination, value, *roots):
+        from cutback.core.workspace import write_private_output
+
+        if any(destination.resolve().is_relative_to(root.resolve()) for root in roots):
+            raise ValueError("ROUTING_PRIVATE_OUTPUT_MUST_BE_OUTSIDE_APPLICATION")
+        write_private_output(destination, value)
+
+    @group.command("inspect-source")
+    def inspect_source(
+        root: Path,
+        producer_file: str,
+        destination: Annotated[Path, typer.Option("--output")],
+    ):
+        """Parse a qualified clean native application. No imports, execution or network."""
+        from cutback.routing_changes import inspect_configuration
+
+        try:
+            baseline, binding = inspect_configuration(root, producer_file)
+            private_result(
+                destination,
+                {
+                    "baseline": baseline.model_dump(mode="json"),
+                    "source": binding.model_dump(mode="json"),
+                },
+                root,
+            )
+        except (OSError, ValueError):
+            fail(
+                "ROUTING_SOURCE_INSPECTION_REFUSED",
+                "Use the exact qualified producer and sibling baseline routing.json in a clean "
+                "Git application; select a private output outside that tree.",
+            )
+
+    def current_source_proposal(project, endpoint, fit_id, run_id, purpose):
+        from pydantic import TypeAdapter
+
+        from cutback.core.models import Identifier
+        from cutback.routing_changes import RoutingSourceProposal
+
+        purpose = TypeAdapter(Identifier).validate_python(purpose)
+        return RoutingSourceProposal.model_validate(
+            request(
+                "POST",
+                endpoint,
+                f"/v1/projects/{identity(project)}/routing/fits/{identity(fit_id)}/source-proposal",
+                json={"purpose": purpose, "confirmation_run_id": identity(run_id)},
+            )
+        )
+
+    @group.command("source-proposal")
+    def source_proposal(
+        root: Path,
+        fit_id: str,
+        confirmation_run_id: str,
+        project: Annotated[str, typer.Option("--project")],
+        endpoint: Annotated[str, typer.Option("--endpoint")],
+        purpose: Annotated[str, typer.Option("--purpose-reference")],
+        destination: Annotated[Path, typer.Option("--output")],
+    ):
+        """Recheck scoped confirmation and prepare a private exact diff and rollback."""
+        from cutback.routing_changes import prepare_patch
+
+        try:
+            if destination.resolve().is_relative_to(root.resolve()):
+                raise ValueError
+            proposal = current_source_proposal(
+                project, endpoint, fit_id, confirmation_run_id, purpose
+            )
+            private_result(destination, prepare_patch(root, proposal), root)
+        except (ValueError, OSError):
+            fail(
+                "ROUTING_SOURCE_PROPOSAL_REFUSED",
+                "Check current source-bound confirmation and the unchanged clean application. "
+                "Write the private diff outside that tree.",
+            )
+
+    @group.command("source-review")
+    def source_review(
+        artifact_file: Path,
+        contract_file: Path,
+        receipt_file: Path,
+        base_root: Path,
+        proposed_root: Path,
+        fit_id: str,
+        project: Annotated[str, typer.Option("--project")],
+        endpoint: Annotated[str, typer.Option("--endpoint")],
+        purpose: Annotated[str, typer.Option("--purpose-reference")],
+        coverage: Annotated[Path, typer.Option("--coverage")],
+        destination: Annotated[Path, typer.Option("--output")],
+        branch: Annotated[str | None, typer.Option("--branch")] = None,
+    ):
+        """Refresh collector authority, verify both checked trees, optionally create a local ref."""
+        from cutback.cli_checks import read
+        from cutback.routing_changes import RoutingSourceProposal, review_change
+
+        try:
+            if any(
+                destination.resolve().is_relative_to(root.resolve())
+                for root in (base_root, proposed_root)
+            ):
+                raise ValueError
+            artifact = read(artifact_file)
+            recorded = RoutingSourceProposal.model_validate(artifact["proposal"])
+            current = current_source_proposal(
+                project, endpoint, fit_id, str(recorded.run_id), purpose
+            )
+            if current != recorded:
+                raise ValueError("ROUTING_SOURCE_COLLECTOR_AUTHORITY_CHANGED")
+            result = review_change(
+                artifact,
+                read(contract_file),
+                read(receipt_file),
+                base_root,
+                proposed_root,
+                read(coverage),
+                branch=branch,
+            )
+            private_result(destination, result, base_root, proposed_root)
+        except (ValueError, OSError, KeyError, TypeError):
+            fail(
+                "ROUTING_SOURCE_REVIEW_REFUSED",
+                "Refresh scoped confirmation; verify the exact two clean trees, actual checks "
+                "and declared policy consumers. A local JSON file is not collector authority.",
+            )
+
     @group.command("training-draft")
     def training_draft(
         request_file: Path,

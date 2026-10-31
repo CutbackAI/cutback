@@ -1,0 +1,30 @@
+{
+  "key": "application-policy",
+  "provider": "router",
+  "model": "input-size-v1",
+  "instruction": "",
+  "max_output_tokens": 256,
+  "max_input_tokens": 8192,
+  "region": null,
+  "local_cost_upper_usd": null,
+  "routes": [
+    {
+      "max_input_bytes": 4000,
+      "target": {
+        "key": "application-baseline",
+        "provider": "openai",
+        "model": "gpt-4.1",
+        "instruction": "Classify the declared ticket priority. Return only Urgent or Normal.",
+        "max_output_tokens": 64,
+        "max_input_tokens": 8192,
+        "region": null,
+        "local_cost_upper_usd": null,
+        "routes": [],
+        "prompt_cache": null,
+        "request_contract": null
+      }
+    }
+  ],
+  "prompt_cache": null,
+  "request_contract": null
+}

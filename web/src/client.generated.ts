@@ -250,6 +250,9 @@ export function createSDK(request:Request) {return {
   validation_draft_v1_projects__project_id__routing_fits__fit_id__validation_drafts_post: (args:{project_id:string;fit_id:string;body:components["schemas"]["RoutingValidationDraftInput"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/routing/fits/${encodeURIComponent(String(args.fit_id))}/validation-drafts`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  source_proposal_v1_projects__project_id__routing_fits__fit_id__source_proposal_post: (args:{project_id:string;fit_id:string;body:components["schemas"]["RoutingSourceProposalInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/routing/fits/${encodeURIComponent(String(args.fit_id))}/source-proposal`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   confirmation_draft_v1_projects__project_id__routing_fits__fit_id__confirmation_drafts_post: (args:{project_id:string;fit_id:string;body:components["schemas"]["RoutingConfirmationDraftInput"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/routing/fits/${encodeURIComponent(String(args.fit_id))}/confirmation-drafts`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},

@@ -82,6 +82,8 @@ def register_agent(app, output, fail):
         joint_context: bool = False,
         assumed_usd_per_cpu_hour: str | None = None,
         min_test_samples: int = typer.Option(30, min=1, max=10000),
+        learned_routing: bool = False,
+        fixture_transport: bool = False,
     ):
         """Prepare permitted examples and the request in an approved encrypted store."""
         from cutback.agent import prepare as run
@@ -112,6 +114,8 @@ def register_agent(app, output, fail):
                 joint_context=joint_context,
                 assumed_usd_per_cpu_hour=assumed_usd_per_cpu_hour,
                 min_test_samples=min_test_samples,
+                learned_routing=learned_routing,
+                fixture_transport=fixture_transport,
             )
         )
 
@@ -192,13 +196,26 @@ def register_agent(app, output, fail):
         target: Path = Path("."),
         purpose: str = typer.Option(..., "--purpose-reference"),
         candidate: str | None = None,
+        destination: Annotated[Path | None, typer.Option("--output")] = None,
     ):
         """Read authorized evidence; produce a diff/rollback for review without applying it."""
+        from cutback.agent import load_session
         from cutback.agent import proposal as run
         from cutback.agent_control import connect
 
+        source_routing = load_session(target).get("search_mode") == "source_routing"
+        if source_routing and destination is None:
+            raise ValueError("ROUTING_SOURCE_PROPOSAL_REQUIRES_PRIVATE_OUTPUT")
+        if destination is not None and destination.resolve().is_relative_to(target.resolve()):
+            raise ValueError("PROPOSAL_OUTPUT_MUST_BE_OUTSIDE_APPLICATION")
         control, _ = connect(target)
-        output(run(target, control, purpose=purpose, candidate=candidate))
+        result = run(target, control, purpose=purpose, candidate=candidate)
+        if destination is not None:
+            from cutback.core.workspace import write_private_output
+
+            write_private_output(destination, result)
+        else:
+            output(result)
 
     @group.command("confirm")
     @guarded
