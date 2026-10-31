@@ -59,11 +59,15 @@ def worker_cycle(sessions, store, *, maintenance_due=True):
         from cutback.server.continuous import queue_schedules
         from cutback.server.criteria_worker import run_criteria_one
         from cutback.server.proposal_worker import run_proposal_one
+        from cutback.server.scenario_worker import run_scenario_one
 
         attempt("campaigns", lambda: advance_one(sessions, store, execution_enabled=True))
         attempt("proposals", lambda: run_proposal_one(sessions, store, execution_enabled=True))
         attempt(
             "criteria_generation", lambda: run_criteria_one(sessions, store, execution_enabled=True)
+        )
+        attempt(
+            "scenario_generation", lambda: run_scenario_one(sessions, store, execution_enabled=True)
         )
 
         attempt(

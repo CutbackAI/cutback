@@ -47,7 +47,13 @@ def lock_lineage(session, project):
 
 def lock_preparation_identity(session, kind, identity):
     """Serialize client-chosen global row identities, including across project locks."""
-    if kind not in {"criteria-draft", "experiment-plan", "learned-routing-fit"}:
+    if kind not in {
+        "criteria-draft",
+        "experiment-plan",
+        "learned-routing-fit",
+        "scenario-draft",
+        "scenario-import",
+    }:
         raise ValueError("PREPARATION_IDENTITY_KIND_INVALID")
     key = int.from_bytes(
         hashlib.sha256(b"cutback-prepare-v1:" + kind.encode() + b":" + identity.bytes).digest()[:8],
@@ -357,6 +363,9 @@ def require_current_test_evidence(session, store, recommendation):
     if not row or row.project_id != project or run.status != "COMPLETED":
         raise LineageViolation("COMPLETED_TEST_EVIDENCE_REQUIRED")
     plan = load_plan(store, project, row.specification)
+    from cutback.server.scenario_service import require_current_import
+
+    require_current_import(session, store, session.get(DatasetRecord, row.dataset_id))
     if plan.criteria_binding:
         from cutback.server.criteria_service import receipt as criteria_receipt
         from cutback.server.criteria_service import validate_binding

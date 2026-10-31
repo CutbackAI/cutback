@@ -2,6 +2,8 @@
 
 Updated 30 October 2026. Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business. [Executed acceptance](progress.md) records the exact artifacts, checks, failures and limits; [the baseline](market-baseline.md) records remaining requirements.
 
+[Reviewed generated scenarios](generated-scenarios.md) are a source addition under qualification: training-only native proposals, bounded synthetic personas/goal mapping, resumable agent intent, private owner review and development-only imports. Source tests and authenticated browser acceptance pass; installed/archive/image/hosted gates remain pending. These static cases do not supply reactive users, independent labels or representative coverage.
+
 ## Choose the right installation
 
 | Installation | Available scope |

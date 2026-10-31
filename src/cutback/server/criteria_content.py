@@ -113,9 +113,15 @@ def training_view(session, store, project, dataset, policy, *, limit=8):
     return result, [str(item.id) for item in items]
 
 
-def put_payload(session, store, row, value, kind, refs, policy):
+def put_payload(session, store, row, value, kind, refs, policy, *, namespace="criteria"):
     from cutback.server.evaluation_api import policy_object_count
 
+    if namespace not in {"criteria", "scenario"} or kind not in {
+        namespace + "_input",
+        namespace + "_output",
+    }:
+        raise ValueError("GENERATED_CONTENT_NAMESPACE_OR_KIND_INVALID")
+    prefix = namespace.upper()
     policy_row = session.get(
         CapturePolicyRecord, row.capture_policy_id, with_for_update=True, populate_existing=True
     )
@@ -126,13 +132,13 @@ def put_payload(session, store, row, value, kind, refs, policy):
         or policy_row.policy != policy.model_dump(mode="json")
         or policy.expires_at <= datetime.now(UTC)
     ):
-        raise ValueError("CRITERIA_CONTENT_POLICY_CHANGED_OR_EXPIRED")
+        raise ValueError(prefix + "_CONTENT_POLICY_CHANGED_OR_EXPIRED")
     count = policy_object_count(session, row.capture_policy_id)
-    if kind == "criteria_output" and row.state == "RUNNING" and row.output_payload_id is None:
+    if kind == namespace + "_output" and row.state == "RUNNING" and row.output_payload_id is None:
         # Consume this exact live parent's durable output slot under the policy lock.
         count -= 1
     if count >= policy.max_samples:
-        raise ValueError("CRITERIA_SHARED_CONTENT_QUOTA_EXHAUSTED")
+        raise ValueError(prefix + "_SHARED_CONTENT_QUOTA_EXHAUSTED")
     clean, blob = policy_content(
         {"content_nonce": str(uuid4()), "value": value}, policy, preserve_semantics=True
     )
@@ -148,14 +154,20 @@ def put_payload(session, store, row, value, kind, refs, policy):
             policy.expires_at,
             datetime.now(UTC) + timedelta(days=policy.retention_days),
         ),
-        metadata_safe={"kind": kind, "criteria_id": str(row.id)},
+        metadata_safe={"kind": kind, namespace + "_id": str(row.id)},
     )
     session.add(payload)
     session.flush()
     return payload
 
 
-def read_payload(session, store, row, payload_id, policy, *, kind):
+def read_payload(session, store, row, payload_id, policy, *, kind, namespace="criteria"):
+    if namespace not in {"criteria", "scenario"} or kind not in {
+        namespace + "_input",
+        namespace + "_output",
+    }:
+        raise ValueError("GENERATED_CONTENT_NAMESPACE_OR_KIND_INVALID")
+    prefix = namespace.upper()
     payload = session.get(PayloadSample, UUID(str(payload_id)))
     if (
         not payload
@@ -163,22 +175,22 @@ def read_payload(session, store, row, payload_id, policy, *, kind):
         or payload.policy_id != row.capture_policy_id
         or payload.expires_at <= datetime.now(UTC)
         or payload.metadata_safe.get("deleted")
-        or payload.metadata_safe.get("criteria_id") != str(row.id)
+        or payload.metadata_safe.get(namespace + "_id") != str(row.id)
         or payload.metadata_safe.get("kind") != kind
     ):
-        raise ValueError("CRITERIA_CONTENT_EXPIRED_OR_OUT_OF_SCOPE")
+        raise ValueError(prefix + "_CONTENT_EXPIRED_OR_OUT_OF_SCOPE")
     try:
         blob = store.get(row.project_id, payload.object_ref)
         if len(blob) > min(policy.max_payload_bytes, 1048576):
-            raise ValueError("CRITERIA_CONTENT_BYTE_BOUND")
+            raise ValueError(prefix + "_CONTENT_BYTE_BOUND")
         raw = json.loads(blob)
     except Exception:
-        raise ValueError("CRITERIA_CONTENT_UNAVAILABLE") from None
+        raise ValueError(prefix + "_CONTENT_UNAVAILABLE") from None
     if (
         not isinstance(raw, dict)
         or set(raw) != {"content_nonce", "value"}
         or digest(raw) != payload.content_hash
     ):
-        raise ValueError("CRITERIA_CONTENT_INTEGRITY_FAILURE")
+        raise ValueError(prefix + "_CONTENT_INTEGRITY_FAILURE")
     policy_content(raw, policy, preserve_semantics=True)
     return raw["value"], payload.content_hash

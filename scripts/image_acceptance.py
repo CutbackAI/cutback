@@ -162,6 +162,7 @@ def main(
     semantic_rubrics=False,
     learned_routing=False,
     source_routing=False,
+    generated_scenarios=False,
 ):
     from cutback.server.migrate import CURRENT_REVISION
 
@@ -282,7 +283,12 @@ manifest=seed_support_desk(
  provider_batch=True,semantic_cache=True,runtime_guardrails=RUNTIME_GUARDS,
  joint_model_context=JOINT_EXPECTED,reviewed_criteria=CRITERIA_EXPECTED,
  semantic_rubrics=RUBRICS_EXPECTED,learned_routing=ROUTING_EXPECTED and not SOURCE_BOUND_EXPECTED,
- source_routing=SOURCE_BOUND_EXPECTED)
+ source_routing=SOURCE_BOUND_EXPECTED,generated_scenarios=SCENARIOS_EXPECTED)
+if SCENARIOS_EXPECTED:
+ assert manifest["generated_scenarios_sample"]["native_sdk_calls"]==11
+ assert manifest["generated_scenarios_sample"]["idempotent_import_checked"] is True
+ assert manifest["generated_scenarios_sample"]["test_evidence"] is False
+ assert manifest["generated_scenarios_sample"]["paid_provider_calls"]==0
 if ROUTING_EXPECTED:
  assert manifest["learned_routing_sample"]["actual_declared_checks_passed"] is True
  assert manifest["learned_routing_sample"]["paid_provider_calls"]==0
@@ -320,6 +326,7 @@ print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":mani
                 code = code.replace("RUBRICS_EXPECTED", repr(semantic_rubrics))
                 code = code.replace("ROUTING_EXPECTED", repr(learned_routing or source_routing))
                 code = code.replace("SOURCE_BOUND_EXPECTED", repr(source_routing))
+                code = code.replace("SCENARIOS_EXPECTED", repr(generated_scenarios))
                 code = code.replace("JOINT_EXPECTED", repr(joint_model_context))
                 manifest = json.loads(inside(container, code, values).strip().splitlines()[-1])
                 base = "/v1/projects/" + manifest["project_id"]
@@ -531,6 +538,21 @@ with sessions() as session:
      assert executed.results["lineage"]["fresh_test_claim"] is True
   assert generation_kinds.count("criteria-generation-v1")==int(CRITERIA_EXPECTED)
   assert generation_kinds.count("criteria-generation-v2")==int(RUBRICS_EXPECTED)
+ if SCENARIOS_EXPECTED:
+  from cutback.server.scenario_db import ScenarioVersionRecord,ScenarioDatasetImport
+  from cutback.server.scenario_service import reviewed_content,require_current_import
+  versions=session.scalars(select(ScenarioVersionRecord)).all()
+  assert len(versions)==1
+  version=versions[0]
+  requirements,proposal,preview=reviewed_content(session,new_only,version)
+  assert len(proposal.scenarios)==1 and preview["independent_labels"] is False
+  links=session.scalars(select(ScenarioDatasetImport)).all()
+  assert len(links)==1 and links[0].review_approval_id==version.review_approval_id
+  from cutback.server.db import DatasetRecord,DatasetItem
+  derived=session.get(DatasetRecord,links[0].dataset_id)
+  require_current_import(session,new_only,derived)
+  assert set(session.scalars(select(DatasetItem.split).where(
+   DatasetItem.dataset_id==derived.id)).all())=={"validation"}
  if ROUTING_EXPECTED:
   from uuid import UUID
   from cutback.server.routing_service import (read_fit,validate_binding as validate_routing,
@@ -580,6 +602,7 @@ engine.dispose()
                     .replace("RUBRICS_EXPECTED", repr(semantic_rubrics))
                     .replace("ROUTING_EXPECTED", repr(learned_routing or source_routing))
                     .replace("SOURCE_BOUND_EXPECTED", repr(source_routing))
+                    .replace("SCENARIOS_EXPECTED", repr(generated_scenarios))
                 )
                 recovered = json.loads(inside(container, recovery, values).strip().splitlines()[-1])
 
@@ -713,6 +736,7 @@ engine.dispose()
                     "routing_fits_and_canonical_training_restored": learned_routing
                     or source_routing,
                     "source_bound_routing_and_both_tree_checks": source_routing,
+                    "reviewed_generated_development_scenarios_restored": generated_scenarios,
                     "restored_tables": len(after),
                     "row_counts_match": True,
                     **recovered,
@@ -759,6 +783,7 @@ if __name__ == "__main__":
     parser.add_argument("--semantic-rubrics", action="store_true")
     parser.add_argument("--learned-routing", action="store_true")
     parser.add_argument("--source-routing", action="store_true")
+    parser.add_argument("--generated-scenarios", action="store_true")
     args = parser.parse_args()
     main(
         args.image,
@@ -772,4 +797,5 @@ if __name__ == "__main__":
         semantic_rubrics=args.semantic_rubrics,
         learned_routing=args.learned_routing,
         source_routing=args.source_routing,
+        generated_scenarios=args.generated_scenarios,
     )
