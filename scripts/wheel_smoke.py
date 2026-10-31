@@ -29,6 +29,8 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
             "-c",
             "import importlib.util; from cutback.pricing import Catalog; "
             "from cutback.core.cache_workload import CacheWorkloadAssessment; "
+            "from cutback.core.retrieval_producer import RetrievalProducerBinding; "
+            "from cutback.retrieval_source import inspect_producer; "
             "from cutback.agent_cache_workload import source_input; "
             f"import cutback; assert cutback.__version__=={version!r}; "
             "from cutback.gateway.client import operation_headers; from uuid import UUID; "

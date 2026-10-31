@@ -1,5 +1,18 @@
 # Cutback agent workflow
 
+When discovery reports a qualified retrieval producer, inspect the installed
+`workflow prepare --help` and `docs/agent-retrieval.md`. The source extension
+supports `--automatic` or explicit `--retrieval`, with separate
+`--retrieval-corpus-authorized`, permitted labeled questions, corpus rights,
+quality criteria and native budget. Never infer corpus permission from a scan.
+Prepare first, approve the exact validation hash, then freeze one eligible
+candidate for separately approved untouched confirmation. Unknown CPU/native
+cost cannot select a winner. Resume the same nonbillable setup or confirmation
+intent after a lost reply; never retry uncertain paid execution. The settings
+proposal still requires checks on both source trees, declared consumer coverage
+and exact rollback. Synthetic evidence remains local review only. This extension
+is absent from published dev5 and does not cover arbitrary retrieval frameworks.
+
 For a clean committed source application with explicitly authorized encrypted
 request profiling, inspect installed `workflow assess-workload --help`. A matching
 collector contract lets the agent derive the current binding and find completed

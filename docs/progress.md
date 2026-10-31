@@ -1,5 +1,38 @@
 # Implementation progress
 
+31 October 2026 automatic retrieval workflow, **working source under final
+qualification**: [commands and scope](agent-retrieval.md). The agent discovers
+the independent committed corpus producer without importing it or parsing the
+corpus. Explicit corpus authorization freezes encrypted questions and documents;
+bounded v6 retrieval variants keep the native model/output ceiling unchanged.
+Component-aware validation, separately approved untouched confirmation,
+purpose-bound settings proposals, both-tree application checks and rollback
+are connected to the resumable workflow. Unknown CPU/native cost cannot select
+a winner. Lost setup or confirmation replies reuse the same nonbillable
+identities; uncertain approval/queue replies cannot submit another run.
+
+Executed source checkpoints: **55 passed / one Windows symlink skip** in 161.89
+seconds across the agent, strategy, preparation, retrieval economics and new PG
+workflow; **six** earlier retrieval/context integration checks in 155.39 seconds;
+**one** actual HTTP/native-SDK/PostgreSQL demo with both source-tree checks and
+rollback in 44.61 seconds; **nine** economics/CLI checks in 3.96 seconds. Full
+typing passes **374 modules**, plus repository lint/format. Broader default,
+SDK3/Python 3.13, installed archives and public gates remain pending. The
+source-only `demo --agent-retrieval` runs the guided synthetic journey. Published
+dev5 is unchanged. This does not complete cross-engine selection, arbitrary
+retrieval frameworks, full-task economics or customer acceptance.
+
+The preceding source-workload census/Decimal follow-up is locally accepted:
+the final installed wheel passed **230 / 17 SDK3-only skips** in 224.61 seconds
+on the default pin and **247** in 224.91 seconds on SDK3. The core-only consumer
+passed without SDK/server; the exact image restored schema 0032, 100 tables,
+2,044 encrypted objects and eight profile sidecars, including rekey and
+source-bound expiry checks. Reproduced wheel SHA256 is
+`efa67a2013f14fd7e27e99949aff9f71ee065f8d35a6a456dfaad39b290db9e6`.
+The later protected-check compatibility fix leaves that application wheel
+byte-identical. Current public-head hosted gates and stacked-base convergence
+remain pending; the superseded failures below are retained as audit evidence.
+
 Post-build auditing found an incomplete-window reporting defect in the first
 workload candidate. A 1,002-attempt window returned a capped page's subtotal as
 the full window cost. A new installed negative regression first reproduced

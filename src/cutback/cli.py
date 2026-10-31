@@ -122,6 +122,7 @@ def demo(
     source_routing: bool = False,
     generated_scenarios: bool = False,
     reactive_users: bool = False,
+    agent_retrieval: bool = False,
 ):
     """Explore the complete sample. Requires Docker and Git; no API key or paid calls."""
     try:
@@ -145,6 +146,7 @@ def demo(
             source_routing=source_routing,
             generated_scenarios=generated_scenarios,
             reactive_users=reactive_users,
+            agent_retrieval=agent_retrieval,
         )
     except ImportError:
         fail(

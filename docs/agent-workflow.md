@@ -1,5 +1,12 @@
 # Optimize an application with your coding agent
 
+The source checkout is adding [automatic retrieval preparation](agent-retrieval.md).
+For the independent corpus application, the agent discovers its exact producer,
+freezes authorized questions and corpus, compares retrieval settings, prepares
+separate confirmation and produces a settings diff plus rollback. Each native
+budget still needs exact approval. This addition is under qualification and is
+absent from published dev5.
+
 The source checkout now adds [source-matched workload assessment](source-workload.md).
 The agent derives a clean application's binding, finds matching retained request
 profiles and checks declared native-window cache economics without inference or
@@ -31,7 +38,7 @@ This extension is under qualification and is absent from published dev5.
 
 The source-only `workflow prepare --automatic` selects the qualified preparation
 adapter for one workflow: native model/output-cap search, joint model/context
-search, or source-bound learned routing. It freezes that choice before collector
+search, retrieval search, or source-bound learned routing. It freezes that choice before collector
 requests and resumes the same intent. Use `--workflow` when discovery finds more
 than one workflow. Keep the same permitted examples, rights reference, quality
 criteria and cost/request ceiling; preparing never approves inference. Automatic

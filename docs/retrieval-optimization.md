@@ -38,6 +38,11 @@ Validation sample gates and statistical confidence are distinct. Synthetic confi
 
 ## API, CLI and recovery
 
+The source checkout is adding [automatic agent discovery and preparation](agent-retrieval.md)
+for the independent example producer. It binds actual clean source, numeric
+settings and the explicitly authorized corpus; the same journal handles validation,
+separate confirmation and source proposals. This addition is under qualification.
+
 `POST /v1/projects/{project}/retrieval/draft` accepts the typed corpus/settings/baseline/metric/budget contract and creates an encrypted plan. Omit `candidates` to use the bounded generator. `POST .../retrieval/confirmation` derives exactly one candidate from a completed validation run. Both return ordinary plans, with the existing approval and queue APIs. `GET .../experiments/plans/{plan}/execution` reconciles a lost queue reply without posting another run. A consumed approval never queues twice.
 
 `POST .../retrieval/{confirmation_run}/proposal` requires administrator scope, an audited purpose, current capture authority, complete confirmation accounting and fresh holdout lineage. It returns only the numeric settings/source binding and decision scope. Viewer metadata access cannot read corpus, encrypted cases or proposals. Existing content expiry/revocation, policy export/delete and project cleanup apply to the encrypted plan and retained samples. No new relational content table or migration is introduced.

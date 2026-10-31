@@ -86,6 +86,8 @@ def register_agent(app, output, fail):
         fixture_transport: bool = False,
         automatic: bool = False,
         exact_cache_contract: Path | None = None,
+        retrieval: bool = False,
+        retrieval_corpus_authorized: bool = False,
     ):
         """Prepare permitted examples and the request in an approved encrypted store."""
         from cutback.agent import prepare as run
@@ -127,6 +129,8 @@ def register_agent(app, output, fail):
                 fixture_transport=fixture_transport,
                 automatic=automatic,
                 exact_cache_contract=cache_contract,
+                retrieval=retrieval,
+                retrieval_corpus_authorized=retrieval_corpus_authorized,
             )
         )
 

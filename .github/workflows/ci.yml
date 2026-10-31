@@ -172,6 +172,7 @@ jobs:
           tests/integration/test_guardrail_process.py
           tests/end_to_end/test_gateway_pipeline.py
           tests/integration/test_retrieval_workflow.py
+          tests/integration/test_agent_retrieval_workflow.py
           tests/end_to_end/test_retrieval_pipeline.py
           tests/integration/test_compression_workflow.py
           tests/integration/test_joint_context_workflow.py
