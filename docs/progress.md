@@ -1,5 +1,38 @@
 # Implementation progress
 
+The independent application is public at
+[CutbackAI/support-desk-example](https://github.com/CutbackAI/support-desk-example).
+Its original application checks pass without Cutback; optional observation uses
+an explicit unreleased public source pin and closed native SDK transports. All
+five hosted jobs passed for `bfe9cd2ec91b5491992bea25824507ccf1cdeec8`: application
+checks on Windows/Linux and Python 3.11/3.13, plus the real collector/PostgreSQL/
+desktop/mobile/accessibility journey. The collector checks made six synthetic
+native calls, preserved missing usage and scanner workflow identity, and recorded
+zero accessibility violations with payload capture off. The fresh installed
+application wheel works without Cutback (**14 passes / three explicit optional
+skips / one upstream deprecation warning**); optional source checks pass **17**.
+Its source/history/wheel/sdist boundary checked **21 files / 29 history objects /
+35 archive members / zero findings**. These are independent consumer mechanics,
+not real model-quality, customer-savings or production claims.
+
+The broader bootstrap source regression passed **1,269 / 34 skips in 538.36
+seconds**, including all units/contracts and real PostgreSQL collector, privacy,
+lineage, retention and preparation recovery. Corrected preparation PR 59's exact
+head also passed all eleven actual hosted jobs. The separate attribution PR 60
+retains a failed hosted routing-authoring confirmation (**one failure / 1,865
+passes / 40 skips**); isolated and paired current installed reruns pass, but do
+not explain that full-run failure. Investigation and complete installed Windows
+qualification remain open.
+
+Routing diagnostics now bind the confirmation form and POST to the actual queued
+validation UUID and explicitly check retained billing, quality and cost gates.
+A refused acknowledgement reports only a bounded uppercase collector code.
+The first diagnostic-only attempt used an incorrect expected queue status
+(201 rather than the API's 202); it failed and was corrected. The corrected
+whole installed routing sample passed **three in 104.93 seconds**, after earlier
+isolated/paired passes. These stronger checks improve diagnosis; they do not
+establish a root-cause fix for the retained hosted 409.
+
 Local connection recovery is under source qualification; see
 [the bootstrap contract and recovery instructions](bootstrap-recovery.md).
 Before project or key writes, the agent privately saves a root/owner/destination-

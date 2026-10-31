@@ -1,5 +1,7 @@
 # Examples
 
+**New to Cutback? Start with the [separate support-desk repository](https://github.com/CutbackAI/support-desk-example).** It is a small application you can clone and run without Cutback. Its optional metadata-only walkthrough connects native local SDK fixtures to a real collector, PostgreSQL and report, with no provider account or paid inference.
+
 For the native asynchronous batch lifecycle, use [`provider-batches`](provider-batches/README.md) or `uv run cutback demo --provider-batch` from source. It uses the real approval, encrypted-store and PostgreSQL ledger with synthetic native HTTP. No provider key or paid inference is needed.
 
 **Start with the [support-desk application](support_desk/README.md): `uv run cutback demo`.** Its [walkthrough](../docs/testing-the-sample.md) shows a useful end-to-end decision before you study SDK/framework details. No provider key or paid call is needed.
