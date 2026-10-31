@@ -43,6 +43,19 @@ units passed after the exact-count correction. Typing passes **383 modules**;
 API/client/types, React build, 14 frontend units and lint/format pass. New final
 installed/archive/image/hosted qualification remains pending.
 
+Follow-up hardening passed **42 source units in 47.48 seconds** and **12 actual
+SDK/PostgreSQL workflow and fixture checks in 119.74 seconds**. Synthetic
+disclosure now survives failed runs and episode execution, and model artifacts
+preserve the existing human-review state with a separate synthetic evidence
+scope. The stale-window execution test additionally preserves the settled first
+call's nonzero cost and refuses replay. Both preceding installed SDK scopes
+stopped at the same review-state compatibility assertion after **72 passes**;
+that failure prompted this correction. The preceding frozen wheel's matching
+image passed restore/rekey across schema 0032, 100 tables, 2,202 encrypted
+objects, eight profiles, one cache and 30 plans, including an unapproved bound
+portfolio with no queued run and its current restored receipt. New immutable
+archives and installed/image qualification are required for this correction.
+
 Retained failures: the first portfolio exceeded its worst-case native budget,
 leading to bounded candidate reduction; a 100-request confirmation correctly
 failed for 160 required requests and is now tested before a sufficient ceiling.

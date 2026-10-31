@@ -366,7 +366,8 @@ def _request_patch(
     }
     if evidence.get("synthetic_execution") is not None:
         result["synthetic_execution"] = evidence["synthetic_execution"]
-        result["review_status"] = "synthetic_sample_only"
+        result["review_status"] = "human_review_required"
+        result["evidence_scope"] = "synthetic_sample_only"
     if instruction_edit:
         result["instruction_edit"] = instruction_edit.model_dump(mode="json")
         result["verification"]["native_request_fields"] = (

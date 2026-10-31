@@ -60,7 +60,8 @@ def test_source_bound_patch_is_reviewed_reversible_and_refuses_stale_input(tmp_p
     assert '+c.responses.create(model="gpt-4.1"' in result["rollback_diff"]
     assert path.read_bytes() == before
     if synthetic:
-        assert result["review_status"] == "synthetic_sample_only"
+        assert result["review_status"] == "human_review_required"
+        assert result["evidence_scope"] == "synthetic_sample_only"
         assert result["synthetic_execution"] == recommendation["evidence"]["synthetic_execution"]
     else:
         assert "synthetic_execution" not in result

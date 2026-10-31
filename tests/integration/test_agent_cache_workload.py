@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from uuid import UUID
 
 import httpx
@@ -514,7 +515,10 @@ def exercise_native_portfolio(root, control, api, tenant, assessment, original, 
         from cutback.server.db import ExperimentRunRecord
 
         with api[2].state.sessions() as session:
-            assert session.get(ExperimentRunRecord, UUID(revoked_run)).requests_used == 1
+            charged = session.get(ExperimentRunRecord, UUID(revoked_run))
+            assert charged.requests_used == 1 and Decimal(charged.spent_usd) > 0
+            assert Decimal(charged.results["known_spend_subtotal_usd"]) > 0
+            assert charged.results["synthetic_execution"]["real_model_quality_verified"] is False
     finally:
         revoked_executor.close()
         reprice(False)
