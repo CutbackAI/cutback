@@ -1,5 +1,14 @@
 # Implementation progress
 
+The first hosted preparation SDK 3.13 run retained **one failure / 1,612 passes /
+14 skips in 974.60 seconds**: its CLI-help test searched raw colored output for
+an option split by ANSI styling. An owned network-disabled Linux container
+reproduced a successful help command with a noncontiguous raw flag and the
+correct visible option. The test now strips ANSI control sequences and checks
+both plain and forced-color modes. This changes test support only; application
+bytes are unchanged. Replacement exact-head hosted qualification is required;
+the failed run is not passing acceptance.
+
 Current source baseline: reviewed synthetic scenarios are merged in
 [PR 57](https://github.com/CutbackAI/cutback/pull/57), and reactive-user evaluation,
 known-cost dispatch stops and observed response-model evidence are merged in
