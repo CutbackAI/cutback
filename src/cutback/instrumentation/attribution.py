@@ -81,7 +81,19 @@ class SourceMap:
                 if len(matching) == 1 and site is None:
                     site = matching[0]["call_site_id"]
                 if site and workflow is None:
-                    workflow = self.workflows.get((name, symbol))
+                    # Scanner entry points may retain the importable module
+                    # prefix when the project uses a src/ package layout.
+                    # Match only the exact executing file and module/name;
+                    # do not change previously assigned inventory identities.
+                    module = frame.f_globals.get("__name__")
+                    qualified = module + "." + symbol if isinstance(module, str) else symbol
+                    workflow_candidates = {
+                        self.workflows.get((name, symbol)),
+                        self.workflows.get((name, qualified)),
+                    } - {None}
+                    if len(workflow_candidates) > 1:
+                        break  # Conflicting aliases cannot establish a workflow.
+                    workflow = next(iter(workflow_candidates), None)
                 frame = frame.f_back
             if site:
                 return {

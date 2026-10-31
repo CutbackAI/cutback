@@ -1,5 +1,16 @@
 # Implementation progress
 
+Independent-consumer qualification exposed a source-attribution gap for Python
+`src/` package layouts: four sync/async/stream regressions preserved the exact
+call site but lost its scanner workflow identity. Runtime matching now accepts
+the executing file's exact module-qualified function name as well as its local
+qualified name, retaining existing inventory IDs. Conflicting aliases and changed
+source remain unknown. Default observer/exporter/runtime qualification passed
+**32 in 8.87 seconds**; SDK 3 passed **49 in 9.69 seconds**, including native SDK 3
+checks. Ruff/format and mypy **347 modules** pass. This is a separate unreleased
+follow-up; final installed artifacts, consumer pipeline and hosted gates remain
+pending. No inference was sent to a provider.
+
 Current source baseline: reviewed synthetic scenarios are merged in
 [PR 57](https://github.com/CutbackAI/cutback/pull/57), and reactive-user evaluation,
 known-cost dispatch stops and observed response-model evidence are merged in
