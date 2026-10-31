@@ -3,6 +3,7 @@ import hashlib
 import json
 import secrets
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
@@ -16,8 +17,10 @@ from cutback.guardrail_service import GuardrailClientAuthority, create_guardrail
 from cutback.guardrails import GuardrailEngine
 
 
-def service(*, max_retained=1000, max_inflight=8, checks_per_minute=600):
-    definition = policy()
+def service(*, max_retained=1000, max_inflight=8, checks_per_minute=600, evaluation_ms=1000):
+    # HTTP identity/replay tests must not depend on the host scheduling a worker
+    # inside the production default's 50ms. Deadline behavior has its own test.
+    definition = policy(max_evaluation_ms=evaluation_ms)
     token = secrets.token_urlsafe(48)
     authority = GuardrailClientAuthority(
         project_id=definition.project_id,
@@ -162,6 +165,33 @@ def test_late_revocation_denies_inflight_result_and_cached_lookup(monkeypatch):
             ).status_code
             == 403
         )
+
+
+def test_http_evaluation_deadline_fails_closed_and_replays_the_same_unavailable_receipt(
+    monkeypatch,
+):
+    import cutback.guardrails as implementation
+
+    app, _, _, path, body, headers = service(evaluation_ms=1)
+    bound = implementation.bounded_episode_value
+    calls = []
+
+    def slow_bound(*args, **kwargs):
+        calls.append(True)
+        time.sleep(0.02)
+        return bound(*args, **kwargs)
+
+    monkeypatch.setattr(implementation, "bounded_episode_value", slow_bound)
+    with TestClient(app, base_url="https://owned-guard.invalid") as client:
+        response = client.post(path + "/check", json=body, headers=headers)
+        assert response.status_code == 200
+        receipt = response.json()
+        assert receipt["decision"]["status"] == "unavailable"
+        assert receipt["decision"]["action"] == "deny"
+        assert not receipt["decision"]["coverage_complete"]
+        assert body["content"] not in response.text
+        assert client.post(path + "/check", json=body, headers=headers).json() == receipt
+        assert calls == [True]
 
 
 def test_process_rate_limit_and_body_caps_are_explicit_and_do_not_echo_inputs():
