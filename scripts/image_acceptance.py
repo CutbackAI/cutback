@@ -44,6 +44,43 @@ def inside(container, code, values):
     )
 
 
+def seed_owned_workload_campaign(container, values):
+    """Give the independent campaign its own bounded seed operation and project."""
+    code = """import json,os,httpx
+from pathlib import Path
+from uuid import uuid4
+from cutback.server.runtime import configure_secrets
+from cutback.server.api import create_app
+from cutback.evals.artifacts import configured_store
+from cutback.demo_workload_campaign import seed_workload_campaign
+configure_secrets()
+assert os.getuid()==10001
+app=create_app(allow_insecure_http=True)
+app.state.artifact_store=configured_store()
+headers={"Authorization":"Bearer "+os.environ["CUTBACK_ADMIN_TOKEN"]}
+with httpx.Client(base_url="http://127.0.0.1:8080",trust_env=False,timeout=30,
+                 headers=headers) as control:
+ separate=control.post("/v1/projects",json={"slug":"owned-workload-campaign-"+uuid4().hex})
+ separate.raise_for_status()
+ project=separate.json()["id"]
+ writer=control.post("/v1/projects/"+project+"/keys",json={"role":"ingest"})
+ writer.raise_for_status()
+ sample=seed_workload_campaign(app,control,project,writer.json()["token"],
+                               Path("/tmp/owned-workload-campaign"))
+ assert sample["report"]["status"]=="COMPLETED" and sample["report"]["billing_complete"]
+ assert sample["report"]["specification"]["version"]=="cutback.improvement-campaign.v4"
+ assert sample["rollback_verified"] and sample["application_checks"]["receipt"]["all_passed"]
+ assert sample["paid_provider_calls"]==0 and not sample["runtime_cache_activated"]
+ usage=control.get("/v1/projects/"+project+
+                   "/usage?traffic_kind=application&group_by=workflow").json()
+ assert usage["summary"]["observed_attempts"]==8 and len(usage["groups"])==1
+ print(json.dumps({"application_calls":usage["summary"]["observed_attempts"],
+                   "application_workflows":len(usage["groups"]),"paid_provider_calls":0}))
+app.state.engine.dispose()
+"""
+    return json.loads(inside(container, code, values).strip().splitlines()[-1])
+
+
 def seed_owned_request_profiles(container, values, *, workload_portfolio=False):
     """Execute the independent example inside the actual image, retaining it for recovery."""
     source = (Path(__file__).resolve().parents[1] / "examples/request-reuse/demo.py").read_text(
@@ -374,28 +411,6 @@ if WORKLOAD_DEMO_EXPECTED:
  assert sample["observed_native_calls"]==8 and sample["modeled_potential_hits"]==3
  assert sample["rollback_verified"] is True and sample["runtime_cache_activated"] is False
  assert sample["paid_provider_calls"]==0 and sample["real_model_quality_verified"] is False
-if WORKLOAD_CAMPAIGN_EXPECTED:
- import httpx
- from uuid import uuid4
- from cutback.demo_workload_campaign import seed_workload_campaign
- headers={"Authorization":"Bearer "+os.environ["CUTBACK_ADMIN_TOKEN"]}
- with httpx.Client(base_url="http://127.0.0.1:8080",trust_env=False,timeout=30,
-                   headers=headers) as control:
-  separate=control.post("/v1/projects",json={"slug":"owned-workload-campaign-"+uuid4().hex})
-  separate.raise_for_status()
-  campaign_project=separate.json()["id"]
-  writer=control.post("/v1/projects/"+campaign_project+"/keys",json={"role":"ingest"})
-  writer.raise_for_status()
-  sample=seed_workload_campaign(app,control,campaign_project,writer.json()["token"],
-                                Path("/tmp/owned-workload-campaign"))
-  assert sample["report"]["status"]=="COMPLETED" and sample["report"]["billing_complete"]
-  assert sample["report"]["specification"]["version"]=="cutback.improvement-campaign.v4"
-  assert sample["rollback_verified"] and sample["application_checks"]["receipt"]["all_passed"]
-  assert sample["paid_provider_calls"]==0 and not sample["runtime_cache_activated"]
-  campaign_usage=control.get("/v1/projects/"+campaign_project+
-                             "/usage?traffic_kind=application&group_by=workflow").json()
-  assert campaign_usage["summary"]["observed_attempts"]==8
-  assert len(campaign_usage["groups"])==1
 if RETRIEVAL_EXPECTED:
  assert manifest["agent_retrieval_sample"]["review_status"]=="READY_FOR_LOCAL_REVIEW"
  assert manifest["agent_retrieval_sample"]["rollback_verified"] is True
@@ -440,11 +455,7 @@ if RUNTIME_GUARDS:
  assert manifest["runtime_guardrail_sample"]["native_fixture_calls"]==4
  assert manifest["runtime_guardrail_sample"]["complete_application_cost_usd"] is None
 print(json.dumps({"project_id":manifest["project_id"],
- "paid_provider_calls":manifest["paid_provider_calls"],
- "workload_campaign_application_calls":campaign_usage["summary"]["observed_attempts"]
-  if WORKLOAD_CAMPAIGN_EXPECTED else 0,
- "workload_campaign_application_workflows":len(campaign_usage["groups"])
-  if WORKLOAD_CAMPAIGN_EXPECTED else 0}))
+ "paid_provider_calls":manifest["paid_provider_calls"]}))
 """
                 code = code.replace("RUNTIME_GUARDS", repr(runtime_guardrails))
                 code = code.replace("CRITERIA_EXPECTED", repr(reviewed_criteria))
@@ -456,7 +467,6 @@ print(json.dumps({"project_id":manifest["project_id"],
                 code = code.replace("JOINT_EXPECTED", repr(joint_model_context))
                 code = code.replace("RETRIEVAL_EXPECTED", repr(joint_model_retrieval))
                 code = code.replace("WORKLOAD_DEMO_EXPECTED", repr(workload_portfolio_demo))
-                code = code.replace("WORKLOAD_CAMPAIGN_EXPECTED", repr(workload_campaign))
                 manifest = json.loads(inside(container, code, values).strip().splitlines()[-1])
                 base = "/v1/projects/" + manifest["project_id"]
                 usage = client.get(
@@ -476,6 +486,11 @@ print(json.dumps({"project_id":manifest["project_id"],
                 assert client.get(base + "/changes").json()
                 native_profiles = seed_owned_request_profiles(
                     container, values, workload_portfolio=workload_portfolio
+                )
+                campaign_sample = (
+                    seed_owned_workload_campaign(container, values)
+                    if workload_campaign
+                    else {"application_calls": 0, "application_workflows": 0}
                 )
                 if isolated_tools:
                     seed_owned_isolated_records(
@@ -997,11 +1012,9 @@ engine.dispose()
                     "source_linked_support_desk_calls": 12,
                     "source_workflows": 2,
                     "application_workflows": len(usage["groups"]),
-                    "workload_campaign_application_calls": manifest[
-                        "workload_campaign_application_calls"
-                    ],
-                    "workload_campaign_application_workflows": manifest[
-                        "workload_campaign_application_workflows"
+                    "workload_campaign_application_calls": campaign_sample["application_calls"],
+                    "workload_campaign_application_workflows": campaign_sample[
+                        "application_workflows"
                     ],
                     "paid_provider_calls": 0,
                     "native_batch_fixture_restored": True,

@@ -94,6 +94,21 @@ validates archive contents and checks package metadata before the long test
 suite, while retaining the post-test committed-source integrity check. The local
 build orchestrator also requires distribution validation before reporting a
 successful build. New package and exact-head hosted gates remain required.
+The final metadata-correct image repeated the combined seed under concurrent
+local qualification and reached the harness's 180-second command limit. The
+driver now runs the independent campaign as its own bounded seed operation,
+keeping the same 180-second limit for each operation and all recovery checks.
+Runtime code and native approval/billing behavior are unchanged. This timeout
+is retained as a failed harness run; the revised gate remains pending.
+
+The final combined installed wheel passed **126 / one unavailable Windows
+symlink privilege skip in 481.49 seconds** on SDK2 and **126 / one corresponding
+skip in 484.65 seconds** on SDK3. These cover source explanations, client/agent
+preparation, frozen campaign budgets, actual PostgreSQL cache/prompt journeys,
+reimported holdout denial, authenticated browser/mobile/axe, both source trees,
+rollback, and all independent request-reuse example modes. Final core-only and
+minimal server/OpenAI imports pass without optional identity/storage/commercial
+or test packages. The complete minimal CLI acceptance is still running.
 
 31 October 2026 complete observed-workload sample, **working source under
 qualification**: [walkthrough](../examples/workload-portfolio/README.md).
