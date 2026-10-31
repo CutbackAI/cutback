@@ -1,5 +1,17 @@
 # Implementation progress
 
+Current reactive qualification retained three hosted SDK 3 failures (**1,564
+passed / 14 skips**) caused by the older guarded-tool migration test expecting
+its guard before the newly added observed-model guard. The corrected test checks
+the real chain's new refusal, then directly exercises the unchanged released
+tool-migration guard without erasing either receipt type. The complete guarded
+tool module passed against the exact installed application on default SDK
+**13 in 104.35 seconds** and SDK 3 **13 in 104.78 seconds**. These are scoped
+corrections, not a claim that the earlier full run passed. Current-head hosted
+and remaining full installed qualification continue. A separately observed local
+guarded-security Docker trial passed its exact focused rerun (**29.91 seconds**);
+the original failure remains part of the full-run record.
+
 The response-model/billing candidate's broader source regression passed **1,159
 tests / 26 skips in 580.16 seconds**. Its first full installed default attempt
 failed during collection because a reactive integration fixture depended on a
