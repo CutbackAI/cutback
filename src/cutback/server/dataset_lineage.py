@@ -56,6 +56,10 @@ def lock_preparation_identity(session, kind, identity):
         "source-scan",
         "capture-policy",
         "dataset-import",
+        "project-bootstrap",
+        "scoped-key",
+        "organization-bootstrap",
+        "scoped-key-token",
     }:
         raise ValueError("PREPARATION_IDENTITY_KIND_INVALID")
     key = int.from_bytes(

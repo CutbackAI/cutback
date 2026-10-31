@@ -1,5 +1,17 @@
 # Cutback agent workflow
 
+When local project/key bootstrap reports
+`BOOTSTRAP_COLLECTOR_UNAVAILABLE_RESUME_SAVED_INTENT`, preserve the separate
+private bootstrap credential journal and rerun the original `workflow prepare
+--local` with the same options and collector. Do not expose that file in status,
+reports or commits. This precedes the later resumable scan/policy/dataset intent.
+Read the installed `docs/bootstrap-recovery.md`; older collectors must advertise
+the matching contract before writes. Changed destination/root/owner, conflicting
+receipts, expired/revoked credentials and deleted identities stop; do not mint
+replacement credentials, clear journals or extend expiry to bypass the stop.
+Completed connections recheck their original intent before use. This is only
+nonbillable setup recovery and cannot authorize or replay inference.
+
 When status returns `RESUME_SAME_NONBILLABLE_PREPARATION`, inspect installed
 `workflow resume-preparation --help` and resume the saved intent. Do not invent
 replacement examples, mapping, rights, budgets, request IDs or expiry after a

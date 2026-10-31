@@ -1,5 +1,13 @@
 # Optimize an application with your coding agent
 
+Local project/key creation also has a [recoverable bootstrap contract](bootstrap-recovery.md).
+It privately saves credentials and identities before writes, then reuses them
+after a lost acknowledgement. For an initial connection interruption, rerun the
+original `workflow prepare --local` command with the same options; the later
+`resume-preparation` command applies after those options have been frozen.
+Neither path renews authority or retries inference. This source extension is
+under qualification and is absent from published dev5.
+
 The source-only resumable preparation contract saves bounded setup options and
 stable scan/policy/dataset/plan identities before collector writes. If the
 connection drops during setup, run `cutback workflow resume-preparation --target

@@ -9,7 +9,7 @@ import pytest
     os.getenv("CUTBACK_TEST_LOCAL_STACK") != "true", reason="explicit owned Docker lifecycle gate"
 )
 def test_persistent_local_stack_default_privacy_restart_and_ownership(tmp_path):
-    from cutback.agent_control import Control
+    from cutback.agent_control import Control, connect
     from cutback.core.workspace import write_private
     from cutback.local_stack import configured, docker, down, free_port, owned, status, up
 
@@ -26,6 +26,11 @@ def test_persistent_local_stack_default_privacy_restart_and_ownership(tmp_path):
         _, restarted = configured(tmp_path)
         assert config["payload_key"] == restarted["payload_key"]
         assert any(row["id"] == project["id"] for row in control("GET", "/v1/projects"))
+        scoped, scoped_project = connect(tmp_path, local=True)
+        assert scoped("GET", "/v1/projects/" + scoped_project)["id"] == scoped_project
+        repeated, same_project = connect(tmp_path)
+        assert same_project == scoped_project
+        assert repeated("GET", "/v1/projects/" + same_project)["id"] == scoped_project
         config = restarted
         tampered = {**config, "owner": "wrong-owner"}
         write_private(location / "config.json", tampered)

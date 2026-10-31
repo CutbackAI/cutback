@@ -1,5 +1,30 @@
 # Implementation progress
 
+Local connection recovery is under source qualification; see
+[the bootstrap contract and recovery instructions](bootstrap-recovery.md).
+Before project or key writes, the agent privately saves a root/owner/destination-
+bound intent, project/key identities, generated credentials and fixed one-day
+expiry. Matching acknowledgements resume those same resources after response
+loss; conflicting, revoked, expired, missing-history or deleted identities stop.
+The completed connection rechecks its original project, credential and key
+fingerprint before network use. The collector returns credential metadata only,
+stores hashes, and shares locking and the retained-key quota with legacy issuance.
+No new schema migration or billable retry is involved.
+
+Executed source evidence: new default unit/PostgreSQL/real-TCP recovery checks
+passed **56 in 39.50 seconds**, followed by the actual original CLI command
+recovering into a frozen plan (**one in 6.74 seconds**, two scoped keys, zero
+inference runs). Final SDK 3 recovery, existing agent workflow, paired-case
+correction, real migration contract, authenticated administrator/viewer/mobile/
+accessibility and owned persistent local-stack lifecycle checks passed **71 in
+164.38 seconds**. OpenAPI/client/types, React production build and fourteen
+frontend units pass; the existing 502.60 kB entry-chunk warning remains. Ruff/
+format and mypy **350 modules** pass. Portable workflow references and source
+archive reproducibility requirements include the new contract. Broader source,
+final installed/archive/image and hosted acceptance remain pending. This is
+unreleased engineering, not a claim that the entire roadmap is complete. No
+provider request, production deployment or package upload occurred.
+
 Independent-consumer qualification exposed a source-attribution gap for Python
 `src/` package layouts: four sync/async/stream regressions preserved the exact
 call site but lost its scanner workflow identity. Runtime matching now accepts

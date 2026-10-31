@@ -41,6 +41,25 @@
       "post": {
         "summary": "Project Create",
         "operationId": "project_create_v1_projects_post",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid4"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Request Id"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -12888,6 +12907,56 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/scoped-keys": {
+      "post": {
+        "summary": "Prepare Key",
+        "operationId": "prepare_key_v1_projects__project_id__scoped_keys_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScopedKeyInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopedKeyReceipt"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
               }
             }
           }
@@ -30601,6 +30670,105 @@
         },
         "type": "object",
         "title": "ScopeSpans"
+      },
+      "ScopedKeyInput": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid4",
+            "title": "Request Id"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "ingest",
+              "viewer",
+              "analyst",
+              "editor",
+              "project_admin",
+              "prompt_reader"
+            ],
+            "title": "Role"
+          },
+          "environment": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.-]{1,100}$",
+            "title": "Environment",
+            "default": "staging"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "token": {
+            "type": "string",
+            "format": "password",
+            "title": "Token",
+            "writeOnly": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "role",
+          "expires_at",
+          "token"
+        ],
+        "title": "ScopedKeyInput"
+      },
+      "ScopedKeyReceipt": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid4",
+            "title": "Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "ingest",
+              "viewer",
+              "analyst",
+              "editor",
+              "project_admin",
+              "prompt_reader"
+            ],
+            "title": "Role"
+          },
+          "environment": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.-]{1,100}$",
+            "title": "Environment"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "request_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Request Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "project_id",
+          "role",
+          "environment",
+          "expires_at",
+          "request_sha256"
+        ],
+        "title": "ScopedKeyReceipt"
       },
       "SearchEffortInput": {
         "properties": {

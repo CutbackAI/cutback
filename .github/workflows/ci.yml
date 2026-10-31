@@ -102,9 +102,11 @@ jobs:
           tests/integration/test_reactive_users.py
           tests/integration/test_response_model_evidence.py
           tests/integration/test_preparation_recovery.py
+          tests/integration/test_bootstrap_recovery.py
           tests/integration/test_paired_cases.py
           tests/integration/test_agent_preparation_recovery.py
           tests/end_to_end/test_preparation_recovery_pipeline.py
+          tests/end_to_end/test_bootstrap_recovery_pipeline.py
           tests/end_to_end/test_reactive_users_pipeline.py
           tests/integration/test_agent_reviewed_criteria.py
           tests/integration/test_generated_semantic_rubric_workflow.py

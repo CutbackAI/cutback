@@ -8,8 +8,9 @@ export function createSDK(request:Request) {return {
   ready_v1_health_ready_get: (args:{}={}) => {
     const query=new URLSearchParams();
     return request(`/health/ready`+(query.size?"?"+query.toString():""),{method:"GET"});},
-  project_create_v1_projects_post: (args:{body:components["schemas"]["ProjectInput"]}) => {
+  project_create_v1_projects_post: (args:{request_id?:string | null;body:components["schemas"]["ProjectInput"]}) => {
     const query=new URLSearchParams();
+    if(args.request_id!==undefined && args.request_id!==null) query.set("request_id",String(args.request_id));
     return request(`/projects`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   projects_v1_projects_get: (args:{limit?:number;offset?:number}={}) => {
     const query=new URLSearchParams();
@@ -822,6 +823,9 @@ export function createSDK(request:Request) {return {
   webhook_v1_billing_webhook_post: (args:{}={}) => {
     const query=new URLSearchParams();
     return request(`/billing/webhook`+(query.size?"?"+query.toString():""),{method:"POST"});},
+  prepare_key_v1_projects__project_id__scoped_keys_post: (args:{project_id:string;body:components["schemas"]["ScopedKeyInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/scoped-keys`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   lookup_v1_ingest_cache_lookup_post: (args:{body:components["schemas"]["CacheKey"]}) => {
     const query=new URLSearchParams();
     return request(`/ingest/cache/lookup`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},

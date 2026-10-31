@@ -3374,6 +3374,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/scoped-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Prepare Key */
+        post: operations["prepare_key_v1_projects__project_id__scoped_keys_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/ingest/cache/lookup": {
         parameters: {
             query?: never;
@@ -10175,6 +10192,61 @@ export interface components {
             /** Spans */
             spans?: components["schemas"]["Span"][];
         };
+        /** ScopedKeyInput */
+        ScopedKeyInput: {
+            /**
+             * Request Id
+             * Format: uuid4
+             */
+            request_id: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "ingest" | "viewer" | "analyst" | "editor" | "project_admin" | "prompt_reader";
+            /**
+             * Environment
+             * @default staging
+             */
+            environment: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Token
+             * Format: password
+             */
+            token: string;
+        };
+        /** ScopedKeyReceipt */
+        ScopedKeyReceipt: {
+            /**
+             * Id
+             * Format: uuid4
+             */
+            id: string;
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "ingest" | "viewer" | "analyst" | "editor" | "project_admin" | "prompt_reader";
+            /** Environment */
+            environment: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Request Sha256 */
+            request_sha256: string;
+        };
         /** SearchEffortInput */
         SearchEffortInput: {
             /** Conservative Savings Per Success Usd */
@@ -12037,7 +12109,9 @@ export interface operations {
     };
     project_create_v1_projects_post: {
         parameters: {
-            query?: never;
+            query?: {
+                request_id?: string | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -19767,6 +19841,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    prepare_key_v1_projects__project_id__scoped_keys_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScopedKeyInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScopedKeyReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
