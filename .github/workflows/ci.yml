@@ -69,6 +69,7 @@ jobs:
       fail-fast: false
       matrix:
         python: ['3.11.18', '3.13.18']
+        scope: ['core', 'workflows', 'systems']
     services:
       postgres:
         image: postgres:17-alpine@sha256:eee6c6e1b0894fa4fe0075eb054af9fd1cf39a35321c2d4110626cfe506411fb
@@ -90,10 +91,15 @@ jobs:
           python-version: ${{ matrix.python }}
           enable-cache: false
       - run: uv sync --project infra/sdk-compat/openai3 --locked --python ${{ matrix.python }}
-      - name: Qualify native observer, worker and approval boundaries
+      - name: Qualify core native contracts
+        if: matrix.scope == 'core'
         run: >-
           uv run --project infra/sdk-compat/openai3 --locked python scripts/check.py -q
           tests/unit tests/contract/test_migrations.py
+      - name: Qualify native observer, worker and approval boundaries
+        if: matrix.scope == 'workflows'
+        run: >-
+          uv run --project infra/sdk-compat/openai3 --locked python scripts/check.py -q
           tests/integration/test_reviewed_criteria_workflow.py
           tests/integration/test_generated_scenario_workflow.py
           tests/integration/test_agent_generated_scenarios.py
@@ -103,6 +109,9 @@ jobs:
           tests/integration/test_response_model_evidence.py
           tests/integration/test_native_fixture_source.py
           tests/integration/test_native_cache_workflow.py
+          tests/integration/test_encrypted_object_retention.py
+          tests/integration/test_capture_commit_recovery.py
+          tests/integration/test_object_recovery.py
           tests/integration/test_exact_cache_experiment.py
           tests/integration/test_agent_exact_cache.py
           tests/integration/test_cache_call_evidence.py
@@ -126,6 +135,10 @@ jobs:
           tests/integration/test_criteria_draft_reconciliation.py
           tests/integration/test_reviewed_criteria_migrations.py
           tests/end_to_end/test_reviewed_criteria_pipeline.py
+      - name: Qualify execution, gateway and application systems
+        if: matrix.scope == 'systems'
+        run: >-
+          uv run --project infra/sdk-compat/openai3 --locked python scripts/check.py -q
           tests/integration/test_native_episodes.py tests/integration/test_semantic_episodes.py
           tests/integration/test_semantic_episode_controls.py tests/integration/test_episode_lifecycle.py
           tests/integration/test_execution_ledger.py tests/integration/test_campaign_workflow.py
@@ -170,6 +183,20 @@ jobs:
           tests/integration/test_guarded_security_episodes.py
           tests/integration/test_tool_ledger.py
           tests/integration/test_security_episodes.py
+  openai3-sdk-required:
+    name: openai3-sdk (${{ matrix.python }})
+    needs: [openai3-sdk]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    strategy:
+      matrix:
+        python: ['3.11.18', '3.13.18']
+    steps:
+      - name: Require every SDK3 shard before the protected compatibility check
+        env:
+          SDK3_SHARDS_RESULT: ${{ needs.openai3-sdk.result }}
+        run: test "$SDK3_SHARDS_RESULT" = success
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 75

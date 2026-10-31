@@ -47,7 +47,8 @@ class PayloadCodec:
             }
         ).encode()
 
-    def decrypt(self, project, ref, raw):
+    def authenticated_payload(self, project, ref, raw):
+        """Authenticate ownership and expiry even when retention has elapsed."""
         if len(raw) > 1024000:
             raise ValueError("oversized encrypted artifact")
         envelope = json.loads(raw)
@@ -70,7 +71,14 @@ class PayloadCodec:
                 continue
         if plaintext is None:
             raise InvalidTag("ARTIFACT_AUTHENTICATION_FAILED")
-        if datetime.fromisoformat(metadata["expires"]) <= datetime.now(UTC):
+        expires = datetime.fromisoformat(metadata["expires"])
+        if expires.tzinfo is None or expires.utcoffset() is None:
+            raise ValueError("ARTIFACT_EXPIRY_TIMEZONE_REQUIRED")
+        return plaintext, expires
+
+    def decrypt(self, project, ref, raw):
+        plaintext, expires = self.authenticated_payload(project, ref, raw)
+        if expires <= datetime.now(UTC):
             raise ValueError("PAYLOAD_EXPIRED")
         return plaintext
 
@@ -82,6 +90,15 @@ class EncryptedFileStore(PayloadCodec):
             raise ValueError("payload root must not be a symlink")
         self.root = root.resolve()
         self.root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        from cutback.evals.artifact_retention import FileExpirySweep
+
+        self._expiry_sweep = FileExpirySweep(self)
+
+    def expire_page(self, *, limit=100, max_seconds=2.0):
+        return self._expiry_sweep.page(limit=limit, max_seconds=max_seconds)
+
+    def close(self):
+        self._expiry_sweep.close()
 
     def _path(self, project, ref):
         project, ref = UUID(str(project)), UUID(str(ref))
@@ -150,6 +167,7 @@ class EncryptedS3Store(PayloadCodec):
         if not bucket or len(bucket) > 255:
             raise ValueError("customer bucket required")
         self.bucket = bucket
+        self._owns_client = client is None
         if client is None:
             import boto3
             from botocore.config import Config
@@ -168,6 +186,17 @@ class EncryptedS3Store(PayloadCodec):
                 ),
             )
         self.client = client
+        from cutback.evals.artifact_retention import S3ExpirySweep
+
+        self._expiry_sweep = S3ExpirySweep(self)
+
+    def expire_page(self, *, limit=100, max_seconds=2.0):
+        return self._expiry_sweep.page(limit=limit, max_seconds=max_seconds)
+
+    def close(self):
+        self._expiry_sweep.close()
+        if self._owns_client:
+            self.client.close()
 
     def _key(self, project, ref):
         return f"{UUID(str(project))}/{UUID(str(ref))}"
