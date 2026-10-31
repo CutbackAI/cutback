@@ -16,8 +16,9 @@ from cutback.server.worker import run_one
 pytestmark = pytest.mark.postgres
 
 
+@pytest.mark.parametrize("automatic", [False, True])
 def test_agent_routes_automatically_between_separately_approved_stages_without_replay(
-    api, tenant, tmp_path, monkeypatch
+    api, tenant, tmp_path, monkeypatch, automatic
 ):
     root = application(tmp_path)
     analyzed = analyze(root)
@@ -37,7 +38,8 @@ def test_agent_routes_automatically_between_separately_approved_stages_without_r
         minimum=1,
         independent_labels=True,
         representative=False,
-        learned_routing=True,
+        learned_routing=not automatic,
+        automatic=automatic,
         fixture_transport=True,
         min_test_samples=3,
     )

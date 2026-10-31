@@ -53,6 +53,9 @@ def lock_preparation_identity(session, kind, identity):
         "learned-routing-fit",
         "scenario-draft",
         "scenario-import",
+        "source-scan",
+        "capture-policy",
+        "dataset-import",
     }:
         raise ValueError("PREPARATION_IDENTITY_KIND_INVALID")
     key = int.from_bytes(

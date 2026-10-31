@@ -59,8 +59,9 @@ export function createSDK(request:Request) {return {
   project_health_v1_projects__project_id__health_get: (args:{project_id:string}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/health`+(query.size?"?"+query.toString():""),{method:"GET"});},
-  upload_scan_v1_projects__project_id__scans_post: (args:{project_id:string;body:components["schemas"]["Inventory"]}) => {
+  upload_scan_v1_projects__project_id__scans_post: (args:{project_id:string;request_id?:string | null;body:components["schemas"]["Inventory"]}) => {
     const query=new URLSearchParams();
+    if(args.request_id!==undefined && args.request_id!==null) query.set("request_id",String(args.request_id));
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/scans`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   inventory_v1_projects__project_id__inventory_get: (args:{project_id:string;start?:string | null;end?:string | null}) => {
     const query=new URLSearchParams();
@@ -105,8 +106,9 @@ export function createSDK(request:Request) {return {
   create_plan_v1_projects__project_id__experiments_plans_post: (args:{project_id:string;body:components["schemas"]["PlanInput"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/experiments/plans`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
-  create_policy_v1_projects__project_id__capture_policies_post: (args:{project_id:string;body:components["schemas"]["CapturePolicy"]}) => {
+  create_policy_v1_projects__project_id__capture_policies_post: (args:{project_id:string;request_id?:string | null;body:components["schemas"]["CapturePolicy"]}) => {
     const query=new URLSearchParams();
+    if(args.request_id!==undefined && args.request_id!==null) query.set("request_id",String(args.request_id));
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/capture-policies`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   policies_v1_projects__project_id__capture_policies_get: (args:{project_id:string}) => {
     const query=new URLSearchParams();
@@ -114,8 +116,9 @@ export function createSDK(request:Request) {return {
   revoke_policy_v1_projects__project_id__capture_policies__policy_id__delete: (args:{project_id:string;policy_id:string}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/capture-policies/${encodeURIComponent(String(args.policy_id))}`+(query.size?"?"+query.toString():""),{method:"DELETE"});},
-  import_dataset_v1_projects__project_id__datasets_post: (args:{project_id:string;body:components["schemas"]["DatasetImport"]}) => {
+  import_dataset_v1_projects__project_id__datasets_post: (args:{project_id:string;request_id?:string | null;body:components["schemas"]["DatasetImport"]}) => {
     const query=new URLSearchParams();
+    if(args.request_id!==undefined && args.request_id!==null) query.set("request_id",String(args.request_id));
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/datasets`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   datasets_v1_projects__project_id__datasets_get: (args:{project_id:string;limit?:number;offset?:number}) => {
     const query=new URLSearchParams();

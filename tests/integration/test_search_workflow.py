@@ -12,13 +12,19 @@ from cutback.server.worker import run_one
 
 
 @pytest.mark.postgres
+@pytest.mark.parametrize("automatic", [False, True])
 def test_source_bound_search_rejects_quality_loss_and_prepares_actual_winning_diff(
     api,
     tenant,
     tmp_path,
     monkeypatch,
+    automatic,
 ):
-    root, control, state, args = prepare_fresh(api, tenant, tmp_path, monkeypatch, search=True)
+    root, control, state, args = prepare_fresh(
+        api, tenant, tmp_path, monkeypatch, search=not automatic, automatic=automatic
+    )
+    if automatic:
+        assert state["automatic_preparation"]["mode"] == "native_search"
     assert state["search_mode"] == "model_and_output_cap"
     plan = state["plan"]
     assert plan["requests"] == plan["sample_n"] * 6

@@ -1,5 +1,65 @@
 # Implementation progress
 
+Current source baseline: reviewed synthetic scenarios are merged in
+[PR 57](https://github.com/CutbackAI/cutback/pull/57), and reactive-user evaluation,
+known-cost dispatch stops and observed response-model evidence are merged in
+[PR 58](https://github.com/CutbackAI/cutback/pull/58), merge
+`0136d7e11351ea86642a58acf1af2711e275bd5d`. All eleven actual hosted jobs passed
+for PR 58's reviewed head. The failed local full installed runs remain failures;
+their passing scoped reruns do not close complete Windows qualification.
+Automatic adapter selection and resumable nonbillable preparation below are
+newer, unreleased work. Seven preparation-journal unit checks also pass, including
+three malformed-response privacy cases. No new PyPI upload, paid inference or
+production deployment occurred. The independent consumer application and broader
+cross-engine economic selection remain unfinished.
+
+Preparation identity-violation follow-up reproduced four unsafe retry paths
+when a server/proxy discarded the requested IDs. A bounded private conflict
+receipt now stops both direct preparation and resume before another upload;
+unknown/malformed returned IDs are withheld. All four regressions passed after
+the guard (**12.04 seconds**). Full focused default recovery/HTTP/authenticated
+browser checks passed **33 in 106.00 seconds**; SDK 3 recovery checks passed
+**32 in 127.88 seconds**. The preceding complete source regression passed
+**1,187 / 26 skips in 919.37 seconds**. Fresh artifacts must contain this final
+guard; the preceding f68 wheel does not. Root-cause analysis did not reproduce
+the earlier local gateway trial: all **32** stream cases passed in **44.89
+seconds**, and the owned PostgreSQL summary reported no capacity/deadlock/disk/
+memory/statement-timeout errors. That is a scoped rerun, not a clean full-suite
+claim. Complete Windows installed acceptance remains open.
+
+Nonbillable preparation recovery is under source qualification. Stable scoped
+request IDs serialize scan, capture-policy and dataset creation; dataset import
+identity is included in its existing immutable provenance extension. No released
+migration or schema revision changes. Retry reads recheck current rights, content
+retention and hashes. The agent journals fixed expiry, source/data/rights/budget
+bindings, nonces and bounded setup options before writes; `resume-preparation`
+reuses those identities and cannot approve or queue inference. An incompatible
+collector is refused before upload; expired rights and changed intent reject.
+The three initial PostgreSQL regressions failed before implementation. API,
+concurrency, tenant/RBAC, expiry and journal-recovery checks passed **27 in 104.99
+seconds**; real TCP response-loss recovery passed **one in 11.52 seconds**;
+existing agent flow, real migration drift/roundtrip and authenticated
+admin/viewer/mobile/axe checks passed **12 in 98.51 seconds**. API/types/React,
+Ruff and mypy **347 modules** pass. SDK 3 focused recovery checks passed **28 in
+105.07 seconds**. Broader installed/image/hosted gates are still pending. This
+does not authorize automatic paid retries or complete the
+remaining cross-engine economic selection roadmap.
+
+Automatic source-adapter preparation is under source qualification. Discovery
+lists qualified workflow adapters; `workflow prepare --automatic` freezes one
+source-analysis-bound choice before collector requests and selects native
+model/output-cap search, joint model/context search or source-bound routing.
+Explicit conflicting flags and ambiguous workflows/adapters reject. Existing
+rights, native support, complete-cost, approval and independent confirmation
+gates still apply. This selects a supported preparation contract; complete
+workload-economic selection across cache, routing, prompt and training remains
+unfinished. Automatic/explicit native, context and routing qualification passed
+**30 / one host symlink skip in 437.98 seconds**, including source proposals,
+untouched confirmation, failed-quality refusal and lost-response stage recovery.
+The CLI/offline selection checks passed **nine in 2.48 seconds**. Ruff/format and
+mypy **345 modules** pass; SDK 3 and final installed/archive/hosted gates remain
+pending for this separate change.
+
 Current reactive qualification retained three hosted SDK 3 failures (**1,564
 passed / 14 skips**) caused by the older guarded-tool migration test expecting
 its guard before the newly added observed-model guard. The corrected test checks

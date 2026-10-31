@@ -646,14 +646,33 @@ def install_evaluation(app, sessions, authorize, scope):
             ]
 
     @app.post("/v1/projects/{project_id}/capture-policies", status_code=201)
-    def create_policy(project_id: UUID, body: CapturePolicy, auth=Depends(authorize)):
+    def create_policy(
+        project_id: UUID,
+        body: CapturePolicy,
+        request_id: UUID4 | None = None,
+        auth=Depends(authorize),
+    ):
         scope(auth, project_id, ("admin",))
         if body.enabled:
             require_store(app)
             if body.expires_at <= datetime.now(UTC):
                 raise HTTPException(422, "POLICY_ALREADY_EXPIRED")
         with sessions.begin() as session:
+            if request_id is not None:
+                from cutback.server.dataset_lineage import lock_preparation_identity
+
+                lock_preparation_identity(session, "capture-policy", request_id)
+                previous = session.get(CapturePolicyRecord, request_id, with_for_update=True)
+                if previous is not None:
+                    if (
+                        previous.project_id != project_id
+                        or previous.policy != body.model_dump(mode="json")
+                        or previous.enabled != body.enabled
+                    ):
+                        raise HTTPException(409, "PREPARATION_IDENTITY_CONFLICT")
+                    return {"id": str(previous.id), "enabled": previous.enabled}
             row = CapturePolicyRecord(
+                **({"id": request_id} if request_id is not None else {}),
                 project_id=project_id,
                 enabled=body.enabled,
                 approved_by=auth["actor"],
@@ -709,13 +728,60 @@ def install_evaluation(app, sessions, authorize, scope):
         return {"status": "revoked", "future_reads_and_runs": "denied"}
 
     @app.post("/v1/projects/{project_id}/datasets", status_code=201)
-    def import_dataset(project_id: UUID, body: DatasetImport, auth=Depends(authorize)):
+    def import_dataset(
+        project_id: UUID,
+        body: DatasetImport,
+        request_id: UUID4 | None = None,
+        auth=Depends(authorize),
+    ):
         scope(auth, project_id, ("analyst",))
         store = require_store(app)
         stored: list[str] = []
         try:
             with sessions.begin() as session:
-                return persist_dataset(session, store, project_id, body, auth["actor"], stored)
+                extra = None
+                if request_id is not None:
+                    from cutback.server.dataset_lineage import lock_preparation_identity
+
+                    lock_preparation_identity(session, "dataset-import", request_id)
+                    identity = digest(body.model_dump(mode="json"))
+                    extra = {"client_preparation_sha256": identity}
+                    previous = session.get(DatasetRecord, request_id, with_for_update=True)
+                    if previous is not None:
+                        if (
+                            previous.project_id != project_id
+                            or previous.provenance.get("client_preparation_sha256") != identity
+                        ):
+                            raise HTTPException(409, "PREPARATION_IDENTITY_CONFLICT")
+                        from cutback.server.worker import load_dataset
+
+                        # Current authorization, retained content and immutable
+                        # hashes must still hold; a retry cannot resurrect data.
+                        _, policy = active_policy(session, project_id, UUID(body.policy_id))
+                        if not policy.permits(body.environment, body.workflow):
+                            raise HTTPException(403, "CAPTURE_SCOPE_DENIED")
+                        try:
+                            load_dataset(session, previous, store)
+                        except ValueError:
+                            raise HTTPException(
+                                409, "PREPARATION_CONTENT_NO_LONGER_AVAILABLE"
+                            ) from None
+                        return {
+                            "id": str(previous.id),
+                            "immutable_hash": previous.immutable_hash,
+                            "provenance": previous.provenance,
+                            "content": "encrypted_separate_store",
+                        }
+                return persist_dataset(
+                    session,
+                    store,
+                    project_id,
+                    body,
+                    auth["actor"],
+                    stored,
+                    dataset_id=request_id,
+                    provenance_extra=extra,
+                )
         except BaseException:
             from cutback.server.campaign_content import discard_unreferenced
 

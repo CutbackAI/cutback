@@ -254,7 +254,13 @@ def create_app(
             revision = session.execute(text("SELECT version_num FROM alembic_version")).scalar()
             if revision != CURRENT_REVISION:
                 raise HTTPException(503, "MIGRATION_REQUIRED")
-        return {"status": "ready", "schema_revision": revision}
+        from cutback.core.preparation import PREPARATION_CONTRACT
+
+        return {
+            "status": "ready",
+            "schema_revision": revision,
+            "preparation_contract": PREPARATION_CONTRACT,
+        }
 
     @app.post("/v1/projects", status_code=201)
     def project_create(body: ProjectInput, auth=Depends(authorize)):

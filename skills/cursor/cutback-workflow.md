@@ -1,5 +1,32 @@
 # Cutback agent workflow
 
+When status returns `RESUME_SAME_NONBILLABLE_PREPARATION`, inspect installed
+`workflow resume-preparation --help` and resume the saved intent. Do not invent
+replacement examples, mapping, rights, budgets, request IDs or expiry after a
+lost setup reply. The new contract retries only idempotent nonbillable setup;
+approval and inference remain separately authorized. Refuse an incompatible
+collector, changed source or expired/revoked rights. Legacy incomplete setup
+without durable IDs requires reconciliation; do not label it completed or
+silently repeat its uploads. Credentials remain in the existing private
+connection file or environment, never in the metadata session or public output.
+If status returns `RECONCILE_PREPARATION_IDENTITY_WITH_OPERATOR`, preserve the
+bounded expected/observed identity receipt and stop uploads. Do not clear the
+conflict, choose new IDs or create a replacement session to bypass the server
+contract failure. Reconciliation requires checking the actual scoped records;
+an unexpected UUID is not proof that the requested creation completed.
+
+When installed `workflow prepare --help` supports `--automatic`, prefer it for a
+single qualified workflow unless the owner already selected an explicit engine.
+It freezes the supported source adapter before collector requests; keep permitted
+examples, rights, quality criteria and money/request bounds explicit. Pass the
+chosen workflow identity when analysis finds multiple workflows. Do not combine
+automatic selection with explicit search/campaign/context/routing flags. Inspect
+the saved selection and exact resulting plan before inference approval. This is
+source eligibility, not measured economic superiority; missing cache freshness,
+training rights, compute or serving evidence cannot be inferred. Resume the same
+intent after interruption; never reinterpret a frozen engine or replay an
+uncertain billable operation.
+
 When an installed version returns native model/price references, include each model's reasoning setting, requested tier, snapshot and SHA in the exact approval review. Preserve source choices and documented defaults. Observation compatibility alone grants no paid execution permission. Read the matching `docs/native-modern-text.md` before using a new contract; published dev5 lacks this source addition. Existing authorization for the same exact frozen scope remains valid.
 
 1. Inside the permitted application, run `cutback doctor --json` and `cutback optimize . --json`. Resume `.cutback/agent/session.json` with `cutback workflow status`; keep this directory ignored. Finish discovery when every detected workflow has either a qualified request/source contract or a concrete unresolved reason. Application source is parsed, never imported by discovery. Keep historical spend and missing coverage unknown.

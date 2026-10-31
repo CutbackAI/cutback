@@ -12434,7 +12434,9 @@ export interface operations {
     };
     upload_scan_v1_projects__project_id__scans_post: {
         parameters: {
-            query?: never;
+            query?: {
+                request_id?: string | null;
+            };
             header?: never;
             path: {
                 project_id: string;
@@ -12871,7 +12873,9 @@ export interface operations {
     };
     create_policy_v1_projects__project_id__capture_policies_post: {
         parameters: {
-            query?: never;
+            query?: {
+                request_id?: string | null;
+            };
             header?: never;
             path: {
                 project_id: string;
@@ -12972,7 +12976,9 @@ export interface operations {
     };
     import_dataset_v1_projects__project_id__datasets_post: {
         parameters: {
-            query?: never;
+            query?: {
+                request_id?: string | null;
+            };
             header?: never;
             path: {
                 project_id: string;

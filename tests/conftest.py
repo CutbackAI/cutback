@@ -126,16 +126,21 @@ def api(api_database_url):
 @pytest.fixture
 def tenant(api):
     client, admin, _ = api
-    project = client.post(
+    project_response = client.post(
         "/v1/projects", json={"slug": "synthetic-" + uuid4().hex}, headers=admin
-    ).json()
-    project_id = project["id"]
-    write = client.post(
+    )
+    assert project_response.status_code == 201, "PROJECT_FIXTURE_CREATE_FAILED"
+    project_id = project_response.json()["id"]
+    write_response = client.post(
         f"/v1/projects/{project_id}/keys", json={"role": "ingest"}, headers=admin
-    ).json()
-    read = client.post(
+    )
+    assert write_response.status_code == 201, "INGEST_FIXTURE_KEY_CREATE_FAILED"
+    write = write_response.json()
+    read_response = client.post(
         f"/v1/projects/{project_id}/keys", json={"role": "viewer"}, headers=admin
-    ).json()
+    )
+    assert read_response.status_code == 201, "VIEWER_FIXTURE_KEY_CREATE_FAILED"
+    read = read_response.json()
     return (
         project_id,
         {"Authorization": f"Bearer {write['token']}"},
