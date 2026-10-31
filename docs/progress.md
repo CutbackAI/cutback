@@ -108,7 +108,15 @@ preparation, frozen campaign budgets, actual PostgreSQL cache/prompt journeys,
 reimported holdout denial, authenticated browser/mobile/axe, both source trees,
 rollback, and all independent request-reuse example modes. Final core-only and
 minimal server/OpenAI imports pass without optional identity/storage/commercial
-or test packages. The complete minimal CLI acceptance is still running.
+or test packages. The complete minimal CLI subsequently passed: an independent
+fresh server/OpenAI-only installation (OpenAI 2.29.0, Pydantic 2.14.2, no pytest,
+Anthropic, JWT, Stripe or S3 SDK) started its own Docker database, exposed a
+completed workload confirmation with eight observations/three potential reuses,
+source checks and rollback, and kept runtime caching off. After Ctrl+C its exact
+owned database container and listener were absent. The first launcher wrapper
+used process replacement and did not retain a controllable CLI session; it
+created no service. The corrected wrapper retained the process through cleanup.
+The public source walkthrough now documents only the necessary runtime extras.
 
 31 October 2026 complete observed-workload sample, **working source under
 qualification**: [walkthrough](../examples/workload-portfolio/README.md).

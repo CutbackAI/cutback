@@ -5,13 +5,19 @@ does not include this command. Use the matching source checkout; Docker and Git
 must be available. No provider account, API key or private application is needed.
 
 ```sh
-uv sync --locked --all-extras --dev
-uv run cutback demo --workload-portfolio
+uv sync --locked --no-dev --extra server --extra openai
+uv run --no-sync cutback demo --workload-portfolio
 ```
 
 The command starts its own temporary local PostgreSQL database and collector,
 then opens the dashboard. In **Sample**, find **Can repeated work avoid another
 provider call?** and choose **Inspect the repeat-workload confirmation**.
+
+This walkthrough needs the server and OpenAI extras, Git and Docker; it does not
+need the development, identity, billing, cloud-storage or other provider packages.
+A fresh minimal installation completed the actual CLI walkthrough, confirmed the
+source change and rollback, and removed its owned database/listener after Ctrl+C.
+All provider transports remain closed synthetic fixtures.
 
 The independent application is a synthetic billing classifier. The complete
 walkthrough performs these steps:
