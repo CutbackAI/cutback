@@ -2159,6 +2159,31 @@ function RunEvidence({ detail }: { detail: RecordData }) {
               />
             </React.Suspense>
           )}
+          {row.user_simulation && (
+            <section aria-label={`User simulation for ${row.model.key}`}>
+              <h3>{row.model.key}: reactive user simulation</h3>
+              <p>
+                {row.target_requests ?? "Unknown"} target calls ·{" "}
+                {row.user_simulation.requests ?? "Unknown"} simulator calls ·{" "}
+                {money(row.user_simulation.known_cost_subtotal_usd)} known
+                simulator subtotal. Simulator calls are excluded from target
+                latency coverage.
+              </p>
+              <p>
+                Target model cost per declared success:{" "}
+                {money(row.model_cost_per_declared_success_usd)}. Total
+                evaluation cost per declared success, including simulation:{" "}
+                {money(row.total_evaluation_cost_per_declared_success_usd)}.
+                Complete production task cost remains unknown.
+              </p>
+              <p className="hint">
+                Model-simulated users do not establish representative human
+                behavior. Candidates can receive different reactive
+                trajectories. Missing usage and undecided outcomes remain
+                unknown.
+              </p>
+            </section>
+          )}
           {row.semantic_judging && (
             <section aria-label={`Semantic assessment for ${row.model.key}`}>
               <h3>{row.model.key}: semantic model assessment</h3>

@@ -295,6 +295,14 @@ def check(directory: Path):
             "src/cutback/server/migrations/versions/0008_dataset_lineage.py",
             "src/cutback/server/migrations/versions/0009_reviews.py",
             "src/cutback/sample_app/app.py",
+            "docs/reactive-users.md",
+            "examples/reactive-user/README.md",
+            "examples/reactive-user/app.py",
+            "src/cutback/core/user_simulation.py",
+            "src/cutback/evals/user_simulation.py",
+            "src/cutback/server/migrations/versions/0029_reactive_user_call_budget.py",
+            "tests/integration/test_reactive_users.py",
+            "tests/end_to_end/test_reactive_users_pipeline.py",
         ):
             if not any(name.endswith("/" + required) for name in source_names):
                 raise ValueError("source distribution missing reproducibility file: " + required)

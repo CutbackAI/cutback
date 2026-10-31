@@ -197,3 +197,61 @@ def test_packaged_reactive_example_keeps_wrong_candidate_failed_and_accounts_for
     assert [m["quality"]["value"] for m in report["models"]] == [1, 0]
     assert all(m["user_simulation"]["requests"] == 2 for m in report["models"])
     assert all(m["target_requests"] == 6 for m in report["models"])
+
+
+@pytest.mark.parametrize("metadata_only", [False, True])
+def test_impossible_reactive_turn_budget_is_refused_before_approval(metadata_only):
+    plan = reactive_plan()
+    case = reactive_case()
+    case["episode"]["max_turns"] = 1
+    item = {"group_hash": "synthetic", "split": "test"}
+    item.update({"episode_max_turns": 1} if metadata_only else {"case": case})
+    with pytest.raises(ValueError, match="REACTIVE_USER_REQUIRES"):
+        plan_summary(plan, {"immutable_hash": "a" * 64, "items": [item]})
+
+
+@pytest.mark.parametrize("action", ["end", "followup"])
+def test_original_scripted_turns_precede_simulation_and_receipts_do_not_weaken_plain_evaluation(
+    monkeypatch, action
+):
+    from cutback.evals.episode_metrics import assess_episode
+
+    calls = []
+
+    def handle(request):
+        value = json.loads(request.content)
+        calls.append(value)
+        if value.get("text", {}).get("format", {}).get("name") == "cutback_reactive_user":
+            observed = json.loads(value["input"])["observed_conversation"]
+            assert [e["text"] for e in observed if e["role"] == "user"][
+                -1
+            ] == "Original scripted turn"
+            return native_text(
+                json.dumps(
+                    {"action": action, "message": "React now" if action == "followup" else ""}
+                )
+            )
+        return httpx.Response(200, json=response_body("responses.create"))
+
+    raw = reactive_plan().model_dump(mode="json")
+    raw["episode_execution"]["max_turns"] = 4
+    plan = ExperimentPlan.model_validate(raw)
+    case = reactive_case()
+    case["episode"].update(max_turns=4, user_followups=["Original scripted turn"])
+    executor = native_executor("responses.create", monkeypatch, handle)
+    ledger = BudgetLedger(plan.budget)
+    observed, assessment = execute_episode(plan, plan.baseline, case, ledger, executor)
+    assert assessment["status"] == "passed"
+    assert len(calls) == ledger.requests == (4 if action == "followup" else 3)
+    assert [e.text for e in observed.events if e.kind == "user"] == [
+        case["input"],
+        "Original scripted turn",
+        *(["React now"] if action == "followup" else []),
+    ]
+    assert observed.user_simulation.status == ("turn_cap" if action == "followup" else "ended")
+    if action == "followup":
+        assert (
+            assess_episode(EpisodeScenario.model_validate(case["episode"]), observed)["status"]
+            == "failed"
+        )
+    executor.close()

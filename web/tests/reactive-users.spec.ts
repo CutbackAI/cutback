@@ -23,6 +23,12 @@ test("reactive user receipts, private trajectory, guided draft and mobile access
   await page
     .getByRole("button", { name: "View reproducible evidence", exact: true })
     .click();
+  const overhead = page.getByRole("region", {
+    name: "User simulation for baseline",
+    exact: true,
+  });
+  await expect(overhead).toContainText("simulator calls");
+  await expect(overhead).toContainText("including simulation");
   await expect(page.getByText("You said:", { exact: false })).toHaveCount(0);
   await page
     .getByRole("button", { name: "Load execution receipts", exact: true })

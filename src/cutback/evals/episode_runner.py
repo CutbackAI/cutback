@@ -41,17 +41,22 @@ def episode_forecast(plan, dataset):
     from cutback.evals.security_suites import validate_security_selection
 
     validate_security_selection(plan, dataset)
+    simulation = plan.episode_execution.user_simulation
     turns, tools = 0, 0
     for item in selected_items(plan, dataset):
         if "case" in item:
             scenario = effective_scenario(plan, item["case"])
             bound = scenario.max_turns
+            if simulation and bound <= 1 + len(scenario.user_followups):
+                raise ValueError("REACTIVE_USER_REQUIRES_ROOM_AFTER_SCRIPTED_TARGET_TURNS")
             tools += min(scenario.max_tool_calls, plan.episode_execution.max_tool_calls)
         else:
             bound = item.get("episode_max_turns")
             if type(bound) is not int or not 1 <= bound <= 32:
                 raise ValueError("TYPED_EPISODE_CASES_REQUIRED")
             bound = min(bound, plan.episode_execution.max_turns)
+            if simulation and bound < 2:
+                raise ValueError("REACTIVE_USER_REQUIRES_AT_LEAST_TWO_TARGET_TURNS")
             if plan.episode_execution.isolated_tools:
                 tool_bound = item.get("episode_max_tool_calls")
                 if (
@@ -75,7 +80,6 @@ def episode_forecast(plan, dataset):
         if plan.episode_execution.semantic_judging
         else 0
     )
-    simulation = plan.episode_execution.user_simulation
     simulation_calls = (
         len(selected_items(plan, dataset)) * len(models) * plan.repeats * simulation.max_turns
         if simulation
