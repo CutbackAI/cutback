@@ -34,6 +34,8 @@ The source [paired security sample](https://github.com/CutbackAI/cutback/blob/ma
 
 For the source-only cache eligibility workflow, see the [eight-call request-reuse example](https://github.com/CutbackAI/cutback/blob/main/examples/request-reuse/README.md). Its provider transport is synthetic; it distinguishes modeled potential reuse from measured delivery and real savings.
 
+The working-source follow-up adds `uv run cutback demo --workload-portfolio`: an [independent observed-workload walkthrough](https://github.com/CutbackAI/cutback/blob/main/examples/workload-portfolio/README.md) through fixture-only comparison, confirmation, source checks and rollback. It is under qualification and absent from published dev5; no provider key is needed.
+
 Add `--source-workload` to include an independently committed application and [automatic source-matched assessment](https://github.com/CutbackAI/cutback/blob/main/docs/source-workload.md), without paid calls or source changes.
 
 The support-desk sample routes tickets by category and priority. Two workflows, ticket triage and escalation, share one native SDK call. It shows why a cheaper configuration that mishandles urgent tickets must be rejected.
@@ -87,6 +89,11 @@ The saved job prepares source contracts, fixture candidates, instrumentation cho
 ## Explore newer source workflows
 
 The commands above target the published dev5 package. For the newer source-checkout workflows:
+
+The working source adds `cutback workflow explain --target .` to turn a saved
+scan into readable next steps and request-contract blockers. Add `--json` for
+agent-readable metadata. It makes no provider call and does not edit or recheck
+application files; rerun `cutback optimize` after resolving a blocker.
 
 | Follow this journey | Start here |
 |---|---|

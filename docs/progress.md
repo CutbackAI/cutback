@@ -1,5 +1,231 @@
 # Implementation progress
 
+31 October 2026 offline source guidance, **active source work**. A new
+`workflow explain` command renders readable or JSON metadata from saved discovery.
+Known request blockers receive fixed, concrete inspection guidance without raw
+exception details, arguments, destinations or credentials. No qualified source
+now points to inspection instead of impossible preparation. The custom-client
+recovery hint uses the actual `cutback optimize` command. Discovery and related
+agent/client regressions passed **58 / one Windows symlink privilege skip in
+23.55 seconds**, including raw-detail suppression, bounded output and saved
+snapshot freshness. The final copy follow-up passed **58 / one skip in 18.81
+seconds**. Ruff/format and mypy (**387 modules**) pass.
+This does not qualify new dynamic adapters or close complete F05 coverage.
+Installed/package/publication qualification is pending.
+
+31 October 2026 workload-bound campaigns, **active engineering; not accepted**.
+The v4 envelope combines the qualified exact-cache control and native alternatives
+before bounded prompt search, with a shared parent reservation and untouched
+confirmation. The cache control remains unchanged during generated validation
+and is excluded from proposer seeds. Current source-window authority is checked
+at admission, approval and call boundaries. A native-fixture draft now also
+freezes the proposer's synthetic-only transport. New real PostgreSQL tests passed
+**2 in 126.71 seconds**: cache success skips the proposer; a unique-input trial
+falls back to reserved prompt generation and confirms its native winner.
+The initial fallback fixture accidentally repeated every input twice; its cache
+success was correct. That fixture now explicitly uses one repetition. New
+authority, ordinary agent, application-check and authenticated dashboard gates
+are running; installed artifacts and exact-head hosted acceptance remain pending.
+The complete ordinary-agent sample, both source trees, exact rollback and real
+administrator/mobile-viewer browser/axe checks passed **1 in 120.30 seconds**.
+Source-window create/approve/per-call repricing and lost-draft reconciliation
+passed **2 in 35.05 seconds**. An initial approval-error assertion was corrected
+to the existing deliberately generic campaign authority error; the denial was
+already correct. Frontend units **14**, generated API/types, React build,
+Ruff and mypy (**386 modules**) pass.
+The SDK3 source follow-up passed **13 in 275.84 seconds**, including both
+cache/prompt source proposals, both-tree checks and rollback, repricing denial,
+lost-draft recovery, authenticated desktop/mobile accessibility and frozen-budget
+contracts. Pure campaign contracts passed **51 in 16.43 seconds**. Installed
+qualification and the new container campaign restore/rekey gate remain pending.
+The first new image gate stopped at a missing campaign sample workspace before
+execution. The sample now creates that requested directory; a regression starting
+with an absent directory passed **1 in 78.82 seconds**, including the actual
+campaign, source checks and rollback. The failed image remains retained and a
+new frozen artifact/image qualification is required for this correction.
+The first campaign wheel passed **159 installed SDK2 checks in 847.51 seconds**
+and **159 installed SDK3 checks in 853.56 seconds**. The workspace correction's
+new wheel passed **16 installed SDK2 checks in 331.25 seconds** and **16 installed
+SDK3 checks in 321.49 seconds**, including the fresh-directory full browser
+journey and both source-change paths. A second image fixture put two identical
+independent tasks in one project and did not complete its campaign. The image
+driver now gives the new campaign its own project, retaining all holdout and
+cross-version lineage guards. That revised full image gate is still pending;
+the failed run remains retained. Its exact failure cause is not asserted from
+the abbreviated error receipt.
+The shared-project fixture was then reproduced with an observed canonical
+lineage denial: reimported sample families could not claim a fresh campaign
+confirmation. That negative PostgreSQL journey passed **1 in 92.95 seconds**.
+The first assertion incorrectly expected an internal lineage code in the public
+parent receipt; the public generic error is intentional. The test now observes
+the actual typed lineage denial while requiring the generic public response.
+The independent-project image fixture retains these controls unchanged.
+
+Hosted predecessor qualification found an incomplete eight-profile capture in
+the independent request-reuse sample (one SDK3 workflow job: **268 passed / nine
+skips / one failure**). The old five-second drain did not record enough detail
+to distinguish pending exports from dropped ones. The sample now waits at most
+30 seconds for already queued exports and emits only allowlisted numeric loss
+counters on failure; it never resends inference or discarded capture. Slow-drain,
+bounded failure and all three actual SDK3/HTTP example modes passed **6 in 34.34
+seconds**. This does not establish the original failure's cause or close its
+hosted gate; current-head rerun remains required.
+This is not the full cross-engine optimizer or a complete market baseline.
+
+The preceding complete observed-workload demo passed **58 installed SDK2 tests
+in 899.75 seconds** and **58 installed SDK3 tests in 887.16 seconds**. Its matching
+container completed confirmation, source checks and restore/rekey across schema
+0032, 100 tables, 2,426 encrypted objects, 16 profiles, nine cache objects and 32
+plans. Corrected receipt counters record 31 application calls across five
+workflows; a prior receipt displayed stale counters, despite passing functional
+checks. The 2,000-event plus 2,000-replay two-tenant local smoke took 2.906 seconds,
+not a production SLA. [PR 73](https://github.com/CutbackAI/cutback/pull/73) remains
+under hosted qualification. The native/cache predecessor is
+[PR 72](https://github.com/CutbackAI/cutback/pull/72); the earlier joint-retrieval
+increment [PR 71](https://github.com/CutbackAI/cutback/pull/71) merged after all
+17 exact-head checks passed. PyPI dev5 remains unchanged. No paid inference,
+production deployment or private application integration occurred.
+
+The complete demo's hosted test suites passed **2,326 / 40 skips in 3,172.58
+seconds** on Python 3.11 and **2,325 / 41 skips in 2,838.86 seconds** on Python
+3.13. Its later distribution validation correctly rejected a package README
+relative link. That link now uses an absolute public repository URL. CI builds,
+validates archive contents and checks package metadata before the long test
+suite, while retaining the post-test committed-source integrity check. The local
+build orchestrator also requires distribution validation before reporting a
+successful build. New package and exact-head hosted gates remain required.
+The final metadata-correct image repeated the combined seed under concurrent
+local qualification and reached the harness's 180-second command limit. The
+driver now runs the independent campaign as its own bounded seed operation,
+keeping the same 180-second limit for each operation and all recovery checks.
+Runtime code and native approval/billing behavior are unchanged. This timeout
+is retained as a failed harness run; the revised gate remains pending.
+
+The final combined installed wheel passed **126 / one unavailable Windows
+symlink privilege skip in 481.49 seconds** on SDK2 and **126 / one corresponding
+skip in 484.65 seconds** on SDK3. These cover source explanations, client/agent
+preparation, frozen campaign budgets, actual PostgreSQL cache/prompt journeys,
+reimported holdout denial, authenticated browser/mobile/axe, both source trees,
+rollback, and all independent request-reuse example modes. Final core-only and
+minimal server/OpenAI imports pass without optional identity/storage/commercial
+or test packages. The complete minimal CLI subsequently passed: an independent
+fresh server/OpenAI-only installation (OpenAI 2.29.0, Pydantic 2.14.2, no pytest,
+Anthropic, JWT, Stripe or S3 SDK) started its own Docker database, exposed a
+completed workload confirmation with eight observations/three potential reuses,
+source checks and rollback, and kept runtime caching off. After Ctrl+C its exact
+owned database container and listener were absent. The first launcher wrapper
+used process replacement and did not retain a controllable CLI session; it
+created no service. The corrected wrapper retained the process through cleanup.
+The public source walkthrough now documents only the necessary runtime extras.
+
+31 October 2026 complete observed-workload sample, **working source under
+qualification**: [walkthrough](../examples/workload-portfolio/README.md).
+`demo --workload-portfolio` now wires an independent committed classifier,
+eight actual intercepted SDK calls, encrypted profile analysis, source-window
+eligibility, a frozen fixture-only native/cache portfolio, automatic fixture
+selection, separate untouched confirmation, both application trees and exact
+rollback. The source component passed **1 real HTTP/PostgreSQL/SDK test in
+52.38 seconds**, and SDK3 plus prerequisite checks passed **8 in 49.48 seconds**.
+Both the standard and workload-extended complete dashboard journeys passed
+**2 in 224.92 seconds**, including administrator/mobile-viewer accessibility.
+The actual headless CLI also started its own Docker database and exposed a
+completed fixture confirmation with source checks and rollback. Its listener
+and exact owned container stopped after Ctrl+C. New installed qualification is
+pending. No live inference or runtime cache activation is granted. The ordinary
+support-desk executor is now explicitly marked synthetic too. Initial failures
+in the local check script's discovery shape and a journal field name were
+corrected against the actual contracts; they remain retained separately. An
+older browser assertion expected three cost workflows; this mode correctly adds
+a fourth, and the test now checks the active manifest. The first CLI probe
+omitted the same-origin JSON request shape and was refused; the browser-shaped
+request subsequently passed.
+
+The predecessor's corrected frozen wheel passed **130 installed SDK2 tests in
+512.70 seconds** and **130 installed SDK3 tests in 514.25 seconds**, plus full
+restore/rekey of the pending bound plan and existing recovery gates across schema
+0032, 100 tables, 2,202 encrypted objects, eight profiles, one cache and 30 plans.
+Its two-tenant 2,000-event plus 2,000-replay local smoke took 1.891 seconds; this
+is not a production SLA. Current-head hosted acceptance is still required.
+
+31 October 2026 workload-bound native/cache portfolios, **working source under
+qualification**: [walkthrough](workload-native-portfolios.md). A positive retained
+source-window assessment now qualifies an exact-cache hypothesis alongside
+native model/output alternatives. The frozen optional binding preserves legacy
+plan hashes. Canonical project/source/census/price/policy/expiry checks run at
+plan creation, content reads, approval, queueing and execution. Expiry bounds
+the plan; client-edited or stale receipts fail closed. Budget fitting removes
+native hypotheses while retaining the qualified cache candidate, with explicit
+counts and unchanged examples/quality requirements.
+
+Setup and untouched confirmation reconcile exact nonbillable identities; rejected
+confirmation budgets leave no stuck intent. The report counts known validation
+and confirmation costs, including rejected trials, and shows an explicitly
+assumed native-window repetition count. Counts use exact decimal text beyond
+the browser integer limit. The opportunity belongs only to the qualified cache
+hypothesis; a model-only confirmation cannot inherit its payback. Incomplete
+billing keeps payback unknown. Full task,
+review/deployment/hosting costs and realized savings remain unknown.
+
+The independent request-reuse example adds `--prepare-trial --keep-source`:
+eight intercepted synthetic SDK calls feed measured eligibility, a retained
+committed application and one pending plan, with no target run or inference
+approval. Its three subprocess/HTTP/PostgreSQL/cleanup variants passed **3 in
+38.95 seconds**. The actual SDK/PG source journey passed separate checkpoints:
+**4 in 146.32 seconds**, then **4 in 272.65 seconds** with both-tree source checks,
+owned runtime activation, exact rollback and authenticated desktop/mobile/axe;
+the expanded lost-setup, foreign-project, repriced-census and revoked-policy
+journey passed **1 in 171.27 seconds**. SDK3's initial source scope passed **8 in
+200.78 seconds**. Python 3.13/SDK3 then passed the extended actual journey,
+including stale approval/queue rejection, stopping after one charged synthetic
+call when prices change, and refusing a replay of that failed run. Final source
+scopes and installed qualification are running.
+
+An evidence audit also found that marked synthetic executors without a frozen
+native-fixture plan were not universally disclosed. They now retain synthetic
+model/candidate/report evidence, cannot retain verified-model status or pass the
+ordinary real-quality gate, and carry that disclosure into cache and model source
+artifacts and the dashboard. A broader unit checkpoint passed **1,419 / 27
+explicit skips in 736.86 seconds**; **23** targeted economics/workload/retrieval
+units passed after the exact-count correction. Typing passes **383 modules**;
+API/client/types, React build, 14 frontend units and lint/format pass. New final
+installed/archive/image/hosted qualification remains pending.
+
+Follow-up hardening passed **42 source units in 47.48 seconds** and **12 actual
+SDK/PostgreSQL workflow and fixture checks in 119.74 seconds**. Synthetic
+disclosure now survives failed runs and episode execution, and model artifacts
+preserve the existing human-review state with a separate synthetic evidence
+scope. The stale-window execution test additionally preserves the settled first
+call's nonzero cost and refuses replay. Both preceding installed SDK scopes
+stopped at the same review-state compatibility assertion after **72 passes**;
+that failure prompted this correction. The preceding frozen wheel's matching
+image passed restore/rekey across schema 0032, 100 tables, 2,202 encrypted
+objects, eight profiles, one cache and 30 plans, including an unapproved bound
+portfolio with no queued run and its current restored receipt. New immutable
+archives and installed/image qualification are required for this correction.
+
+Retained failures: the first portfolio exceeded its worst-case native budget,
+leading to bounded candidate reduction; a 100-request confirmation correctly
+failed for 160 required requests and is now tested before a sufficient ceiling.
+One local observer flush timed out. An attempted test timeout outside the
+existing two-second capture bound was correctly rejected and reverted; runtime
+bounds were not widened. Required Budget fields missing in an initial test
+fixture were corrected. Later checks retained a bounded source-read mismatch
+and PostgreSQL connection timeout; a separate eight-case Python 3.13 unit
+diagnostic passed without weakening source checks. New test assertions also
+used the wrong queue-response key and connection-file location; these were
+corrected against the actual contracts. Later passing checkpoints are separate
+evidence. Recovery qualification now additionally checks an unapproved bound
+portfolio and its current source-window receipt after restore and rekey.
+
+The earlier profiling/automatic-retrieval/Decimal increment is accepted in
+[PR 68](https://github.com/CutbackAI/cutback/pull/68): installed full default
+**2,292 / 36 skips in 4,222.48 seconds**, installed SDK3 qualified full scope
+**2,064 / 10 skips in 3,299.19 seconds**, and all **17** exact-head hosted checks.
+The joint retrieval follow-up remains separately qualifying in PR 71. No paid
+request, production deployment or new PyPI publication occurred. This native
+model/cache increment does not close full cross-engine selection, the remaining
+market baseline or customer qualification.
+
 31 October 2026 portable golden-fixture correction, **hosted qualification in
 progress**: Python 3.13's Unicode 15.1 recipe correctly produces legacy v6 hash
 `870f88c5732552d81a8dfa65920112b358291ef61899de2d07da6a235ee34791`, whereas the

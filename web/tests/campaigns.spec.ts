@@ -36,7 +36,9 @@ test("inspect canonical campaign evidence, approve exact bounds and cancel witho
   );
   await expect(selected).toContainText("generated-r1-2");
   await expect(selected).toContainText("confirmation");
-  await expect(selected).toContainText("Initial model/output-cap validation");
+  await expect(selected).toContainText(
+    "Initial prepared-alternative validation",
+  );
   await expect(selected).toContainText(
     "selected its reserved instruction-search stage",
   );
@@ -87,7 +89,7 @@ test("inspect canonical campaign evidence, approve exact bounds and cancel witho
     selected.getByRole("region", { name: "Frozen static portfolio" }),
   ).toBeVisible();
   await expect(
-    selected.getByText("Model and output limits frozen before approval"),
+    selected.getByText("Alternatives and output limits frozen before approval"),
   ).toBeVisible();
   await expect(selected).toContainText("Preparation omitted 3 alternatives");
   await expect(

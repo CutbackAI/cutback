@@ -152,6 +152,19 @@ export function CacheWorkloadCheck({
             Source lineage is client reported. This assessment grants no paid
             budget or source-change approval. Valid until {receipt.valid_until}.
           </p>
+          {receipt.decision === "prepare_separate_cache_trial" && (
+            <p>
+              In a matching source installation, use{" "}
+              <code>
+                cutback workflow prepare --automatic --exact-cache-contract
+                PRIVATE_CONTRACT --help
+              </code>{" "}
+              to prepare a workload-bound native/model/cache comparison with
+              permitted labeled examples. The collector rechecks this exact
+              window before approval and every execution call. Preparation
+              starts no inference.
+            </p>
+          )}
         </div>
       )}
     </details>

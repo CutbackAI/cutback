@@ -7,7 +7,8 @@ from cutback.changes import CanaryPolicy, canary_decision, model_patch
 from cutback.scanner import scan
 
 
-def test_source_bound_patch_is_reviewed_reversible_and_refuses_stale_input(tmp_path):
+@pytest.mark.parametrize("synthetic", [False, True])
+def test_source_bound_patch_is_reviewed_reversible_and_refuses_stale_input(tmp_path, synthetic):
     path = tmp_path / "main.py"
     path.write_text(
         "from openai import OpenAI\nc=OpenAI()\n"
@@ -41,6 +42,12 @@ def test_source_bound_patch_is_reviewed_reversible_and_refuses_stale_input(tmp_p
         "key": "compact",
         "model": "gpt-4.1-mini",
     }
+    if synthetic:
+        recommendation["evidence"]["synthetic_execution"] = {
+            "evidence": "operator_reported_synthetic_transport",
+            "real_model_quality_verified": False,
+            "customer_savings_verified": False,
+        }
     result = model_patch(
         tmp_path,
         inventory,
@@ -52,6 +59,12 @@ def test_source_bound_patch_is_reviewed_reversible_and_refuses_stale_input(tmp_p
     assert "+c.responses.create(model='gpt-4.1-mini'" in result["diff"]
     assert '+c.responses.create(model="gpt-4.1"' in result["rollback_diff"]
     assert path.read_bytes() == before
+    if synthetic:
+        assert result["review_status"] == "human_review_required"
+        assert result["evidence_scope"] == "synthetic_sample_only"
+        assert result["synthetic_execution"] == recommendation["evidence"]["synthetic_execution"]
+    else:
+        assert "synthetic_execution" not in result
     reused = {
         **recommendation,
         "evidence": {**recommendation["evidence"], "lineage": {"fresh_test_claim": False}},

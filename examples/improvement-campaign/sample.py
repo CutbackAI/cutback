@@ -23,6 +23,11 @@ def main():
     parser.add_argument("--local-target", type=Path, required=True)
     parser.add_argument("--cleanup", action="store_true")
     parser.add_argument(
+        "--workload-cache-first",
+        action="store_true",
+        help="Observe an independent repeat workload, then run its native/cache campaign",
+    )
+    parser.add_argument(
         "--ticket-router",
         action="store_true",
         help=(
@@ -46,6 +51,10 @@ def main():
         help="Include one real closed metadata observation window; requires --outcomes",
     )
     args = parser.parse_args()
+    if args.workload_cache_first and any(
+        (args.outcomes, args.watch, args.modern_model, args.ticket_router)
+    ):
+        parser.error("--workload-cache-first is a separate independent sample")
     if args.watch and not args.outcomes:
         parser.error("--watch requires --outcomes")
     if args.modern_model and not args.outcomes:
@@ -83,7 +92,13 @@ def main():
             project = created.json()["id"]
             key = client.post(f"/v1/projects/{project}/keys", json={"role": "ingest"})
             key.raise_for_status()
-            if args.outcomes:
+            if args.workload_cache_first:
+                from cutback.demo_workload_campaign import seed_workload_campaign
+
+                result = seed_workload_campaign(
+                    owned, client, project, key.json()["token"], workspace
+                )
+            elif args.outcomes:
                 from cutback.demo_campaign_outcomes import run_sample
 
                 result = run_sample(
@@ -112,6 +127,16 @@ def main():
                         "known_modeled_subtotal_usd": report["known_spend_subtotal_usd"],
                         "decision": report["summary"]["decision"],
                         "paid_provider_calls": 0,
+                        **(
+                            {
+                                "observed_native_calls": result["observed_native_calls"],
+                                "proposer_calls": 0,
+                                "rollback_verified": result["rollback_verified"],
+                                "runtime_cache_activated": False,
+                            }
+                            if args.workload_cache_first
+                            else {}
+                        ),
                         **(
                             {
                                 "scenario": result["scenario"],

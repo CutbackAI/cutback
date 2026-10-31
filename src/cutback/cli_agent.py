@@ -57,6 +57,22 @@ def register_agent(app, output, fail):
 
         output(public_session(load_session(target)))
 
+    @group.command("explain")
+    @guarded
+    def explain(
+        target: Path = Path("."),
+        json_output: Annotated[bool, typer.Option("--json")] = False,
+    ):
+        """Explain saved discovery and concrete request-contract blockers offline."""
+        from cutback.agent import load_session, public_session
+        from cutback.core.source_guidance import explain_source, render_source_guide
+
+        report = explain_source(public_session(load_session(target)))
+        if json_output:
+            output(report)
+        else:
+            typer.echo(render_source_guide(report))
+
     @group.command("prepare")
     @guarded
     def prepare(

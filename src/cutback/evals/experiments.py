@@ -27,6 +27,7 @@ from cutback.core.native_models import NativeModelContract, validate_luna_text_c
 from cutback.core.observation import observation_scope
 from cutback.core.request_profiles import RequestContract, SourceBinding
 from cutback.core.security_suites import SecurityEvaluationSpec
+from cutback.core.workload_portfolio import WorkloadPortfolioBinding
 from cutback.evals.compression import (
     CompressionExecutionSpec,
     CompressionProcessor,
@@ -383,6 +384,7 @@ class ExperimentPlan(StrictModel):
     criteria_binding: ReviewedCriteriaBinding | None = None
     routing_execution: RoutingTrainingExecution | LearnedRoutingBinding | None = None
     native_fixture: NativeFixtureExecution | None = None
+    workload_portfolio: "WorkloadPortfolioBinding | None" = None
 
     @model_serializer(mode="wrap")
     def preserve_existing_plan_hashes(self, handler):
@@ -403,10 +405,14 @@ class ExperimentPlan(StrictModel):
             result.pop("routing_execution", None)
         if self.native_fixture is None:
             result.pop("native_fixture", None)
+        if self.workload_portfolio is None:
+            result.pop("workload_portfolio", None)
         return result
 
     @model_validator(mode="after")
     def eligibility(self):
+        if self.workload_portfolio is not None:
+            self.workload_portfolio.validate_plan(self)
         cached = [model for model in self.candidates if model.exact_cache is not None]
         if (
             self.baseline.exact_cache is not None
@@ -1280,7 +1286,7 @@ def run(
     if plan.episode_execution:
         from cutback.evals.episode_runner import run_episodes
 
-        return run_episodes(
+        episode_report = run_episodes(
             plan,
             dataset,
             executor,
@@ -1292,6 +1298,7 @@ def run(
             check_authority=check_authority,
             environment_factory=environment_factory,
         )
+        return _synthetic_disclosure(episode_report, executor)
     from cutback.evals.input_groups import InputGroupingViolation, effective_input_groups
 
     # Preparation is part of the same approved wall envelope. Constructing the
@@ -1573,8 +1580,7 @@ def run(
                     "routing_compute_cost_usd": None,
                     "application_hosting_cost_usd": None,
                     "cost_evidence": "scripted_fixture_usage"
-                    if (plan.routing_execution is not None or plan.native_fixture is not None)
-                    and getattr(executor, "synthetic_transport", False) is True
+                    if getattr(executor, "synthetic_transport", False) is True
                     else "customer_compute_upper_bound"
                     if model.provider == "local"
                     else "provider_usage_with_pinned_public_rate",
@@ -1762,7 +1768,8 @@ def run(
             report["input_grouping"] = input_grouping
             for recommendation in report["recommendations"]:
                 recommendation["input_grouping"] = input_grouping
-        return processor.finalize(report) if processor else report
+        report = processor.finalize(report) if processor else report
+        return _synthetic_disclosure(report, executor)
     except Exception as exc:
         # Safe failure codes only: provider exception text can contain request content/secrets.
         code = str(exc) if type(exc) is ValueError else "EXECUTOR_FAILED"
@@ -1781,7 +1788,26 @@ def run(
             "requests": ledger.requests,
             "production_deployed": False,
         }
-        return processor.finalize(report) if processor else report
+        report = processor.finalize(report) if processor else report
+        return _synthetic_disclosure(report, executor)
+
+
+def _synthetic_disclosure(report, executor):
+    """Preserve provenance on successes, partial failures and episode results."""
+    if getattr(executor, "synthetic_transport", False) is True:
+        marker = {
+            "evidence": "operator_reported_synthetic_transport",
+            "real_model_quality_verified": False,
+            "customer_savings_verified": False,
+        }
+        report["synthetic_execution"] = marker
+        for model in report.get("models", []):
+            model["cost_evidence"] = "scripted_fixture_usage"
+        for recommendation in report.get("recommendations", []):
+            recommendation["synthetic_execution"] = marker
+            if recommendation.get("status") == "VERIFIED_ON_HELDOUT_DATASET":
+                recommendation["status"] = "PROMISING"
+    return report
 
 
 def rank_results(plan, results, representative):

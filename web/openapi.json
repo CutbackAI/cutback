@@ -18275,7 +18275,8 @@
             "enum": [
               "cutback.improvement-campaign.v1",
               "cutback.improvement-campaign.v2",
-              "cutback.improvement-campaign.v3"
+              "cutback.improvement-campaign.v3",
+              "cutback.improvement-campaign.v4"
             ],
             "title": "Version",
             "default": "cutback.improvement-campaign.v1"
@@ -18523,6 +18524,11 @@
           "source_bound": {
             "type": "boolean",
             "title": "Source Bound"
+          },
+          "workload_bound_cache": {
+            "type": "boolean",
+            "title": "Workload Bound Cache",
+            "default": false
           },
           "instruction_edit": {
             "anyOf": [
@@ -21604,6 +21610,16 @@
                 "type": "null"
               }
             ]
+          },
+          "workload_portfolio": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkloadPortfolioBinding-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -21948,6 +21964,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/NativeFixtureExecution"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "workload_portfolio": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkloadPortfolioBinding-Output"
               },
               {
                 "type": "null"
@@ -23980,7 +24006,8 @@
             "enum": [
               "cutback.improvement-campaign.v1",
               "cutback.improvement-campaign.v2",
-              "cutback.improvement-campaign.v3"
+              "cutback.improvement-campaign.v3",
+              "cutback.improvement-campaign.v4"
             ],
             "title": "Version",
             "default": "cutback.improvement-campaign.v1"
@@ -36799,6 +36826,52 @@
           "started_ns"
         ],
         "title": "WorkflowSpan"
+      },
+      "WorkloadPortfolioBinding-Input": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "workload-native-portfolio-v1",
+            "title": "Version",
+            "default": "workload-native-portfolio-v1"
+          },
+          "assessment": {
+            "$ref": "#/components/schemas/CacheWorkloadAssessment"
+          },
+          "cache_execution": {
+            "$ref": "#/components/schemas/ExactCacheExecution-Input"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "assessment",
+          "cache_execution"
+        ],
+        "title": "WorkloadPortfolioBinding"
+      },
+      "WorkloadPortfolioBinding-Output": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "workload-native-portfolio-v1",
+            "title": "Version",
+            "default": "workload-native-portfolio-v1"
+          },
+          "assessment": {
+            "$ref": "#/components/schemas/CacheWorkloadAssessment"
+          },
+          "cache_execution": {
+            "$ref": "#/components/schemas/ExactCacheExecution-Output"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "assessment",
+          "cache_execution"
+        ],
+        "title": "WorkloadPortfolioBinding"
       }
     }
   }

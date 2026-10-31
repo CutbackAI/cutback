@@ -124,6 +124,7 @@ def demo(
     reactive_users: bool = False,
     agent_retrieval: bool = False,
     joint_model_retrieval: bool = False,
+    workload_portfolio: bool = False,
 ):
     """Explore the complete sample. Requires Docker and Git; no API key or paid calls."""
     try:
@@ -149,6 +150,7 @@ def demo(
             reactive_users=reactive_users,
             agent_retrieval=agent_retrieval,
             joint_model_retrieval=joint_model_retrieval,
+            workload_portfolio=workload_portfolio,
         )
     except ImportError:
         fail(

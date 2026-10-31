@@ -161,6 +161,8 @@ def confirmation_plan(prior, report, run_id, budget):
 def regression_gate(report, *, expected_plan_hash, candidate=None, sample_only=False):
     """Exact v12 accounting, component economics, quality and confirmation gate."""
     reasons = []
+    if report.get("synthetic_execution") and not sample_only:
+        reasons.append("fixture_transport_cannot_verify_real_model_quality")
     if report.get("status") != "COMPLETED" or report.get("billing_complete") is not True:
         reasons.append("run_or_accounting_incomplete")
     if report.get("plan", {}).get("plan_hash") != expected_plan_hash:

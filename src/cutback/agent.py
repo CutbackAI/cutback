@@ -172,10 +172,19 @@ def next_action(state):
         ):
             return {
                 "code": "QUALIFY_CLIENT_DESTINATION",
-                "tool": "cutback workflow analyze",
+                "tool": "cutback optimize",
                 "requires": ["explicit_supported_client_options_or_inspected_destination_adapter"],
                 "effects": ["read_source_metadata"],
                 "provider_calls": 0,
+            }
+        if not state.get("profiles"):
+            return {
+                "code": "INSPECT_UNQUALIFIED_SOURCE_CONTRACTS",
+                "tool": "cutback workflow explain",
+                "requires": ["qualified_request_or_source_specific_adapter"],
+                "effects": ["read_saved_source_metadata"],
+                "provider_calls": 0,
+                "replay_qualified": False,
             }
         return {
             "code": "REVIEW_DATA_RIGHTS_AND_PREPARE",
@@ -311,17 +320,9 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
                         "source_file": site["source_file"],
                         "reason": "REQUEST_REQUIRES_INSPECTED_ADAPTER_OR_EXPLICIT_BOUND",
                     }
-                    # Never expose arbitrary parser/provider exception text. This
-                    # exact fixed code carries no URL, source content or credential.
-                    if (
-                        type(exc) is ValueError
-                        and str(exc) == "CUSTOM_PROVIDER_DESTINATION_REQUIRES_REVIEW"
-                    ):
-                        issue.update(
-                            diagnostic_code="CUSTOM_PROVIDER_DESTINATION_REQUIRES_REVIEW",
-                            next_action="Metadata observation can continue; source replay needs "
-                            "explicit client options and a qualified provider destination.",
-                        )
+                    from cutback.core.source_guidance import request_guidance
+
+                    issue.update(request_guidance(exc))
                     unresolved.append(issue)
                 entrypoints[entry["file"]] = entry
         fixtures = discover_fixtures(root)
@@ -660,6 +661,7 @@ def prepare(
     retrieval=False,
     retrieval_corpus_authorized=False,
     joint_retrieval=False,
+    workload_portfolio_binding=None,
 ):
     """Read only explicitly permitted files; upload to the chosen encrypted collector; no calls."""
     from cutback.core.models import Identifier
@@ -686,6 +688,13 @@ def prepare(
         if not search and not automatic:
             raise ValueError("EXACT_CACHE_REQUIRES_SEARCH_OR_AUTOMATIC_PREPARATION")
 
+    workload_binding = None
+    if workload_portfolio_binding is not None:
+        from cutback.core.workload_portfolio import WorkloadPortfolioBinding
+
+        workload_binding = WorkloadPortfolioBinding.model_validate(workload_portfolio_binding)
+        if cache_contract != workload_binding.cache_execution:
+            raise ValueError("WORKLOAD_PORTFOLIO_EXACT_CACHE_CONTRACT_CHANGED")
     if type(automatic) is not bool:
         raise ValueError("AUTOMATIC_PREPARATION_FLAG_MUST_BE_BOOLEAN")
     if type(min_test_samples) is not int or not 1 <= min_test_samples <= 10000:
@@ -715,6 +724,30 @@ def prepare(
         joint_retrieval = selected["mode"] == "joint_model_retrieval"
         if cache_contract is not None and selected["mode"] != "native_search":
             raise ValueError("EXACT_CACHE_REQUIRES_NATIVE_MODEL_PORTFOLIO")
+        if cache_contract is not None and not fixture_transport:
+            from cutback.agent_cache_workload import assess
+            from cutback.core.workload_portfolio import (
+                WORKLOAD_PORTFOLIO_CONTRACT,
+                WorkloadPortfolioBinding,
+            )
+
+            if (
+                control("GET", "/v1/health/ready").get("workload_portfolio_contract")
+                != WORKLOAD_PORTFOLIO_CONTRACT
+            ):
+                raise ValueError("COLLECTOR_WORKLOAD_PORTFOLIO_UPGRADE_REQUIRED")
+            assessed = assess(
+                root,
+                control,
+                project,
+                cache_execution=cache_contract.model_dump(mode="json"),
+                workflow=workflow,
+            )
+            if assessed["decision"] != "prepare_separate_cache_trial":
+                raise ValueError("AUTOMATIC_CACHE_TRIAL_REQUIRES_CURRENT_SOURCE_WORKLOAD")
+            workload_binding = WorkloadPortfolioBinding(
+                assessment=assessed["selected_assessment"], cache_execution=cache_contract
+            )
     if retrieval or joint_retrieval:
         if retrieval and joint_retrieval:
             raise ValueError("CHOOSE_FIXED_MODEL_OR_JOINT_RETRIEVAL_SEARCH")
@@ -973,11 +1006,42 @@ def prepare(
                     else {}
                 ),
                 **({"name": "Campaign preparation basis"} if for_campaign else {}),
+                **(
+                    {"workload_portfolio": workload_binding.model_dump(mode="json")}
+                    if workload_binding
+                    else {}
+                ),
             }
         )
         summary = plan_summary(spec, prepared)
+        if workload_binding is not None:
+            original_count = len(spec.candidates)
+            cached = [value for value in spec.candidates if value.exact_cache is not None]
+            native = [value for value in spec.candidates if value.exact_cache is None]
+            while not summary["fits_budget"] and native:
+                native.pop()
+                spec = ExperimentPlan.model_validate(
+                    {
+                        **spec.model_dump(mode="json"),
+                        "candidates": [
+                            value.model_dump(mode="json") for value in [*native, *cached]
+                        ],
+                    }
+                )
+                summary = plan_summary(spec, prepared)
+            state["workload_candidate_preparation"] = {
+                "qualified_candidate_count": original_count,
+                "prepared_candidates": len(spec.candidates),
+                "budget_reduced_portfolio": len(spec.candidates) < original_count,
+                "selection_basis": "qualified_native_prefix_plus_workload_eligible_cache",
+                "examples_or_quality_requirements_reduced": False,
+            }
         if not summary["fits_budget"]:
             raise ValueError("PROPOSED_PLAN_EXCEEDS_BUDGET_OR_HAS_NO_HELDOUT_CASES")
+        if workload_binding is not None:
+            state["workload_portfolio_sha256"] = fingerprint(
+                workload_binding.model_dump(mode="json")
+            )
         intent = {
             "source": profile.binding.profile_sha256,
             "examples": identities,
@@ -1041,6 +1105,11 @@ def prepare(
             **(
                 {"exact_cache_contract": cache_contract.model_dump(mode="json")}
                 if cache_contract is not None
+                else {}
+            ),
+            **(
+                {"workload_portfolio_binding": workload_binding.model_dump(mode="json")}
+                if workload_binding
                 else {}
             ),
         }
@@ -1275,6 +1344,17 @@ def gate(root, control, *, candidate=None, sample_only=False):
 
 def confirm(root, control, *, candidate, max_usd, max_requests=100, purpose):
     """Freeze one validation winner for a separately approved untouched test run."""
+    if load_session(root).get("workload_portfolio_sha256"):
+        from cutback.agent_workload_confirmation import confirm as confirm_workload
+
+        return confirm_workload(
+            root,
+            control,
+            candidate=candidate,
+            max_usd=max_usd,
+            max_requests=max_requests,
+            purpose=purpose,
+        )
     if load_session(root).get("search_mode") in RETRIEVAL_SEARCH_MODES:
         from cutback.agent_retrieval import confirm as confirm_retrieval
 

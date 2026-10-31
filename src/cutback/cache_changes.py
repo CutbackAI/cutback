@@ -256,4 +256,6 @@ def prepare_patch(root, current, site, profile, recommendation, *, proposal_only
     }
     if evidence.get("native_fixture") is not None:
         artifact["native_fixture"] = evidence["native_fixture"]
+    if evidence.get("synthetic_execution") is not None:
+        artifact["synthetic_execution"] = evidence["synthetic_execution"]
     return artifact

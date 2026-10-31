@@ -1122,6 +1122,14 @@ def install_evaluation(app, sessions, authorize, scope):
                         409, "NATIVE_FIXTURE_REQUIRES_SYNTHETIC_DATA_AND_RIGHTS"
                     ) from None
             binding = body.specification.source_binding
+            from cutback.server.workload_portfolio import validate_binding as validate_workload
+
+            try:
+                validate_workload(session, project_id, body.specification)
+            except ValueError:
+                raise HTTPException(
+                    409, "WORKLOAD_PORTFOLIO_CURRENT_SOURCE_WINDOW_REQUIRED"
+                ) from None
             from cutback.server.scenario_service import require_current_import
 
             try:
@@ -1261,6 +1269,13 @@ def install_evaluation(app, sessions, authorize, scope):
                         datetime.fromisoformat(frozen["expires_at"]),
                         routing_source[0].expires_at,
                     ).isoformat()
+                if body.specification.workload_portfolio is not None:
+                    frozen["expires_at"] = min(
+                        datetime.fromisoformat(frozen["expires_at"]),
+                        datetime.fromisoformat(
+                            body.specification.workload_portfolio.assessment.valid_until
+                        ),
+                    ).isoformat()
             except ValueError:
                 raise HTTPException(422, "PLAN_CONTENT_POLICY_DENIED") from None
             refs.append(frozen["artifact_ref"])
@@ -1305,6 +1320,9 @@ def install_evaluation(app, sessions, authorize, scope):
                 from cutback.server.criteria_service import validate_binding as validate_criteria
 
                 validate_criteria(session, store, project_id, plan)
+                from cutback.server.workload_portfolio import validate_binding as validate_workload
+
+                validate_workload(session, project_id, plan)
             except ValueError as exc:
                 raise HTTPException(409, str(exc)) from None
             session.add(
@@ -1364,6 +1382,19 @@ def install_evaluation(app, sessions, authorize, scope):
                 raise HTTPException(409, "PLAN_ALREADY_DECIDED")
             if row.specification["plan_hash"] != body.plan_hash:
                 raise HTTPException(409, "PLAN_CHANGED")
+            if row.specification.get("public_specification", {}).get("workload_portfolio"):
+                from cutback.server.workload_portfolio import validate_binding as validate_workload
+
+                try:
+                    validate_workload(
+                        session,
+                        project_id,
+                        load_plan(require_store(app), project_id, row.specification),
+                    )
+                except ValueError:
+                    raise HTTPException(
+                        409, "WORKLOAD_PORTFOLIO_CURRENT_SOURCE_WINDOW_REQUIRED"
+                    ) from None
             row.approval_status, row.approved_by = "approved", auth["actor"]
             session.add(
                 AuditEvent(
@@ -1406,6 +1437,9 @@ def install_evaluation(app, sessions, authorize, scope):
                 from cutback.server.criteria_service import validate_binding as validate_criteria
 
                 validate_criteria(session, require_store(app), project_id, frozen)
+                from cutback.server.workload_portfolio import validate_binding as validate_workload
+
+                validate_workload(session, project_id, frozen)
                 validate_stage(
                     session,
                     require_store(app),

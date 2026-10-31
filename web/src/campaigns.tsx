@@ -241,7 +241,10 @@ export function Campaigns({
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const body = {
-      version: "cutback.improvement-campaign.v3",
+      version: templates.find((item) => item.id === template)
+        ?.workload_bound_cache
+        ? "cutback.improvement-campaign.v4"
+        : "cutback.improvement-campaign.v3",
       template_plan_id: template,
       baseline_snapshot_id: snapshot,
       generator_model: {
@@ -313,13 +316,14 @@ export function Campaigns({
     <section aria-label="Improvement campaigns">
       <h2>Search within a fixed budget</h2>
       <p>
-        Generate alternatives, compare them with a simple model downgrade, then
-        confirm one frozen candidate on untouched test groups.
+        Compare prepared cache, model and output-limit alternatives, generate
+        instructions only if needed, then confirm one frozen candidate on
+        untouched test groups.
       </p>
       <p>
-        Every native generation, target and judge call shares one durable
-        budget. Forecasts remain owner assumptions. Application deployment is a
-        separate decision.
+        Every native generation, target and judge call and each declared cache
+        operation shares one durable budget. Forecasts remain owner assumptions.
+        Application deployment is a separate decision.
       </p>
       {error && <p role="alert">{error}</p>}
       {loading && <p role="status">Loading campaigns…</p>}
@@ -336,11 +340,12 @@ export function Campaigns({
           </p>
           <form onSubmit={prepare} className="grid">
             <p>
-              Test the prepared model or output-cap alternative first. If it
-              passes validation, skip instruction generation and confirm on
-              untouched test groups. Otherwise use only the prompt-search effort
-              that fits the same frozen budget. If no generation round fits,
-              reject the failed alternative.
+              Test the prepared alternatives first, including exact caching when
+              a retained source workload qualifies it. If one passes validation,
+              skip instruction generation and confirm on untouched test groups.
+              Otherwise use only the prompt-search effort that fits the same
+              frozen budget. If no generation round fits, reject the failed
+              alternative.
             </p>
             <label>
               Prepared application plan
@@ -354,6 +359,7 @@ export function Campaigns({
                   <option key={t.id} value={t.id}>
                     {t.workflow_label} · {t.baseline_model} ·{" "}
                     {t.source_bound ? "source bound" : "evaluation only"} ·{" "}
+                    {t.workload_bound_cache && "measured cache window · "}
                     {t.id.slice(0, 8)}
                   </option>
                 ))}
@@ -569,6 +575,7 @@ export function Campaigns({
           {[
             "cutback.improvement-campaign.v2",
             "cutback.improvement-campaign.v3",
+            "cutback.improvement-campaign.v4",
           ].includes(String(detail.specification.version)) && (
             <p>
               Search order:{" "}
@@ -580,12 +587,14 @@ export function Campaigns({
               requests.
               {detail.economic_envelope.instruction_search_enabled === false &&
                 " No instruction-generation round fits this envelope."}
-              Native API costs are bounded; other optimization overhead is
-              unmeasured.
+              Native API costs and declared cache operations are bounded; other
+              optimization overhead is unmeasured.
             </p>
           )}
-          {detail.specification.version ===
-            "cutback.improvement-campaign.v3" && (
+          {[
+            "cutback.improvement-campaign.v3",
+            "cutback.improvement-campaign.v4",
+          ].includes(String(detail.specification.version)) && (
             <div
               className="table-scroll"
               role="region"
@@ -594,12 +603,13 @@ export function Campaigns({
             >
               <table>
                 <caption>
-                  Model and output limits frozen before approval
+                  Alternatives and output limits frozen before approval
                 </caption>
                 <thead>
                   <tr>
                     <th>Candidate</th>
                     <th>Model</th>
+                    <th>Execution</th>
                     <th>Output token ceiling</th>
                     <th>Worst case USD per request</th>
                   </tr>
@@ -611,6 +621,11 @@ export function Campaigns({
                     <tr key={String(m.key)}>
                       <td>{String(m.key)}</td>
                       <td>{String(m.model)}</td>
+                      <td>
+                        {m.engine === "exact_cache"
+                          ? "Exact cache"
+                          : "Native model"}
+                      </td>
                       <td>{String(m.max_output_tokens)}</td>
                       <td>{gatewayModeledUSD(m.worst_case_request_usd)}</td>
                     </tr>
@@ -623,6 +638,16 @@ export function Campaigns({
                 confirmation. If none passes, instruction search runs only when
                 reserved in this envelope.
               </p>
+              {detail.specification.version ===
+                "cutback.improvement-campaign.v4" && (
+                <p>
+                  Cache eligibility is bound to a retained source window and
+                  rechecked before calls. The original cache configuration also
+                  runs as a control in generated-instruction validation; it is
+                  never used as a generation seed. A later prompt winner does
+                  not inherit the cache opportunity forecast.
+                </p>
+              )}
               {Array.isArray(detail.economic_envelope.omitted_static_keys) &&
                 detail.economic_envelope.omitted_static_keys.length > 0 && (
                   <p>
@@ -733,9 +758,10 @@ export function Campaigns({
                 [
                   "cutback.improvement-campaign.v2",
                   "cutback.improvement-campaign.v3",
+                  "cutback.improvement-campaign.v4",
                 ].includes(String(detail.specification.version)) &&
                 detail.economic_envelope.static_alternative_available
-                  ? "Initial model/output-cap validation"
+                  ? "Initial prepared-alternative validation"
                   : `Round ${String(r.round)} · ${String(r.phase)}`}{" "}
                 · {String(r.status)} · {String(r.requests)} requests ·{" "}
                 {money(r.known_spend_subtotal_usd)}

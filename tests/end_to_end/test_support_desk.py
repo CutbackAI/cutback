@@ -18,8 +18,11 @@ from cutback.server.api import create_app
 
 
 @pytest.mark.postgres
+@pytest.mark.parametrize(
+    "workload_portfolio", [False, True], ids=["standard", "workload-portfolio"]
+)
 def test_support_desk_decisions_stages_encrypted_cases_and_browser(
-    postgres_url, tmp_path, monkeypatch
+    postgres_url, tmp_path, monkeypatch, workload_portfolio
 ):
     monkeypatch.setenv("CUTBACK_ALLOW_PAYLOADS", "true")
     admin = secrets.token_urlsafe(48)
@@ -32,7 +35,9 @@ def test_support_desk_decisions_stages_encrypted_cases_and_browser(
             base_url=endpoint, headers={"Authorization": "Bearer " + admin}, trust_env=False
         ) as client,
     ):
-        manifest = seed_support_desk(app, endpoint, admin, tmp_path / "workspace")
+        manifest = seed_support_desk(
+            app, endpoint, admin, tmp_path / "workspace", workload_portfolio=workload_portfolio
+        )
         base = "/v1/projects/" + manifest["project_id"]
         run_id = manifest["comparison_run_id"]
         report = client.get(base + "/experiments/" + run_id).json()
@@ -54,12 +59,12 @@ def test_support_desk_decisions_stages_encrypted_cases_and_browser(
         )
         assert manifest["paid_provider_calls"] == 0
         usage = client.get(base + "/usage?traffic_kind=application&group_by=workflow").json()
-        assert usage["summary"]["observed_attempts"] == 19
-        assert len(usage["groups"]) == 3
+        assert usage["summary"]["observed_attempts"] == 19 + 8 * workload_portfolio
+        assert len(usage["groups"]) == 3 + workload_portfolio
         inventory = client.get(base + "/inventory").json()
         assert (
             sum(row["observed_attempts"] for row in inventory["runtime_by_call_site"].values())
-            == 19
+            == 19 + 8 * workload_portfolio
         )
         assert client.get(base + "/changes").json()
         assert [s["stage"] for s in manifest["stages"]] == ["smoke", "pilot", "full"]
@@ -106,9 +111,18 @@ def test_support_desk_decisions_stages_encrypted_cases_and_browser(
                     Path(__file__).resolve().parents[2] / "web",
                     "support-demo.spec.ts",
                     "execution.spec.ts",
+                    *(["workload-portfolio-demo.spec.ts"] if workload_portfolio else []),
                 ),
                 cwd=Path(__file__).resolve().parents[2] / "web",
-                env={**os.environ, "CUTBACK_UI_URL": endpoint, "CUTBACK_SUPPORT_DEMO": "true"},
+                env={
+                    **os.environ,
+                    "CUTBACK_UI_URL": endpoint,
+                    "CUTBACK_SUPPORT_DEMO": "true",
+                    "CUTBACK_WORKLOAD_DEMO_BROWSER": "true" if workload_portfolio else "false",
+                    "CUTBACK_UI_KEY": admin,
+                    "CUTBACK_PORTFOLIO_VIEWER": viewer,
+                    "CUTBACK_UI_PROJECT": manifest["project_id"],
+                },
                 capture_output=True,
                 text=True,
                 timeout=300,

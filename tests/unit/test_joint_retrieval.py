@@ -138,3 +138,49 @@ def test_legacy_v6_hash_is_identical_to_the_frozen_pre_extension_wheel():
         "05e5f5852cfb3d64bd0d4f56443424cc2685610975579ec18aac634cb9a6164c"
     )
     assert digest(wire) == "12aa530e7e985112bce17fb1f34d03b1a80cd4de2e4145256b2cae7053464a4c"
+
+
+def test_synthetic_executor_without_fixture_plan_stays_explicit_in_every_candidate():
+    from cutback.evals.joint_retrieval_planning import regression_gate
+
+    plan, dataset = joint()
+    executor = NativeModels()
+    executor.synthetic_transport = True
+    report = run(
+        plan,
+        dataset,
+        executor,
+        approval_hash=plan_summary(plan, dataset)["plan_hash"],
+        independent_labels=True,
+    )
+    assert report["synthetic_execution"]["real_model_quality_verified"] is False
+    assert all(row["cost_evidence"] == "scripted_fixture_usage" for row in report["models"])
+    assert all(
+        row["synthetic_execution"]["customer_savings_verified"] is False
+        for row in report["recommendations"]
+    )
+    assert (
+        "fixture_transport_cannot_verify_real_model_quality"
+        in regression_gate(report, expected_plan_hash=report["plan"]["plan_hash"])["reasons"]
+    )
+
+
+def test_failed_synthetic_run_keeps_provenance_when_authority_stops_dispatch():
+    plan, dataset = joint()
+    executor = NativeModels()
+    executor.synthetic_transport = True
+
+    def blocked(*args, **kwargs):
+        raise ValueError("OWNED_AUTHORITY_REVOKED")
+
+    report = run(
+        plan,
+        dataset,
+        executor,
+        approval_hash=plan_summary(plan, dataset)["plan_hash"],
+        reserve_call=blocked,
+        record_call=lambda *args, **kwargs: None,
+    )
+    assert report["status"] == "FAILED" and executor.models == []
+    assert report["synthetic_execution"]["customer_savings_verified"] is False
+    assert report["billing_complete"] is False and report["recommendations"] == []
