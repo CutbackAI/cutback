@@ -254,7 +254,11 @@ def run_native_profile_one(sessions, store, *, only_analysis_id=None, clock=time
             )
             from cutback.server.native_profile_metadata import metadata_digest, retained_metadata
 
-            metadata = retained_metadata(session, row)
+            metadata = (
+                retained_metadata(session, row)
+                if metadata_count is not None and metadata_count <= 1000
+                else []
+            )
             stable = metadata_count is not None and len(metadata) == metadata_count <= 1000
             result["metadata_evidence_sha256"] = metadata_digest(metadata) if stable else None
             if not stable:

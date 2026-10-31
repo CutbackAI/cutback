@@ -1,7 +1,7 @@
 """Observed source eligibility is a bounded metadata join, never a synthetic hit-rate claim."""
 
 from datetime import UTC, datetime, timedelta
-from decimal import Decimal
+from decimal import Decimal, Rounded, Subnormal, localcontext
 from uuid import UUID, uuid4
 
 import pytest
@@ -188,6 +188,11 @@ def test_missing_or_changed_retained_evidence_does_not_inherit_a_previous_qualif
     change,
 ):
     body, path, _, request = prepare(api, tenant, tmp_path, monkeypatch, event)
+    if change == "missing_digest":
+        monkeypatch.setattr(
+            "cutback.server.cache_workload_api.retained_metadata",
+            lambda *a, **k: pytest.fail("LEGACY_ANALYSIS_MUST_NOT_RESCAN_METADATA"),
+        )
     with api[2].state.sessions.begin() as session:
         if change == "missing_digest":
             row = session.get(NativeProfileAnalysis, UUID(request["request_id"]))
@@ -205,6 +210,8 @@ def test_missing_or_changed_retained_evidence_does_not_inherit_a_previous_qualif
     result = api[0].post(path, headers=api[1], json=body).json()
     assert result["decision"] == "abstain"
     assert "RETAINED_METADATA_SNAPSHOT_UNAVAILABLE_OR_CHANGED" in result["reasons"]
+    assert result["provider_modeled_window_cost_usd"] is None
+    assert result["modeled_avoided_provider_cost_usd"] is None
 
 
 def test_current_capture_authority_and_application_traffic_remain_required(
@@ -243,6 +250,71 @@ def test_late_canonical_attempt_invalidates_prior_census(api, tenant, tmp_path, 
     result = api[0].post(path, headers=api[1], json=body).json()
     assert result["decision"] == "abstain"
     assert "RETAINED_METADATA_SNAPSHOT_UNAVAILABLE_OR_CHANGED" in result["reasons"]
+
+
+def test_bounded_metadata_page_cannot_be_reported_as_a_complete_window_cost(
+    api, tenant, tmp_path, monkeypatch, event
+):
+    body, path, _, _ = prepare(api, tenant, tmp_path, monkeypatch, event)
+    with api[2].state.sessions() as session:
+        row = session.query(StoredEvent).filter_by(project_id=UUID(tenant[0])).first()
+        template = LLMEvent.model_validate(row.event)
+    for _ in range(5):
+        events = [
+            template.model_copy(
+                update={
+                    "event_id": uuid4(),
+                    "request_attempt_id": uuid4(),
+                    "span_id": uuid4().hex[:16],
+                }
+            ).model_dump(mode="json")
+            for _ in range(200)
+        ]
+        response = api[0].post(
+            "/v1/ingest/events",
+            headers=tenant[1],
+            json={
+                "project_id": tenant[0],
+                "events": events,
+            },
+        )
+        assert response.status_code == 200
+    result = api[0].post(path, headers=api[1], json=body).json()
+    assert result["decision"] == "abstain"
+    assert "RETAINED_METADATA_SNAPSHOT_UNAVAILABLE_OR_CHANGED" in result["reasons"]
+    assert result["provider_modeled_window_cost_usd"] is None
+    assert result["modeled_avoided_provider_cost_usd"] is None
+    assert result["modeled_net_native_window_opportunity_usd"] is None
+
+
+def test_window_cost_sum_is_independent_of_the_callers_decimal_context(
+    api, tenant, tmp_path, monkeypatch, event
+):
+    from cutback.server.cache_workload_api import CacheWorkloadInput, assess_cache_workload
+
+    event = event.model_copy(
+        update={"input_tokens": 1234567, "output_tokens": 137, "cache_read_tokens": 0}
+    )
+    body, _, _, request = prepare(api, tenant, tmp_path, monkeypatch, event)
+    typed = CacheWorkloadInput.model_validate(body)
+    with api[2].state.sessions() as session:
+        row = session.get(NativeProfileAnalysis, UUID(request["request_id"]))
+        with localcontext() as context:
+            context.prec = 64
+            expected = sum(
+                (
+                    item.cost_usd
+                    for item in session.query(StoredEvent).filter_by(project_id=UUID(tenant[0]))
+                ),
+                Decimal(0),
+            )
+        with localcontext() as context:
+            context.prec = 2
+            context.Emin, context.Emax = -1, 1
+            context.traps[Subnormal] = context.traps[Rounded] = True
+            result = assess_cache_workload(session, row, typed)
+        assert result.decision == "prepare_separate_cache_trial"
+        assert Decimal(result.provider_modeled_window_cost_usd) == expected
 
 
 def test_summary_expires_no_later_than_its_encrypted_source(

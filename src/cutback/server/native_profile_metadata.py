@@ -12,13 +12,7 @@ from cutback.server.db import Environment, StoredEvent
 def retained_metadata(session, analysis, *, as_of=True):
     from cutback.server.native_profile_service import _event_clause
 
-    query = (
-        select(StoredEvent)
-        .join(Environment)
-        .where(*_event_clause(analysis))
-        .order_by(StoredEvent.event_id)
-        .limit(1001)
-    )
+    query = select(StoredEvent).join(Environment).where(*_event_clause(analysis)).limit(1001)
     if as_of and analysis.completed_at is not None:
         query = query.where(StoredEvent.received_at <= analysis.completed_at)
     return session.scalars(query).all()

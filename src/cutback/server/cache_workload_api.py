@@ -1,6 +1,6 @@
 """Source-scoped cache trial eligibility from frozen observed workload metadata."""
 
-from decimal import Decimal, DecimalException, localcontext
+from decimal import Context, Decimal, DecimalException, localcontext
 from uuid import UUID
 
 from fastapi import Depends, HTTPException
@@ -27,11 +27,12 @@ def assess_cache_workload(session, analysis, body):
     if analysis.state != "COMPLETED" or not analysis.summary or analysis.completed_at is None:
         raise HTTPException(409, "CACHE_WORKLOAD_COMPLETED_ANALYSIS_REQUIRED")
     summary = analysis.summary
-    # Late-arriving canonical attempts also invalidate the earlier census.
-    rows = retained_metadata(session, analysis, as_of=False)
     reasons = []
     expected = summary.get("metadata_evidence_sha256")
-    if not expected or len(rows) > 1000 or metadata_digest(rows) != expected:
+    # Late arrivals invalidate the census. Legacy/oversized analyses need no new scan.
+    rows = retained_metadata(session, analysis, as_of=False) if expected else []
+    snapshot_complete = bool(expected) and len(rows) <= 1000 and metadata_digest(rows) == expected
+    if not snapshot_complete:
         reasons.append("RETAINED_METADATA_SNAPSHOT_UNAVAILABLE_OR_CHANGED")
     if summary.get("cache_trial_eligible") is not True:
         reasons.append("RETAINED_STREAM_NOT_CACHE_TRIAL_ELIGIBLE")
@@ -45,9 +46,8 @@ def assess_cache_workload(session, analysis, body):
         or execution.ttl_seconds != policy.native_request_profile.prospective_ttl_seconds
     ):
         reasons.append("APPROVED_FRESHNESS_OR_TTL_MISMATCH")
-    known = Decimal(0)
-    known_count = 0
-    for row in rows:
+    known_costs = []
+    for row in rows if snapshot_complete else []:
         event = LLMEvent.model_validate(row.event)
         if (
             event.provider != "openai"
@@ -66,8 +66,10 @@ def assess_cache_workload(session, analysis, body):
             and row.price_snapshot_id
             and event.usage_source == "provider_reported"
         ):
-            known += row.cost_usd
-            known_count += 1
+            known_costs.append(row.cost_usd)
+    with localcontext(Context(prec=64)):
+        known = sum(known_costs, Decimal(0))
+    known_count = len(known_costs)
     n, hits = summary.get("profiled_attempts"), summary.get("modeled_potential_hits")
     if (
         type(n) is not int
@@ -78,12 +80,20 @@ def assess_cache_workload(session, analysis, body):
     ):
         reasons.append("COMPLETE_BOUNDED_NATIVE_WORKLOAD_REQUIRED")
     modeled_avoided = summary.get("modeled_avoided_provider_cost_usd")
+    price_complete = (
+        snapshot_complete
+        and type(n) is int
+        and len(rows) == n == summary.get("metadata_attempts")
+        and bool(rows)
+        and known_count == len(rows)
+    )
+    if not price_complete:
+        modeled_avoided = None
     operations = total_cache_cost = net = None
-    if modeled_avoided is None or not rows or known_count != len(rows):
+    if modeled_avoided is None:
         reasons.append("SOURCE_MATCHED_PROVIDER_COST_COVERAGE_UNKNOWN")
     elif not reasons:
-        with localcontext() as context:
-            context.prec = 64
+        with localcontext(Context(prec=64)):
             avoided = Decimal(modeled_avoided)
             if not avoided.is_finite() or not Decimal(0) <= avoided <= known:
                 reasons.append("RETAINED_PROVIDER_COST_CONFLICT")
@@ -111,9 +121,7 @@ def assess_cache_workload(session, analysis, body):
         "reasons": sorted(set(reasons)),
         "profiled_attempts": n,
         "modeled_potential_hits": hits,
-        "provider_modeled_window_cost_usd": str(known)
-        if rows and known_count == len(rows)
-        else None,
+        "provider_modeled_window_cost_usd": str(known) if price_complete else None,
         "modeled_avoided_provider_cost_usd": modeled_avoided,
         "declared_cache_operations": operations,
         "declared_cache_operation_upper_cost_usd": str(total_cache_cost)

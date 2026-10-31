@@ -1,5 +1,23 @@
 # Implementation progress
 
+Post-build auditing found an incomplete-window reporting defect in the first
+workload candidate. A 1,002-attempt window returned a capped page's subtotal as
+the full window cost. A new installed negative regression first reproduced
+`0.500500000000` instead of unknown. Changed/incomplete snapshots now clear the
+window and avoided-cost fields. Legacy analyses avoid rescanning; metadata
+queries use the existing indexed scope and 1,001-row cap, with canonical ordering
+done only in bounded memory. The focused PG/profile/source scope passed **47 in
+49.05 seconds** after the fix.
+
+Two further installed negatives reproduced dependence on an embedding caller's
+Decimal context: a value above the exact monetary ceiling was accepted, and a
+window sum became `0.98` instead of `0.988092000000`. Monetary validation now uses
+exact absolute values and bounded exponents; calculations own their Decimal
+precision, exponent limits and traps. The expanded core/API/source scope passed
+**52 in 34.23 seconds**, followed by **29 in 4.66 seconds** including hostile
+Decimal-context checks. The earlier workload wheel/image remain superseded;
+fixed artifact qualification is required before acceptance or publication.
+
 Source-matched workload assessment is under qualification. Its typed metadata
 API, agent discovery, private source export and dashboard preserve project,
 environment, workflow, commit/call-site/model and exact declared cost bounds.

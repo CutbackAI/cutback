@@ -1,6 +1,7 @@
 """A workload report's hash, exact money and abstentions cannot become execution approval."""
 
 from datetime import UTC, datetime, timedelta
+from decimal import localcontext
 from uuid import uuid4
 
 import pytest
@@ -55,6 +56,15 @@ def test_metadata_assessment_round_trip_keeps_hash_and_exact_decimal_text():
     assert result.modeled_net_native_window_opportunity_usd == "0.047"
 
 
+def test_money_ceiling_is_exact_even_when_the_callers_decimal_precision_is_low():
+    with localcontext() as context:
+        context.prec = 2
+        with pytest.raises(ValidationError):
+            CacheWorkloadAssessment.model_validate(
+                assessment(provider_modeled_window_cost_usd="1000000000000000001")
+            )
+
+
 @pytest.mark.parametrize(
     "field", ["paid_calls_authorized", "source_change_authorized", "cache_delivery_benchmarked"]
 )
@@ -74,6 +84,8 @@ def test_even_correctly_rehashed_reports_cannot_invent_authority(field, value):
         {"production_hit_rate": "0.5"},
         {"modeled_net_native_window_opportunity_usd": "NaN"},
         {"modeled_net_native_window_opportunity_usd": 0.047},
+        {"declared_cache_operation_upper_cost_usd": "1e-1000000000"},
+        {"modeled_avoided_provider_cost_usd": "0.0000000000001"},
         {"modeled_net_native_window_opportunity_usd": "0.048"},
         {"modeled_potential_hits": 2},
         {"declared_cache_operations": 2},

@@ -97,6 +97,11 @@ upper cost from known modeled avoided provider cost. Money stays decimal text;
 missing costs stay unknown. Unmeasured delivery latency and broader task/hosting
 costs remain unknown. Cache behavior must still be validated.
 
+Reported money follows the canonical database's 12-decimal-place contract and
+uses an owned Decimal context. A capped page, changed snapshot or missing source
+coverage cannot become a complete-window cost. Legacy analyses without a frozen
+metadata digest require fresh authorized evidence rather than a new metadata scan.
+
 Source lineage is client reported, not independent runtime attestation. A
 positive hashed receipt grants no paid budget, quality claim, source-change
 approval or production action. The agent rechecks source bytes after the request

@@ -1,7 +1,7 @@
 """Content-free workload assessments cannot grant inference or source-change authority."""
 
 from datetime import datetime
-from decimal import Decimal, DecimalException, localcontext
+from decimal import Context, Decimal, DecimalException, localcontext
 from typing import Annotated, Literal
 from uuid import UUID
 
@@ -71,9 +71,12 @@ class CacheWorkloadAssessment(StrictModel):
             return value
         try:
             number = Decimal(value)
+            exponent = number.as_tuple().exponent
             if (
                 not number.is_finite()
-                or abs(number) > Decimal("1e18")
+                or not isinstance(exponent, int)
+                or not -12 <= exponent <= 18
+                or number.copy_abs() > Decimal("1e18")
                 or (number < 0 and info.field_name != "modeled_net_native_window_opportunity_usd")
             ):
                 raise ValueError
@@ -128,8 +131,7 @@ class CacheWorkloadAssessment(StrictModel):
             or any(amount is None for amount in amounts)
         ):
             raise ValueError("CACHE_WORKLOAD_TRIAL_REQUIRES_COMPLETE_EVIDENCE")
-        with localcontext() as context:
-            context.prec = 64
+        with localcontext(Context(prec=64)):
             baseline, avoided, cache, net = (
                 Decimal(amount) for amount in amounts if amount is not None
             )
