@@ -37,6 +37,26 @@ function ceiling(data: Data) {
     max_requests: Number(data.max_requests),
   };
 }
+async function prepareRouting(api: API, path: string, body: Data) {
+  // Only nonbillable preparations use this bounded recovery. Their frozen UUID
+  // survives a lost commit acknowledgement; approval and queue never retry here.
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await json(api, path, body);
+    } catch (error) {
+      const failure = error as Error;
+      if (
+        attempt ||
+        !(
+          failure.message === "STORAGE_UNAVAILABLE" ||
+          ["TimeoutError", "AbortError", "TypeError"].includes(failure.name)
+        )
+      )
+        throw error;
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+  }
+}
 function BudgetFields() {
   return (
     <>
@@ -92,6 +112,8 @@ export function LearnedRouting({
   const validationIdentity = useRef<Identity | null>(null),
     confirmationIdentity = useRef<Identity | null>(null);
   const generation = useRef(0);
+  const selection = useRef(0),
+    currentPlan = useRef<string | null>(null);
   const scope = useRef({ base, admin });
   scope.current = { base, admin };
   const api: API = async (path, options) => {
@@ -130,6 +152,8 @@ export function LearnedRouting({
     }
   }
   useEffect(() => {
+    selection.current += 1;
+    currentPlan.current = null;
     setFit(null);
     setPlan(null);
     setPrivateContent(null);
@@ -147,6 +171,8 @@ export function LearnedRouting({
     };
   }, [base, admin]);
   function selectedPlan(next: Data) {
+    selection.current += 1;
+    currentPlan.current = next.id;
     setPlan(next);
     setPrivateContent(null);
     setReviewedHash("");
@@ -155,6 +181,8 @@ export function LearnedRouting({
     reload();
   }
   function clearPlan() {
+    selection.current += 1;
+    currentPlan.current = null;
     setPlan(null);
     setPrivateContent(null);
     setReviewedHash("");
@@ -162,7 +190,9 @@ export function LearnedRouting({
     setReport(null);
   }
   function selectedFit(next: Data | null) {
+    selection.current += 1;
     if (next?.id !== fit?.id) {
+      currentPlan.current = null;
       validationIdentity.current = confirmationIdentity.current = null;
       setPlan(null);
       setExecution(null);
@@ -183,18 +213,26 @@ export function LearnedRouting({
       row.status === "COMPLETED",
   );
   async function executionFor(planId: string) {
+    const revision = selection.current;
+    if (currentPlan.current !== planId) return null;
     const value = await api(base + `/experiments/plans/${planId}/execution`);
-    setExecution(value);
-    setReport(
-      value.run_id ? await api(base + `/experiments/${value.run_id}`) : null,
-    );
+    const nextReport = value.run_id
+      ? await api(base + `/experiments/${value.run_id}`)
+      : null;
+    if (revision === selection.current && currentPlan.current === planId) {
+      setExecution(value);
+      setReport(nextReport);
+    }
     return value;
   }
   async function inspectRun(row: Data) {
+    const revision = ++selection.current;
+    currentPlan.current = null;
     setPlan(null);
     setPrivateContent(null);
     setReviewedHash("");
-    setReport(await api(base + `/experiments/${row.id}`));
+    const next = await api(base + `/experiments/${row.id}`);
+    if (revision === selection.current) setReport(next);
     setExecution(null);
   }
   const routingRuns = runs.filter(
@@ -258,11 +296,15 @@ export function LearnedRouting({
                 max_cases: Number(data.max_cases),
               };
               const identity = await identify(body, trainingIdentity);
-              const next = await json(api, base + "/routing/training-drafts", {
-                ...body,
-                request_id: identity.request_id,
-                content_nonce: identity.content_nonce,
-              });
+              const next = await prepareRouting(
+                api,
+                base + "/routing/training-drafts",
+                {
+                  ...body,
+                  request_id: identity.request_id,
+                  content_nonce: identity.content_nonce,
+                },
+              );
               selectedPlan({ ...next, budget: body.budget });
               await refresh();
               return "Training plan prepared. Review its exact content before approving its budget.";
@@ -467,7 +509,7 @@ export function LearnedRouting({
               },
             };
             const identity = await identify(body, fitIdentity);
-            const next = await json(api, base + "/routing/fits", {
+            const next = await prepareRouting(api, base + "/routing/fits", {
               ...body,
               request_id: identity.request_id,
             });
@@ -556,11 +598,18 @@ export function LearnedRouting({
             title="Read private fitted routing policy"
             submit="Read fitted policy"
             onSubmit={async (data) => {
-              setPrivateContent(
-                await json(api, base + `/routing/fits/${fit.id}/content`, {
+              const revision = selection.current;
+              setReviewedHash("");
+              const value = await json(
+                api,
+                base + `/routing/fits/${fit.id}/content`,
+                {
                   purpose: String(data.purpose),
-                }),
+                },
               );
+              if (revision !== selection.current)
+                throw new Error("ROUTING_SELECTION_CHANGED");
+              setPrivateContent(value);
               return "Private policy loaded into this tab only.";
             }}
           >
@@ -577,7 +626,7 @@ export function LearnedRouting({
               };
               const identity = await identify(body, validationIdentity);
               selectedPlan(
-                await json(
+                await prepareRouting(
                   api,
                   base + `/routing/fits/${fit.id}/validation-drafts`,
                   {
@@ -605,7 +654,7 @@ export function LearnedRouting({
               };
               const identity = await identify(body, confirmationIdentity);
               selectedPlan(
-                await json(
+                await prepareRouting(
                   api,
                   base + `/routing/fits/${fit.id}/confirmation-drafts`,
                   { ...body, request_id: identity.request_id },
@@ -669,11 +718,17 @@ export function LearnedRouting({
               title="Review exact routing plan"
               submit="Read exact routing plan"
               onSubmit={async (data) => {
+                const revision = selection.current;
                 const value = await json(
                   api,
                   base + `/experiments/plans/${plan.id}/content`,
                   { purpose: String(data.purpose) },
                 );
+                if (
+                  revision !== selection.current ||
+                  currentPlan.current !== plan.id
+                )
+                  throw new Error("ROUTING_SELECTION_CHANGED");
                 if (value.plan_hash !== plan.plan_hash)
                   throw new Error(
                     "Frozen plan changed. Refresh the selected plan.",
@@ -783,6 +838,7 @@ export function LearnedRouting({
           <h3>Private routing review</h3>
           <button
             onClick={() => {
+              selection.current += 1;
               setPrivateContent(null);
               setReviewedHash("");
             }}

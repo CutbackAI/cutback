@@ -22,6 +22,10 @@ export const money = (value: unknown) =>
 export function explain(error: unknown) {
   const code = (error as Error)?.message || "REQUEST_FAILED";
   const messages: Record<string, string> = {
+    STORAGE_UNAVAILABLE:
+      "The collector could not complete its storage operation. Reconcile the saved preparation or execution before retrying; started uncertain work must not be replayed.",
+    ROUTING_SELECTION_CHANGED:
+      "The selected routing plan or policy changed while this read was pending. Read the current selection before approving it.",
     ROUTING_TRAINING_GROUPS_INSUFFICIENT:
       "These examples collapse into too few training families. Use distinct permitted task families; renamed copies do not count as new evidence.",
     ROUTING_TRAINING_NO_LOWER_COST_FEASIBLE_POLICY:

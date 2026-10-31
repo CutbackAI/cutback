@@ -1,0 +1,210 @@
+{
+  "reviewed_head": "7cdd9239efc412bdde33caef086042c473d92968",
+  "runs": [
+    {
+      "run_id": 41126844739,
+      "jobs": [
+        {
+          "name": "infrastructure",
+          "id": 124307458378,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 7,
+              "skipped": 0,
+              "seconds": 1.47
+            }
+          ]
+        },
+        {
+          "name": "verify (3.13.18)",
+          "id": 124307458488,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1653,
+              "skipped": 41,
+              "seconds": 1219.31
+            }
+          ]
+        },
+        {
+          "name": "legacy-sdk (3.13.18)",
+          "id": 124307458523,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 0.85
+            }
+          ]
+        },
+        {
+          "name": "isolated-tools",
+          "id": 124307458615,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 13,
+              "skipped": 0,
+              "seconds": 90.63
+            }
+          ]
+        },
+        {
+          "name": "legacy-sdk (3.11.18)",
+          "id": 124307458660,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 0.67
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.11.18)",
+          "id": 124307458682,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1414,
+              "skipped": 11,
+              "seconds": 680.75
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.13.18)",
+          "id": 124307458705,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1415,
+              "skipped": 10,
+              "seconds": 661.75
+            }
+          ]
+        },
+        {
+          "name": "verify (3.11.18)",
+          "id": 124307458860,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1654,
+              "skipped": 40,
+              "seconds": 1253.29
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": 41126844548,
+      "jobs": [
+        {
+          "name": "audit",
+          "id": 124307457494,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "codeql (javascript-typescript)",
+          "id": 124307457826,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "codeql (python)",
+          "id": 124307457930,
+          "conclusion": "success",
+          "tests": []
+        }
+      ]
+    }
+  ],
+  "identical_private_public_archives": {
+    "cutback-0.1.0.dev5-py3-none-any.whl": "6661354c3b41c692049bf759d92df312c0cf2fa07d448d5ab22d4c34f8fcf729",
+    "cutback-0.1.0.dev5.tar.gz": "2830e2751a25dfd8deda039c9ce2f7eb5103b3b05ff95d42acaee9f5d801ca66"
+  },
+  "status": "accepted_bounded_source_increment",
+  "pull_request": "https://github.com/CutbackAI/cutback/pull/54",
+  "merge_commit": "4e016a44a834b25867b71daa27ffc09b5ccccfe4",
+  "qualified_source_tree": "2af71f256f43220485eb9fc3bebd0504f8060b58",
+  "local_installed_default_full": {
+    "failed": 2,
+    "passed": 1656,
+    "skipped": 36,
+    "seconds": 5222.36,
+    "failures": [
+      "Storage unavailable during campaign preparation",
+      "Bounded semantic-cache dataset-read deadline"
+    ]
+  },
+  "unchanged_default_failure_reruns": {
+    "passed": 2,
+    "seconds": 49.32,
+    "not_a_full_suite": true
+  },
+  "local_installed_sdk3_full": {
+    "failed": 1,
+    "passed": 1428,
+    "skipped": 7,
+    "seconds": 3223.51,
+    "failure": "Compression confirmation browser synchronization"
+  },
+  "unchanged_sdk3_failure_rerun": {
+    "passed": 1,
+    "seconds": 45.66,
+    "not_a_full_suite": true
+  },
+  "synchronized_browser_modes": {
+    "passed": 2,
+    "seconds": 154.5
+  },
+  "focused_native_postgres_agent_browser": {
+    "passed": 85,
+    "skipped": 1,
+    "seconds": 204.48
+  },
+  "native_four_mode_matrix": {
+    "default_passed": 12,
+    "sdk3_passed": 12,
+    "surfaces": [
+      "responses.create",
+      "chat.completions.create",
+      "messages.create"
+    ]
+  },
+  "core_only_consumer": "passed",
+  "twine_and_exact_payload": {
+    "status": "passed",
+    "application_files": 337
+  },
+  "image": {
+    "id": "sha256:76d2bbb796a1de32d9ea15973c0929fa26fad63f2e389d5d8dcec11d02d16d4e",
+    "matched_application_files": 337,
+    "restored_tables": 97,
+    "rekeyed_objects": 1596,
+    "plans": 24
+  },
+  "final_boundary": {
+    "source_files": 1003,
+    "reachable_history_objects": 4434,
+    "archive_members": 1341,
+    "findings": 0
+  },
+  "pypi_release": "0.1.0.dev5 unchanged",
+  "paid_provider_calls": 0,
+  "production_deployed": false,
+  "limits": [
+    "Confirmed semantic results remain model proxies",
+    "Independent calibration and population coverage remain external",
+    "No source-patch authority from a proxy score",
+    "Generated scenarios/personas and the wider roadmap remain unfinished",
+    "Failed local full runs remain failures; final hosted full jobs passed"
+  ]
+}

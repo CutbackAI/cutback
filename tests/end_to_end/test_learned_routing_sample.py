@@ -1,5 +1,6 @@
 """Independent source demo through real HTTP, native SDK, encryption and PostgreSQL."""
 
+import json
 import os
 import subprocess
 from decimal import Decimal
@@ -8,13 +9,13 @@ from uuid import UUID
 
 import httpx
 import pytest
-from sqlalchemy import select
+from sqlalchemy import event, select
 from support_browser import browser_command
 from test_pipeline import server
 
 from cutback.demo_routing import seed_routing
 from cutback.evals.artifacts import EncryptedFileStore
-from cutback.server.db import ExperimentRunRecord, PayloadSample, Project
+from cutback.server.db import ExperimentPlanRecord, ExperimentRunRecord, PayloadSample, Project
 from cutback.server.execution_db import ExecutionCall
 
 pytestmark = [pytest.mark.postgres, pytest.mark.e2e]
@@ -86,6 +87,16 @@ def test_authenticated_routing_authoring_mobile_accessibility_and_viewer_boundar
     monkeypatch.setenv("CUTBACK_ALLOW_PAYLOADS", "true")
     app = api[2]
     app.state.artifact_store = EncryptedFileStore(tmp_path / "encrypted", os.urandom(32))
+    storage_errors = []
+
+    def storage_error(context):
+        if len(storage_errors) < 32:
+            error = context.original_exception
+            storage_errors.append(
+                {"type": type(error).__name__, "sqlstate": getattr(error, "sqlstate", None)}
+            )
+
+    event.listen(app.state.engine, "handle_error", storage_error)
     with (
         server(app) as endpoint,
         httpx.Client(base_url=endpoint, headers=api[1], trust_env=False, timeout=30) as control,
@@ -109,12 +120,30 @@ def test_authenticated_routing_authoring_mobile_accessibility_and_viewer_boundar
                 },
                 capture_output=True,
                 text=True,
-                timeout=180,
+                timeout=300,
             )
             safe = (
                 (result.stdout + result.stderr)
                 .replace(token, "<credential-omitted>")
                 .replace(viewer, "<credential-omitted>")
             )
-            assert result.returncode == 0, safe
+            (tmp_path / "routing-storage-diagnostics.json").write_text(
+                json.dumps(storage_errors), encoding="utf-8"
+            )
+            assert result.returncode == 0, (safe, storage_errors)
         assert worker["calls"] and not worker["errors"]
+        with app.state.sessions() as session:
+            plans = session.scalars(
+                select(ExperimentPlanRecord).where(
+                    ExperimentPlanRecord.project_id == UUID(tenant[0])
+                )
+            ).all()
+            runs = session.scalars(
+                select(ExperimentRunRecord).where(ExperimentRunRecord.project_id == UUID(tenant[0]))
+            ).all()
+            assert len(plans) == len(runs) == 3
+            assert all(
+                row.status == "COMPLETED" and row.results["billing_complete"] is True
+                for row in runs
+            )
+            assert sum(row.requests_used for row in runs) == len(worker["calls"])

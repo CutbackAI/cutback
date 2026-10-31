@@ -40,8 +40,8 @@ Working source also adds [joint model/context search](joint-model-context.md): a
 
 Training-only [deterministic criteria](reviewed-criteria.md) and their
 [application-agent sequence](agent-reviewed-criteria.md) are accepted in PRs 52
-and 53. Generated [semantic episode rubrics](semantic-rubrics.md) have a separate
-final acceptance gate; even confirmed scores remain model proxies. The new
+and 53. Generated [semantic episode rubrics](semantic-rubrics.md) are accepted in
+[PR 54](https://github.com/CutbackAI/cutback/pull/54); even confirmed scores remain model proxies. The new
 [learned input-size routing sample](../examples/learned-routing/README.md) is under
 source/installed qualification, with separate training, fitting, validation and
 untouched confirmation. It does not yet qualify an automatic routing source patch

@@ -11,7 +11,7 @@ test("routing training, private fitting, independent validation and confirmation
     process.env.CUTBACK_ROUTING_BROWSER !== "true",
     "Requires owned synthetic worker and PostgreSQL",
   );
-  test.setTimeout(150000);
+  test.setTimeout(240000);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.name));
   await page.goto("/dashboard/?project=" + process.env.CUTBACK_UI_PROJECT);
@@ -56,7 +56,7 @@ test("routing training, private fitting, independent validation and confirmation
       await expect(
         page.getByRole("region", { name: "Routing run evidence", exact: true }),
       ).toContainText("COMPLETED");
-    }).toPass({ timeout: 60000 });
+    }).toPass({ timeout: 60000, intervals: [1000, 2000, 5000] });
   }
   await approve();
   let queues = 0;
@@ -117,12 +117,18 @@ test("routing training, private fitting, independent validation and confirmation
   });
   await validation.getByLabel("Maximum USD for this stage").fill("2");
   await validation.getByLabel("Maximum requests for this stage").fill("500");
+  const validationResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/validation-drafts") &&
+      response.request().method() === "POST",
+  );
   await validation
     .getByLabel("Routing validation purpose")
     .fill("owned-browser-validation");
   await validation
     .getByRole("button", { name: "Freeze routing validation", exact: true })
     .click();
+  expect((await validationResponse).status()).toBe(201);
   await approve();
   await page
     .getByRole("button", {
@@ -142,12 +148,42 @@ test("routing training, private fitting, independent validation and confirmation
   ).toHaveCount(1);
   await confirmation.getByLabel("Maximum USD for this stage").fill("2");
   await confirmation.getByLabel("Maximum requests for this stage").fill("500");
+  let preparationAttempts = 0;
+  let preparedId = "",
+    preparedRequest = "";
+  const confirmationPath = "**/routing/fits/*/confirmation-drafts";
+  await page.route(confirmationPath, async (route) => {
+    preparationAttempts++;
+    const body = route.request().postDataJSON();
+    if (preparationAttempts === 1) {
+      preparedRequest = body.request_id;
+      const committed = await route.fetch();
+      expect(committed.status()).toBe(201);
+      preparedId = (await committed.json()).id;
+      return route.fulfill({
+        status: 503,
+        json: { code: "STORAGE_UNAVAILABLE" },
+      });
+    }
+    expect(body.request_id).toBe(preparedRequest);
+    return route.continue();
+  });
+  const confirmationResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/confirmation-drafts") &&
+      response.request().method() === "POST" &&
+      response.status() === 201,
+  );
   await confirmation
     .getByLabel("Routing confirmation purpose")
     .fill("owned-browser-confirmation");
   await confirmation
     .getByRole("button", { name: "Freeze routing confirmation", exact: true })
     .click();
+  const recovered = await confirmationResponse;
+  expect((await recovered.json()).id).toBe(preparedId);
+  expect(preparationAttempts).toBe(2);
+  await page.unroute(confirmationPath);
   await approve();
   await page
     .getByRole("button", {

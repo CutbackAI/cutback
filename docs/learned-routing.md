@@ -62,6 +62,12 @@ plan hash; `queue` consumes that approval once. `execution PLAN_UUID` reconciles
 an interrupted queue reply. `recheck RUN_UUID` is limited to unstarted blocked
 work and preserves its identity; it cannot replay an uncertain paid operation.
 
+The dashboard makes at most one recovery attempt for a nonbillable preparation
+after a transport timeout or storage-unavailable response. It preserves the exact
+request identity and body. Approval, inference queueing and started work do not
+use that retry. Late execution/private-read replies cannot replace a newly
+selected plan or repopulate a cleared private review.
+
 Each command takes `--project`, `--endpoint` and `--output`. Fit content also
 requires `--purpose-reference` and an explicit private output path. Keep generated
 content in the application's ignored workspace, outside publication inputs.
