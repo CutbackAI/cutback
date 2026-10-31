@@ -4,7 +4,7 @@ import json
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from decimal import Decimal
+from decimal import Context, Decimal, localcontext
 from typing import Annotated, Literal, Protocol
 from uuid import UUID, uuid4
 
@@ -835,14 +835,18 @@ class ExperimentPlan(StrictModel):
 
 
 def upper_cost(model: ModelSpec) -> Decimal:
+    """Conservative native/cache ceiling independent of the embedding Decimal context."""
+    with localcontext(Context(prec=80)):
+        return _upper_cost(model)
+
+
+def _upper_cost(model: ModelSpec) -> Decimal:
     if model.provider == "router":
         return max(upper_cost(target) for target in provider_models(model))
     if model.provider == "local":
         assert model.local_cost_upper_usd is not None
         return model.local_cost_upper_usd
     if model.native_contract is not None:
-        from decimal import localcontext
-
         catalog = Catalog()
         reference = validate_luna_text_contract(model, catalog)
         rate = catalog.rate_info("openai", model.model)["rate"]
@@ -916,6 +920,12 @@ def pilot_items(plan, dataset):
 
 
 def plan_summary(plan: ExperimentPlan, dataset: dict) -> dict:
+    """Freeze whole-plan bounds with owned precision, exponents, rounding and traps."""
+    with localcontext(Context(prec=80)):
+        return _plan_summary(plan, dataset)
+
+
+def _plan_summary(plan: ExperimentPlan, dataset: dict) -> dict:
     catalog = Catalog()
     if (plan.price_snapshot_id, plan.price_sha256) != (catalog.snapshot_id, catalog.sha256):
         raise ValueError("PRICE_CONTRACT_CHANGED_REAPPROVAL_REQUIRED")

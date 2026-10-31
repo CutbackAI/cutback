@@ -159,14 +159,19 @@ def register_retrieval(app, output, request, fail):
         proposal_file: Path,
         destination: Annotated[Path, typer.Option("--output")],
     ):
-        """Prepare a local diff from a downloaded server proposal. Never applies or deploys."""
+        """Materialize a proposal or exact agent change as diff/rollback. Never applies."""
         from cutback.cli_checks import read
         from cutback.retrieval_changes import RetrievalProposal, prepare_patch
 
         try:
             if destination.resolve().is_relative_to(root.resolve()):
                 raise ValueError("output")
-            result = prepare_patch(root, RetrievalProposal.model_validate(read(proposal_file)))
+            downloaded = read(proposal_file)
+            agent_change = downloaded.get("version") == "cutback.retrieval-change.v1"
+            proposed = downloaded.get("proposal") if agent_change else downloaded
+            result = prepare_patch(root, RetrievalProposal.model_validate(proposed))
+            if agent_change and downloaded != result:
+                raise ValueError("RETRIEVAL_AGENT_CHANGE_MODIFIED")
         except (ValueError, OSError):
             fail(
                 "RETRIEVAL_PATCH_INPUT_OR_SOURCE_CHANGED",

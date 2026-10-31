@@ -30,6 +30,24 @@ def setup(api, tenant, tmp_path, monkeypatch):
     return f"/v1/projects/{tenant[0]}"
 
 
+def test_automatic_agent_retrieval_demo_runs_native_http_postgres_both_trees_and_rollback(
+    api, tenant, tmp_path, monkeypatch
+):
+    from cutback.demo_agent_retrieval import seed_agent_retrieval
+
+    setup(api, tenant, tmp_path, monkeypatch)
+    with (
+        server(api[2]) as endpoint,
+        httpx.Client(base_url=endpoint, headers=api[1], trust_env=False) as control,
+    ):
+        result = seed_agent_retrieval(api[2], control, tenant[0], tmp_path / "workspace")
+    assert result["validation_run_id"] != result["confirmation_run_id"]
+    assert result["native_sdk_calls"] > 0 and result["paid_provider_calls"] == 0
+    assert result["review_status"] == "READY_FOR_LOCAL_REVIEW"
+    assert result["rollback_verified"] and not result["application_changed"]
+    assert not result["production_deployed"]
+
+
 def test_corpus_native_pipeline_prepares_exact_diff_and_passes_both_application_trees(
     api, tenant, tmp_path, monkeypatch
 ):

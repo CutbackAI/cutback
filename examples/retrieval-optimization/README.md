@@ -25,6 +25,16 @@ Choose **Explore sample**, then **Compare real corpus retrieval configurations**
 
 ## Prepare an independent source proposal
 
+The source checkout also adds an [agent-driven path](../../docs/agent-retrieval.md):
+`optimize` discovers this producer, and `workflow prepare --automatic` freezes
+the actual corpus and questions after explicit authorization. Validation,
+separate confirmation and source proposal use the same resumable workflow.
+This extension is under qualification and is absent from published dev5.
+
+`cutback demo --agent-retrieval` runs that automatic path with synthetic native
+responses, real PostgreSQL, checks on both application trees and verified
+rollback. Inspect its separate validation and confirmation in Retrieval history.
+
 For your own local synthetic trial, copy this directory outside Cutback and initialize a clean Git repository there. Keep generated requests/receipts outside that source tree. The application has no dependency on another private product.
 
 1. In the collector, authorize encrypted storage for the `synthetic-retrieval-search` staging workflow with synthetic rights and OpenAI vendor scope. The example contains 40 fictional policy families with different 14/21/28-day deadlines, one labeled question per policy and explicit family groups. Prepare and import those questions:

@@ -1,5 +1,36 @@
 # Cutback agent workflow
 
+When discovery reports a qualified retrieval producer, inspect the installed
+`workflow prepare --help` and `docs/agent-retrieval.md`. The source extension
+supports `--automatic` or explicit `--retrieval`, with separate
+`--retrieval-corpus-authorized`, permitted labeled questions, corpus rights,
+quality criteria and native budget. Never infer corpus permission from a scan.
+Prepare first, approve the exact validation hash, then freeze one eligible
+candidate for separately approved untouched confirmation. Unknown CPU/native
+cost cannot select a winner. Resume the same nonbillable setup or confirmation
+intent after a lost reply; never retry uncertain paid execution. The settings
+proposal still requires checks on both source trees, declared consumer coverage
+and exact rollback. Synthetic evidence remains local review only. This extension
+is absent from published dev5 and does not cover arbitrary retrieval frameworks.
+
+For a clean committed source application with explicitly authorized encrypted
+request profiling, inspect installed `workflow assess-workload --help`. A matching
+collector contract lets the agent derive the current binding and find completed
+source/workflow/environment analyses using metadata only. Keep cache freshness,
+TTL and justified operation-cost bounds explicit; do not infer them from repeats.
+The result can support a separate trial, never a paid budget, source edit,
+production hit rate or realized saving. Missing, expired, repriced or changed
+evidence must abstain. Read installed `docs/source-workload.md`; published dev5
+lacks these commands. Do not silently upgrade application SDK pins to enable them.
+
+After committing a reviewed instrumentation change, inspect installed
+`workflow refresh-source-map --help`, refresh the ignored map for the actual
+running commit, and restart the observer. This command parses verified source
+without importing it and does not enable telemetry or content capture. Stale or
+missing attribution cannot qualify source-matched workload evidence. For a
+dashboard review, `workflow workload-input` writes only an explicitly selected
+private metadata export, excluding request templates/instructions/payloads.
+
 For the independent public support-desk lesson, use its documented native fixture
 command and exact source pin. `--fixture-transport` requires the matching
 collector readiness contract and actual synthetic dataset/rights; it cannot

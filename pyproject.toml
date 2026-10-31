@@ -88,6 +88,7 @@ include = [
   "/docs/agent-integration.md", "/docs/demo.md", "/docs/product-completion.md",
   "/docs/product-research.md", "/docs/optimization-search.md",
   "/docs/status.md",
+  "/docs/source-workload.md",
   "/docs/runtime-guardrails.md",
   "/docs/guarded-tools.md",
   "/docs/guarded-security.md",

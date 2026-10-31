@@ -113,6 +113,8 @@ jobs:
           tests/integration/test_capture_commit_recovery.py
           tests/integration/test_native_request_profiles.py
           tests/integration/test_native_profile_recovery.py
+          tests/integration/test_cache_workload_assessment.py
+          tests/integration/test_agent_cache_workload.py
           tests/end_to_end/test_native_profile_dashboard.py
           tests/end_to_end/test_request_reuse_example.py
           tests/integration/test_object_recovery.py
@@ -170,6 +172,7 @@ jobs:
           tests/integration/test_guardrail_process.py
           tests/end_to_end/test_gateway_pipeline.py
           tests/integration/test_retrieval_workflow.py
+          tests/integration/test_agent_retrieval_workflow.py
           tests/end_to_end/test_retrieval_pipeline.py
           tests/integration/test_compression_workflow.py
           tests/integration/test_joint_context_workflow.py

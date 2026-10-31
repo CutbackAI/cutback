@@ -1,5 +1,12 @@
 # What works and what remains
 
+Working source adds [source-matched workload assessment](source-workload.md) and
+an [independent committed application](../examples/source-workload/README.md).
+It derives current source scope and models a separate trial's native-window
+opportunity from retained authorized profiles. It makes no inference call or
+source change. Qualification and unresolved hosted failures are in
+[progress](progress.md); this is not unified cross-engine economic selection.
+
 Updated 31 October 2026. Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business. [Executed acceptance](progress.md) records the exact artifacts, checks, failures and limits; [the baseline](market-baseline.md) records remaining requirements.
 
 [Native exact caching](native-response-cache.md) is accepted in

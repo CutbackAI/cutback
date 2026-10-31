@@ -1,5 +1,144 @@
 # Implementation progress
 
+31 October 2026 economic arithmetic follow-up, **working source under
+qualification**: two real PostgreSQL negatives reproduced an exact-budget
+reservation being admitted after ambient rounding and a settled total changing
+from `0.999123456790` to `0.999123456700`. Native/whole-plan upper bounds,
+reservation/settlement transactions and task/window/search economics now own
+their Decimal precision, exponents, rounding and traps. The fix preserves the
+embedding caller's context and the existing plan serialization. The combined
+task/improvement/ledger scope passed **49 in 33.11 seconds**; six dedicated
+context regressions pass. Broader native/campaign/installed/hosted gates remain
+pending. No paid request or new schema is involved.
+
+The dashboard build now pins minimatch 11.0.1 for the schema tooling's transitive
+dependency, following the maintainer's [glob amplification advisory](https://github.com/isaacs/minimatch/security/advisories/GHSA-g3hv-75wg-m249).
+Locked installation and the complete dashboard/Node SDK audits report zero
+known vulnerabilities. Regenerated OpenAPI/client/types and rebuilt dashboard
+remain unchanged; all 14 frontend units pass. This is a build-tool update,
+not a broader runtime compatibility claim.
+
+The preceding retrieval candidate completed its source and installed default
+scope: **1,412 passed / 27 explicit skips**, respectively 823.56 and 861.67
+seconds. The installed SDK3 retrieval/native/PG scope passed **97 in 478.50
+seconds**; separate SDK3 and Python 3.13 source scopes passed **44 each** in
+281.40 and 281.37 seconds. Its exact 400-entry image restored schema 0032,
+100 tables, 2,044 encrypted objects, eight profile sidecars, one cache object
+and 29 plans with rekey/preserved pointers; two-tenant 2,000-event/2,000-replay
+smoke was 2.828 seconds, not an SLA. Reproduced retrieval wheel SHA256 is
+`44a278798366be7a5faac00cef4cf5dd9532f548e61e3f4f02f21671ea9994e7`.
+That candidate predates the economic arithmetic fix above. Its scoped passing
+checks are retained, without treating them as acceptance of the newer code.
+
+31 October 2026 automatic retrieval workflow, **working source under final
+qualification**: [commands and scope](agent-retrieval.md). The agent discovers
+the independent committed corpus producer without importing it or parsing the
+corpus. Explicit corpus authorization freezes encrypted questions and documents;
+bounded v6 retrieval variants keep the native model/output ceiling unchanged.
+Component-aware validation, separately approved untouched confirmation,
+purpose-bound settings proposals, both-tree application checks and rollback
+are connected to the resumable workflow. Unknown CPU/native cost cannot select
+a winner. Lost setup or confirmation replies reuse the same nonbillable
+identities; uncertain approval/queue replies cannot submit another run.
+
+Executed source checkpoints: **55 passed / one Windows symlink skip** in 161.89
+seconds across the agent, strategy, preparation, retrieval economics and new PG
+workflow; **six** earlier retrieval/context integration checks in 155.39 seconds;
+**one** actual HTTP/native-SDK/PostgreSQL demo with both source-tree checks and
+rollback in 44.61 seconds; **nine** economics/CLI checks in 3.96 seconds. Full
+typing passes **374 modules**, plus repository lint/format. Broader default,
+SDK3/Python 3.13, installed archives and public gates remain pending. The
+source-only `demo --agent-retrieval` runs the guided synthetic journey. Published
+dev5 is unchanged. This does not complete cross-engine selection, arbitrary
+retrieval frameworks, full-task economics or customer acceptance.
+
+The preceding source-workload census/Decimal follow-up is locally accepted:
+the final installed wheel passed **230 / 17 SDK3-only skips** in 224.61 seconds
+on the default pin and **247** in 224.91 seconds on SDK3. The core-only consumer
+passed without SDK/server; the exact image restored schema 0032, 100 tables,
+2,044 encrypted objects and eight profile sidecars, including rekey and
+source-bound expiry checks. Reproduced wheel SHA256 is
+`efa67a2013f14fd7e27e99949aff9f71ee065f8d35a6a456dfaad39b290db9e6`.
+The later protected-check compatibility fix leaves that application wheel
+byte-identical. Current public-head hosted gates and stacked-base convergence
+remain pending; the superseded failures below are retained as audit evidence.
+
+Post-build auditing found an incomplete-window reporting defect in the first
+workload candidate. A 1,002-attempt window returned a capped page's subtotal as
+the full window cost. A new installed negative regression first reproduced
+`0.500500000000` instead of unknown. Changed/incomplete snapshots now clear the
+window and avoided-cost fields. Legacy analyses avoid rescanning; metadata
+queries use the existing indexed scope and 1,001-row cap, with canonical ordering
+done only in bounded memory. The focused PG/profile/source scope passed **47 in
+49.05 seconds** after the fix.
+
+Two further installed negatives reproduced dependence on an embedding caller's
+Decimal context: a value above the exact monetary ceiling was accepted, and a
+window sum became `0.98` instead of `0.988092000000`. Monetary validation now uses
+exact absolute values and bounded exponents; calculations own their Decimal
+precision, exponent limits and traps. The expanded core/API/source scope passed
+**52 in 34.23 seconds**, followed by **29 in 4.66 seconds** including hostile
+Decimal-context checks. The earlier workload wheel/image remain superseded;
+fixed artifact qualification is required before acceptance or publication.
+
+Source-matched workload assessment is under qualification. Its typed metadata
+API, agent discovery, private source export and dashboard preserve project,
+environment, workflow, commit/call-site/model and exact declared cost bounds.
+Changed/repriced/deleted or late canonical metadata invalidates the earlier
+census; derived evidence expires with its encrypted source. The first focused
+scope passed **51 checks on each pinned SDK**. The expanded authenticated
+dashboard/mobile/axe and agent/API scope passed **27**; the follow-up metadata/
+expiry/agent scope passed **28**. The independent eight-call process, now also
+running its own committed application, passed **three checks on the default
+SDK** and **20 with the SDK3 API/source scope**. An initial dashboard fixture
+correctly abstained on undeclared traffic; the fixture now explicitly declares
+its synthetic application traffic. Unified economic selection remains unfinished.
+
+The broader source regression passed **1,410 / 27 explicit skips in 375.86
+seconds**, including all units, migration/example contracts and the new real-PG
+profile/workload scopes. The expanded actual example/API/browser scope passed
+**57 in 78.78 seconds on Python 3.13** and **58 in 61.10 seconds on SDK3**.
+Offline attribution refresh and private-export guards passed **15 in 28.25
+seconds**. It refreshes only the ignored map after a clean commit and requires
+an observer restart. The final combined routing/workload browser/example/agent
+scope passed **19 in 90.00 seconds** after integrating the routing loading guard.
+Final wheel/image/installed qualification for this newer increment remains open.
+
+The routing follow-up now includes a deterministic held-file-read regression:
+the previous unbound form stayed editable, then remounted on source binding and
+could reset a just-entered sample minimum. The fixed form blocks edits and
+submission during inspection and verifies the submitted sample requirement.
+Its separate Python 3.13 routing/source-review scope passed **19 in 390.74
+seconds** and Python 3.11 native/browser scope **three in 96.81 seconds**.
+This confirms the UI race; current-head hosted acceptance still determines
+whether the complete change is accepted. No quality threshold was relaxed.
+
+The final clock-corrected profiling wheel and Linux image completed local
+qualification: **198 installed checks on each pinned SDK**, a core-only consumer,
+matching private/public archives, and schema `0032` recovery of **100 tables,
+2,044 encrypted objects, eight profile sidecars and 29 plans**, including key
+rotation. Two-tenant 2,000-event/2,000-replay smoke: **2.641 seconds**, not an SLA.
+All checks used synthetic provider traffic. The final wheel SHA256 is
+`1d3f461a23bb37446294bd7d73d35ecaa64eabf816853bc1db0d7cad04b014bf`;
+sdist `42108db95a27b35dcb847c91c2be4f342a1637a9790fc8d96dd232d259cf5abb`;
+image `sha256:20d5fe1af3adf928c04b7a93a102b29829e48f6e9aff2746ba47299af7816df4`.
+These artifacts do not include the newer source-workload assessment changes.
+
+Hosted acceptance is still open. [PR 67](https://github.com/CutbackAI/cutback/pull/67)
+passed its default Python 3.11, SDK3, security and infrastructure checks, but the
+Python 3.13 browser run failed its routing validation quality gate after **2,109
+passes / 41 skips**. Isolated local routing and both browser variants passed on
+Python 3.11 and 3.13; the hosted failure is unresolved. A diagnostic-only public
+follow-up preserves bounded scores/counts/reasons without payloads or credentials.
+[PR 68](https://github.com/CutbackAI/cutback/pull/68) also hit the SDK3 Python 3.11
+job's 20-minute limit. The next source increment partitions core/workflow checks
+without removing tests. Neither draft is accepted on these results. No new
+PyPI upload, paid inference or production deployment occurred.
+
+The earlier entries below preserve the sequence of source and superseded
+artifact checks; the final artifact evidence above supersedes their pending
+local-qualification statements.
+
 The source-bound routing dashboard now blocks edits and plan submission while
 an application inspection is loading. Previously, the unbound form remained
 editable; binding the loaded source remounted it and could discard a just-entered
