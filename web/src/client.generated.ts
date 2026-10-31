@@ -228,6 +228,35 @@ export function createSDK(request:Request) {return {
   confirmation_v1_projects__project_id__criteria__criteria_id__confirmation_post: (args:{project_id:string;criteria_id:string;body:components["schemas"]["CriteriaConfirmationInput"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/criteria/${encodeURIComponent(String(args.criteria_id))}/confirmation`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  content_v1_projects__project_id__scenarios__scenario_id__content_post: (args:{project_id:string;scenario_id:string;body:components["schemas"]["ContentPurpose"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/scenarios/${encodeURIComponent(String(args.scenario_id))}/content`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  import_reviewed_v1_projects__project_id__scenarios__scenario_id__imports_post: (args:{project_id:string;scenario_id:string;body:components["schemas"]["ScenarioImportInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/scenarios/${encodeURIComponent(String(args.scenario_id))}/imports`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  draft_v1_projects__project_id__scenarios_drafts_post: (args:{project_id:string;body:components["schemas"]["ScenarioDraftInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/scenarios/drafts`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  list_versions_v1_projects__project_id__scenarios_get: (args:{project_id:string;limit?:number;offset?:number}) => {
+    const query=new URLSearchParams();
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    if(args.offset!==undefined && args.offset!==null) query.set("offset",String(args.offset));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/scenarios`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  status_v1_projects__project_id__scenarios__scenario_id__get: (args:{project_id:string;scenario_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/scenarios/${encodeURIComponent(String(args.scenario_id))}`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  approve_generation_v1_projects__project_id__scenarios__scenario_id__approve_generation_post: (args:{project_id:string;scenario_id:string;body:components["schemas"]["ScenarioBudgetApproval"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/scenarios/${encodeURIComponent(String(args.scenario_id))}/approve-generation`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  queue_v1_projects__project_id__scenarios__scenario_id__runs_post: (args:{project_id:string;scenario_id:string;body:components["schemas"]["ScenarioQueueInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/scenarios/${encodeURIComponent(String(args.scenario_id))}/runs`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  review_v1_projects__project_id__scenarios__scenario_id__review_post: (args:{project_id:string;scenario_id:string;body:components["schemas"]["ScenarioReviewInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/scenarios/${encodeURIComponent(String(args.scenario_id))}/review`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  cancel_v1_projects__project_id__scenarios__scenario_id__cancel_post: (args:{project_id:string;scenario_id:string;body:components["schemas"]["ScenarioCancelInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/scenarios/${encodeURIComponent(String(args.scenario_id))}/cancel`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   training_draft_v1_projects__project_id__routing_training_drafts_post: (args:{project_id:string;body:components["schemas"]["RoutingTrainingDraftInput"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/routing/training-drafts`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},

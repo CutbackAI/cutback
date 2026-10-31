@@ -66,6 +66,11 @@ const Compression = React.lazy(() =>
 const ReviewedCriteria = React.lazy(() =>
   import("./criteria").then((module) => ({ default: module.ReviewedCriteria })),
 );
+const GeneratedScenarios = React.lazy(() =>
+  import("./scenarios").then((module) => ({
+    default: module.GeneratedScenarios,
+  })),
+);
 const LearnedRouting = React.lazy(() =>
   import("./routing").then((module) => ({ default: module.LearnedRouting })),
 );
@@ -1755,6 +1760,17 @@ function Experiments({
         />
       </React.Suspense>
       <h2>Experiment plans</h2>
+      <React.Suspense fallback={<p>Loading development scenarios…</p>}>
+        <GeneratedScenarios
+          key={base}
+          api={api}
+          base={base}
+          datasets={data.datasets}
+          admin={admin}
+          analyst={analyst}
+          reload={reload}
+        />
+      </React.Suspense>
       <label htmlFor="approval">
         Approval reference (required to approve a budget)
       </label>

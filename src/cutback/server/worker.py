@@ -33,6 +33,9 @@ def load_dataset(
     session, dataset, store, *, now=None, check=None, max_cases=None, max_content_bytes=None
 ):
     require_payloads_enabled()
+    from cutback.server.scenario_service import require_current_import
+
+    require_current_import(session, store, dataset)
     now = now or datetime.now(UTC)
     policy_row = session.get(CapturePolicyRecord, dataset.provenance["policy_id"])
     if not policy_row or policy_row.project_id != dataset.project_id or not policy_row.enabled:
@@ -363,12 +366,18 @@ def run_one(
                 from cutback.server.criteria_service import validate_binding as validate_criteria
 
                 validate_criteria(session, store, project_id, plan)
+                from cutback.server.scenario_service import require_current_import
+
+                require_current_import(session, store, session.get(DatasetRecord, dataset_id))
                 from cutback.server.routing_service import validate_binding as validate_routing
 
                 validate_routing(session, store, project_id, plan, dataset_id=dataset_id)
 
             def authorize_execution(session):
                 require_payloads_enabled()
+                from cutback.server.scenario_service import require_current_import
+
+                require_current_import(session, store, session.get(DatasetRecord, dataset_id))
                 authorize_campaign_run(
                     session,
                     store,

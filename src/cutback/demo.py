@@ -112,6 +112,7 @@ def seed_support_desk(
     semantic_rubrics=False,
     learned_routing=False,
     source_routing=False,
+    generated_scenarios=False,
 ):
     """Use actual scoped HTTP APIs and the durable worker, retaining the sample project."""
     require_demo_git()
@@ -387,6 +388,11 @@ def seed_support_desk(
                 app, control, project["id"], workspace, joint=joint_model_context
             )
             joint_sample = compression_sample if joint_model_context else None
+            scenario_sample = None
+            if generated_scenarios:
+                from cutback.demo_scenarios import seed_scenarios
+
+                scenario_sample = seed_scenarios(app, control, project["id"])
             criteria_sample = None
             if reviewed_criteria:
                 from cutback.demo_criteria import seed_criteria
@@ -472,6 +478,7 @@ def seed_support_desk(
                 "sample_source": "cutback/sample_app/app.py",
                 "source_diff": patch,
                 "paid_provider_calls": 0,
+                **({"generated_scenarios_sample": scenario_sample} if scenario_sample else {}),
                 **({"reviewed_criteria_sample": criteria_sample} if criteria_sample else {}),
                 **({"semantic_rubrics_sample": rubric_sample} if rubric_sample else {}),
                 **({"learned_routing_sample": routing_sample} if routing_sample else {}),
@@ -622,6 +629,7 @@ def launch_demo(
     semantic_rubrics=False,
     learned_routing=False,
     source_routing=False,
+    generated_scenarios=False,
 ):
     """Own one temporary Docker database. Never connect to production or reuse app keys."""
     require_demo_git()
@@ -686,6 +694,7 @@ def launch_demo(
         thread = None
         server = None
         routing_context = None
+        scenario_context = None
         old_url = os.environ.get("CUTBACK_DATABASE_URL")
         old_payload = os.environ.get("CUTBACK_ALLOW_PAYLOADS")
         old_semantic = os.environ.get("CUTBACK_SEMANTIC_CACHE_ENABLED")
@@ -763,12 +772,18 @@ def launch_demo(
                 semantic_rubrics=semantic_rubrics,
                 learned_routing=learned_routing,
                 source_routing=source_routing,
+                generated_scenarios=generated_scenarios,
             )
             if learned_routing or source_routing:
                 from cutback.demo_routing import routing_worker
 
                 routing_context = routing_worker(app, manifest["project_id"])
                 routing_context.__enter__()
+            if generated_scenarios:
+                from cutback.demo_scenarios import scenario_worker
+
+                scenario_context = scenario_worker(app, manifest["project_id"])
+                scenario_context.__enter__()
             print(
                 f"Ready: {endpoint}/dashboard/\n"
                 "Choose Explore sample. No API key is needed.\n"
@@ -786,6 +801,11 @@ def launch_demo(
             return manifest
         finally:
             routing_shutdown_failed = False
+            if scenario_context:
+                try:
+                    scenario_context.__exit__(None, None, None)
+                except RuntimeError:
+                    routing_shutdown_failed = True
             if routing_context:
                 try:
                     routing_context.__exit__(None, None, None)

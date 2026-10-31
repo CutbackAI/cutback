@@ -48,8 +48,8 @@ def write_private(path: Path, value, *, exclusive=False):
         temporary.unlink(missing_ok=True)
 
 
-def write_private_output(path: Path, value):
-    """Write explicitly requested private JSON without following redirected parents."""
+def prepare_private_output(path: Path) -> Path:
+    """Validate the private destination before requesting content; recheck when writing."""
     import stat
 
     path = Path(os.path.abspath(path))
@@ -65,6 +65,20 @@ def write_private_output(path: Path, value):
             or getattr(info, "st_file_attributes", 0) & 1024
         ):
             raise ValueError("UNSAFE_PRIVATE_OUTPUT_DIRECTORY")
+    if path.exists() or path.is_symlink():
+        info = path.lstat()
+        if (
+            not stat.S_ISREG(info.st_mode)
+            or stat.S_ISLNK(info.st_mode)
+            or getattr(info, "st_file_attributes", 0) & 1024
+        ):
+            raise ValueError("UNSAFE_PRIVATE_OUTPUT_FILE")
+    return path
+
+
+def write_private_output(path: Path, value):
+    """Write explicitly requested private JSON without following redirected parents."""
+    path = prepare_private_output(path)
     write_private(path, value)
 
 

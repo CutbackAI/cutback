@@ -23,6 +23,7 @@ def target_evaluation_clause():
         operation.is_distinct_from("candidate-generation-v1"),
         operation.is_distinct_from("criteria-generation-v1"),
         operation.is_distinct_from("criteria-generation-v2"),
+        operation.is_distinct_from("scenario-generation-v1"),
         ExperimentPlanRecord.specification["public_specification"]["routing_execution"]["phase"]
         .as_string()
         .is_distinct_from("training"),

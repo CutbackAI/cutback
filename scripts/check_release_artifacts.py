@@ -295,6 +295,7 @@ def check(directory: Path):
             "src/cutback/server/migrations/versions/0008_dataset_lineage.py",
             "src/cutback/server/migrations/versions/0009_reviews.py",
             "src/cutback/sample_app/app.py",
+            "docs/generated-scenarios.md",
         ):
             if not any(name.endswith("/" + required) for name in source_names):
                 raise ValueError("source distribution missing reproducibility file: " + required)

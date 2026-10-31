@@ -218,6 +218,7 @@ class ExecutionLedger:
             "candidate-generation-v1",
             "criteria-generation-v1",
             "criteria-generation-v2",
+            "scenario-generation-v1",
             "routing-training-v1",
         } or isinstance(getattr(self.plan, "routing_execution", None), RoutingTrainingExecution)
         if (purpose == "optimization") != proposal:

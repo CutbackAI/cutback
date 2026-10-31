@@ -84,6 +84,7 @@ from cutback.server.review_db import (
     ReviewResolution,
     ReviewVote,
 )
+from cutback.server.scenario_db import ScenarioDatasetImport, ScenarioVersionRecord
 from cutback.server.semantic_cache_db import (
     SemanticCacheMember,
     SemanticCacheNamespace,
@@ -118,6 +119,8 @@ def install_privacy(app, sessions, authorize, scope):
         def records():
             with sessions() as session:
                 for cls in (
+                    ScenarioDatasetImport,
+                    ScenarioVersionRecord,
                     CriteriaExperimentUse,
                     CriteriaVersionRecord,
                     GuardrailPolicyRow,
@@ -354,6 +357,8 @@ def install_privacy(app, sessions, authorize, scope):
                 .values(state="REVOKED", active_qualification_id=None, active_approval_hash=None)
             )
             for cls in (
+                ScenarioDatasetImport,
+                ScenarioVersionRecord,
                 CriteriaExperimentUse,
                 CriteriaVersionRecord,
                 SemanticUploadCase,

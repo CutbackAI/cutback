@@ -29,6 +29,13 @@ def reserve_campaign_call(
     session, run, environment, plan_sha256, purpose, amount, *, operation=None
 ):
     parent, link = campaign_for_run(session, run)
+    if operation == "scenario-generation-v1":
+        if parent is not None or purpose != "optimization":
+            raise ValueError("SCENARIO_GENERATION_REQUIRES_SEPARATE_APPROVED_RUN")
+        from cutback.server.scenario_service import reserve_scenario_generation
+
+        reserve_scenario_generation(session, run, environment, plan_sha256, amount)
+        return
     if operation == "routing-training-v1":
         if parent is not None or purpose != "optimization":
             raise ValueError("ROUTING_TRAINING_REQUIRES_SEPARATE_APPROVED_RUN")

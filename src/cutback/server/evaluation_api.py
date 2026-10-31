@@ -53,6 +53,7 @@ def policy_object_count(session, policy_id):
     from cutback.server.criteria_db import CriteriaVersionRecord
     from cutback.server.enterprise_db import CacheEntry
     from cutback.server.quality_db import QualityEvaluation, QualityRule
+    from cutback.server.scenario_db import ScenarioVersionRecord
     from cutback.server.semantic_upload_db import SemanticDatasetUpload
 
     stored = sum(
@@ -99,7 +100,20 @@ def policy_object_count(session, policy_id):
         )
         or 0
     )
-    return stored + reserved + uploads + criteria_outputs
+    scenario_outputs = (
+        session.scalar(
+            select(func.count())
+            .select_from(ScenarioVersionRecord)
+            .where(
+                ScenarioVersionRecord.capture_policy_id == policy_id,
+                ScenarioVersionRecord.output_payload_id.is_(None),
+                ScenarioVersionRecord.state.in_(["PENDING", "QUEUED", "RUNNING"]),
+                ScenarioVersionRecord.expires_at > datetime.now(UTC),
+            )
+        )
+        or 0
+    )
+    return stored + reserved + uploads + criteria_outputs + scenario_outputs
 
 
 class PlanInput(StrictModel):
@@ -238,6 +252,8 @@ def persist_dataset(
     provenance_extra=None,
     preexisting_payloads=None,
     check=None,
+    development_only=False,
+    dataset_id=None,
 ):
     from cutback.server.dataset_lineage import lock_lineage, register_groups
 
@@ -310,6 +326,11 @@ def persist_dataset(
     prepared = prepare_dataset(
         clean, lineage_groups={key: str(value) for key, value in lineage.items()}
     )
+    if development_only:
+        for item in prepared["items"]:
+            item["split"] = "validation"
+        prepared["split_counts"] = {"train": 0, "validation": len(clean.cases), "test": 0}
+        prepared["split_strategy"] = "reviewed-generated-development-only-v1"
     provenance = clean.model_dump(mode="json", exclude={"cases"})
     provenance.update(
         {
@@ -342,6 +363,7 @@ def persist_dataset(
         }
     )
     dataset = DatasetRecord(
+        **({"id": dataset_id} if dataset_id is not None else {}),
         project_id=project_id,
         workflow_id=body.workflow,
         immutable_hash=dataset_version_hash(
@@ -932,6 +954,17 @@ def install_evaluation(app, sessions, authorize, scope):
             if not dataset or dataset.project_id != project_id:
                 raise HTTPException(404, "DATASET_NOT_FOUND")
             binding = body.specification.source_binding
+            from cutback.server.scenario_service import require_current_import
+
+            try:
+                require_current_import(session, store, dataset)
+                if (
+                    dataset.provenance.get("generated_scenario")
+                    and body.specification.split != "validation"
+                ):
+                    raise ValueError("SCENARIO_DEVELOPMENT_VALIDATION_ONLY")
+            except ValueError:
+                raise HTTPException(409, "CURRENT_GENERATED_DEVELOPMENT_DATASET_REQUIRED") from None
             from cutback.server.routing_service import validate_binding as validate_routing
 
             try:
@@ -1156,6 +1189,7 @@ def install_evaluation(app, sessions, authorize, scope):
             if row.specification.get("public_specification", {}).get("operation") in {
                 "criteria-generation-v1",
                 "criteria-generation-v2",
+                "scenario-generation-v1",
             }:
                 raise HTTPException(409, "CRITERIA_REQUIRES_ITS_SCOPED_GENERATION_APPROVAL")
             if row.approval_status != "pending":
@@ -1193,6 +1227,11 @@ def install_evaluation(app, sessions, authorize, scope):
 
             try:
                 frozen = load_plan(require_store(app), project_id, plan.specification)
+                from cutback.server.scenario_service import require_current_import
+
+                require_current_import(
+                    session, require_store(app), session.get(DatasetRecord, plan.dataset_id)
+                )
                 from cutback.server.prompt_experiments import recheck_bindings
 
                 recheck_bindings(session, require_store(app), project_id, plan, frozen)
@@ -1460,6 +1499,9 @@ def install_evaluation(app, sessions, authorize, scope):
     from cutback.server.criteria_api import install_criteria
 
     install_criteria(app, sessions, authorize, scope, create_plan)
+    from cutback.server.scenario_api import install_scenario
+
+    install_scenario(app, sessions, authorize, scope)
     from cutback.server.routing_api import install_routing
 
     install_routing(app, sessions, authorize, scope, create_plan)
