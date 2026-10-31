@@ -1,5 +1,63 @@
 # Implementation progress
 
+Source-matched workload assessment is under qualification. Its typed metadata
+API, agent discovery, private source export and dashboard preserve project,
+environment, workflow, commit/call-site/model and exact declared cost bounds.
+Changed/repriced/deleted or late canonical metadata invalidates the earlier
+census; derived evidence expires with its encrypted source. The first focused
+scope passed **51 checks on each pinned SDK**. The expanded authenticated
+dashboard/mobile/axe and agent/API scope passed **27**; the follow-up metadata/
+expiry/agent scope passed **28**. The independent eight-call process, now also
+running its own committed application, passed **three checks on the default
+SDK** and **20 with the SDK3 API/source scope**. An initial dashboard fixture
+correctly abstained on undeclared traffic; the fixture now explicitly declares
+its synthetic application traffic. Unified economic selection remains unfinished.
+
+The broader source regression passed **1,410 / 27 explicit skips in 375.86
+seconds**, including all units, migration/example contracts and the new real-PG
+profile/workload scopes. The expanded actual example/API/browser scope passed
+**57 in 78.78 seconds on Python 3.13** and **58 in 61.10 seconds on SDK3**.
+Offline attribution refresh and private-export guards passed **15 in 28.25
+seconds**. It refreshes only the ignored map after a clean commit and requires
+an observer restart. The final combined routing/workload browser/example/agent
+scope passed **19 in 90.00 seconds** after integrating the routing loading guard.
+Final wheel/image/installed qualification for this newer increment remains open.
+
+The routing follow-up now includes a deterministic held-file-read regression:
+the previous unbound form stayed editable, then remounted on source binding and
+could reset a just-entered sample minimum. The fixed form blocks edits and
+submission during inspection and verifies the submitted sample requirement.
+Its separate Python 3.13 routing/source-review scope passed **19 in 390.74
+seconds** and Python 3.11 native/browser scope **three in 96.81 seconds**.
+This confirms the UI race; current-head hosted acceptance still determines
+whether the complete change is accepted. No quality threshold was relaxed.
+
+The final clock-corrected profiling wheel and Linux image completed local
+qualification: **198 installed checks on each pinned SDK**, a core-only consumer,
+matching private/public archives, and schema `0032` recovery of **100 tables,
+2,044 encrypted objects, eight profile sidecars and 29 plans**, including key
+rotation. Two-tenant 2,000-event/2,000-replay smoke: **2.641 seconds**, not an SLA.
+All checks used synthetic provider traffic. The final wheel SHA256 is
+`1d3f461a23bb37446294bd7d73d35ecaa64eabf816853bc1db0d7cad04b014bf`;
+sdist `42108db95a27b35dcb847c91c2be4f342a1637a9790fc8d96dd232d259cf5abb`;
+image `sha256:20d5fe1af3adf928c04b7a93a102b29829e48f6e9aff2746ba47299af7816df4`.
+These artifacts do not include the newer source-workload assessment changes.
+
+Hosted acceptance is still open. [PR 67](https://github.com/CutbackAI/cutback/pull/67)
+passed its default Python 3.11, SDK3, security and infrastructure checks, but the
+Python 3.13 browser run failed its routing validation quality gate after **2,109
+passes / 41 skips**. Isolated local routing and both browser variants passed on
+Python 3.11 and 3.13; the hosted failure is unresolved. A diagnostic-only public
+follow-up preserves bounded scores/counts/reasons without payloads or credentials.
+[PR 68](https://github.com/CutbackAI/cutback/pull/68) also hit the SDK3 Python 3.11
+job's 20-minute limit. The next source increment partitions core/workflow checks
+without removing tests. Neither draft is accepted on these results. No new
+PyPI upload, paid inference or production deployment occurred.
+
+The earlier entries below preserve the sequence of source and superseded
+artifact checks; the final artifact evidence above supersedes their pending
+local-qualification statements.
+
 The first installed profiling candidate passed **182 checks on the default SDK**
 but its SDK3 lane failed after **128 passes** in the independent fast-call
 example. Python 3.11 on Windows supplies a 15.625ms `GetTickCount64` monotonic

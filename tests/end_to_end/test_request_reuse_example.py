@@ -19,10 +19,12 @@ from cutback.server.native_profile_service import run_native_profile_one
 
 
 @pytest.mark.postgres
+@pytest.mark.parametrize("source_workload", [False, True])
 def test_independent_request_reuse_example_actual_sdk_http_worker_and_cleanup(
     api,
     tmp_path,
     monkeypatch,
+    source_workload,
 ):
     monkeypatch.setenv("CUTBACK_ALLOW_PAYLOADS", "true")
     store = EncryptedFileStore(tmp_path / "encrypted", os.urandom(32))
@@ -59,6 +61,7 @@ def test_independent_request_reuse_example_actual_sdk_http_worker_and_cleanup(
                     endpoint,
                     "--project-slug",
                     slug,
+                    *(["--source-workload"] if source_workload else []),
                 ],
                 cwd=tmp_path,
                 env={**os.environ, "CUTBACK_CONTROL_TOKEN": token},
@@ -72,6 +75,13 @@ def test_independent_request_reuse_example_actual_sdk_http_worker_and_cleanup(
         assert receipt["synthetic_native_calls"] == 8 and receipt["paid_provider_calls"] == 0
         assert receipt["analysis"]["summary"]["modeled_potential_hits"] == 3
         assert receipt["project_retained"] is False
+        if source_workload:
+            assessment = receipt["source_workload"]
+            assert assessment["decision"] == "prepare_separate_cache_trial"
+            assert assessment["selected_assessment"]["modeled_potential_hits"] == 3
+            assert assessment["provider_calls"] == assessment["encrypted_storage_reads"] == 0
+            assert assessment["paid_calls_authorized"] is False
+            assert receipt["application_source_changed"] is False
         assert "request_hmac_sha256" not in completed.stdout
         with api[2].state.sessions() as session:
             assert session.scalar(select(Project.id).where(Project.slug == slug)) is None

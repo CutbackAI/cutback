@@ -303,6 +303,9 @@ export function createSDK(request:Request) {return {
   cancel_v1_projects__project_id__native_request_profiles_analyses__analysis_id__cancel_post: (args:{project_id:string;analysis_id:string}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/native-request-profiles/analyses/${encodeURIComponent(String(args.analysis_id))}/cancel`+(query.size?"?"+query.toString():""),{method:"POST"});},
+  assess_v1_projects__project_id__native_request_profiles_analyses__analysis_id__cache_trial_post: (args:{project_id:string;analysis_id:string;body:components["schemas"]["CacheWorkloadInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/native-request-profiles/analyses/${encodeURIComponent(String(args.analysis_id))}/cache-trial`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   templates_v1_projects__project_id__campaign_templates_get: (args:{project_id:string;after?:string | null;limit?:number}) => {
     const query=new URLSearchParams();
     if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));

@@ -130,6 +130,63 @@ def register_agent(app, output, fail):
             )
         )
 
+    @group.command("refresh-source-map")
+    @guarded
+    def refresh_source_map(target: Path = Path(".")):
+        """Refresh private attribution after a commit; parse only, then restart the observer."""
+        from cutback.agent_source_map import refresh
+
+        output(refresh(target))
+
+    @group.command("workload-input")
+    @guarded
+    def workload_input(
+        exact_cache_contract: Annotated[Path, typer.Option("--exact-cache-contract")],
+        destination: Annotated[Path, typer.Option("--output")],
+        target: Path = Path("."),
+        workflow: str | None = None,
+    ):
+        """Export bounded source metadata for the dashboard; no collector or inference call."""
+        from cutback.agent_cache_workload import source_input
+        from cutback.cli_workflows import read_json
+        from cutback.core.workspace import write_private_output
+
+        write_private_output(
+            destination,
+            source_input(
+                target, cache_execution=read_json(exact_cache_contract), workflow=workflow
+            ),
+        )
+
+    @group.command("assess-workload")
+    @guarded
+    def assess_workload(
+        exact_cache_contract: Annotated[Path, typer.Option("--exact-cache-contract")],
+        target: Path = Path("."),
+        workflow: str | None = None,
+        environment: str = "staging",
+        analysis_id: str | None = None,
+        endpoint: str | None = None,
+        project: str | None = None,
+    ):
+        """Assess source-matched reuse evidence without inference or source changes."""
+        from cutback.agent_cache_workload import assess
+        from cutback.agent_control import connect
+        from cutback.cli_workflows import read_json
+
+        control, identity = connect(target, endpoint=endpoint, project=project)
+        output(
+            assess(
+                target,
+                control,
+                identity,
+                cache_execution=read_json(exact_cache_contract),
+                workflow=workflow,
+                environment=environment,
+                analysis_id=analysis_id,
+            )
+        )
+
     @group.command("resume-preparation")
     @guarded
     def resume_preparation(target: Path = Path(".")):

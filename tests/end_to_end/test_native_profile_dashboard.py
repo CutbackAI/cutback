@@ -1,5 +1,6 @@
 """Authenticated profile approval, background analysis and accessible aggregate evidence."""
 
+import json
 import os
 import subprocess
 import threading
@@ -8,11 +9,14 @@ from pathlib import Path
 from uuid import UUID
 
 import pytest
+from integration.test_cache_workload_assessment import binding
 from integration.test_native_request_profiles import retained_profile_stream
 from sqlalchemy import select
 from support_browser import browser_command
 from support_http import owned_collector
 
+from cutback.core.models import LLMEvent
+from cutback.server.db import StoredEvent
 from cutback.server.native_profile_db import NativeProfileAnalysis
 from cutback.server.native_profile_service import run_native_profile_one
 
@@ -28,6 +32,40 @@ def test_request_profile_dashboard_scope_evidence_mobile_and_accessibility(
     if os.getenv("CUTBACK_TEST_BROWSER") != "true":
         pytest.skip("set CUTBACK_TEST_BROWSER=true for actual authenticated profile acceptance")
     sample, store, snapshot = retained_profile_stream(api, tenant, tmp_path, monkeypatch, event)
+    source = binding()
+    with api[2].state.sessions.begin() as session:
+        for row in session.scalars(
+            select(StoredEvent).where(StoredEvent.project_id == UUID(tenant[0]))
+        ):
+            row.event = (
+                LLMEvent.model_validate(row.event)
+                .model_copy(
+                    update={
+                        "call_site_id": source.call_site_id,
+                        "source_commit": source.source_commit,
+                        "traffic_kind": "application",
+                    }
+                )
+                .model_dump(mode="json")
+            )
+    workload = tmp_path / "owned-workload-input.json"
+    workload.write_text(
+        json.dumps(
+            {
+                "source_binding": source.model_dump(mode="json"),
+                "baseline_model": event.requested_model,
+                "cache_execution": {
+                    "freshness_ref": "owned-immutable-v1",
+                    "ttl_seconds": 300,
+                    "content_retention_authorized": True,
+                    "immutable_or_safely_invalidated": True,
+                    "operation_cost_upper_usd": "0.000000000001",
+                    "operation_cost_basis_ref": "owned-bound",
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
     stop = threading.Event()
 
     def worker():
@@ -59,6 +97,7 @@ def test_request_profile_dashboard_scope_evidence_mobile_and_accessibility(
                     "CUTBACK_UI_PROJECT": tenant[0],
                     "CUTBACK_UI_KEY": token,
                     "CUTBACK_PROFILE_POLICY": sample["policy_id"],
+                    "CUTBACK_PROFILE_WORKLOAD_INPUT": str(workload),
                     "CUTBACK_PROFILE_START": (datetime.now(UTC) - timedelta(minutes=5)).isoformat(),
                     "CUTBACK_PROFILE_END": datetime.now(UTC).isoformat(),
                     "CUTBACK_PROFILE_VIEWER": viewer,

@@ -63,11 +63,38 @@ test("routing training, private fitting, independent validation and confirmation
     await expect(
       page.getByLabel("Shared task instruction", { exact: true }),
     ).toBeVisible();
+    await page.evaluate(() => {
+      const original = File.prototype.text;
+      File.prototype.text = function () {
+        File.prototype.text = original;
+        return new Promise<string>((resolve, reject) => {
+          (
+            window as unknown as { releaseInspection: () => void }
+          ).releaseInspection = () => original.call(this).then(resolve, reject);
+        });
+      };
+    });
     await upload.setInputFiles(process.env.CUTBACK_ROUTING_INSPECTION);
     const form = page.getByRole("form", {
       name: "Prepare routing training",
       exact: true,
     });
+    await expect(
+      form.getByRole("button", { name: "Freeze training plan", exact: true }),
+    ).toBeDisabled();
+    await page.evaluate(() =>
+      (
+        window as unknown as { releaseInspection: () => void }
+      ).releaseInspection(),
+    );
+    await expect(
+      page
+        .getByRole("region", {
+          name: "Learned input-size routing",
+          exact: true,
+        })
+        .getByRole("status"),
+    ).toContainText("Application bound: app.py");
     await form
       .getByLabel("Required confirmation samples", { exact: true })
       .fill("3");
@@ -90,6 +117,7 @@ test("routing training, private fitting, independent validation and confirmation
     expect(response.request().postDataJSON().source.producer_file).toBe(
       "app.py",
     );
+    expect(response.request().postDataJSON().metric.min_test_samples).toBe(3);
     await expect(
       page.getByRole("form", {
         name: "Review exact routing plan",

@@ -1,5 +1,9 @@
 # Measure repeats before trying a cache
 
+To include an independently committed application and automatic agent matching,
+add `--source-workload` to the command below. See the
+[source-workload walkthrough](../source-workload/README.md).
+
 This example sends eight actual OpenAI SDK calls through an in-process synthetic
 HTTP transport. Four requests repeat; four are distinct. The expected analysis
 has **eight profiled attempts and three modeled potential hits**. All eight

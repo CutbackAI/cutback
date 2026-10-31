@@ -51,6 +51,41 @@ test("approved request reuse evidence is scoped, private and accessible", async 
     "Infrastructure cost, semantic quality and realized savings",
   );
   await expect(receipt).toContainText("Unknown");
+  await receipt
+    .getByText("Check this window against your application", { exact: true })
+    .click();
+  const upload = receipt.getByLabel(
+    "Source workload input (private metadata JSON)",
+  );
+  await upload.setInputFiles({
+    name: "bad.json",
+    mimeType: "application/json",
+    buffer: Buffer.from("{broken"),
+  });
+  await expect(receipt.getByRole("alert")).toContainText(
+    "File contents omitted",
+  );
+  await upload.setInputFiles(process.env.CUTBACK_PROFILE_WORKLOAD_INPUT!);
+  const assessed = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/cache-trial") &&
+      response.request().method() === "POST",
+  );
+  await receipt
+    .getByRole("button", { name: "Assess source-matched trial eligibility" })
+    .click();
+  const assessedResponse = await assessed;
+  expect(assessedResponse.status()).toBe(200);
+  const assessment = await assessedResponse.json();
+  expect(assessment.provider_calls).toBe(0);
+  expect(assessment.encrypted_storage_reads).toBe(0);
+  expect(assessment.paid_calls_authorized).toBe(false);
+  expect(assessment.source_change_authorized).toBe(false);
+  await expect(
+    receipt.getByRole("status", { name: "Source workload assessment" }),
+  ).toContainText(
+    "This source window supports preparing a separate cache trial",
+  );
   await expect(page.locator("body")).not.toContainText(
     process.env.CUTBACK_PROFILE_PRIVATE_FINGERPRINT!,
   );
