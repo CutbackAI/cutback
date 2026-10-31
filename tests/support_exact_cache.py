@@ -80,7 +80,19 @@ def prepare_cache_experiment(
     return store, UUID(queued.json()["id"]), executor, calls
 
 
-def qualify_source_runtime(api, tenant, source, artifact, state, contract, directory, monkeypatch):
+def qualify_source_runtime(
+    api,
+    tenant,
+    source,
+    artifact,
+    state,
+    contract,
+    directory,
+    monkeypatch,
+    *,
+    expected_model="gpt-4.1-mini",
+    expected_output_cap=16,
+):
     """Apply only in owned copies, check both real Git trees, enable against owned TCP."""
     import hashlib
     import json
@@ -104,13 +116,16 @@ def respond(**request):
     seen.append(request)
     return answer
 client = SimpleNamespace(responses=SimpleNamespace(create=respond))
-sys.modules["openai"] = SimpleNamespace(OpenAI=lambda: client)
+sys.modules["openai"] = SimpleNamespace(OpenAI=lambda **options: client)
 from app import classify
 assert classify("owned synthetic source check") is answer
 assert seen[0]["input"] == "owned synthetic source check"
 assert seen[0]["model"] == "gpt-4.1-mini"
 assert seen[0]["max_output_tokens"] == 16
 """
+    check_source = check_source.replace('== "gpt-4.1-mini"', "== " + repr(expected_model)).replace(
+        "== 16", "== " + str(expected_output_cap)
+    )
     base, proposed = directory / "base", directory / "proposed"
 
     def git(root, *arguments, patch=None):
@@ -225,7 +240,10 @@ assert seen[0]["max_output_tokens"] == 16
                     json={"purpose": "owned-cache-source-roundtrip"},
                 )
                 assert stored.status_code == 200 and stored.json()["diff"] == artifact["diff"]
-                assert stored.json()["native_fixture"]["real_model_quality_verified"] is False
+                marker = stored.json().get("native_fixture") or stored.json().get(
+                    "synthetic_execution"
+                )
+                assert marker["real_model_quality_verified"] is False
                 assert tenant[1]["Authorization"][7:] not in json.dumps(stored.json())
                 exported = owner.get(f"/v1/projects/{tenant[0]}/export", headers=api[1])
                 assert (

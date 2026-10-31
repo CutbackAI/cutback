@@ -21604,6 +21604,16 @@
                 "type": "null"
               }
             ]
+          },
+          "workload_portfolio": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkloadPortfolioBinding-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -21948,6 +21958,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/NativeFixtureExecution"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "workload_portfolio": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkloadPortfolioBinding-Output"
               },
               {
                 "type": "null"
@@ -36799,6 +36819,52 @@
           "started_ns"
         ],
         "title": "WorkflowSpan"
+      },
+      "WorkloadPortfolioBinding-Input": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "workload-native-portfolio-v1",
+            "title": "Version",
+            "default": "workload-native-portfolio-v1"
+          },
+          "assessment": {
+            "$ref": "#/components/schemas/CacheWorkloadAssessment"
+          },
+          "cache_execution": {
+            "$ref": "#/components/schemas/ExactCacheExecution-Input"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "assessment",
+          "cache_execution"
+        ],
+        "title": "WorkloadPortfolioBinding"
+      },
+      "WorkloadPortfolioBinding-Output": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "workload-native-portfolio-v1",
+            "title": "Version",
+            "default": "workload-native-portfolio-v1"
+          },
+          "assessment": {
+            "$ref": "#/components/schemas/CacheWorkloadAssessment"
+          },
+          "cache_execution": {
+            "$ref": "#/components/schemas/ExactCacheExecution-Output"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "assessment",
+          "cache_execution"
+        ],
+        "title": "WorkloadPortfolioBinding"
       }
     }
   }

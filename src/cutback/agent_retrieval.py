@@ -40,7 +40,7 @@ def regression_gate(report, *, expected_plan_hash, candidate=None, sample_only=F
         reasons.append("frozen_plan_mismatch")
     if report.get("plan", {}).get("split") != "test":
         reasons.append("independent_test_confirmation_required")
-    if report.get("native_fixture") and not sample_only:
+    if (report.get("native_fixture") or report.get("synthetic_execution")) and not sample_only:
         reasons.append("fixture_transport_cannot_verify_real_model_quality")
     if report.get("retrieval", {}).get("version") != "cutback.retrieval-execution.v1":
         reasons.append("retrieval_execution_contract_required")

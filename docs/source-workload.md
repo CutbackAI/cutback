@@ -108,7 +108,10 @@ approval or production action. The agent rechecks source bytes after the request
 and declines changed source or stale scope. It never runs repository hooks or
 clean filters to establish the snapshot.
 
-A positive decision supports preparing a separate trial only. Unified economic
+A positive decision can now feed a [workload-bound native/cache
+portfolio](workload-native-portfolios.md), under source qualification, with
+canonical evidence checks, budget-fitting candidate preparation and independent
+confirmation. It still authorizes preparation only. Unified economic
 selection across caching, routing, retrieval, prompts and training remains
 unfinished. Fixture repetition cannot establish production hit rate, realized
 savings or complete task economics.

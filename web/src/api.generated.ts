@@ -6321,6 +6321,7 @@ export interface components {
             /** Routing Execution */
             routing_execution?: components["schemas"]["RoutingTrainingExecution"] | components["schemas"]["LearnedRoutingBinding"] | null;
             native_fixture?: components["schemas"]["NativeFixtureExecution"] | null;
+            workload_portfolio?: components["schemas"]["WorkloadPortfolioBinding-Input"] | null;
         };
         /** ExperimentPlan */
         "ExperimentPlan-Output": {
@@ -6425,6 +6426,7 @@ export interface components {
             /** Routing Execution */
             routing_execution?: components["schemas"]["RoutingTrainingExecution"] | components["schemas"]["LearnedRoutingBinding"] | null;
             native_fixture?: components["schemas"]["NativeFixtureExecution"] | null;
+            workload_portfolio?: components["schemas"]["WorkloadPortfolioBinding-Output"] | null;
         };
         /** FieldTransition */
         FieldTransition: {
@@ -12663,6 +12665,28 @@ export interface components {
              * @enum {string}
              */
             status: "ok" | "error" | "cancelled" | "incomplete" | "unknown";
+        };
+        /** WorkloadPortfolioBinding */
+        "WorkloadPortfolioBinding-Input": {
+            /**
+             * Version
+             * @default workload-native-portfolio-v1
+             * @constant
+             */
+            version: "workload-native-portfolio-v1";
+            assessment: components["schemas"]["CacheWorkloadAssessment"];
+            cache_execution: components["schemas"]["ExactCacheExecution-Input"];
+        };
+        /** WorkloadPortfolioBinding */
+        "WorkloadPortfolioBinding-Output": {
+            /**
+             * Version
+             * @default workload-native-portfolio-v1
+             * @constant
+             */
+            version: "workload-native-portfolio-v1";
+            assessment: components["schemas"]["CacheWorkloadAssessment"];
+            cache_execution: components["schemas"]["ExactCacheExecution-Output"];
         };
     };
     responses: never;

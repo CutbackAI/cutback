@@ -6,6 +6,7 @@ import json
 import os
 import time
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from urllib.parse import urlsplit
 from uuid import uuid4
 
@@ -22,11 +23,29 @@ def main():
     parser.add_argument("--keep-project", action="store_true")
     parser.add_argument("--project-slug", help="Unique name for the new synthetic project")
     parser.add_argument(
+        "--keep-source",
+        type=Path,
+        help="Retain the independent application in a new private directory",
+    )
+    parser.add_argument(
+        "--prepare-trial",
+        action="store_true",
+        help="Prepare a pending workload-bound trial without inference; implies --keep-project",
+    )
+    parser.add_argument(
         "--source-workload",
         action="store_true",
         help="Also bind a committed independent application and assess its workload",
     )
     args = parser.parse_args()
+    if args.prepare_trial:
+        if not args.source_workload or args.keep_source is None:
+            parser.error(
+                "--prepare-trial requires --source-workload and --keep-source NEW_PRIVATE_DIRECTORY"
+            )
+        args.keep_project = True
+    if args.keep_source is not None and not args.source_workload:
+        parser.error("--keep-source requires --source-workload")
     endpoint = args.endpoint.rstrip("/")
     url = urlsplit(endpoint)
     if (
@@ -109,7 +128,7 @@ def main():
             if args.source_workload:
                 from source_application import SourceApplication
 
-                source_app = SourceApplication()
+                source_app = SourceApplication(root=args.keep_source, with_cases=args.prepare_trial)
             workflow_id = source_app.workflow if source_app else "classify"
             project = request(
                 "POST",
@@ -207,6 +226,7 @@ def main():
             assert summary["modeled_potential_hits"] == 3
             assert summary["cache_trial_eligible"] is True
             assessment = None
+            trial = None
             if source_app:
                 from cutback.agent_cache_workload import assess
                 from cutback.agent_control import Control
@@ -226,6 +246,46 @@ def main():
                 )
                 assert assessment["decision"] == "prepare_separate_cache_trial"
                 assert source_app.unchanged()
+                if args.prepare_trial:
+                    from cutback.agent import prepare
+                    from cutback.agent_control import connect
+
+                    # Save destination metadata only; the existing administrator
+                    # credential remains in this process environment.
+                    connect(source_app.root, endpoint=endpoint, project=project)
+                    planned = prepare(
+                        source_app.root,
+                        Control(endpoint, token, client=control),
+                        project,
+                        files=["cases.jsonl"],
+                        rights_basis="synthetic",
+                        rights_ref="owned-workload-trial",
+                        max_usd="5",
+                        max_requests=500,
+                        independent_labels=True,
+                        representative=False,
+                        minimum=1,
+                        min_test_samples=3,
+                        automatic=True,
+                        exact_cache_contract={
+                            "freshness_ref": "owned-immutable-demo",
+                            "ttl_seconds": 300,
+                            "content_retention_authorized": True,
+                            "immutable_or_safely_invalidated": True,
+                            "operation_cost_upper_usd": "0.000000000001",
+                            "operation_cost_basis_ref": "owned-fixture-bound",
+                        },
+                    )
+                    assert planned["phase"] == "PLAN_READY"
+                    assert request("GET", f"/v1/projects/{project}/experiments") == []
+                    trial = {
+                        "plan": planned["plan"],
+                        "phase": planned["phase"],
+                        "candidate_preparation": planned["workload_candidate_preparation"],
+                        "provider_calls": 0,
+                        "approval_required": True,
+                        "application_source_changed": False,
+                    }
             print(
                 json.dumps(
                     {
@@ -234,6 +294,11 @@ def main():
                         "paid_provider_calls": 0,
                         "analysis": receipt,
                         "project_retained": args.keep_project,
+                        **(
+                            {"pending_workload_trial": trial, "source_checkout_retained": True}
+                            if trial
+                            else {}
+                        ),
                         **(
                             {"source_workload": assessment, "application_source_changed": False}
                             if source_app

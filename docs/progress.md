@@ -1,5 +1,71 @@
 # Implementation progress
 
+31 October 2026 workload-bound native/cache portfolios, **working source under
+qualification**: [walkthrough](workload-native-portfolios.md). A positive retained
+source-window assessment now qualifies an exact-cache hypothesis alongside
+native model/output alternatives. The frozen optional binding preserves legacy
+plan hashes. Canonical project/source/census/price/policy/expiry checks run at
+plan creation, content reads, approval, queueing and execution. Expiry bounds
+the plan; client-edited or stale receipts fail closed. Budget fitting removes
+native hypotheses while retaining the qualified cache candidate, with explicit
+counts and unchanged examples/quality requirements.
+
+Setup and untouched confirmation reconcile exact nonbillable identities; rejected
+confirmation budgets leave no stuck intent. The report counts known validation
+and confirmation costs, including rejected trials, and shows an explicitly
+assumed native-window repetition count. Counts use exact decimal text beyond
+the browser integer limit. The opportunity belongs only to the qualified cache
+hypothesis; a model-only confirmation cannot inherit its payback. Incomplete
+billing keeps payback unknown. Full task,
+review/deployment/hosting costs and realized savings remain unknown.
+
+The independent request-reuse example adds `--prepare-trial --keep-source`:
+eight intercepted synthetic SDK calls feed measured eligibility, a retained
+committed application and one pending plan, with no target run or inference
+approval. Its three subprocess/HTTP/PostgreSQL/cleanup variants passed **3 in
+38.95 seconds**. The actual SDK/PG source journey passed separate checkpoints:
+**4 in 146.32 seconds**, then **4 in 272.65 seconds** with both-tree source checks,
+owned runtime activation, exact rollback and authenticated desktop/mobile/axe;
+the expanded lost-setup, foreign-project, repriced-census and revoked-policy
+journey passed **1 in 171.27 seconds**. SDK3's initial source scope passed **8 in
+200.78 seconds**. Python 3.13/SDK3 then passed the extended actual journey,
+including stale approval/queue rejection, stopping after one charged synthetic
+call when prices change, and refusing a replay of that failed run. Final source
+scopes and installed qualification are running.
+
+An evidence audit also found that marked synthetic executors without a frozen
+native-fixture plan were not universally disclosed. They now retain synthetic
+model/candidate/report evidence, cannot retain verified-model status or pass the
+ordinary real-quality gate, and carry that disclosure into cache and model source
+artifacts and the dashboard. A broader unit checkpoint passed **1,419 / 27
+explicit skips in 736.86 seconds**; **23** targeted economics/workload/retrieval
+units passed after the exact-count correction. Typing passes **383 modules**;
+API/client/types, React build, 14 frontend units and lint/format pass. New final
+installed/archive/image/hosted qualification remains pending.
+
+Retained failures: the first portfolio exceeded its worst-case native budget,
+leading to bounded candidate reduction; a 100-request confirmation correctly
+failed for 160 required requests and is now tested before a sufficient ceiling.
+One local observer flush timed out. An attempted test timeout outside the
+existing two-second capture bound was correctly rejected and reverted; runtime
+bounds were not widened. Required Budget fields missing in an initial test
+fixture were corrected. Later checks retained a bounded source-read mismatch
+and PostgreSQL connection timeout; a separate eight-case Python 3.13 unit
+diagnostic passed without weakening source checks. New test assertions also
+used the wrong queue-response key and connection-file location; these were
+corrected against the actual contracts. Later passing checkpoints are separate
+evidence. Recovery qualification now additionally checks an unapproved bound
+portfolio and its current source-window receipt after restore and rekey.
+
+The earlier profiling/automatic-retrieval/Decimal increment is accepted in
+[PR 68](https://github.com/CutbackAI/cutback/pull/68): installed full default
+**2,292 / 36 skips in 4,222.48 seconds**, installed SDK3 qualified full scope
+**2,064 / 10 skips in 3,299.19 seconds**, and all **17** exact-head hosted checks.
+The joint retrieval follow-up remains separately qualifying in PR 71. No paid
+request, production deployment or new PyPI publication occurred. This native
+model/cache increment does not close full cross-engine selection, the remaining
+market baseline or customer qualification.
+
 31 October 2026 portable golden-fixture correction, **hosted qualification in
 progress**: Python 3.13's Unicode 15.1 recipe correctly produces legacy v6 hash
 `870f88c5732552d81a8dfa65920112b358291ef61899de2d07da6a235ee34791`, whereas the

@@ -7,6 +7,12 @@ opportunity from retained authorized profiles. It makes no inference call or
 source change. Acceptance and separate source-only follow-ups are in
 [progress](progress.md); this is not unified cross-engine economic selection.
 
+The source [native/cache portfolio](workload-native-portfolios.md) is under
+qualification. Its independent example can retain a committed synthetic
+application and prepare a pending trial from observed source-window eligibility.
+It grants no inference approval. Confirmation, source review and exact rollback
+are separate steps, with cache-specific opportunity and unknown full-task costs.
+
 Updated 31 October 2026. Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business. [Executed acceptance](progress.md) records the exact artifacts, checks, failures and limits; [the baseline](market-baseline.md) records remaining requirements.
 
 [Native exact caching](native-response-cache.md) is accepted in

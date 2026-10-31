@@ -35,3 +35,10 @@ zero cache transport latency. It is not a production hit rate, quality result,
 customer saving or invoice. A separate cache trial must establish delivery,
 independent task quality and infrastructure economics before any source change.
 See [the complete contract and troubleshooting](../../docs/request-reuse.md).
+
+The source checkout also adds a [workload-bound native/cache portfolio](../../docs/workload-native-portfolios.md).
+Add `--source-workload --prepare-trial --keep-source ../cutback-owned-example`
+to retain an independent committed application and prepare one pending trial.
+This makes no target inference call and implies `--keep-project`; approval and
+execution remain separate. The destination must be new. This extension remains
+under qualification and is absent from published dev5.

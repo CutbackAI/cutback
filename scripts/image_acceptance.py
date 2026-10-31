@@ -44,12 +44,19 @@ def inside(container, code, values):
     )
 
 
-def seed_owned_request_profiles(container, values):
+def seed_owned_request_profiles(container, values, *, workload_portfolio=False):
     """Execute the independent example inside the actual image, retaining it for recovery."""
     source = (Path(__file__).resolve().parents[1] / "examples/request-reuse/demo.py").read_text(
         encoding="utf-8"
     )
-    code = """import json,os,sys,threading
+    example_root = Path(__file__).resolve().parents[1] / "examples"
+    files = {
+        name: (example_root / name).read_text(encoding="utf-8")
+        for name in ("request-reuse/source_application.py", "source-workload/app.py")
+    }
+    code = (
+        """import json,os,sys,threading,tempfile
+from pathlib import Path
 from uuid import uuid4
 from sqlalchemy import select
 from cutback.server.db import database,Project
@@ -72,25 +79,46 @@ def work():
   if identifier:
    run_native_profile_one(sessions,store,only_analysis_id=identifier)
 thread=threading.Thread(target=work,daemon=True)
+temporary=tempfile.TemporaryDirectory(prefix="cutback-owned-image-example-")
+sample_root=Path(temporary.name)
+for relative,contents in SAMPLE_FILES.items():
+ target=sample_root/"examples"/relative
+ target.parent.mkdir(parents=True,exist_ok=True)
+ target.write_text(contents,encoding="utf-8")
+sample_file=sample_root/"examples/request-reuse/demo.py"
+sys.path.insert(0,str(sample_file.parent))
 thread.start()
 sys.argv=["owned-request-reuse-example","--keep-project","--project-slug",slug]
+if WORKLOAD_EXPECTED:
+ sys.argv.extend(["--source-workload","--prepare-trial","--keep-source",str(sample_root/"application")])
 try:
- exec(compile(SAMPLE_SOURCE,"<owned-request-reuse-example>","exec"),{"__name__":"__main__"})
+ exec(compile(SAMPLE_SOURCE,"<owned-request-reuse-example>","exec"),
+      {"__name__":"__main__","__file__":str(sample_file)})
 finally:
  stop.set()
  thread.join(5)
  engine.dispose()
+ temporary.cleanup()
 assert not thread.is_alive()
 """.replace("SAMPLE_SOURCE", repr(source))
+        .replace("SAMPLE_FILES", repr(files))
+        .replace("WORKLOAD_EXPECTED", repr(workload_portfolio))
+    )
     result = json.loads(inside(container, code, values).strip().splitlines()[-1])
     assert result["paid_provider_calls"] == 0 and result["synthetic_native_calls"] == 8
     assert result["analysis"]["summary"]["modeled_potential_hits"] == 3
     assert result["analysis"]["summary"]["cache_trial_eligible"] is True
+    if workload_portfolio:
+        assert result["pending_workload_trial"]["phase"] == "PLAN_READY"
+        assert result["pending_workload_trial"]["provider_calls"] == 0
+        assert result["pending_workload_trial"]["approval_required"] is True
+        assert result["source_workload"]["decision"] == "prepare_separate_cache_trial"
     return {
         "synthetic_native_calls": 8,
         "modeled_potential_hits": 3,
         "paid_provider_calls": 0,
         "project_retained_for_recovery": True,
+        "pending_workload_trial": workload_portfolio,
     }
 
 
@@ -209,6 +237,7 @@ def main(
     guarded_security=False,
     joint_model_context=False,
     joint_model_retrieval=False,
+    workload_portfolio=False,
     reviewed_criteria=False,
     semantic_rubrics=False,
     learned_routing=False,
@@ -402,7 +431,9 @@ print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":mani
                 assert len(source_groups) == 2
                 assert sum(group["observed_attempts"] for group in source_groups) == 12
                 assert client.get(base + "/changes").json()
-                native_profiles = seed_owned_request_profiles(container, values)
+                native_profiles = seed_owned_request_profiles(
+                    container, values, workload_portfolio=workload_portfolio
+                )
                 if isolated_tools:
                     seed_owned_isolated_records(
                         container,
@@ -565,6 +596,22 @@ with sessions() as session:
   rotating.rekey(row.project_id,row.specification["artifact_ref"])
   after=new_only.get(row.project_id,row.specification["artifact_ref"])
   assert before==after
+ if WORKLOAD_EXPECTED:
+  from cutback.server.plan_artifacts import load_plan
+  from cutback.server.workload_portfolio import validate_binding
+  workload_plans=[row for row in plans
+                  if row.specification["public_specification"].get("workload_portfolio")]
+  assert len(workload_plans)==1
+  planned=workload_plans[0]
+  assert planned.approval_status=="pending"
+  assert not session.scalar(select(ExperimentRunRecord.id).where(
+   ExperimentRunRecord.plan_id==planned.id))
+  frozen=load_plan(new_only,planned.project_id,planned.specification)
+  assert frozen.workload_portfolio is not None and frozen.split=="validation"
+  current=validate_binding(session,planned.project_id,frozen)
+  assert current==frozen.workload_portfolio.assessment
+  assert any(candidate.exact_cache for candidate in frozen.candidates)
+  assert current.paid_calls_authorized is False and current.realized_savings_usd is None
  if REACTIVE_EXPECTED:
   from cutback.server.execution_db import ExecutionCall
   from cutback.server.plan_artifacts import load_plan
@@ -726,6 +773,7 @@ engine.dispose()
                     .replace("GUARDED_SECURITY", repr(guarded_security))
                     .replace("JOINT_EXPECTED", repr(joint_model_context))
                     .replace("RETRIEVAL_EXPECTED", repr(joint_model_retrieval))
+                    .replace("WORKLOAD_EXPECTED", repr(workload_portfolio))
                     .replace("CRITERIA_EXPECTED", repr(reviewed_criteria))
                     .replace("RUBRICS_EXPECTED", repr(semantic_rubrics))
                     .replace("ROUTING_EXPECTED", repr(learned_routing or source_routing))
@@ -867,6 +915,7 @@ engine.dispose()
                     or source_routing,
                     "source_bound_routing_and_both_tree_checks": source_routing,
                     "joint_retrieval_confirmation_and_both_tree_checks": joint_model_retrieval,
+                    "pending_workload_portfolio_and_source_window_restored": workload_portfolio,
                     "reviewed_generated_development_scenarios_restored": generated_scenarios,
                     "reactive_user_contracts_receipts_and_trajectories_restored": reactive_users,
                     "restored_tables": len(after),
@@ -912,6 +961,7 @@ if __name__ == "__main__":
     parser.add_argument("--guarded-security", action="store_true")
     parser.add_argument("--joint-model-context", action="store_true")
     parser.add_argument("--joint-model-retrieval", action="store_true")
+    parser.add_argument("--workload-portfolio", action="store_true")
     parser.add_argument("--reviewed-criteria", action="store_true")
     parser.add_argument("--semantic-rubrics", action="store_true")
     parser.add_argument("--learned-routing", action="store_true")
@@ -928,6 +978,7 @@ if __name__ == "__main__":
         guarded_security=args.guarded_security,
         joint_model_context=args.joint_model_context,
         joint_model_retrieval=args.joint_model_retrieval,
+        workload_portfolio=args.workload_portfolio,
         reviewed_criteria=args.reviewed_criteria,
         semantic_rubrics=args.semantic_rubrics,
         learned_routing=args.learned_routing,

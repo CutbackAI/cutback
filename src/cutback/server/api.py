@@ -260,6 +260,7 @@ def create_app(
         from cutback.core.native_fixture import NATIVE_FIXTURE_CONTRACT
         from cutback.core.preparation import PREPARATION_CONTRACT
         from cutback.core.retrieval import CONTRACT_SHA256 as RETRIEVAL_RECIPE_SHA256
+        from cutback.core.workload_portfolio import WORKLOAD_PORTFOLIO_CONTRACT
         from cutback.evals.retrieval_joint import JOINT_RETRIEVAL_CONTRACT
 
         return {
@@ -270,6 +271,7 @@ def create_app(
             "native_fixture_contract": NATIVE_FIXTURE_CONTRACT,
             "exact_cache_contract": EXACT_CACHE_CONTRACT,
             "cache_workload_assessment_contract": CACHE_WORKLOAD_CONTRACT,
+            "workload_portfolio_contract": WORKLOAD_PORTFOLIO_CONTRACT,
             "joint_retrieval_contract": JOINT_RETRIEVAL_CONTRACT,
             "retrieval_recipe_sha256": RETRIEVAL_RECIPE_SHA256,
         }

@@ -28,6 +28,19 @@ production hit rate or realized saving. Missing, expired, repriced or changed
 evidence must abstain. Read installed `docs/source-workload.md`; published dev5
 lacks these commands. Do not silently upgrade application SDK pins to enable them.
 
+When installed help supports workload-bound native portfolios, read
+`docs/workload-native-portfolios.md`. With the owner's explicit cache contract,
+permitted independently labeled examples and exact native budget, `workflow
+prepare --automatic --exact-cache-contract PRIVATE_FILE` refreshes canonical
+source-window eligibility and compares qualified model/output/cache hypotheses.
+Do not infer freshness, retention rights or operation costs. Inspect reduced
+candidate counts; examples and quality requirements remain fixed. Resume setup
+and confirmation with the same frozen identities. Stale census, changed prices,
+expired policy or source mismatch requires fresh evidence, never a forged local
+receipt. Confirm one candidate under a new exact approval and inspect total
+trial-family cost before source review. Window-repetition payback is an explicit
+native-component assumption, not complete task economics or customer savings.
+
 After committing a reviewed instrumentation change, inspect installed
 `workflow refresh-source-map --help`, refresh the ignored map for the actual
 running commit, and restart the observer. This command parses verified source

@@ -104,6 +104,12 @@ The additional [source-bound learned routing journey](source-routing.md) now con
 
 Choose search effort from the workload and expected break-even opportunity; abstain when evidence/volume/cost is unknown or benefit is too small. Adaptively select on validation, freeze a selected candidate, then separately confirm on untouched groups. Prepare application checks, exact diffs, affected-consumer tests and a reviewable branch/PR. Never deploy from the optimizer.
 
+The new [workload-bound native/cache portfolio](workload-native-portfolios.md)
+connects a canonical source window to automatic cache/model trial preparation,
+budget-fitting alternatives, independent confirmation and native-component trial
+cost disclosure. It is under qualification. Its repetition assumption does not
+supply future traffic, full task costs or unified routing/training selection.
+
 Add task outcome and change-observation records joining application release, verified result and allocated costs. Show failed-task spend, incomplete coverage, one-time optimization costs and later measured windows. Full cost per successful task remains unknown when its components are incomplete. Subsequent windows can recommend rollback or re-evaluation under an existing policy, not silently authorize new spend or traffic changes. Finite source-bound automatic observation is implemented with its accepted publication state in progress.md; [scope and operator walkthrough](automatic-outcome-observation.md). This does not complete all Release 6 or Release 7 requirements.
 
 **Acceptance:** cheap-but-worse candidate, search-cost payback failure, proposer/judge overhead, unknown tool prices, missing outcomes, source mutation, protected test reimport, cross-tenant artifacts, crash at each ledger boundary, reproducible application PR checks and later observed outcome linkage. Compare against a simple model downgrade and a qualified optimizer-only baseline before complexity is justified.

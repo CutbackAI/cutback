@@ -190,6 +190,7 @@ def resume(root, control):
             "retrieval",
             "retrieval_corpus_authorized",
             "joint_retrieval",
+            "workload_portfolio_binding",
         }
         if set(options) - allowed:
             raise ValueError("PREPARATION_OPTIONS_INVALID")

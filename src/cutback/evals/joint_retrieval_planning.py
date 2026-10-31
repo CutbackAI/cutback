@@ -152,7 +152,7 @@ def regression_gate(report, *, expected_plan_hash, candidate=None, sample_only=F
         reasons.append("independent_test_lineage_unknown_or_exposed")
     if report.get("joint_model_retrieval", {}).get("version") != "cutback.joint-model-retrieval.v1":
         reasons.append("joint_retrieval_execution_contract_required")
-    if report.get("native_fixture") and not sample_only:
+    if (report.get("native_fixture") or report.get("synthetic_execution")) and not sample_only:
         reasons.append("fixture_transport_cannot_verify_real_model_quality")
     rows = [
         row

@@ -13,9 +13,22 @@ from cutback.scanner import scan
 
 
 class SourceApplication:
-    def __init__(self):
-        self.temporary = tempfile.TemporaryDirectory(prefix="cutback-owned-source-workload-")
-        self.root = Path(self.temporary.name).resolve(strict=True)
+    def __init__(self, *, root=None, with_cases=False):
+        self.temporary = None
+        if root is None:
+            self.temporary = tempfile.TemporaryDirectory(prefix="cutback-owned-source-workload-")
+            self.root = Path(self.temporary.name).resolve(strict=True)
+        else:
+            from cutback.core.workspace import prepare_private_output
+
+            root = Path(root).absolute()
+            prepare_private_output(root)
+            try:
+                root.mkdir(mode=0o700)
+            except FileExistsError:
+                raise ValueError("OWNED_SOURCE_DESTINATION_MUST_BE_NEW") from None
+            prepare_private_output(root / "app.py")
+            self.root = root.resolve(strict=True)
         self.module = None
         try:
             self.original = (
@@ -23,6 +36,20 @@ class SourceApplication:
             ).read_bytes()
             (self.root / "app.py").write_bytes(self.original)
             (self.root / ".gitignore").write_text("__pycache__/\n", encoding="utf-8")
+            if with_cases:
+                cases = [
+                    {
+                        "id": f"{chr(65 + group)}-{repeat}",
+                        "input": f"Owned billing topic {chr(65 + group)}",
+                        "gold": "billing",
+                        "group": f"family-{chr(65 + group)}",
+                    }
+                    for group in range(20)
+                    for repeat in range(10)
+                ]
+                (self.root / "cases.jsonl").write_text(
+                    "".join(json.dumps(case) + "\n" for case in cases), encoding="utf-8"
+                )
             git_env = {
                 key: value for key, value in os.environ.items() if not key.startswith("GIT_")
             }
@@ -34,7 +61,7 @@ class SourceApplication:
             )
             for arguments in (
                 ("init", "--quiet"),
-                ("add", "app.py", ".gitignore"),
+                ("add", "app.py", ".gitignore", *(["cases.jsonl"] if with_cases else [])),
                 (
                     "-c",
                     "user.name=Owned Synthetic Example",
@@ -85,4 +112,5 @@ class SourceApplication:
         return (self.root / "app.py").read_bytes() == self.original
 
     def close(self):
-        self.temporary.cleanup()
+        if self.temporary is not None:
+            self.temporary.cleanup()

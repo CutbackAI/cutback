@@ -397,6 +397,9 @@ def run_one(
 
             def authorize_execution(session):
                 require_payloads_enabled()
+                from cutback.server.workload_portfolio import validate_binding as validate_workload
+
+                validate_workload(session, project_id, plan)
                 if plan.native_fixture is not None:
                     from cutback.server.evaluation_api import active_policy
 
@@ -608,6 +611,9 @@ def run_one(
                             statistical_gate_passed=False,
                             decision_reason="durable_call_accounting_incomplete",
                         )
+            from cutback.server.workload_portfolio import economic_receipt
+
+            results.update(economic_receipt(session, project_id, plan, results))
             if (
                 record.status != "RUNNING"
                 or job.status != "RUNNING"

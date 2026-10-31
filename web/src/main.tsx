@@ -12,6 +12,7 @@ import {
 } from "./forms";
 import { Teams, Billing, Schedules, Rollouts } from "./management";
 import { explain } from "./ui";
+import { gatewayModeledUSD as exactModeledUSD } from "./gateway-money";
 import { Training } from "./training";
 import { SSO, handleSSOReturn } from "./sso";
 import "./style.css";
@@ -2013,6 +2014,60 @@ function RunEvidence({ detail }: { detail: RecordData }) {
           Local fixture responses and usage. This run tests the source workflow;
           it does not verify real model quality, invoice charges or customer
           savings. A live provider worker cannot execute this frozen plan.
+        </p>
+      )}
+      {result.workload_portfolio && (
+        <section aria-label="Workload-guided trial economics">
+          <h3>Workload-guided trial economics</h3>
+          <p>
+            The source window qualified a cache hypothesis alongside native
+            model alternatives. This is an independently budgeted trial, not a
+            production saving.
+          </p>
+          <dl>
+            <dt>Validation and confirmation known subtotal</dt>
+            <dd>
+              {exactModeledUSD(
+                result.workload_portfolio.trial_family_known_spend_subtotal_usd,
+              )}
+            </dd>
+            <dt>Trial family billing</dt>
+            <dd>
+              {result.workload_portfolio.trial_family_billing_complete
+                ? "Complete modeled call accounting"
+                : "Incomplete; payback unknown"}
+            </dd>
+            <dt>
+              Qualified cache hypothesis opportunity per retained source window
+            </dt>
+            <dd>
+              {exactModeledUSD(
+                result.workload_portfolio.modeled_native_window_opportunity_usd,
+              )}
+            </dd>
+            <dt>Identical cache-hypothesis windows to cover this trial</dt>
+            <dd>
+              {result.workload_portfolio
+                .modeled_source_windows_to_cover_trial ?? "Unknown"}
+            </dd>
+          </dl>
+          <p>
+            This assumes the same retained native workload repeats. Review
+            effort, deployment, full task costs, future traffic and realized
+            savings remain unknown. Rejected trials are included in the
+            subtotal. This opportunity belongs only to the qualified cache
+            hypothesis; a model-only confirmation has unknown payback here.
+          </p>
+        </section>
+      )}
+      {result.synthetic_execution && !result.native_fixture && (
+        <p
+          role="status"
+          className="notice"
+          aria-label="Synthetic execution disclosure"
+        >
+          The operator marked this transport as synthetic. Model quality,
+          invoice charges and customer savings are not verified by this run.
         </p>
       )}
       {result.criteria_generation_cost && (
