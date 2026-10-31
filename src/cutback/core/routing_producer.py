@@ -52,8 +52,13 @@ def classify(client, text):
     except (OSError, ValueError, RecursionError):
         raise ValueError("ROUTING_SOURCE_CONFIGURATION_UNAVAILABLE_OR_INVALID") from None
     target = route_target(policy, text)
-    if (target.provider != "openai" or target.request_contract or target.native_contract
-            or target.prompt_cache or target.agent_turn):
+    if (
+        target.provider != "openai"
+        or target.request_contract
+        or target.native_contract
+        or target.prompt_cache
+        or target.agent_turn
+    ):
         raise ValueError("ROUTING_SOURCE_TARGET_CONTRACT_UNSUPPORTED")
     qualified_native_model(target)
     return client.responses.create(
