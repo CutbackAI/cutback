@@ -1,5 +1,10 @@
 # Request reuse: measure before selecting a cache
 
+The source checkout also connects this evidence to a clean committed application:
+[automatic source-matched workload assessment](source-workload.md), with an
+[independent sample](../examples/source-workload/README.md). The agent finds the
+matching analysis and preserves unknown economics and authority.
+
 Status: unreleased source implementation; acceptance is recorded in
 [progress](progress.md). This extends native exact caching with an explicitly
 authorized, encrypted request profile. It does not complete unified selection

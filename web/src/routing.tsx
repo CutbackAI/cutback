@@ -108,6 +108,7 @@ export function LearnedRouting({
   const [report, setReport] = useState<Data | null>(null);
   const [provider, setProvider] = useState("openai");
   const [sourceInspection, setSourceInspection] = useState<Data | null>(null);
+  const [sourceReadBusy, setSourceReadBusy] = useState(false);
   const [sourceProposal, setSourceProposal] = useState<Data | null>(null);
   const sourceRead = useRef(0);
   const trainingIdentity = useRef<Identity | null>(null),
@@ -164,6 +165,7 @@ export function LearnedRouting({
     setExecution(null);
     setReport(null);
     setSourceInspection(null);
+    setSourceReadBusy(false);
     setSourceProposal(null);
     sourceRead.current += 1;
     trainingIdentity.current =
@@ -278,6 +280,7 @@ export function LearnedRouting({
                 const file = event.target.files?.[0];
                 event.target.value = "";
                 setSourceInspection(null);
+                setSourceReadBusy(!!file);
                 clearPlan();
                 if (!file) return;
                 try {
@@ -298,6 +301,8 @@ export function LearnedRouting({
                     setError(
                       "Use the bounded JSON output from cutback routing inspect-source. File contents omitted.",
                     );
+                } finally {
+                  if (revision === sourceRead.current) setSourceReadBusy(false);
                 }
               }}
             />
@@ -311,6 +316,9 @@ export function LearnedRouting({
             . The baseline instruction and bounds stay fixed. The file is held
             in memory and sent only when you freeze a plan.
           </p>
+          {sourceReadBusy && (
+            <p role="status">Reading application inspection…</p>
+          )}
           {sourceInspection && (
             <div role="status">
               <p>
@@ -334,6 +342,7 @@ export function LearnedRouting({
               sourceInspection?.source?.source_tree_hash || "unbound-routing"
             }
             title="Prepare routing training"
+            disabled={sourceReadBusy}
             submit="Freeze training plan"
             description="Use permitted labeled text cases. Preparing makes no provider request."
             onSubmit={async (data) => {

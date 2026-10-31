@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { components } from "./api.generated";
+import { CacheWorkloadCheck } from "./cache-workload";
 import {
   type API,
   type Data,
@@ -214,6 +215,15 @@ export function RequestProfiles({
                 assumes zero cache transport latency. Sampled or missing
                 profiles cannot establish a traffic census.
               </p>
+              {row.state === "COMPLETED" && (
+                <CacheWorkloadCheck
+                  api={api}
+                  project={project}
+                  analysis={row.id}
+                  environment={row.environment}
+                  workflow={row.workflow}
+                />
+              )}
             </>
           )}
           {["QUEUED", "RUNNING"].includes(row.state) && (

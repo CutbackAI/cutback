@@ -1328,6 +1328,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/native-request-profiles/analyses/{analysis_id}/cache-trial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Assess */
+        post: operations["assess_v1_projects__project_id__native_request_profiles_analyses__analysis_id__cache_trial_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/campaign-templates": {
         parameters: {
             query?: never;
@@ -4537,6 +4554,116 @@ export interface components {
              * @default 10
              */
             minimum_positive_groups: number;
+        };
+        /** CacheWorkloadAssessment */
+        CacheWorkloadAssessment: {
+            /**
+             * Version
+             * @constant
+             */
+            version: "cache-workload-assessment-v1";
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Environment */
+            environment: string;
+            /** Workflow */
+            workflow: string;
+            /**
+             * Analysis Id
+             * Format: uuid
+             */
+            analysis_id: string;
+            /** Analysis Sha256 */
+            analysis_sha256: string;
+            /** Source Binding Sha256 */
+            source_binding_sha256: string;
+            /** Baseline Model */
+            baseline_model: string;
+            /** Cache Execution Sha256 */
+            cache_execution_sha256: string;
+            /**
+             * Scope
+             * @constant
+             */
+            scope: "retained_client_reported_source_window";
+            /**
+             * Source Lineage
+             * @constant
+             */
+            source_lineage: "client_reported_commit_and_callsite_not_independent_attestation";
+            /** Valid Until */
+            valid_until: string;
+            /** Metadata As Of */
+            metadata_as_of: string;
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "prepare_separate_cache_trial" | "abstain";
+            /** Reasons */
+            reasons: string[];
+            /** Profiled Attempts */
+            profiled_attempts: number | null;
+            /** Modeled Potential Hits */
+            modeled_potential_hits: number | null;
+            /** Provider Modeled Window Cost Usd */
+            provider_modeled_window_cost_usd: string | null;
+            /** Modeled Avoided Provider Cost Usd */
+            modeled_avoided_provider_cost_usd: string | null;
+            /** Declared Cache Operations */
+            declared_cache_operations: number | null;
+            /** Declared Cache Operation Upper Cost Usd */
+            declared_cache_operation_upper_cost_usd: string | null;
+            /** Modeled Net Native Window Opportunity Usd */
+            modeled_net_native_window_opportunity_usd: string | null;
+            /** Production Hit Rate */
+            production_hit_rate: null;
+            /** Whole Task Cost Usd */
+            whole_task_cost_usd: null;
+            /** Realized Savings Usd */
+            realized_savings_usd: null;
+            /**
+             * Quality Evidence
+             * @constant
+             */
+            quality_evidence: "separate_independent_trial_required";
+            /**
+             * Cache Delivery Benchmarked
+             * @constant
+             */
+            cache_delivery_benchmarked: false;
+            /**
+             * Paid Calls Authorized
+             * @constant
+             */
+            paid_calls_authorized: false;
+            /**
+             * Source Change Authorized
+             * @constant
+             */
+            source_change_authorized: false;
+            /**
+             * Provider Calls
+             * @constant
+             */
+            provider_calls: 0;
+            /**
+             * Encrypted Storage Reads
+             * @constant
+             */
+            encrypted_storage_reads: 0;
+            /** Assessment Sha256 */
+            assessment_sha256: string;
+        };
+        /** CacheWorkloadInput */
+        CacheWorkloadInput: {
+            source_binding: components["schemas"]["SourceBinding"];
+            /** Baseline Model */
+            baseline_model: string;
+            cache_execution: components["schemas"]["ExactCacheExecution-Input"];
         };
         /** CallPage */
         CallPage: {
@@ -15239,6 +15366,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    assess_v1_projects__project_id__native_request_profiles_analyses__analysis_id__cache_trial_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                analysis_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CacheWorkloadInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CacheWorkloadAssessment"];
                 };
             };
             /** @description Validation Error */

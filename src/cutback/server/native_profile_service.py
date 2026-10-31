@@ -252,6 +252,20 @@ def run_native_profile_one(sessions, store, *, only_analysis_id=None, clock=time
                 sample_rate=policy.sample_rate,
                 truncated=truncated,
             )
+            from cutback.server.native_profile_metadata import metadata_digest, retained_metadata
+
+            metadata = (
+                retained_metadata(session, row)
+                if metadata_count is not None and metadata_count <= 1000
+                else []
+            )
+            stable = metadata_count is not None and len(metadata) == metadata_count <= 1000
+            result["metadata_evidence_sha256"] = metadata_digest(metadata) if stable else None
+            if not stable:
+                result["abstention_reasons"].append("METADATA_SNAPSHOT_INCOMPLETE_OR_CHANGED")
+                result["cache_trial_eligible"] = False
+            if content_expires_at is not None:
+                row.expires_at = min(row.expires_at, content_expires_at)
             row.summary, row.state = result, "COMPLETED"
             row.completed_at, row.lease_until = datetime.now(UTC), None
             session.add(

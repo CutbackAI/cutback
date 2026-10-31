@@ -21,6 +21,11 @@ def main():
     parser.add_argument("--endpoint", default="http://127.0.0.1:8080")
     parser.add_argument("--keep-project", action="store_true")
     parser.add_argument("--project-slug", help="Unique name for the new synthetic project")
+    parser.add_argument(
+        "--source-workload",
+        action="store_true",
+        help="Also bind a committed independent application and assess its workload",
+    )
     args = parser.parse_args()
     endpoint = args.endpoint.rstrip("/")
     url = urlsplit(endpoint)
@@ -37,6 +42,7 @@ def main():
         )
     project = None
     observer = None
+    source_app = None
     previous = {
         name: os.environ.get(name)
         for name in (
@@ -100,6 +106,11 @@ def main():
             return response.json()
 
         try:
+            if args.source_workload:
+                from source_application import SourceApplication
+
+                source_app = SourceApplication()
+            workflow_id = source_app.workflow if source_app else "classify"
             project = request(
                 "POST",
                 "/v1/projects",
@@ -117,7 +128,7 @@ def main():
                     "approval_ref": "synthetic-request-reuse-demo",
                     "rights_basis": "synthetic",
                     "environments": ["staging"],
-                    "workflows": ["classify"],
+                    "workflows": [workflow_id],
                     "allowed_providers": ["openai"],
                     "sample_rate": 1,
                     "max_samples": 16,
@@ -145,6 +156,7 @@ def main():
                 capture_content=True,
                 capture_policy_id=policy["id"],
                 timeout_seconds=2,
+                **({"source_map": str(source_app.source_map)} if source_app else {}),
             )
             with (
                 OpenAI(
@@ -154,15 +166,19 @@ def main():
                         transport=httpx.MockTransport(provider), trust_env=False
                     ),
                 ) as client,
-                workflow("classify"),
+                workflow(workflow_id),
             ):
                 for index in range(8):
-                    result = client.responses.create(
-                        model="gpt-4.1",
-                        input="Owned synthetic billing task "
-                        + ("repeat" if index < 4 else str(index)),
-                        store=False,
-                        max_output_tokens=64,
+                    text = "Owned synthetic billing task " + ("repeat" if index < 4 else str(index))
+                    result = (
+                        source_app.call(client, text)
+                        if source_app
+                        else client.responses.create(
+                            model="gpt-4.1",
+                            input=text,
+                            store=False,
+                            max_output_tokens=64,
+                        )
                     )
                     assert result.output_text == "billing"
             if not observer.flush(5) or observer.health().get("native_profile_exported") != 8:
@@ -171,7 +187,7 @@ def main():
                 "request_id": str(uuid4()),
                 "policy_id": policy["id"],
                 "environment": "staging",
-                "workflow": "classify",
+                "workflow": workflow_id,
                 "purpose": "synthetic-demo",
                 "window_start": start.isoformat(),
                 "window_end": datetime.now(UTC).isoformat(),
@@ -190,6 +206,26 @@ def main():
             assert len(calls) == 8 and summary["profiled_attempts"] == 8
             assert summary["modeled_potential_hits"] == 3
             assert summary["cache_trial_eligible"] is True
+            assessment = None
+            if source_app:
+                from cutback.agent_cache_workload import assess
+                from cutback.agent_control import Control
+
+                assessment = assess(
+                    source_app.root,
+                    Control(endpoint, token, client=control),
+                    project,
+                    cache_execution={
+                        "freshness_ref": "owned-immutable-demo",
+                        "ttl_seconds": 300,
+                        "content_retention_authorized": True,
+                        "immutable_or_safely_invalidated": True,
+                        "operation_cost_upper_usd": "0.000000000001",
+                        "operation_cost_basis_ref": "owned-fixture-bound",
+                    },
+                )
+                assert assessment["decision"] == "prepare_separate_cache_trial"
+                assert source_app.unchanged()
             print(
                 json.dumps(
                     {
@@ -198,6 +234,11 @@ def main():
                         "paid_provider_calls": 0,
                         "analysis": receipt,
                         "project_retained": args.keep_project,
+                        **(
+                            {"source_workload": assessment, "application_source_changed": False}
+                            if source_app
+                            else {}
+                        ),
                     },
                     default=str,
                 )
@@ -205,6 +246,8 @@ def main():
         finally:
             if observer:
                 observer.close()
+            if source_app:
+                source_app.close()
             for name, value in previous.items():
                 if value is None:
                     os.environ.pop(name, None)

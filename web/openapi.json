@@ -4619,6 +4619,66 @@
         }
       }
     },
+    "/v1/projects/{project_id}/native-request-profiles/analyses/{analysis_id}/cache-trial": {
+      "post": {
+        "summary": "Assess",
+        "operationId": "assess_v1_projects__project_id__native_request_profiles_analyses__analysis_id__cache_trial_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CacheWorkloadInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CacheWorkloadAssessment"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{project_id}/campaign-templates": {
       "get": {
         "summary": "Templates",
@@ -16872,6 +16932,290 @@
           "minimum_useful_hit_group_ratio"
         ],
         "title": "CacheQualificationSpec"
+      },
+      "CacheWorkloadAssessment": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cache-workload-assessment-v1",
+            "title": "Version"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "environment": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Environment"
+          },
+          "workflow": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Workflow"
+          },
+          "analysis_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Analysis Id"
+          },
+          "analysis_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Analysis Sha256"
+          },
+          "source_binding_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Source Binding Sha256"
+          },
+          "baseline_model": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Baseline Model"
+          },
+          "cache_execution_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Cache Execution Sha256"
+          },
+          "scope": {
+            "type": "string",
+            "const": "retained_client_reported_source_window",
+            "title": "Scope"
+          },
+          "source_lineage": {
+            "type": "string",
+            "const": "client_reported_commit_and_callsite_not_independent_attestation",
+            "title": "Source Lineage"
+          },
+          "valid_until": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Valid Until"
+          },
+          "metadata_as_of": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Metadata As Of"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "prepare_separate_cache_trial",
+              "abstain"
+            ],
+            "title": "Decision"
+          },
+          "reasons": {
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+            },
+            "type": "array",
+            "maxItems": 16,
+            "title": "Reasons"
+          },
+          "profiled_attempts": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profiled Attempts"
+          },
+          "modeled_potential_hits": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modeled Potential Hits"
+          },
+          "provider_modeled_window_cost_usd": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Modeled Window Cost Usd"
+          },
+          "modeled_avoided_provider_cost_usd": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modeled Avoided Provider Cost Usd"
+          },
+          "declared_cache_operations": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 2000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Declared Cache Operations"
+          },
+          "declared_cache_operation_upper_cost_usd": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Declared Cache Operation Upper Cost Usd"
+          },
+          "modeled_net_native_window_opportunity_usd": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modeled Net Native Window Opportunity Usd"
+          },
+          "production_hit_rate": {
+            "type": "null",
+            "title": "Production Hit Rate"
+          },
+          "whole_task_cost_usd": {
+            "type": "null",
+            "title": "Whole Task Cost Usd"
+          },
+          "realized_savings_usd": {
+            "type": "null",
+            "title": "Realized Savings Usd"
+          },
+          "quality_evidence": {
+            "type": "string",
+            "const": "separate_independent_trial_required",
+            "title": "Quality Evidence"
+          },
+          "cache_delivery_benchmarked": {
+            "type": "boolean",
+            "const": false,
+            "title": "Cache Delivery Benchmarked"
+          },
+          "paid_calls_authorized": {
+            "type": "boolean",
+            "const": false,
+            "title": "Paid Calls Authorized"
+          },
+          "source_change_authorized": {
+            "type": "boolean",
+            "const": false,
+            "title": "Source Change Authorized"
+          },
+          "provider_calls": {
+            "type": "integer",
+            "const": 0,
+            "title": "Provider Calls"
+          },
+          "encrypted_storage_reads": {
+            "type": "integer",
+            "const": 0,
+            "title": "Encrypted Storage Reads"
+          },
+          "assessment_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Assessment Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "version",
+          "project_id",
+          "environment",
+          "workflow",
+          "analysis_id",
+          "analysis_sha256",
+          "source_binding_sha256",
+          "baseline_model",
+          "cache_execution_sha256",
+          "scope",
+          "source_lineage",
+          "valid_until",
+          "metadata_as_of",
+          "decision",
+          "reasons",
+          "profiled_attempts",
+          "modeled_potential_hits",
+          "provider_modeled_window_cost_usd",
+          "modeled_avoided_provider_cost_usd",
+          "declared_cache_operations",
+          "declared_cache_operation_upper_cost_usd",
+          "modeled_net_native_window_opportunity_usd",
+          "production_hit_rate",
+          "whole_task_cost_usd",
+          "realized_savings_usd",
+          "quality_evidence",
+          "cache_delivery_benchmarked",
+          "paid_calls_authorized",
+          "source_change_authorized",
+          "provider_calls",
+          "encrypted_storage_reads",
+          "assessment_sha256"
+        ],
+        "title": "CacheWorkloadAssessment"
+      },
+      "CacheWorkloadInput": {
+        "properties": {
+          "source_binding": {
+            "$ref": "#/components/schemas/SourceBinding"
+          },
+          "baseline_model": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Baseline Model"
+          },
+          "cache_execution": {
+            "$ref": "#/components/schemas/ExactCacheExecution-Input"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_binding",
+          "baseline_model",
+          "cache_execution"
+        ],
+        "title": "CacheWorkloadInput"
       },
       "CallPage": {
         "properties": {

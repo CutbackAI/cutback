@@ -433,6 +433,7 @@ from cutback.server.semantic_upload_db import SemanticDatasetUpload
 from cutback.server.tool_db import ToolSessionRecord,ToolOperationRecord
 from cutback.server.native_profile_db import NativeProfileAnalysis
 from cutback.core.native_request_profile import NativeRequestProfileSnapshot
+from cutback.server.native_profile_metadata import metadata_digest,retained_metadata
 from cutback.server.semantic_cache_service import read_catalog
 from cutback.core.semantic_cache import SemanticCacheIndex
 from cutback.evals.datasets import digest
@@ -467,6 +468,11 @@ with sessions() as session:
  assert analyses[0].summary["profiled_attempts"]==8
  assert analyses[0].summary["modeled_potential_hits"]==3
  assert analyses[0].summary["realized_savings_usd"] is None
+ restored_metadata=metadata_digest(retained_metadata(session,analyses[0],as_of=False))
+ assert restored_metadata==analyses[0].summary["metadata_evidence_sha256"]
+ profile_rows=[row for row in rows
+               if row.project_id==analyses[0].project_id and row.native_profile_ref]
+ assert analyses[0].expires_at<=min(row.expires_at for row in profile_rows)
  caches=session.scalars(select(CacheEntry)).all()
  assert caches
  for row in caches:
