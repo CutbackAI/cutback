@@ -1,5 +1,13 @@
 # Implementation progress
 
+The response-model/billing candidate's broader source regression passed **1,159
+tests / 26 skips in 580.16 seconds**. Its first full installed default attempt
+failed during collection because a reactive integration fixture depended on a
+unit module's import order. Shared reactive fixtures now live in ordinary test
+support, including the native-episode preparation path; application bytes are
+unchanged. The failed attempt is not passing installed acceptance. Corrected
+full installed and hosted gates remain pending.
+
 Observed response-model provenance is under source qualification. Native target,
 simulator and batch receipts retain bounded SDK-reported model identifiers
 separately from requested configuration; missing historical metadata stays

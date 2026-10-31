@@ -11,8 +11,8 @@ from alembic import command
 from alembic.config import Config
 from sqlalchemy import select
 from support_native_agent import native_executor, response_body
+from support_reactive_users import native_text
 from test_native_episodes import prepared_episode
-from test_user_simulation import native_text
 
 from cutback.evals.experiments import upper_cost
 from cutback.server.db import (

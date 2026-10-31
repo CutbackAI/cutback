@@ -1,45 +1,18 @@
 import json
 from decimal import Decimal
-from uuid import uuid4
 
 import httpx
 import httpx2
 import pytest
 from support_native_agent import native_executor, response_body
+from support_reactive_users import native_text, reactive_plan
 from test_episode_runner import episode_plan
 
 from cutback.core.episodes import EpisodeObservation, EpisodeScenario
 from cutback.core.user_simulation import UserSimulationResponse
 from cutback.evals.datasets import Case
 from cutback.evals.episode_runner import execute_episode
-from cutback.evals.experiments import BudgetLedger, ExperimentPlan, ModelSpec, plan_summary, run
-from cutback.evals.user_simulation import user_simulation_model
-
-
-def reactive_plan(**changes):
-    raw = episode_plan().model_dump(mode="json")
-    raw.update(
-        evaluator_version="deterministic-v17",
-        content_nonce=str(uuid4()),
-        episode_execution={
-            "version": "native-fixture-reactive-user-v1",
-            "max_turns": 3,
-            "user_simulation": {
-                "model": user_simulation_model(
-                    ModelSpec(
-                        key="simulated_user",
-                        provider="openai",
-                        model="gpt-4.1-mini",
-                        max_input_tokens=32768,
-                    )
-                ).model_dump(mode="json"),
-                "persona": "skeptical",
-                "max_turns": 1,
-            },
-        },
-    )
-    raw.update(changes)
-    return ExperimentPlan.model_validate(raw)
+from cutback.evals.experiments import BudgetLedger, ExperimentPlan, plan_summary, run
 
 
 def reactive_case():
@@ -53,16 +26,6 @@ def reactive_case():
             assertions={"accepted_answers": ["Urgent"]},
         ),
     ).model_dump(mode="json")
-
-
-def native_text(text, *, usage=True, complete=True):
-    value = response_body("responses.create")
-    value["output"][0]["content"][0]["text"] = text
-    if not usage:
-        value.pop("usage", None)
-    if not complete:
-        value["status"] = "incomplete"
-    return httpx.Response(200, json=value)
 
 
 @pytest.mark.parametrize(

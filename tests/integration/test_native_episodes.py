@@ -92,7 +92,7 @@ def prepared_episode(
 
         spec = with_semantic_judge(spec)
     if reactive:
-        from test_user_simulation import reactive_plan
+        from support_reactive_users import reactive_plan
 
         raw = reactive_plan().model_dump(mode="json")
         raw.update(

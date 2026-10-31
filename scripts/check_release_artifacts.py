@@ -306,6 +306,7 @@ def check(directory: Path):
             "src/cutback/core/model_identity.py",
             "tests/unit/test_model_identity.py",
             "tests/integration/test_response_model_evidence.py",
+            "tests/support_reactive_users.py",
             "tests/integration/test_reactive_users.py",
             "tests/end_to_end/test_reactive_users_pipeline.py",
         ):
