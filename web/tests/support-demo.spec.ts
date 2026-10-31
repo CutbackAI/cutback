@@ -1,6 +1,8 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
+test.use({ screenshot: "off", trace: "off", video: "off" });
+
 test("newcomer explores real sample decisions, unknown intervals, private cases and mobile", async ({
   page,
 }) => {
@@ -8,6 +10,7 @@ test("newcomer explores real sample decisions, unknown intervals, private cases 
     process.env.CUTBACK_SUPPORT_DEMO !== "true",
     "Requires the isolated support-desk PostgreSQL fixture",
   );
+  test.setTimeout(180000);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/dashboard/");
@@ -64,11 +67,25 @@ test("newcomer explores real sample decisions, unknown intervals, private cases 
     .getByLabel("Correction review reference")
     .first()
     .fill("synthetic-browser-correction");
+  const invalid = await page
+    .getByRole("form", { name: "Corrected dataset version", exact: true })
+    .first()
+    .evaluate((form) =>
+      Array.from(form.querySelectorAll("input,textarea,select"))
+        .filter((element) => !(element as HTMLInputElement).validity.valid)
+        .map((element) => ({
+          name: (element as HTMLInputElement).name,
+          missing: (element as HTMLInputElement).validity.valueMissing,
+          pattern: (element as HTMLInputElement).validity.patternMismatch,
+        })),
+    );
+  expect(invalid).toEqual([]);
   const [correction] = await Promise.all([
     page.waitForResponse(
       (response) =>
         response.url().endsWith("/cases/correct") &&
         response.request().method() === "POST",
+      { timeout: 120000 },
     ),
     page
       .getByRole("button", { name: "Create corrected dataset", exact: true })

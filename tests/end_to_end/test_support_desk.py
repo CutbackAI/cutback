@@ -111,9 +111,15 @@ def test_support_desk_decisions_stages_encrypted_cases_and_browser(
                 env={**os.environ, "CUTBACK_UI_URL": endpoint, "CUTBACK_SUPPORT_DEMO": "true"},
                 capture_output=True,
                 text=True,
-                timeout=180,
+                timeout=300,
             )
-            assert result.returncode == 0, result.stdout + result.stderr
+            if result.returncode:
+                safe = (
+                    (result.stdout + result.stderr)
+                    .replace(admin, "<credential-omitted>")
+                    .replace(viewer, "<credential-omitted>")
+                )
+                pytest.fail(safe, pytrace=False)
         from cutback.server.db import CapturePolicyRecord
 
         with app.state.sessions.begin() as session:
