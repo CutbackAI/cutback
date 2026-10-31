@@ -570,14 +570,6 @@ def install_evaluation(app, sessions, authorize, scope):
                     raise HTTPException(403, "CAPTURE_SCOPE_DENIED")
                 if body.sample_id.int / (2**128) >= policy.sample_rate:
                     raise HTTPException(403, "SAMPLE_OUTSIDE_APPROVED_RATE")
-                existing = session.get(PayloadSample, body.sample_id)
-                if existing:
-                    if existing.project_id != project:
-                        raise HTTPException(403, "SAMPLE_SCOPE_DENIED")
-                    return {"status": "duplicate", "sample_id": str(body.sample_id)}
-                count = policy_object_count(session, body.policy_id)
-                if count >= policy.max_samples:
-                    raise HTTPException(429, "CAPTURE_SAMPLE_QUOTA_EXCEEDED")
                 case = redact(
                     {
                         "id": str(body.sample_id),
@@ -589,6 +581,40 @@ def install_evaluation(app, sessions, authorize, scope):
                     },
                     policy.never_capture_fields,
                 )
+                existing = session.get(PayloadSample, body.sample_id)
+                if existing:
+                    if existing.project_id != project:
+                        raise HTTPException(403, "SAMPLE_SCOPE_DENIED")
+                    if (
+                        existing.policy_id != body.policy_id
+                        or existing.content_hash != digest(case)
+                        or any(
+                            existing.metadata_safe.get(name) != value
+                            for name, value in {
+                                "environment": body.environment,
+                                "workflow": body.workflow,
+                                "event_id": str(body.event_id),
+                            }.items()
+                        )
+                        or existing.metadata_safe.get("provider", body.provider) != body.provider
+                    ):
+                        raise HTTPException(409, "SAMPLE_ID_CONTENT_OR_BINDING_CONFLICT")
+                    if existing.expires_at <= datetime.now(UTC) or existing.metadata_safe.get(
+                        "deleted"
+                    ):
+                        raise HTTPException(409, "SAMPLE_EXPIRED_REQUIRES_NEW_AUTHORIZED_CAPTURE")
+                    try:
+                        restored = json.loads(store.get(project, existing.object_ref))
+                        if digest(restored) != existing.content_hash:
+                            raise ValueError("SAMPLE_CONTENT_INTEGRITY_FAILURE")
+                    except Exception:
+                        raise HTTPException(
+                            409, "SAMPLE_COMMITTED_CONTENT_REQUIRES_RECONCILIATION"
+                        ) from None
+                    return {"status": "duplicate", "sample_id": str(body.sample_id)}
+                count = policy_object_count(session, body.policy_id)
+                if count >= policy.max_samples:
+                    raise HTTPException(429, "CAPTURE_SAMPLE_QUOTA_EXCEEDED")
                 blob = json.dumps(case).encode()
                 if len(blob) > policy.max_payload_bytes:
                     raise HTTPException(413, "SAMPLE_EXCEEDS_POLICY_BYTES")
@@ -600,11 +626,15 @@ def install_evaluation(app, sessions, authorize, scope):
                         policy_id=body.policy_id,
                         object_ref=ref,
                         content_hash=digest(case),
-                        expires_at=datetime.now(UTC) + timedelta(days=policy.retention_days),
+                        expires_at=min(
+                            policy.expires_at,
+                            datetime.now(UTC) + timedelta(days=policy.retention_days),
+                        ),
                         metadata_safe={
                             "environment": body.environment,
                             "workflow": body.workflow,
                             "event_id": str(body.event_id),
+                            "provider": body.provider,
                             "ordinal": 0,
                             "redaction": policy.redaction_version,
                         },
@@ -613,7 +643,9 @@ def install_evaluation(app, sessions, authorize, scope):
             return {"status": "stored", "sample_id": str(body.sample_id)}
         except BaseException:
             if ref:
-                store.delete(project, ref)
+                from cutback.server.campaign_content import discard_unreferenced
+
+                discard_unreferenced(sessions, store, project, [ref], policy_id=body.policy_id)
             raise
 
     @app.get("/v1/projects/{project_id}/experiments/plans")

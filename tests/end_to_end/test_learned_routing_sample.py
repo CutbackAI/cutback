@@ -153,7 +153,55 @@ def test_authenticated_routing_authoring_mobile_accessibility_and_viewer_boundar
             if result.returncode:
                 (tmp_path / "routing-browser-diagnostics.txt").write_text(safe, encoding="utf-8")
             if result.returncode:
-                pytest.fail(json.dumps({"browser": safe, "storage": storage_errors}))
+                with app.state.sessions() as session:
+                    diagnostic_runs = session.scalars(
+                        select(ExperimentRunRecord).where(
+                            ExperimentRunRecord.project_id == UUID(tenant[0])
+                        )
+                    ).all()
+                    diagnostics = [
+                        {
+                            "status": row.status,
+                            "requests": row.requests_used,
+                            "billing_complete": row.results.get("billing_complete"),
+                            "recommendations": [
+                                {
+                                    key: recommendation.get(key)
+                                    for key in (
+                                        "quality_gate_passed",
+                                        "decision_reason",
+                                        "sample_n",
+                                        "cheaper_on_sample",
+                                        "failed_criteria",
+                                        "insufficient_criteria",
+                                    )
+                                }
+                                for recommendation in row.results.get("recommendations", [])
+                            ],
+                            "models": [
+                                {
+                                    key: model.get(key)
+                                    for key in (
+                                        "metric_min",
+                                        "metric_max",
+                                        "cost_complete",
+                                        "quality",
+                                    )
+                                }
+                                for model in row.results.get("models", [])
+                            ],
+                        }
+                        for row in diagnostic_runs
+                    ]
+                pytest.fail(
+                    json.dumps(
+                        {
+                            "browser": safe,
+                            "storage": storage_errors,
+                            "routing_evidence": diagnostics,
+                        }
+                    )
+                )
         assert worker["calls"] and not worker["errors"]
         with app.state.sessions() as session:
             plans = session.scalars(
