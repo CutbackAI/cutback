@@ -94,8 +94,11 @@ later completion cannot refresh an already live entry. Equality at a completion
 boundary is ambiguous and blocks automatic selection. Rotated keys or changed
 requests never join. SDK process clock domains stay separate; multiple independent
 clock domains block automatic selection rather than assuming synchronized clocks.
-Wall-clock timestamps scope the requested retained window; monotonic SDK timing
-drives completion and TTL within a domain. TTL is the approved prospective TTL.
+Wall-clock timestamps scope the requested retained window; the same
+`perf_counter_ns` source supplies native start and duration. The required
+`process_perf_counter_ns_v1` clock basis prevents interpreting incompatible
+snapshots as this timing contract. Completion and TTL stay within a domain.
+TTL is the approved prospective TTL.
 
 The denominator is retained canonical metadata attempts in the same project,
 environment, workflow and window. Missing profiles, sampling, truncation, unknown

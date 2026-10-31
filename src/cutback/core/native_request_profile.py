@@ -41,6 +41,7 @@ class NativeRequestProfileSnapshot(StrictModel):
     capture_policy_sha256: Digest
     profile_key_id: UUID4
     clock_domain_id: UUID4
+    clock_basis: Literal["process_perf_counter_ns_v1"]
     monotonic_started_ns: int = Field(strict=True, ge=0, le=9223372036854775807)
     request_hmac_sha256: Digest
     sdk_version: Literal["2.29.0", "3.35.1"]

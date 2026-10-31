@@ -47,6 +47,7 @@ def test_snapshot_has_no_arbitrary_content_or_credential_fields(field):
         "capture_policy_sha256": "a" * 64,
         "profile_key_id": str(uuid4()),
         "clock_domain_id": str(uuid4()),
+        "clock_basis": "process_perf_counter_ns_v1",
         "monotonic_started_ns": 1000,
         "request_hmac_sha256": "b" * 64,
         "sdk_version": "2.29.0",
@@ -68,6 +69,7 @@ def observation(at, *, duration=100, key="b", key_id=None, eligible=True, cost="
             "capture_policy_sha256": "a" * 64,
             "profile_key_id": key_id or PROFILE_KEY_ID,
             "clock_domain_id": PROFILE_CLOCK_DOMAIN_ID,
+            "clock_basis": "process_perf_counter_ns_v1",
             "monotonic_started_ns": int(Decimal(str(at)) * 1000000000),
             "request_hmac_sha256": key * 64,
             "sdk_version": "2.29.0",
@@ -200,3 +202,14 @@ def test_wall_clock_adjustment_does_not_change_monotonic_reuse_model():
     first, second = observation(0), observation(1)
     second["occurred_at"] -= timedelta(days=1)
     assert summary([first, second])["modeled_potential_hits"] == 1
+
+
+@pytest.mark.parametrize("basis", [None, "platform_monotonic_ns"])
+def test_incompatible_clock_snapshots_are_not_reinterpreted(basis):
+    value = observation(0)["profile"]
+    if basis is None:
+        value.pop("clock_basis")
+    else:
+        value["clock_basis"] = basis
+    with pytest.raises(ValidationError):
+        NativeRequestProfileSnapshot.model_validate(value)

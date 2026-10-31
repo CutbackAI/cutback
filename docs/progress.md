@@ -1,5 +1,19 @@
 # Implementation progress
 
+The first installed profiling candidate passed **182 checks on the default SDK**
+but its SDK3 lane failed after **128 passes** in the independent fast-call
+example. Python 3.11 on Windows supplies a 15.625ms `GetTickCount64` monotonic
+clock separately from the high-resolution duration clock. That mismatch made
+serial fixture calls appear concurrent. A portable negative regression first
+reproduced **zero potential hits instead of three**. Native starts and durations
+now share `perf_counter_ns`; encrypted snapshots require the explicit
+`process_perf_counter_ns_v1` basis and reject incompatible snapshots. The corrected
+default native/Anthropic/retry/profile/PG/example/browser scope passed **94 in
+57.85 seconds**, the final SDK3 scope passed **96 in 93.00 seconds**, and the
+legacy suite passed **21 in 5.76 seconds**. The full 32 timing/contract checks
+also passed on the default SDK. Final artifact qualification follows. The earlier wheel and Linux image are retained
+as superseded; their passing Linux recovery does not close this Windows bug.
+
 The final source regression for request profiling passed **1,357 / 27 explicit
 skips in 517.92 seconds**, including all collected units, real PostgreSQL,
 capture/object recovery, the independent eight-call SDK process and authenticated

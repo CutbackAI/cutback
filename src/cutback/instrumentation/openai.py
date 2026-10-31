@@ -114,7 +114,7 @@ class Observation:
     def __init__(self, owner, resource, surface, kwargs):
         self.owner = owner
         self.surface = surface
-        self.start = time.perf_counter()
+        self.start_ns = time.perf_counter_ns()
         parent = trace.get_current_span().get_span_context()
         self.base = {
             "occurred_at": datetime.now(UTC),
@@ -156,9 +156,9 @@ class Observation:
 
     def attempt(self, number):
         self.started_attempt = True
-        self.start = time.perf_counter()
+        self.start_ns = time.perf_counter_ns()
         if self.native_request_profile is not None:
-            self.native_request_profile["monotonic_started_ns"] = time.monotonic_ns()
+            self.native_request_profile["monotonic_started_ns"] = self.start_ns
         self.finished = False
         self.response = None
         self.base.update(
@@ -197,7 +197,7 @@ class Observation:
             event = LLMEvent(
                 **metadata,
                 response_model=field(response, "model"),
-                duration_ms=(time.perf_counter() - self.start) * 1000,
+                duration_ms=(time.perf_counter_ns() - self.start_ns) / 1000000,
                 status=status,
                 error_type=type(error).__name__ if error else None,
                 http_status=http_status or getattr(error, "status_code", None),

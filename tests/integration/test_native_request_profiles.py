@@ -389,6 +389,7 @@ def profile_capture(api, tenant, tmp_path, monkeypatch, *, approved=True, max_sa
         capture_policy_sha256=digest(policy.model_dump(mode="json")),
         profile_key_id=uuid4(),
         clock_domain_id=uuid4(),
+        clock_basis="process_perf_counter_ns_v1",
         monotonic_started_ns=0,
         request_hmac_sha256="d" * 64,
         sdk_version=version("openai"),

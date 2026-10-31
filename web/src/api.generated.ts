@@ -8463,6 +8463,11 @@ export interface components {
              * Format: uuid4
              */
             clock_domain_id: string;
+            /**
+             * Clock Basis
+             * @constant
+             */
+            clock_basis: "process_perf_counter_ns_v1";
             /** Monotonic Started Ns */
             monotonic_started_ns: number;
             /** Request Hmac Sha256 */

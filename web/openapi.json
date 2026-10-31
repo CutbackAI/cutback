@@ -26558,6 +26558,11 @@
             "format": "uuid4",
             "title": "Clock Domain Id"
           },
+          "clock_basis": {
+            "type": "string",
+            "const": "process_perf_counter_ns_v1",
+            "title": "Clock Basis"
+          },
           "monotonic_started_ns": {
             "type": "integer",
             "maximum": 9.223372036854776e+18,
@@ -26588,6 +26593,7 @@
           "capture_policy_sha256",
           "profile_key_id",
           "clock_domain_id",
+          "clock_basis",
           "monotonic_started_ns",
           "request_hmac_sha256",
           "sdk_version",

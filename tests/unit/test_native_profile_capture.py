@@ -14,6 +14,7 @@ import pytest
 from unit.test_instrumentation import observer as observer
 from unit.test_native_cache import REQUEST, native_body
 
+from cutback.core.native_request_profile import NativeProfileObservation, summarize_native_profile
 from cutback.evals.datasets import CapturePolicy
 from cutback.instrumentation import workflow
 from cutback.instrumentation.capture import CaptureExporter
@@ -193,3 +194,51 @@ def test_legacy_policy_and_sample_wire_format_stays_unchanged():
     value.pop("native_request_profile")
     old = CapturePolicy.model_validate(value)
     assert old.model_dump(mode="json") == value
+
+
+def test_fast_serial_calls_use_one_high_resolution_clock_despite_coarse_platform_monotonic(
+    observer,
+    monkeypatch,
+):
+    import time
+
+    exporter = capture(observer)
+    # Python 3.11 on Windows exposes GetTickCount64 (15.625ms) separately
+    # from QueryPerformanceCounter. Simulate the coarse clock on every host.
+    monkeypatch.setattr(time, "monotonic_ns", lambda: 0)
+    with (
+        openai.OpenAI(
+            api_key="owned-profile-clock",
+            max_retries=0,
+            http_client=httpx.Client(
+                transport=httpx.MockTransport(
+                    lambda request: httpx.Response(200, json=native_body()),
+                ),
+                trust_env=False,
+            ),
+        ) as client,
+        workflow("classify"),
+    ):
+        for _ in range(4):
+            client.responses.create(**REQUEST)
+    samples = drain(exporter)
+    assert len(samples) == 4
+    rows = [
+        NativeProfileObservation(
+            event_id=event.event_id,
+            occurred_at=event.occurred_at,
+            duration_ms=event.duration_ms,
+            profile=sample.native_request_profile,
+            provider_modeled_cost_usd="0.01",
+        )
+        for event, sample in zip(observer.exporter.events, samples, strict=True)
+    ]
+    result = summarize_native_profile(
+        rows,
+        exporter.policy.native_request_profile,
+        capture_policy_sha256=rows[0].profile.capture_policy_sha256,
+        metadata_attempts=4,
+        sample_rate=1,
+    )
+    assert result["modeled_potential_hits"] == 3
+    assert result["overlapping_cold_misses"] == 0

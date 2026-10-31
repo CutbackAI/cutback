@@ -200,6 +200,7 @@ class CaptureExporter:
                 "capture_policy_sha256": digest(policy.model_dump(mode="json")),
                 "profile_key_id": self._profile_key_id,
                 "clock_domain_id": self._profile_clock_domain_id,
+                "clock_basis": "process_perf_counter_ns_v1",
                 "request_hmac_sha256": identity["key_sha256"],
                 "sdk_version": sdk_version,
             }
