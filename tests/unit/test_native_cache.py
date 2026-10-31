@@ -411,6 +411,23 @@ def test_credential_derivation_is_private_scope_bound_and_cleared_on_close(monke
         http.close()
 
 
+def test_request_identity_performs_no_network_io_and_matches_actual_cache_lookup():
+    native, cache, transport, calls, http = clients()
+    try:
+        identity, sdk = cache.request_identity(native, **REQUEST)
+        assert identity["contract"] == "native-exact-cache-v1"
+        assert sdk in {"2.29.0", "3.35.1"}
+        assert not calls and not transport.calls
+        assert native.api_key not in json.dumps(identity)
+        cache.create(native, **REQUEST)
+        lookup = next(body for path, body in transport.calls if path.endswith("lookup"))
+        assert lookup == identity and len(calls) == 1
+    finally:
+        native.close()
+        cache.close()
+        http.close()
+
+
 @pytest.mark.parametrize("credential", ["", "x" * 4097, "non-ascii-\u2603"])
 def test_unqualified_provider_credential_stops_before_any_request(credential):
     native, cache, transport, calls, http = clients()

@@ -66,7 +66,10 @@ def next_action(state):
         from cutback.agent_routing import next_action as routing_action
 
         return routing_action(state)
-    if phase == "PREPARING_CONFIRMATION" and state.get("search_mode") == "reviewed_criteria":
+    if phase == "PREPARING_CONFIRMATION" and state.get("search_mode") in {
+        "reviewed_criteria",
+        "retrieval_search",
+    }:
         return {
             "code": "RESUME_SAME_CONFIRMATION_PREPARATION",
             "tool": "cutback workflow confirm",
@@ -114,6 +117,21 @@ def next_action(state):
             "provider_calls": 0,
         }
     if phase in {"ANALYZED", "SOURCE_CHANGED"}:
+        if state.get("retrieval_producers") and not state.get("profiles"):
+            return {
+                "code": "REVIEW_DATA_RIGHTS_AND_PREPARE_RETRIEVAL",
+                "tool": "cutback workflow prepare --retrieval",
+                "requires": [
+                    "permitted_questions_and_bound_corpus",
+                    "explicit_corpus_authorization",
+                    "rights_reference",
+                    "approved_collector",
+                    "budget_ceiling",
+                    "independent_quality_threshold",
+                    "declared_cpu_cost_basis",
+                ],
+                "provider_calls": 0,
+            }
         if state.get("routing_producers") and not state.get("profiles"):
             return {
                 "code": "PREPARE_SOURCE_BOUND_ROUTING",
@@ -206,6 +224,7 @@ def next_action(state):
             "model_and_output_cap",
             "joint_model_context",
             "reviewed_criteria",
+            "retrieval_search",
         } and not state.get("confirmation"):
             return {
                 "code": "SELECT_CANDIDATE_AND_FREEZE_CONFIRMATION",
@@ -303,9 +322,12 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
                 entrypoints[entry["file"]] = entry
         fixtures = discover_fixtures(root)
         context_producers = []
+        retrieval_producers = []
         from cutback.application_checks import snapshot
         from cutback.core.context_producer import qualify
+        from cutback.core.retrieval_producer import qualify as qualify_retrieval
         from cutback.joint_context_changes import inspect_producer
+        from cutback.retrieval_source import inspect_producer as inspect_retrieval
 
         context_files = []
         try:
@@ -344,6 +366,22 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
                 continue
             try:
                 path = permitted_file(root, name)
+                if path.stat().st_size <= 65536:
+                    qualify_retrieval(path.read_bytes())
+                    _, retrieval_configuration, retrieval_producer = inspect_retrieval(root, name)
+                    retrieval_producers.append(
+                        {
+                            "workflow_id": identity,
+                            "configuration_binding": retrieval_configuration.model_dump(
+                                mode="json"
+                            ),
+                            "producer_binding": retrieval_producer.model_dump(mode="json"),
+                        }
+                    )
+            except (ValueError, OSError):
+                pass
+            try:
+                path = permitted_file(root, name)
                 if path.stat().st_size > 65536:
                     continue
                 qualify(path.read_bytes())
@@ -370,6 +408,7 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
                 "context_producers": context_producers,
                 "context_profile_analysis": context_analysis,
                 "routing_producers": routing_producers,
+                **({"retrieval_producers": retrieval_producers} if retrieval_producers else {}),
             }
         )
         prior = (
@@ -421,6 +460,7 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
             "profiles": profiles,
             "context_producers": context_producers,
             "routing_producers": routing_producers,
+            "retrieval_producers": retrieval_producers,
             "context_profile_analysis": context_analysis,
             "profile_analysis": profile_analysis,
             "unresolved": unresolved,
@@ -507,6 +547,10 @@ def strategy_assessments(profiles):
 
 
 def selected_profile(root, state, workflow=None):
+    if state.get("search_mode") == "retrieval_search":
+        from cutback.agent_retrieval import selected_source
+
+        return selected_source(root, state, workflow)
     if state.get("search_mode") == "joint_model_context":
         from cutback.agent_context import selected_source
 
@@ -609,6 +653,8 @@ def prepare(
     fixture_transport=False,
     automatic=False,
     exact_cache_contract=None,
+    retrieval=False,
+    retrieval_corpus_authorized=False,
 ):
     """Read only explicitly permitted files; upload to the chosen encrypted collector; no calls."""
     from cutback.core.models import Identifier
@@ -623,7 +669,13 @@ def prepare(
         from cutback.core.exact_cache import ExactCacheExecution
 
         cache_contract = ExactCacheExecution.model_validate(exact_cache_contract)
-        if for_campaign or joint_context or learned_routing or criteria_generator_provider:
+        if (
+            for_campaign
+            or joint_context
+            or learned_routing
+            or retrieval
+            or criteria_generator_provider
+        ):
             raise ValueError("EXACT_CACHE_REQUIRES_NATIVE_MODEL_PORTFOLIO")
         if not search and not automatic:
             raise ValueError("EXACT_CACHE_REQUIRES_SEARCH_OR_AUTOMATIC_PREPARATION")
@@ -639,6 +691,7 @@ def prepare(
                 for_campaign,
                 joint_context,
                 learned_routing,
+                retrieval,
                 campaign_generator_provider is not None,
                 criteria_generator_provider is not None,
             )
@@ -651,8 +704,45 @@ def prepare(
         search = selected["mode"] == "native_search"
         joint_context = selected["mode"] == "joint_model_context"
         learned_routing = selected["mode"] == "source_routing"
+        retrieval = selected["mode"] == "retrieval_search"
         if cache_contract is not None and selected["mode"] != "native_search":
             raise ValueError("EXACT_CACHE_REQUIRES_NATIVE_MODEL_PORTFOLIO")
+    if retrieval:
+        if any(
+            (
+                search,
+                for_campaign,
+                joint_context,
+                learned_routing,
+                fixture_transport,
+                campaign_generator_provider,
+                criteria_generator_provider,
+            )
+        ):
+            raise ValueError("RETRIEVAL_REQUIRES_ITS_OWN_FROZEN_SEARCH")
+        from cutback.agent_retrieval import prepare as prepare_retrieval
+
+        return prepare_retrieval(
+            root,
+            control,
+            project,
+            files=files,
+            rights_basis=rights_basis,
+            rights_ref=rights_ref,
+            max_usd=max_usd,
+            workflow=workflow,
+            max_requests=max_requests,
+            minimum=minimum,
+            independent_labels=independent_labels,
+            representative=representative,
+            retain_case_outputs=retain_case_outputs,
+            mapping=mapping,
+            assumed_usd_per_cpu_hour=assumed_usd_per_cpu_hour,
+            min_test_samples=min_test_samples,
+            corpus_authorized=retrieval_corpus_authorized,
+        )
+    if retrieval_corpus_authorized:
+        raise ValueError("CORPUS_AUTHORIZATION_REQUIRES_RETRIEVAL_PREPARATION")
     if learned_routing:
         if (
             joint_context
@@ -1066,7 +1156,12 @@ def advance(root, control, *, plan_hash=None, approval_ref=None):
             state["decisions"] = report["results"].get("recommendations", [])
             from cutback.evals.search import sample_frontier
 
-            state["search_results"] = sample_frontier(report["results"])
+            if state.get("search_mode") == "retrieval_search":
+                from cutback.agent_retrieval import component_frontier
+
+                state["search_results"] = component_frontier(report["results"])
+            else:
+                state["search_results"] = sample_frontier(report["results"])
             phase = report["status"]
             save_session(
                 directory,
@@ -1084,7 +1179,12 @@ def advance(root, control, *, plan_hash=None, approval_ref=None):
                     "cutback workflow confirm --candidate KEY --max-usd CEILING "
                     "--purpose-reference REVIEW"
                     if state.get("search_mode")
-                    in {"model_and_output_cap", "joint_model_context", "reviewed_criteria"}
+                    in {
+                        "model_and_output_cap",
+                        "joint_model_context",
+                        "reviewed_criteria",
+                        "retrieval_search",
+                    }
                     and not state.get("confirmation")
                     else "cutback workflow proposal --purpose-reference REVIEW"
                 )
@@ -1133,6 +1233,15 @@ def gate(root, control, *, candidate=None, sample_only=False):
                 candidate=candidate,
                 sample_only=sample_only,
             )
+        if state.get("search_mode") == "retrieval_search":
+            from cutback.agent_retrieval import regression_gate as retrieval_gate
+
+            return retrieval_gate(
+                report["results"],
+                expected_plan_hash=state["plan"]["plan_hash"],
+                candidate=candidate,
+                sample_only=sample_only,
+            )
         return regression_gate(
             report["results"],
             expected_plan_hash=state["plan"]["plan_hash"],
@@ -1143,6 +1252,17 @@ def gate(root, control, *, candidate=None, sample_only=False):
 
 def confirm(root, control, *, candidate, max_usd, max_requests=100, purpose):
     """Freeze one validation winner for a separately approved untouched test run."""
+    if load_session(root).get("search_mode") == "retrieval_search":
+        from cutback.agent_retrieval import confirm as confirm_retrieval
+
+        return confirm_retrieval(
+            root,
+            control,
+            candidate=candidate,
+            max_usd=max_usd,
+            max_requests=max_requests,
+            purpose=purpose,
+        )
     if load_session(root).get("search_mode") == "source_routing":
         raise ValueError("ROUTING_CONFIRMATION_IS_PREPARED_BY_RESUMABLE_CONTINUE")
     if load_session(root).get("search_mode") == "reviewed_criteria":
@@ -1167,7 +1287,11 @@ def confirm(root, control, *, candidate, max_usd, max_requests=100, purpose):
             state["phase"] != "COMPLETED"
             or state.get("confirmation")
             or state.get("search_mode")
-            not in {"model_and_output_cap", "joint_model_context", "reviewed_criteria"}
+            not in {
+                "model_and_output_cap",
+                "joint_model_context",
+                "reviewed_criteria",
+            }
         ):
             raise ValueError("COMPLETED_SEARCH_REQUIRED")
         selected_profile(root, state, state["selected_workflow"])
@@ -1249,6 +1373,32 @@ def proposal(root, control, *, purpose, candidate=None):
         base = f"/v1/projects/{state['project_id']}"
         if state["endpoint"] != control.endpoint:
             raise ValueError("COLLECTOR_DESTINATION_MISMATCH")
+        if state.get("search_mode") == "retrieval_search":
+            from cutback.retrieval_changes import RetrievalProposal
+            from cutback.retrieval_changes import prepare_patch as prepare_retrieval_patch
+
+            source = control(
+                "POST", base + f"/retrieval/{state['run_id']}/proposal", {"purpose": purpose}
+            )
+            retrieval_proposal = RetrievalProposal.model_validate(source)
+            selected = state.get("confirmation", {}).get("selected_candidate")
+            if candidate is not None and candidate != selected:
+                raise ValueError("SELECTED_RETRIEVAL_CONFIRMATION_CANDIDATE_CHANGED")
+            if (
+                not selected
+                or str(retrieval_proposal.run_id) != state["run_id"]
+                or retrieval_proposal.plan_hash != state["plan"]["plan_hash"]
+            ):
+                raise ValueError("RETRIEVAL_CONFIRMATION_PROPOSAL_IDENTITY_MISMATCH")
+            artifact = prepare_retrieval_patch(root, retrieval_proposal)
+            state["proposal"] = {
+                "version": artifact["version"],
+                "run_id": str(retrieval_proposal.run_id),
+                "source_file": retrieval_proposal.binding.file,
+                "proposed_sha256": artifact["proposed_sha256"],
+            }
+            save_session(directory, state, "PROPOSAL_READY")
+            return artifact
         if state.get("search_mode") == "joint_model_context":
             from cutback.joint_context_changes import JointContextProposal, prepare_patch
 

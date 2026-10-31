@@ -60,6 +60,7 @@ def lock_preparation_identity(session, kind, identity):
         "scoped-key",
         "organization-bootstrap",
         "scoped-key-token",
+        "native-profile-analysis",
     }:
         raise ValueError("PREPARATION_IDENTITY_KIND_INVALID")
     key = int.from_bytes(

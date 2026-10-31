@@ -31,6 +31,11 @@ import { Monitoring } from "./monitoring";
 import { PriceSnapshots } from "./price-snapshots";
 import { NativeContracts } from "./native-contracts";
 import { ExactCacheContracts, ExactCacheEvidence } from "./exact-cache";
+const RequestProfiles = React.lazy(() =>
+  import("./request-profiles").then((module) => ({
+    default: module.RequestProfiles,
+  })),
+);
 const SecuritySuiteImport = React.lazy(() =>
   import("./security-suites").then((module) => ({
     default: module.SecuritySuiteImport,
@@ -157,6 +162,7 @@ const views = [
   "Campaigns",
   "Provider batches",
   "Semantic caching",
+  "Request reuse",
   "Retrieval",
   "Compression",
   "Routing",
@@ -895,6 +901,20 @@ function App() {
                     ].includes(
                       identity.project_roles?.[project] || identity.role,
                     )}
+                  />
+                </React.Suspense>
+              </BudgetViewBoundary>
+            )}
+            {view === "Request reuse" && project && (
+              <BudgetViewBoundary key={project}>
+                <React.Suspense
+                  fallback={<p role="status">Loading request reuse…</p>}
+                >
+                  <RequestProfiles
+                    key={project}
+                    api={api}
+                    project={project}
+                    canApprove={admin}
                   />
                 </React.Suspense>
               </BudgetViewBoundary>

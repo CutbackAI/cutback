@@ -114,6 +114,7 @@ def seed_support_desk(
     source_routing=False,
     generated_scenarios=False,
     reactive_users=False,
+    agent_retrieval=False,
 ):
     """Use actual scoped HTTP APIs and the durable worker, retaining the sample project."""
     require_demo_git()
@@ -381,6 +382,13 @@ def seed_support_desk(
             from cutback.demo_retrieval import seed_retrieval
 
             retrieval_sample = seed_retrieval(app, control, project["id"], workspace)
+            agent_retrieval_sample = None
+            if agent_retrieval:
+                from cutback.demo_agent_retrieval import seed_agent_retrieval
+
+                agent_retrieval_sample = seed_agent_retrieval(
+                    app, control, project["id"], workspace
+                )
             from cutback.demo_compression import seed_compression
 
             # These modes share a corpus. Execute one comparison so its protected
@@ -479,6 +487,11 @@ def seed_support_desk(
                 "sample_source": "cutback/sample_app/app.py",
                 "source_diff": patch,
                 "paid_provider_calls": 0,
+                **(
+                    {"agent_retrieval_sample": agent_retrieval_sample}
+                    if agent_retrieval_sample
+                    else {}
+                ),
                 **({"generated_scenarios_sample": scenario_sample} if scenario_sample else {}),
                 **({"reviewed_criteria_sample": criteria_sample} if criteria_sample else {}),
                 **({"semantic_rubrics_sample": rubric_sample} if rubric_sample else {}),
@@ -633,6 +646,7 @@ def launch_demo(
     source_routing=False,
     generated_scenarios=False,
     reactive_users=False,
+    agent_retrieval=False,
 ):
     """Own one temporary Docker database. Never connect to production or reuse app keys."""
     require_demo_git()
@@ -777,6 +791,7 @@ def launch_demo(
                 source_routing=source_routing,
                 generated_scenarios=generated_scenarios,
                 reactive_users=reactive_users,
+                agent_retrieval=agent_retrieval,
             )
             if learned_routing or source_routing:
                 from cutback.demo_routing import routing_worker

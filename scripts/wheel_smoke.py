@@ -28,6 +28,10 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
             str(executable),
             "-c",
             "import importlib.util; from cutback.pricing import Catalog; "
+            "from cutback.core.cache_workload import CacheWorkloadAssessment; "
+            "from cutback.core.retrieval_producer import RetrievalProducerBinding; "
+            "from cutback.retrieval_source import inspect_producer; "
+            "from cutback.agent_cache_workload import source_input; "
             f"import cutback; assert cutback.__version__=={version!r}; "
             "from cutback.gateway.client import operation_headers; from uuid import UUID; "
             "from cutback.core.retrieval import "
@@ -105,6 +109,36 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
     assert job["phase"] == "ANALYZED" and job["profiles"]
     assert job["next_action"]["provider_calls"] == 0
     assert command("workflow", "status")["id"] == job["id"]
+    git_env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    git_env.update(GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull, GIT_ATTR_NOSYSTEM="1")
+    for arguments in (
+        ["init", "--quiet"],
+        ["add", "main.py", ".gitignore"],
+        [
+            "-c",
+            "user.name=Owned Fixture",
+            "-c",
+            "user.email=fixture@example.invalid",
+            "-c",
+            "commit.gpgSign=false",
+            "commit",
+            "--quiet",
+            "-m",
+            "Synthetic source",
+        ],
+    ):
+        subprocess.run(
+            ["git", "-c", "core.hooksPath=", "-c", "core.fsmonitor=false", *arguments],
+            cwd=consumer,
+            env=git_env,
+            check=True,
+            capture_output=True,
+        )
+    attribution = command("workflow", "refresh-source-map")
+    assert attribution["provider_calls"] == 0 and attribution["mapped_files"] == 1
+    assert attribution["application_source_changed"] is False
+    assert source.read_text(encoding="utf-8") == original
+    assert private_sentinel not in (consumer / attribution["source_map_path"]).read_text()
     help_result = subprocess.run(
         [str(executable), "-m", "cutback.cli", "qualify", "load", "--help"],
         capture_output=True,

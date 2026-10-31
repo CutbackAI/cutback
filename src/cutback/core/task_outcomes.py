@@ -5,7 +5,7 @@ not an independent billing audit or a representative customer-quality claim.
 """
 
 from datetime import UTC, datetime, timedelta
-from decimal import Decimal, localcontext
+from decimal import Context, Decimal, localcontext
 from typing import Annotated, Literal
 from uuid import UUID
 
@@ -149,8 +149,7 @@ def task_economics(task: TaskOutcomeInput, native: NativeTaskCostEvidence) -> di
     components_complete = task.other_costs_declared_complete and all(
         c.amount_usd is not None for c in task.components
     )
-    with localcontext() as context:
-        context.prec = 64
+    with localcontext(Context(prec=64)):
         known_other = sum(
             (c.amount_usd for c in task.components if c.amount_usd is not None), Decimal(0)
         )
@@ -206,8 +205,7 @@ def summarize_task_economics(rows: list[dict], *, expected_tasks: int | None = N
         row["outcome"] == "failure" and row["known_native_modeled_subtotal_usd"] is not None
         for row in rows
     )
-    with localcontext() as context:
-        context.prec = 64
+    with localcontext(Context(prec=64)):
         total = sum(
             (
                 Decimal(row["declared_modeled_total_usd"])

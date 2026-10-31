@@ -1276,6 +1276,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/native-request-profiles/analyses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Analyses */
+        get: operations["analyses_v1_projects__project_id__native_request_profiles_analyses_get"];
+        put?: never;
+        /** Queue */
+        post: operations["queue_v1_projects__project_id__native_request_profiles_analyses_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/native-request-profiles/analyses/{analysis_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Analysis */
+        get: operations["analysis_v1_projects__project_id__native_request_profiles_analyses__analysis_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/native-request-profiles/analyses/{analysis_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel */
+        post: operations["cancel_v1_projects__project_id__native_request_profiles_analyses__analysis_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/native-request-profiles/analyses/{analysis_id}/cache-trial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Assess */
+        post: operations["assess_v1_projects__project_id__native_request_profiles_analyses__analysis_id__cache_trial_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/campaign-templates": {
         parameters: {
             query?: never;
@@ -4486,6 +4555,116 @@ export interface components {
              */
             minimum_positive_groups: number;
         };
+        /** CacheWorkloadAssessment */
+        CacheWorkloadAssessment: {
+            /**
+             * Version
+             * @constant
+             */
+            version: "cache-workload-assessment-v1";
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Environment */
+            environment: string;
+            /** Workflow */
+            workflow: string;
+            /**
+             * Analysis Id
+             * Format: uuid
+             */
+            analysis_id: string;
+            /** Analysis Sha256 */
+            analysis_sha256: string;
+            /** Source Binding Sha256 */
+            source_binding_sha256: string;
+            /** Baseline Model */
+            baseline_model: string;
+            /** Cache Execution Sha256 */
+            cache_execution_sha256: string;
+            /**
+             * Scope
+             * @constant
+             */
+            scope: "retained_client_reported_source_window";
+            /**
+             * Source Lineage
+             * @constant
+             */
+            source_lineage: "client_reported_commit_and_callsite_not_independent_attestation";
+            /** Valid Until */
+            valid_until: string;
+            /** Metadata As Of */
+            metadata_as_of: string;
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "prepare_separate_cache_trial" | "abstain";
+            /** Reasons */
+            reasons: string[];
+            /** Profiled Attempts */
+            profiled_attempts: number | null;
+            /** Modeled Potential Hits */
+            modeled_potential_hits: number | null;
+            /** Provider Modeled Window Cost Usd */
+            provider_modeled_window_cost_usd: string | null;
+            /** Modeled Avoided Provider Cost Usd */
+            modeled_avoided_provider_cost_usd: string | null;
+            /** Declared Cache Operations */
+            declared_cache_operations: number | null;
+            /** Declared Cache Operation Upper Cost Usd */
+            declared_cache_operation_upper_cost_usd: string | null;
+            /** Modeled Net Native Window Opportunity Usd */
+            modeled_net_native_window_opportunity_usd: string | null;
+            /** Production Hit Rate */
+            production_hit_rate: null;
+            /** Whole Task Cost Usd */
+            whole_task_cost_usd: null;
+            /** Realized Savings Usd */
+            realized_savings_usd: null;
+            /**
+             * Quality Evidence
+             * @constant
+             */
+            quality_evidence: "separate_independent_trial_required";
+            /**
+             * Cache Delivery Benchmarked
+             * @constant
+             */
+            cache_delivery_benchmarked: false;
+            /**
+             * Paid Calls Authorized
+             * @constant
+             */
+            paid_calls_authorized: false;
+            /**
+             * Source Change Authorized
+             * @constant
+             */
+            source_change_authorized: false;
+            /**
+             * Provider Calls
+             * @constant
+             */
+            provider_calls: 0;
+            /**
+             * Encrypted Storage Reads
+             * @constant
+             */
+            encrypted_storage_reads: 0;
+            /** Assessment Sha256 */
+            assessment_sha256: string;
+        };
+        /** CacheWorkloadInput */
+        CacheWorkloadInput: {
+            source_binding: components["schemas"]["SourceBinding"];
+            /** Baseline Model */
+            baseline_model: string;
+            cache_execution: components["schemas"]["ExactCacheExecution-Input"];
+        };
         /** CallPage */
         CallPage: {
             /** Items */
@@ -5036,6 +5215,7 @@ export interface components {
              * @constant
              */
             redaction_version: "email-secret-v1";
+            native_request_profile?: components["schemas"]["NativeRequestProfileAuthorization"] | null;
         };
         /** Case */
         Case: {
@@ -8316,6 +8496,117 @@ export interface components {
              */
             replay_supported: false;
         };
+        /** NativeProfileAnalysisInput */
+        NativeProfileAnalysisInput: {
+            /**
+             * Request Id
+             * Format: uuid4
+             */
+            request_id: string;
+            /**
+             * Policy Id
+             * Format: uuid
+             */
+            policy_id: string;
+            /** Environment */
+            environment: string;
+            /** Workflow */
+            workflow: string;
+            /** Purpose */
+            purpose: string;
+            /**
+             * Window Start
+             * Format: date-time
+             */
+            window_start: string;
+            /**
+             * Window End
+             * Format: date-time
+             */
+            window_end: string;
+            /**
+             * Max Observations
+             * @default 1000
+             */
+            max_observations: number;
+            /**
+             * Max Wall Seconds
+             * @default 60
+             */
+            max_wall_seconds: number;
+        };
+        /** NativeRequestProfileAuthorization */
+        NativeRequestProfileAuthorization: {
+            /**
+             * Version
+             * @default native-request-profile-v1
+             * @constant
+             */
+            version: "native-request-profile-v1";
+            /** Freshness Ref */
+            freshness_ref: string;
+            /** Prospective Ttl Seconds */
+            prospective_ttl_seconds: number;
+            /**
+             * Fingerprint Capture Authorized
+             * @constant
+             */
+            fingerprint_capture_authorized: true;
+            /**
+             * Immutable Or Safely Invalidated
+             * @constant
+             */
+            immutable_or_safely_invalidated: true;
+        };
+        /** NativeRequestProfileSnapshot */
+        NativeRequestProfileSnapshot: {
+            /**
+             * Version
+             * @default native-request-profile-v1
+             * @constant
+             */
+            version: "native-request-profile-v1";
+            /**
+             * Request Identity Contract
+             * @default native-exact-cache-v1
+             * @constant
+             */
+            request_identity_contract: "native-exact-cache-v1";
+            /**
+             * Origin
+             * @default client_reported_sdk_capture
+             * @constant
+             */
+            origin: "client_reported_sdk_capture";
+            /** Capture Policy Sha256 */
+            capture_policy_sha256: string;
+            /**
+             * Profile Key Id
+             * Format: uuid4
+             */
+            profile_key_id: string;
+            /**
+             * Clock Domain Id
+             * Format: uuid4
+             */
+            clock_domain_id: string;
+            /**
+             * Clock Basis
+             * @constant
+             */
+            clock_basis: "process_perf_counter_ns_v1";
+            /** Monotonic Started Ns */
+            monotonic_started_ns: number;
+            /** Request Hmac Sha256 */
+            request_hmac_sha256: string;
+            /**
+             * Sdk Version
+             * @enum {string}
+             */
+            sdk_version: "2.29.0" | "3.35.1";
+            /** Response Cache Eligible */
+            response_cache_eligible: boolean;
+        };
         /** NotificationInput */
         NotificationInput: {
             /** Destination */
@@ -10150,6 +10441,7 @@ export interface components {
             input: string;
             /** Reference */
             reference?: string | null;
+            native_request_profile?: components["schemas"]["NativeRequestProfileSnapshot"] | null;
         };
         /** SavedViewInput */
         SavedViewInput: {
@@ -14941,6 +15233,175 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    analyses_v1_projects__project_id__native_request_profiles_analyses_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    queue_v1_projects__project_id__native_request_profiles_analyses_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NativeProfileAnalysisInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    analysis_v1_projects__project_id__native_request_profiles_analyses__analysis_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                analysis_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_v1_projects__project_id__native_request_profiles_analyses__analysis_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                analysis_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    assess_v1_projects__project_id__native_request_profiles_analyses__analysis_id__cache_trial_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                analysis_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CacheWorkloadInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CacheWorkloadAssessment"];
                 };
             };
             /** @description Validation Error */

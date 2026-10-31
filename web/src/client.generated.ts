@@ -289,6 +289,23 @@ export function createSDK(request:Request) {return {
   confirmation_draft_v1_projects__project_id__routing_fits__fit_id__confirmation_drafts_post: (args:{project_id:string;fit_id:string;body:components["schemas"]["RoutingConfirmationDraftInput"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/routing/fits/${encodeURIComponent(String(args.fit_id))}/confirmation-drafts`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  queue_v1_projects__project_id__native_request_profiles_analyses_post: (args:{project_id:string;body:components["schemas"]["NativeProfileAnalysisInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/native-request-profiles/analyses`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  analyses_v1_projects__project_id__native_request_profiles_analyses_get: (args:{project_id:string;limit?:number;offset?:number}) => {
+    const query=new URLSearchParams();
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    if(args.offset!==undefined && args.offset!==null) query.set("offset",String(args.offset));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/native-request-profiles/analyses`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  analysis_v1_projects__project_id__native_request_profiles_analyses__analysis_id__get: (args:{project_id:string;analysis_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/native-request-profiles/analyses/${encodeURIComponent(String(args.analysis_id))}`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  cancel_v1_projects__project_id__native_request_profiles_analyses__analysis_id__cancel_post: (args:{project_id:string;analysis_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/native-request-profiles/analyses/${encodeURIComponent(String(args.analysis_id))}/cancel`+(query.size?"?"+query.toString():""),{method:"POST"});},
+  assess_v1_projects__project_id__native_request_profiles_analyses__analysis_id__cache_trial_post: (args:{project_id:string;analysis_id:string;body:components["schemas"]["CacheWorkloadInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/native-request-profiles/analyses/${encodeURIComponent(String(args.analysis_id))}/cache-trial`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   templates_v1_projects__project_id__campaign_templates_get: (args:{project_id:string;after?:string | null;limit?:number}) => {
     const query=new URLSearchParams();
     if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));

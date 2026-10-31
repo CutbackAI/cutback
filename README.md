@@ -32,6 +32,10 @@ The source [paired security sample](https://github.com/CutbackAI/cutback/blob/ma
 
 ## Start with a working application
 
+For the source-only cache eligibility workflow, see the [eight-call request-reuse example](https://github.com/CutbackAI/cutback/blob/main/examples/request-reuse/README.md). Its provider transport is synthetic; it distinguishes modeled potential reuse from measured delivery and real savings.
+
+Add `--source-workload` to include an independently committed application and [automatic source-matched assessment](https://github.com/CutbackAI/cutback/blob/main/docs/source-workload.md), without paid calls or source changes.
+
 The support-desk sample routes tickets by category and priority. Two workflows, ticket triage and escalation, share one native SDK call. It shows why a cheaper configuration that mishandles urgent tickets must be rejected.
 
 You need Python 3.11–3.13 and running Docker Desktop. Install in a fresh virtual environment. The dashboard is already built; no Node setup or provider API key is needed for the sample.

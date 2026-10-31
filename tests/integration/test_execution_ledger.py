@@ -1,6 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
-from decimal import Decimal
+from decimal import ROUND_FLOOR, Context, Decimal, localcontext
 from uuid import UUID
 
 import pytest
@@ -52,6 +52,40 @@ def ledger_for(api, tenant, tmp_path, monkeypatch):
     return ExecutionLedger(
         sessions, run_id, job_id, plan, environment, authorize=lambda session: None
     )
+
+
+def test_ambient_rounding_cannot_admit_a_call_above_the_exact_spend_cap(
+    api, tenant, tmp_path, monkeypatch
+):
+    ledger = ledger_for(api, tenant, tmp_path, monkeypatch)
+    with ledger.sessions.begin() as session:
+        session.get(ExperimentRunRecord, ledger.run_id).reserved_usd = Decimal("0.999000000001")
+    with localcontext(Context(prec=10, rounding=ROUND_FLOOR)):
+        with pytest.raises(ValueError, match="BUDGET_EXHAUSTED"):
+            ledger.reserve(Decimal("0.001"), ledger.plan.baseline, "evaluation")
+    with ledger.sessions() as session:
+        assert not session.scalar(
+            select(ExecutionCall.id).where(ExecutionCall.run_id == ledger.run_id)
+        )
+
+
+def test_ambient_rounding_cannot_reduce_the_canonical_settled_cost(
+    api, tenant, tmp_path, monkeypatch
+):
+    ledger = ledger_for(api, tenant, tmp_path, monkeypatch)
+    identifier = ledger.reserve(Decimal("0.001"), ledger.plan.baseline, "evaluation")
+    with ledger.sessions.begin() as session:
+        session.get(ExperimentRunRecord, ledger.run_id).spent_usd = Decimal("0.999000000001")
+    with localcontext(Context(prec=10, rounding=ROUND_FLOOR)):
+        ledger.record(
+            identifier,
+            Execution(output="A", cost_usd=Decimal("0.000123456789"), latency_ms=1),
+            "completed",
+        )
+    with ledger.sessions() as session:
+        assert session.get(ExperimentRunRecord, ledger.run_id).spent_usd == Decimal(
+            "0.999123456790"
+        )
 
 
 def test_worker_call_is_durably_reserved_before_transport_and_cost_is_recorded(

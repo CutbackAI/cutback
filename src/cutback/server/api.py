@@ -255,6 +255,7 @@ def create_app(
             revision = session.execute(text("SELECT version_num FROM alembic_version")).scalar()
             if revision != CURRENT_REVISION:
                 raise HTTPException(503, "MIGRATION_REQUIRED")
+        from cutback.core.cache_workload import CACHE_WORKLOAD_CONTRACT
         from cutback.core.exact_cache import EXACT_CACHE_CONTRACT
         from cutback.core.native_fixture import NATIVE_FIXTURE_CONTRACT
         from cutback.core.preparation import PREPARATION_CONTRACT
@@ -266,6 +267,7 @@ def create_app(
             "bootstrap_contract": BOOTSTRAP_CONTRACT,
             "native_fixture_contract": NATIVE_FIXTURE_CONTRACT,
             "exact_cache_contract": EXACT_CACHE_CONTRACT,
+            "cache_workload_assessment_contract": CACHE_WORKLOAD_CONTRACT,
         }
 
     @app.post("/v1/projects", status_code=201)
@@ -625,6 +627,14 @@ def create_app(
     from cutback.server.evaluation_api import install_evaluation
 
     import_dataset = install_evaluation(app, sessions, authorize, scope)
+
+    from cutback.server.native_profile_api import install_native_profiles
+
+    install_native_profiles(app, sessions, authorize, scope)
+
+    from cutback.server.cache_workload_api import install_cache_workload
+
+    install_cache_workload(app, sessions, authorize, scope)
     from cutback.server.campaign_api import install_campaigns
 
     install_campaigns(app, sessions, authorize, scope)

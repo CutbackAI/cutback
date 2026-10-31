@@ -1,6 +1,22 @@
 # What works and what remains
 
+Working source adds [source-matched workload assessment](source-workload.md) and
+an [independent committed application](../examples/source-workload/README.md).
+It derives current source scope and models a separate trial's native-window
+opportunity from retained authorized profiles. It makes no inference call or
+source change. Qualification and unresolved hosted failures are in
+[progress](progress.md); this is not unified cross-engine economic selection.
+
 Updated 31 October 2026. Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business. [Executed acceptance](progress.md) records the exact artifacts, checks, failures and limits; [the baseline](market-baseline.md) records remaining requirements.
+
+[Native exact caching](native-response-cache.md) is accepted in
+[PR 63](https://github.com/CutbackAI/cutback/pull/63). The encrypted-retention and
+capture-commit fixes are in [draft PR 67](https://github.com/CutbackAI/cutback/pull/67)
+after installed/package/image qualification. The new [request-reuse analysis](request-reuse.md)
+and [eight-call synthetic example](../examples/request-reuse/README.md) are in source
+qualification. They add explicitly authorized encrypted fingerprints, monotonic
+timing and one-shot background analysis; they do not establish production hit
+rates, customer quality or unified strategy selection. None updates PyPI dev5.
 
 [Reactive user simulation](reactive-users.md) is accepted in
 [PR 58](https://github.com/CutbackAI/cutback/pull/58), with package/image and all

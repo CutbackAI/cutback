@@ -22,6 +22,12 @@ export const money = (value: unknown) =>
 export function explain(error: unknown) {
   const code = (error as Error)?.message || "REQUEST_FAILED";
   const messages: Record<string, string> = {
+    CURRENT_SOURCE_WORKLOAD_EVIDENCE_REQUIRED:
+      "This window no longer matches the supplied source evidence. Check rights and expiry, refresh your committed-source export, and inspect the current analysis.",
+    CACHE_WORKLOAD_COMPLETED_ANALYSIS_REQUIRED:
+      "Choose a completed, unexpired request analysis before checking its source workload.",
+    WORKLOAD_RESPONSE_SCOPE_MISMATCH:
+      "The project, workflow or analysis changed. Reopen the intended analysis and use its matching private export.",
     STORAGE_UNAVAILABLE:
       "The collector could not complete its storage operation. Reconcile the saved preparation or execution before retrying; started uncertain work must not be replayed.",
     ROUTING_SELECTION_CHANGED:
