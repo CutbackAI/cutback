@@ -1,13 +1,15 @@
 import json
 from uuid import uuid4
 
+import pytest
 import typer
 from typer.testing import CliRunner
 
 from cutback.cli_retrieval import register_retrieval
 
 
-def test_required_named_options_and_explicit_corpus_upload_authority(tmp_path):
+@pytest.mark.parametrize("joint", [False, True])
+def test_required_named_options_and_explicit_corpus_upload_authority(tmp_path, joint):
     calls, results = [], []
     app = typer.Typer()
 
@@ -18,12 +20,14 @@ def test_required_named_options_and_explicit_corpus_upload_authority(tmp_path):
     def fail(*args):
         raise typer.Exit(2)
 
-    register_retrieval(app, lambda value, path=None: results.append(value), request, fail)
+    register_retrieval(
+        app, lambda value, path=None: results.append(value), request, fail, joint=joint
+    )
     file = tmp_path / "authorized-draft.json"
     file.write_text("{}", encoding="utf-8")
     project = str(uuid4())
     args = [
-        "retrieval",
+        "model-retrieval" if joint else "retrieval",
         "draft",
         str(file),
         "--project",
@@ -37,8 +41,13 @@ def test_required_named_options_and_explicit_corpus_upload_authority(tmp_path):
     assert runner.invoke(app, args).exit_code == 2 and not calls
     result = runner.invoke(app, [*args, "--authorize-corpus-upload"])
     assert result.exit_code == 0, result.output
-    assert len(calls) == 1 and calls[0][0][2] == f"/v1/projects/{project}/retrieval/draft"
-    assert results == [{"status": "READY_FOR_APPROVAL"}]
+    route = "model-retrieval" if joint else "retrieval"
+    assert len(calls) == 1 and calls[0][0][2] == f"/v1/projects/{project}/{route}/draft"
+    if joint:
+        assert json.loads((tmp_path / "plan.json").read_text()) == {"status": "READY_FOR_APPROVAL"}
+        assert not results
+    else:
+        assert results == [{"status": "READY_FOR_APPROVAL"}]
 
 
 def test_agent_change_materialization_rechecks_exact_artifact_and_source(tmp_path):

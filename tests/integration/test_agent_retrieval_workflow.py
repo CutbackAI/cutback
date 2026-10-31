@@ -46,7 +46,7 @@ def test_discovery_and_preparation_freeze_actual_corpus_without_inference(
     }
     state = analyze(root)
     assert len(state["retrieval_producers"]) == 1
-    assert state["preparation_options"][0]["modes"] == ["retrieval_search"]
+    assert state["preparation_options"][0]["modes"] == ["joint_model_retrieval"]
     monkeypatch.setenv("CUTBACK_ALLOW_PAYLOADS", "true")
     api[2].state.artifact_store = EncryptedFileStore(tmp_path / "encrypted", os.urandom(32))
     control = Control("http://127.0.0.1", api[1]["Authorization"][7:], client=api[0])
@@ -207,7 +207,9 @@ def test_retrieval_agent_reconciles_queue_confirms_and_prepares_source_review(
         checked = gate(root, control, sample_only=True)
         assert checked["passed"], checked
         artifact = proposal(root, control, purpose="owned-confirmed-review", candidate=selected)
-        assert artifact["version"] == "cutback.retrieval-change.v1"
+        assert artifact["version"] == (
+            "cutback.joint-retrieval-change.v1" if automatic else "cutback.retrieval-change.v1"
+        )
         assert artifact["proposal"]["binding"]["file"] == "retrieval.json"
         assert artifact["rollback_diff"] and not artifact["application_changed"]
         assert (root / "retrieval.json").read_bytes() == original

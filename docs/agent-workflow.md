@@ -7,6 +7,10 @@ separate confirmation and produces a settings diff plus rollback. Each native
 budget still needs exact approval. This addition is under qualification and is
 absent from published dev5.
 
+Automatic preparation now selects the [joint model/output/retrieval
+extension](joint-retrieval.md) for that exact producer. Explicit `--retrieval`
+keeps the original fixed-model v6 path; stored sessions retain their engine.
+
 The source checkout now adds [source-matched workload assessment](source-workload.md).
 The agent derives a clean application's binding, finds matching retained request
 profiles and checks declared native-window cache economics without inference or

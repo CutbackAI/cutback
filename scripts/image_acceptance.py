@@ -208,6 +208,7 @@ def main(
     guarded_tools=False,
     guarded_security=False,
     joint_model_context=False,
+    joint_model_retrieval=False,
     reviewed_criteria=False,
     semantic_rubrics=False,
     learned_routing=False,
@@ -335,7 +336,12 @@ manifest=seed_support_desk(
  joint_model_context=JOINT_EXPECTED,reviewed_criteria=CRITERIA_EXPECTED,
  semantic_rubrics=RUBRICS_EXPECTED,learned_routing=ROUTING_EXPECTED and not SOURCE_BOUND_EXPECTED,
  source_routing=SOURCE_BOUND_EXPECTED,generated_scenarios=SCENARIOS_EXPECTED,
- reactive_users=REACTIVE_EXPECTED)
+ reactive_users=REACTIVE_EXPECTED,joint_model_retrieval=RETRIEVAL_EXPECTED)
+if RETRIEVAL_EXPECTED:
+ assert manifest["agent_retrieval_sample"]["review_status"]=="READY_FOR_LOCAL_REVIEW"
+ assert manifest["agent_retrieval_sample"]["rollback_verified"] is True
+ assert manifest["agent_retrieval_sample"]["local_consumer_check_http_calls"]==4
+ assert manifest["agent_retrieval_sample"]["paid_provider_calls"]==0
 if REACTIVE_EXPECTED:
  assert manifest["agent_episode_reactive_user_simulation"] is True
  assert manifest["paid_provider_calls"]==0
@@ -384,6 +390,7 @@ print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":mani
                 code = code.replace("SCENARIOS_EXPECTED", repr(generated_scenarios))
                 code = code.replace("REACTIVE_EXPECTED", repr(reactive_users))
                 code = code.replace("JOINT_EXPECTED", repr(joint_model_context))
+                code = code.replace("RETRIEVAL_EXPECTED", repr(joint_model_retrieval))
                 manifest = json.loads(inside(container, code, values).strip().splitlines()[-1])
                 base = "/v1/projects/" + manifest["project_id"]
                 usage = client.get(
@@ -603,6 +610,21 @@ with sessions() as session:
   assert confirmed.results["lineage"]["fresh_test_claim"] is True
   decision=confirmed.results["recommendations"][0]
   assert decision["joint_model_context_confirmation_eligible"] is True
+ if RETRIEVAL_EXPECTED:
+  from cutback.evals.retrieval_joint import JointModelRetrievalExecutionSpec
+  from cutback.server.plan_artifacts import load_plan
+  selected=[row for row in plans if
+   row.specification["public_specification"].get("evaluator_version")=="deterministic-v18"]
+  assert len(selected)==2
+  for row in selected:
+   frozen=load_plan(new_only,row.project_id,row.specification)
+   assert isinstance(frozen.retrieval_execution,JointModelRetrievalExecutionSpec)
+   assert frozen.retrieval_execution.producer_binding
+   executed=session.scalar(select(ExperimentRunRecord).where(ExperimentRunRecord.plan_id==row.id))
+   assert executed.status=="COMPLETED" and executed.results["billing_complete"] is True
+   if frozen.split=="test":
+    assert executed.results["lineage"]["fresh_test_claim"] is True
+    assert executed.results["recommendations"][0]["joint_model_retrieval_confirmation_eligible"]
  if CRITERIA_EXPECTED or RUBRICS_EXPECTED:
   from cutback.server.criteria_db import CriteriaVersionRecord,CriteriaExperimentUse
   from cutback.server.criteria_service import (
@@ -703,6 +725,7 @@ engine.dispose()
                     .replace("GUARDED_TOOLS", repr(guarded_tools))
                     .replace("GUARDED_SECURITY", repr(guarded_security))
                     .replace("JOINT_EXPECTED", repr(joint_model_context))
+                    .replace("RETRIEVAL_EXPECTED", repr(joint_model_retrieval))
                     .replace("CRITERIA_EXPECTED", repr(reviewed_criteria))
                     .replace("RUBRICS_EXPECTED", repr(semantic_rubrics))
                     .replace("ROUTING_EXPECTED", repr(learned_routing or source_routing))
@@ -843,6 +866,7 @@ engine.dispose()
                     "routing_fits_and_canonical_training_restored": learned_routing
                     or source_routing,
                     "source_bound_routing_and_both_tree_checks": source_routing,
+                    "joint_retrieval_confirmation_and_both_tree_checks": joint_model_retrieval,
                     "reviewed_generated_development_scenarios_restored": generated_scenarios,
                     "reactive_user_contracts_receipts_and_trajectories_restored": reactive_users,
                     "restored_tables": len(after),
@@ -887,6 +911,7 @@ if __name__ == "__main__":
     parser.add_argument("--guarded-tools", action="store_true")
     parser.add_argument("--guarded-security", action="store_true")
     parser.add_argument("--joint-model-context", action="store_true")
+    parser.add_argument("--joint-model-retrieval", action="store_true")
     parser.add_argument("--reviewed-criteria", action="store_true")
     parser.add_argument("--semantic-rubrics", action="store_true")
     parser.add_argument("--learned-routing", action="store_true")
@@ -902,6 +927,7 @@ if __name__ == "__main__":
         guarded_tools=args.guarded_tools,
         guarded_security=args.guarded_security,
         joint_model_context=args.joint_model_context,
+        joint_model_retrieval=args.joint_model_retrieval,
         reviewed_criteria=args.reviewed_criteria,
         semantic_rubrics=args.semantic_rubrics,
         learned_routing=args.learned_routing,

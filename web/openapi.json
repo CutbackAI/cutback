@@ -2767,6 +2767,162 @@
         }
       }
     },
+    "/v1/projects/{project_id}/model-retrieval/draft": {
+      "post": {
+        "summary": "Draft",
+        "operationId": "draft_v1_projects__project_id__model_retrieval_draft_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JointRetrievalDraftInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/model-retrieval/confirmation": {
+      "post": {
+        "summary": "Confirm",
+        "operationId": "confirm_v1_projects__project_id__model_retrieval_confirmation_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JointRetrievalConfirmationInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/model-retrieval/{run_id}/proposal": {
+      "post": {
+        "summary": "Proposal",
+        "operationId": "proposal_v1_projects__project_id__model_retrieval__run_id__proposal_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentPurpose"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JointRetrievalProposal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{project_id}/criteria/drafts": {
       "post": {
         "summary": "Draft",
@@ -21333,7 +21489,8 @@
               "deterministic-v14",
               "deterministic-v15",
               "deterministic-v16",
-              "deterministic-v17"
+              "deterministic-v17",
+              "deterministic-v18"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -21354,9 +21511,13 @@
                 "$ref": "#/components/schemas/RetrievalExecutionSpec-Input"
               },
               {
+                "$ref": "#/components/schemas/JointModelRetrievalExecutionSpec-Input"
+              },
+              {
                 "type": "null"
               }
-            ]
+            ],
+            "title": "Retrieval Execution"
           },
           "compression_execution": {
             "anyOf": [
@@ -21677,7 +21838,8 @@
               "deterministic-v14",
               "deterministic-v15",
               "deterministic-v16",
-              "deterministic-v17"
+              "deterministic-v17",
+              "deterministic-v18"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -21698,9 +21860,13 @@
                 "$ref": "#/components/schemas/RetrievalExecutionSpec-Output"
               },
               {
+                "$ref": "#/components/schemas/JointModelRetrievalExecutionSpec-Output"
+              },
+              {
                 "type": "null"
               }
-            ]
+            ],
+            "title": "Retrieval Execution"
           },
           "compression_execution": {
             "anyOf": [
@@ -25131,6 +25297,372 @@
         ],
         "title": "JointModelContextExecutionSpec",
         "description": "Separate approval for a frozen native model/output/context search.\n\nThe legacy fields remain independently declared so their serialized order\nand contract do not change when this execution target evolves."
+      },
+      "JointModelRetrievalExecutionSpec-Input": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.joint-model-retrieval.v1",
+            "title": "Version",
+            "default": "cutback.joint-model-retrieval.v1"
+          },
+          "contract_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Contract Sha256"
+          },
+          "corpus": {
+            "$ref": "#/components/schemas/RetrievalCorpus"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/RetrievalVariant-Input"
+            },
+            "type": "array",
+            "maxItems": 6,
+            "minItems": 2,
+            "title": "Variants"
+          },
+          "max_query_bytes": {
+            "type": "integer",
+            "maximum": 8192.0,
+            "minimum": 1.0,
+            "title": "Max Query Bytes",
+            "default": 1024
+          },
+          "assumed_usd_per_cpu_hour": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "decimal_places": 12,
+                "ge": 0,
+                "le": 1000000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assumed Usd Per Cpu Hour"
+          },
+          "cpu_charge_quantum_ms": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Cpu Charge Quantum Ms",
+            "default": 1
+          },
+          "configuration_binding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RetrievalConfigurationBinding-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "producer_binding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RetrievalProducerBinding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "corpus",
+          "variants"
+        ],
+        "title": "JointModelRetrievalExecutionSpec"
+      },
+      "JointModelRetrievalExecutionSpec-Output": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.joint-model-retrieval.v1",
+            "title": "Version",
+            "default": "cutback.joint-model-retrieval.v1"
+          },
+          "contract_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Contract Sha256"
+          },
+          "corpus": {
+            "$ref": "#/components/schemas/RetrievalCorpus"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/RetrievalVariant-Output"
+            },
+            "type": "array",
+            "maxItems": 6,
+            "minItems": 2,
+            "title": "Variants"
+          },
+          "max_query_bytes": {
+            "type": "integer",
+            "maximum": 8192.0,
+            "minimum": 1.0,
+            "title": "Max Query Bytes",
+            "default": 1024
+          },
+          "assumed_usd_per_cpu_hour": {
+            "anyOf": [
+              {
+                "type": "string",
+                "decimal_places": 12,
+                "ge": 0,
+                "le": 1000000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assumed Usd Per Cpu Hour"
+          },
+          "cpu_charge_quantum_ms": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Cpu Charge Quantum Ms",
+            "default": 1
+          },
+          "configuration_binding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RetrievalConfigurationBinding-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "producer_binding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RetrievalProducerBinding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "corpus",
+          "variants"
+        ],
+        "title": "JointModelRetrievalExecutionSpec"
+      },
+      "JointRetrievalConfirmationInput": {
+        "properties": {
+          "validation_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Validation Run Id"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/Budget-Input"
+          },
+          "candidate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "validation_run_id",
+          "budget"
+        ],
+        "title": "JointRetrievalConfirmationInput"
+      },
+      "JointRetrievalDraftInput": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Dataset Id"
+          },
+          "baseline": {
+            "$ref": "#/components/schemas/ModelSpec-Input"
+          },
+          "corpus": {
+            "$ref": "#/components/schemas/RetrievalCorpus"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/RetrievalSettings-Input"
+          },
+          "metric": {
+            "$ref": "#/components/schemas/MetricSpec"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/Budget-Input"
+          },
+          "max_candidates": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Max Candidates",
+            "default": 5
+          },
+          "assumed_usd_per_cpu_hour": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "decimal_places": 12,
+                "ge": 0,
+                "le": 1000000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assumed Usd Per Cpu Hour"
+          },
+          "max_query_bytes": {
+            "type": "integer",
+            "maximum": 8192.0,
+            "minimum": 1.0,
+            "title": "Max Query Bytes",
+            "default": 1024
+          },
+          "retain_case_outputs": {
+            "type": "boolean",
+            "title": "Retain Case Outputs",
+            "default": false
+          },
+          "configuration_binding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RetrievalConfigurationBinding-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "producer_binding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RetrievalProducerBinding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "baseline",
+          "corpus",
+          "settings",
+          "metric",
+          "budget"
+        ],
+        "title": "JointRetrievalDraftInput"
+      },
+      "JointRetrievalProposal": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.joint-retrieval-proposal.v1",
+            "title": "Version",
+            "default": "cutback.joint-retrieval-proposal.v1"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Run Id"
+          },
+          "plan_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Plan Hash"
+          },
+          "dataset_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Dataset Hash"
+          },
+          "binding": {
+            "$ref": "#/components/schemas/RetrievalConfigurationBinding-Output"
+          },
+          "producer": {
+            "$ref": "#/components/schemas/RetrievalProducerBinding"
+          },
+          "baseline": {
+            "$ref": "#/components/schemas/ModelSpec-Output"
+          },
+          "proposed": {
+            "$ref": "#/components/schemas/ModelSpec-Output"
+          },
+          "proposed_settings": {
+            "$ref": "#/components/schemas/RetrievalSettings-Output"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "synthetic_local_review_only",
+              "sample_review_required",
+              "heldout_review_required"
+            ],
+            "title": "Decision"
+          },
+          "production_approval_required": {
+            "type": "boolean",
+            "const": true,
+            "title": "Production Approval Required",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "run_id",
+          "plan_hash",
+          "dataset_hash",
+          "binding",
+          "producer",
+          "baseline",
+          "proposed",
+          "proposed_settings",
+          "decision"
+        ],
+        "title": "JointRetrievalProposal"
       },
       "JsonValue": {},
       "KeyInput": {
@@ -30005,6 +30537,85 @@
           "variants"
         ],
         "title": "RetrievalExecutionSpec"
+      },
+      "RetrievalProducerBinding": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.retrieval-producer.v1",
+            "title": "Version",
+            "default": "cutback.retrieval-producer.v1"
+          },
+          "file": {
+            "type": "string",
+            "maxLength": 240,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_./-]+$",
+            "title": "File"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Sha256"
+          },
+          "source_tree_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Source Tree Hash"
+          },
+          "commit": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{40,64}$",
+            "title": "Commit"
+          },
+          "program_sha256": {
+            "type": "string",
+            "const": "234c2703aa3b4c98b068dab33ba4e19407a9d05ea1275eaf436b0683bb8c7ac0",
+            "title": "Program Sha256",
+            "default": "234c2703aa3b4c98b068dab33ba4e19407a9d05ea1275eaf436b0683bb8c7ac0"
+          },
+          "provider": {
+            "type": "string",
+            "const": "openai",
+            "title": "Provider",
+            "default": "openai"
+          },
+          "surface": {
+            "type": "string",
+            "const": "responses.create",
+            "title": "Surface",
+            "default": "responses.create"
+          },
+          "model": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Model"
+          },
+          "max_output_tokens": {
+            "type": "integer",
+            "maximum": 16384.0,
+            "minimum": 16.0,
+            "title": "Max Output Tokens"
+          },
+          "corpus_file": {
+            "type": "string",
+            "maxLength": 240,
+            "minLength": 1,
+            "title": "Corpus File"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "file",
+          "sha256",
+          "source_tree_hash",
+          "commit",
+          "model",
+          "max_output_tokens",
+          "corpus_file"
+        ],
+        "title": "RetrievalProducerBinding"
       },
       "RetrievalProposal": {
         "properties": {

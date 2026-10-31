@@ -104,6 +104,18 @@ def confirm(root, control, *, candidate, max_usd, max_requests, purpose):
     from cutback.core.workspace import workspace_lock
     from cutback.evals.experiments import Budget, ExperimentPlan, plan_summary
 
+    if load_session(root).get("search_mode") == "joint_model_retrieval":
+        from cutback.agent_joint_retrieval import confirm as joint_confirm
+
+        return joint_confirm(
+            root,
+            control,
+            candidate=candidate,
+            max_usd=max_usd,
+            max_requests=max_requests,
+            purpose=purpose,
+        )
+
     budget = Budget(max_usd=max_usd, max_requests=max_requests)
     root, directory = workspace(root)
     with workspace_lock(directory):
@@ -221,6 +233,7 @@ def prepare(
     assumed_usd_per_cpu_hour,
     min_test_samples,
     corpus_authorized,
+    joint=False,
 ):
     from cutback.agent import load_session, permitted_file, public_session, save_session, workspace
     from cutback.agent_preparation import begin, bind, expiry
@@ -235,10 +248,14 @@ def prepare(
     from cutback.evals.experiments import Budget, ExperimentPlan, ModelSpec, plan_summary
     from cutback.evals.metrics import MetricSpec
     from cutback.evals.records import read_records
+    from cutback.evals.retrieval_joint import JOINT_RETRIEVAL_CONTRACT
     from cutback.evals.retrieval_planning import draft_retrieval_plan
 
     if corpus_authorized is not True:
         raise ValueError("EXPLICIT_BOUND_RETRIEVAL_CORPUS_AUTHORIZATION_REQUIRED")
+    if type(joint) is not bool:
+        raise ValueError("JOINT_RETRIEVAL_PREPARATION_FLAG_MUST_BE_BOOLEAN")
+    mode = "joint_model_retrieval" if joint else "retrieval_search"
     root, directory = workspace(root)
     project = str(UUID(str(project)))
     with workspace_lock(directory):
@@ -319,6 +336,7 @@ def prepare(
                     "cpu_basis": assumed_usd_per_cpu_hour,
                     "representative": representative,
                     "retain_case_outputs": retain_case_outputs,
+                    **({"search_contract": JOINT_RETRIEVAL_CONTRACT} if joint else {}),
                 }
             ),
             preparation,
@@ -326,10 +344,7 @@ def prepare(
             policy,
         )
         if state["phase"] in {"PLAN_READY", "PREPARING"}:
-            if (
-                state.get("search_mode") != "retrieval_search"
-                or state.get("preparation_sha256") != intent
-            ):
+            if state.get("search_mode") != mode or state.get("preparation_sha256") != intent:
                 raise ValueError("FROZEN_PLAN_CHANGED_START_NEW_SESSION")
             if state["phase"] == "PLAN_READY":
                 return public_session(state)
@@ -348,29 +363,67 @@ def prepare(
             max_output_tokens=producer.max_output_tokens,
             max_input_tokens=bound,
         )
-        specification = draft_retrieval_plan(
-            {
-                "workflow": body.workflow,
-                "hash": prepared["immutable_hash"],
-                "provenance": {
-                    "independent_labels": True,
-                    "max_input_bytes": max(
-                        (len(case.input.encode("utf-8")) for case in cases), default=0
-                    ),
-                },
+        metadata = {
+            "workflow": body.workflow,
+            "hash": prepared["immutable_hash"],
+            "provenance": {
+                "independent_labels": True,
+                "max_input_bytes": max(
+                    (len(case.input.encode("utf-8")) for case in cases), default=0
+                ),
             },
-            baseline,
-            corpus,
-            binding.settings,
-            metric=metric,
-            budget=budget,
-            assumed_usd_per_cpu_hour=assumed_usd_per_cpu_hour,
-            retain_case_outputs=retain_case_outputs,
-            configuration_binding=binding,
-        )
-        if preparation:
-            specification = specification.model_copy(
-                update={"content_nonce": UUID(preparation["content_nonce"])}
+        }
+
+        def freeze_nonce(value):
+            return (
+                value.model_copy(update={"content_nonce": UUID(preparation["content_nonce"])})
+                if preparation
+                else value
+            )
+
+        if joint:
+            from cutback.evals.joint_retrieval_planning import draft_plan
+
+            specification = None
+            qualified_candidates = 0
+            for limit in range(5, 0, -1):
+                proposed = freeze_nonce(
+                    draft_plan(
+                        metadata,
+                        baseline,
+                        corpus,
+                        binding.settings,
+                        metric=metric,
+                        budget=budget,
+                        max_candidates=limit,
+                        assumed_usd_per_cpu_hour=assumed_usd_per_cpu_hour,
+                        retain_case_outputs=retain_case_outputs,
+                        configuration_binding=binding,
+                        producer_binding=producer,
+                    )
+                )
+                if limit == 5:
+                    qualified_candidates = len(proposed.candidates)
+                if plan_summary(proposed, prepared)["fits_budget"]:
+                    specification = proposed
+                    break
+            if specification is None:
+                raise ValueError(
+                    "PROPOSED_RETRIEVAL_PLAN_EXCEEDS_BUDGET_OR_HAS_NO_VALIDATION_CASES"
+                )
+        else:
+            specification = freeze_nonce(
+                draft_retrieval_plan(
+                    metadata,
+                    baseline,
+                    corpus,
+                    binding.settings,
+                    metric=metric,
+                    budget=budget,
+                    assumed_usd_per_cpu_hour=assumed_usd_per_cpu_hour,
+                    retain_case_outputs=retain_case_outputs,
+                    configuration_binding=binding,
+                )
             )
         if not plan_summary(specification, prepared)["fits_budget"]:
             raise ValueError("PROPOSED_RETRIEVAL_PLAN_EXCEEDS_BUDGET_OR_HAS_NO_VALIDATION_CASES")
@@ -382,11 +435,21 @@ def prepare(
             endpoint=control.endpoint,
             selected_workflow=body.workflow,
             preparation_sha256=intent,
-            search_mode="retrieval_search",
+            search_mode=mode,
             permitted_files=identities,
             rights_ref=rights_ref,
             quality_scope="heldout_independent_exact_answers",
         )
+        if joint:
+            state["candidate_preparation"] = {
+                "requested_candidate_limit": 5,
+                "qualified_candidate_count": qualified_candidates,
+                "prepared_candidates": len(specification.candidates),
+                "budget_reduced_portfolio": len(specification.candidates) < qualified_candidates,
+                "selection_basis": "deterministic_data_independent_prefix_fitting_native_budget",
+                "examples_or_quality_requirements_reduced": False,
+                "full_task_economics_known": False,
+            }
         state["preparation_command"] = dict(
             files=files,
             rights_basis=rights_basis,
@@ -399,7 +462,8 @@ def prepare(
             representative=representative,
             retain_case_outputs=retain_case_outputs,
             mapping=mapping,
-            retrieval=True,
+            retrieval=not joint,
+            joint_retrieval=joint,
             retrieval_corpus_authorized=True,
             assumed_usd_per_cpu_hour=assumed_usd_per_cpu_hour,
             min_test_samples=min_test_samples,
@@ -408,6 +472,13 @@ def prepare(
         from cutback import agent_preparation as setup
 
         setup.require_protocol(control)
+        if joint:
+            ready = control("GET", "/v1/health/ready")
+            if (
+                ready.get("joint_retrieval_contract") != JOINT_RETRIEVAL_CONTRACT
+                or ready.get("retrieval_recipe_sha256") != binding.retrieval_contract_sha256
+            ):
+                raise ValueError("COLLECTOR_JOINT_RETRIEVAL_UPGRADE_REQUIRED")
         base = f"/v1/projects/{project}"
         setup.create(
             control,

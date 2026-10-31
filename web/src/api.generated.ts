@@ -799,6 +799,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/model-retrieval/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Draft */
+        post: operations["draft_v1_projects__project_id__model_retrieval_draft_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/model-retrieval/confirmation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm */
+        post: operations["confirm_v1_projects__project_id__model_retrieval_confirmation_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/model-retrieval/{run_id}/proposal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Proposal */
+        post: operations["proposal_v1_projects__project_id__model_retrieval__run_id__proposal_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/criteria/drafts": {
         parameters: {
             query?: never;
@@ -6255,9 +6306,10 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13" | "deterministic-v14" | "deterministic-v15" | "deterministic-v16" | "deterministic-v17";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13" | "deterministic-v14" | "deterministic-v15" | "deterministic-v16" | "deterministic-v17" | "deterministic-v18";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec-Input"] | null;
-            retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Input"] | null;
+            /** Retrieval Execution */
+            retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Input"] | components["schemas"]["JointModelRetrievalExecutionSpec-Input"] | null;
             /** Compression Execution */
             compression_execution?: components["schemas"]["CompressionExecutionSpec-Input"] | components["schemas"]["JointModelContextExecutionSpec-Input"] | null;
             source_binding?: components["schemas"]["SourceBinding"] | null;
@@ -6358,9 +6410,10 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13" | "deterministic-v14" | "deterministic-v15" | "deterministic-v16" | "deterministic-v17";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13" | "deterministic-v14" | "deterministic-v15" | "deterministic-v16" | "deterministic-v17" | "deterministic-v18";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec-Output"] | null;
-            retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Output"] | null;
+            /** Retrieval Execution */
+            retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Output"] | components["schemas"]["JointModelRetrievalExecutionSpec-Output"] | null;
             /** Compression Execution */
             compression_execution?: components["schemas"]["CompressionExecutionSpec-Output"] | components["schemas"]["JointModelContextExecutionSpec-Output"] | null;
             source_binding?: components["schemas"]["SourceBinding"] | null;
@@ -7807,6 +7860,139 @@ export interface components {
             cpu_charge_quantum_ms: number;
             configuration_binding?: components["schemas"]["CompressionConfigurationBinding"] | null;
             producer_binding?: components["schemas"]["ContextProducerBinding"] | null;
+        };
+        /** JointModelRetrievalExecutionSpec */
+        "JointModelRetrievalExecutionSpec-Input": {
+            /**
+             * Version
+             * @default cutback.joint-model-retrieval.v1
+             * @constant
+             */
+            version: "cutback.joint-model-retrieval.v1";
+            /** Contract Sha256 */
+            contract_sha256?: string;
+            corpus: components["schemas"]["RetrievalCorpus"];
+            /** Variants */
+            variants: components["schemas"]["RetrievalVariant-Input"][];
+            /**
+             * Max Query Bytes
+             * @default 1024
+             */
+            max_query_bytes: number;
+            /** Assumed Usd Per Cpu Hour */
+            assumed_usd_per_cpu_hour?: (number | string) | null;
+            /**
+             * Cpu Charge Quantum Ms
+             * @default 1
+             */
+            cpu_charge_quantum_ms: number;
+            configuration_binding?: components["schemas"]["RetrievalConfigurationBinding-Input"] | null;
+            producer_binding?: components["schemas"]["RetrievalProducerBinding"] | null;
+        };
+        /** JointModelRetrievalExecutionSpec */
+        "JointModelRetrievalExecutionSpec-Output": {
+            /**
+             * Version
+             * @default cutback.joint-model-retrieval.v1
+             * @constant
+             */
+            version: "cutback.joint-model-retrieval.v1";
+            /** Contract Sha256 */
+            contract_sha256?: string;
+            corpus: components["schemas"]["RetrievalCorpus"];
+            /** Variants */
+            variants: components["schemas"]["RetrievalVariant-Output"][];
+            /**
+             * Max Query Bytes
+             * @default 1024
+             */
+            max_query_bytes: number;
+            /** Assumed Usd Per Cpu Hour */
+            assumed_usd_per_cpu_hour?: string | null;
+            /**
+             * Cpu Charge Quantum Ms
+             * @default 1
+             */
+            cpu_charge_quantum_ms: number;
+            configuration_binding?: components["schemas"]["RetrievalConfigurationBinding-Output"] | null;
+            producer_binding?: components["schemas"]["RetrievalProducerBinding"] | null;
+        };
+        /** JointRetrievalConfirmationInput */
+        JointRetrievalConfirmationInput: {
+            /**
+             * Validation Run Id
+             * Format: uuid
+             */
+            validation_run_id: string;
+            budget: components["schemas"]["Budget-Input"];
+            /** Candidate */
+            candidate?: string | null;
+        };
+        /** JointRetrievalDraftInput */
+        JointRetrievalDraftInput: {
+            /**
+             * Dataset Id
+             * Format: uuid
+             */
+            dataset_id: string;
+            baseline: components["schemas"]["ModelSpec-Input"];
+            corpus: components["schemas"]["RetrievalCorpus"];
+            settings: components["schemas"]["RetrievalSettings-Input"];
+            metric: components["schemas"]["MetricSpec"];
+            budget: components["schemas"]["Budget-Input"];
+            /**
+             * Max Candidates
+             * @default 5
+             */
+            max_candidates: number;
+            /** Assumed Usd Per Cpu Hour */
+            assumed_usd_per_cpu_hour?: (number | string) | null;
+            /**
+             * Max Query Bytes
+             * @default 1024
+             */
+            max_query_bytes: number;
+            /**
+             * Retain Case Outputs
+             * @default false
+             */
+            retain_case_outputs: boolean;
+            configuration_binding?: components["schemas"]["RetrievalConfigurationBinding-Input"] | null;
+            producer_binding?: components["schemas"]["RetrievalProducerBinding"] | null;
+        };
+        /** JointRetrievalProposal */
+        JointRetrievalProposal: {
+            /**
+             * Version
+             * @default cutback.joint-retrieval-proposal.v1
+             * @constant
+             */
+            version: "cutback.joint-retrieval-proposal.v1";
+            /**
+             * Run Id
+             * Format: uuid
+             */
+            run_id: string;
+            /** Plan Hash */
+            plan_hash: string;
+            /** Dataset Hash */
+            dataset_hash: string;
+            binding: components["schemas"]["RetrievalConfigurationBinding-Output"];
+            producer: components["schemas"]["RetrievalProducerBinding"];
+            baseline: components["schemas"]["ModelSpec-Output"];
+            proposed: components["schemas"]["ModelSpec-Output"];
+            proposed_settings: components["schemas"]["RetrievalSettings-Output"];
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "synthetic_local_review_only" | "sample_review_required" | "heldout_review_required";
+            /**
+             * Production Approval Required
+             * @default true
+             * @constant
+             */
+            production_approval_required: true;
         };
         JsonValue: unknown;
         /** KeyInput */
@@ -9815,6 +10001,47 @@ export interface components {
              */
             cpu_charge_quantum_ms: number;
             configuration_binding?: components["schemas"]["RetrievalConfigurationBinding-Output"] | null;
+        };
+        /** RetrievalProducerBinding */
+        RetrievalProducerBinding: {
+            /**
+             * Version
+             * @default cutback.retrieval-producer.v1
+             * @constant
+             */
+            version: "cutback.retrieval-producer.v1";
+            /** File */
+            file: string;
+            /** Sha256 */
+            sha256: string;
+            /** Source Tree Hash */
+            source_tree_hash: string;
+            /** Commit */
+            commit: string;
+            /**
+             * Program Sha256
+             * @default 234c2703aa3b4c98b068dab33ba4e19407a9d05ea1275eaf436b0683bb8c7ac0
+             * @constant
+             */
+            program_sha256: "234c2703aa3b4c98b068dab33ba4e19407a9d05ea1275eaf436b0683bb8c7ac0";
+            /**
+             * Provider
+             * @default openai
+             * @constant
+             */
+            provider: "openai";
+            /**
+             * Surface
+             * @default responses.create
+             * @constant
+             */
+            surface: "responses.create";
+            /** Model */
+            model: string;
+            /** Max Output Tokens */
+            max_output_tokens: number;
+            /** Corpus File */
+            corpus_file: string;
         };
         /** RetrievalProposal */
         RetrievalProposal: {
@@ -14210,6 +14437,112 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["JointContextProposal"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    draft_v1_projects__project_id__model_retrieval_draft_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JointRetrievalDraftInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_v1_projects__project_id__model_retrieval_confirmation_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JointRetrievalConfirmationInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    proposal_v1_projects__project_id__model_retrieval__run_id__proposal_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentPurpose"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JointRetrievalProposal"];
                 };
             };
             /** @description Validation Error */

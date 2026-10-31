@@ -30,8 +30,9 @@ def setup(api, tenant, tmp_path, monkeypatch):
     return f"/v1/projects/{tenant[0]}"
 
 
+@pytest.mark.parametrize("joint", [False, True])
 def test_automatic_agent_retrieval_demo_runs_native_http_postgres_both_trees_and_rollback(
-    api, tenant, tmp_path, monkeypatch
+    api, tenant, tmp_path, monkeypatch, joint
 ):
     from cutback.demo_agent_retrieval import seed_agent_retrieval
 
@@ -40,12 +41,17 @@ def test_automatic_agent_retrieval_demo_runs_native_http_postgres_both_trees_and
         server(api[2]) as endpoint,
         httpx.Client(base_url=endpoint, headers=api[1], trust_env=False) as control,
     ):
-        result = seed_agent_retrieval(api[2], control, tenant[0], tmp_path / "workspace")
+        result = seed_agent_retrieval(
+            api[2], control, tenant[0], tmp_path / "workspace", joint=joint
+        )
     assert result["validation_run_id"] != result["confirmation_run_id"]
     assert result["native_sdk_calls"] > 0 and result["paid_provider_calls"] == 0
     assert result["review_status"] == "READY_FOR_LOCAL_REVIEW"
     assert result["rollback_verified"] and not result["application_changed"]
     assert not result["production_deployed"]
+    if joint:
+        assert result["local_consumer_check_http_calls"] == 4
+        assert result["search_axes"] == ["model", "output_cap", "retrieval"]
 
 
 def test_corpus_native_pipeline_prepares_exact_diff_and_passes_both_application_trees(
@@ -151,8 +157,9 @@ def test_corpus_native_pipeline_prepares_exact_diff_and_passes_both_application_
         assert all("deadline-days=" not in json.dumps(r.results) for r in runs)
 
 
+@pytest.mark.parametrize("joint", [False, True])
 def test_authenticated_retrieval_authoring_confirmation_and_mobile_accessibility(
-    api, tenant, tmp_path, monkeypatch
+    api, tenant, tmp_path, monkeypatch, joint
 ):
     if os.getenv("CUTBACK_TEST_BROWSER") != "true":
         pytest.skip("set CUTBACK_TEST_BROWSER=true for authenticated retrieval/browser acceptance")
@@ -198,8 +205,15 @@ def test_authenticated_retrieval_authoring_confirmation_and_mobile_accessibility
             )
             root = Path(result["source_directory"])
             inspection = tmp_path / "inspection.json"
+            metadata = {"configuration_binding": result["configuration_binding"]}
+            if joint:
+                from cutback.retrieval_source import inspect_producer
+
+                metadata["producer_binding"] = inspect_producer(root, "app.py")[2].model_dump(
+                    mode="json"
+                )
             inspection.write_text(
-                json.dumps({"configuration_binding": result["configuration_binding"]}),
+                json.dumps(metadata),
                 encoding="utf-8",
             )
             thread.start()
@@ -216,6 +230,7 @@ def test_authenticated_retrieval_authoring_confirmation_and_mobile_accessibility
                     "CUTBACK_RETRIEVAL_VIEWER": viewer,
                     "CUTBACK_RETRIEVAL_CORPUS": str(root / "corpus.json"),
                     "CUTBACK_RETRIEVAL_INSPECTION": str(inspection),
+                    "CUTBACK_JOINT_RETRIEVAL_BROWSER": "true" if joint else "false",
                 },
                 capture_output=True,
                 text=True,

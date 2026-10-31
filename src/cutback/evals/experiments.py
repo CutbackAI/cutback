@@ -35,6 +35,7 @@ from cutback.evals.compression import (
 from cutback.evals.datasets import digest
 from cutback.evals.metrics import MetricSpec, evaluate, grouped_confidence
 from cutback.evals.retrieval import RetrievalExecutionSpec, RetrievalProcessor
+from cutback.evals.retrieval_joint import JointModelRetrievalExecutionSpec
 from cutback.pricing import Catalog
 
 
@@ -369,9 +370,10 @@ class ExperimentPlan(StrictModel):
         "deterministic-v15",
         "deterministic-v16",
         "deterministic-v17",
+        "deterministic-v18",
     ] = "deterministic-v3"
     episode_execution: EpisodeExecutionSpec | None = None
-    retrieval_execution: RetrievalExecutionSpec | None = None
+    retrieval_execution: RetrievalExecutionSpec | JointModelRetrievalExecutionSpec | None = None
     compression_execution: CompressionExecutionSpec | JointModelContextExecutionSpec | None = None
     source_binding: SourceBinding | None = None
     prompt_bindings: list[PromptModelBinding] | None = Field(
@@ -619,8 +621,10 @@ class ExperimentPlan(StrictModel):
                     raise ValueError("COMPRESSION_FRAME_EXCEEDS_NATIVE_INPUT_BOUND")
         if self.retrieval_execution:
             retrieval = self.retrieval_execution
+            joint_retrieval = isinstance(retrieval, JointModelRetrievalExecutionSpec)
             if (
-                self.evaluator_version != "deterministic-v6"
+                self.evaluator_version
+                != ("deterministic-v18" if joint_retrieval else "deterministic-v6")
                 or self.episode_execution
                 or self.source_binding
                 or self.prompt_bindings
@@ -631,18 +635,68 @@ class ExperimentPlan(StrictModel):
                 or self.content_nonce is None
                 or self.content_nonce.int == 0
             ):
-                raise ValueError("RETRIEVAL_REQUIRES_NONCE_AND_EXPLICIT_V6_CONTRACT")
+                raise ValueError(
+                    "JOINT_RETRIEVAL_REQUIRES_NONCE_AND_EXPLICIT_V18_CONTRACT"
+                    if joint_retrieval
+                    else "RETRIEVAL_REQUIRES_NONCE_AND_EXPLICIT_V6_CONTRACT"
+                )
             models = [self.baseline, *self.candidates]
             if [v.model_key for v in retrieval.variants] != [m.key for m in models]:
                 raise ValueError("RETRIEVAL_VARIANTS_MUST_MATCH_ALL_MODEL_KEYS_IN_ORDER")
+            if joint_retrieval:
+                variants = [
+                    (model.model_dump_json(exclude={"key"}), value.settings.model_dump_json())
+                    for model, value in zip(models, retrieval.variants, strict=True)
+                ]
+                if len(set(variants)) != len(variants):
+                    raise ValueError("JOINT_RETRIEVAL_CANDIDATES_MUST_BE_DISTINCT")
             original = self.baseline.model_dump(mode="json", exclude={"key"})
+            preserved = {"key", "model", "max_output_tokens"}
+            original_joint = self.baseline.model_dump(mode="json", exclude=preserved)
+            if (
+                isinstance(retrieval, JointModelRetrievalExecutionSpec)
+                and retrieval.producer_binding is not None
+            ):
+                retrieval_producer = retrieval.producer_binding
+                if (
+                    (
+                        self.baseline.provider,
+                        self.baseline.model,
+                        self.baseline.max_output_tokens,
+                    )
+                    != (
+                        retrieval_producer.provider,
+                        retrieval_producer.model,
+                        retrieval_producer.max_output_tokens,
+                    )
+                    or self.baseline.instruction
+                    or self.baseline.request_contract is not None
+                    or self.baseline.native_contract is not None
+                ):
+                    raise ValueError("JOINT_RETRIEVAL_BASELINE_DIFFERS_FROM_BOUND_PRODUCER")
+                if any(
+                    model.max_output_tokens > self.baseline.max_output_tokens for model in models
+                ) or any(
+                    value.settings.max_context_bytes
+                    > retrieval.variants[0].settings.max_context_bytes
+                    for value in retrieval.variants
+                ):
+                    raise ValueError(
+                        "JOINT_RETRIEVAL_BOUND_SOURCE_CANNOT_EXPAND_NATIVE_OR_CONTEXT_CEILING"
+                    )
             for model in models:
+                same_configuration = (
+                    model.model_dump(mode="json", exclude=preserved) == original_joint
+                    and model.exact_cache is None
+                    if joint_retrieval
+                    else model.model_dump(mode="json", exclude={"key"}) == original
+                )
                 if (
                     model.provider not in {"openai", "anthropic"}
                     or model.routes
                     or model.prompt_cache
                     or model.agent_turn is not None
-                    or model.model_dump(mode="json", exclude={"key"}) != original
+                    or not same_configuration
                 ):
                     raise ValueError("RETRIEVAL_SEARCH_MUST_PRESERVE_NATIVE_MODEL_CONFIGURATION")
                 contract = model.request_contract
@@ -729,6 +783,8 @@ class ExperimentPlan(StrictModel):
                 if isinstance(self.compression_execution, JointModelContextExecutionSpec)
                 else "deterministic-v7"
                 if self.compression_execution
+                else "deterministic-v18"
+                if isinstance(self.retrieval_execution, JointModelRetrievalExecutionSpec)
                 else "deterministic-v6"
                 if self.retrieval_execution
                 else "deterministic-v13"

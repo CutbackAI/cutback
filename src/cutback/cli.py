@@ -123,6 +123,7 @@ def demo(
     generated_scenarios: bool = False,
     reactive_users: bool = False,
     agent_retrieval: bool = False,
+    joint_model_retrieval: bool = False,
 ):
     """Explore the complete sample. Requires Docker and Git; no API key or paid calls."""
     try:
@@ -147,6 +148,7 @@ def demo(
             generated_scenarios=generated_scenarios,
             reactive_users=reactive_users,
             agent_retrieval=agent_retrieval,
+            joint_model_retrieval=joint_model_retrieval,
         )
     except ImportError:
         fail(
@@ -559,6 +561,7 @@ register_tools(app, output, request, fail)
 register_security(app, output, request, fail)
 register_guardrails(app, output, request, fail)
 register_retrieval(app, output, request, fail)
+register_retrieval(app, output, request, fail, joint=True)
 register_compression(app, output, request, fail)
 register_compression(app, output, request, fail, joint=True)
 register_criteria(app, output, request, fail)

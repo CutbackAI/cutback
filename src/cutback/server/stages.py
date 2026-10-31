@@ -6,6 +6,7 @@ from sqlalchemy import select
 
 from cutback.evals.compression import JointModelContextExecutionSpec
 from cutback.evals.datasets import digest
+from cutback.evals.retrieval_joint import JointModelRetrievalExecutionSpec
 from cutback.server.db import DatasetRecord, ExperimentPlanRecord, ExperimentRunRecord
 from cutback.server.plan_artifacts import load_plan, target_evaluation_clause
 
@@ -70,6 +71,10 @@ def validate_confirmation(session, store, project_id, plan, *, run_id=None):
         or not decision.get("quality_gate_passed")
         or not decision.get("cheaper_on_sample")
         or (prior.retrieval_execution and not decision.get("retrieval_automation_eligible"))
+        or (
+            isinstance(prior.retrieval_execution, JointModelRetrievalExecutionSpec)
+            and decision.get("joint_model_retrieval_confirmation_eligible") is not True
+        )
         or (
             prior.compression_execution
             and not decision.get(

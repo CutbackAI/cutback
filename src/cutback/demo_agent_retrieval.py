@@ -6,7 +6,7 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 
-def seed_agent_retrieval(app, control, project_id, workspace):
+def seed_agent_retrieval(app, control, project_id, workspace, *, joint=False):
     from cutback.agent import advance, analyze, confirm, gate, prepare, proposal
     from cutback.agent_control import Control
     from cutback.application_check_discovery import discover
@@ -14,13 +14,17 @@ def seed_agent_retrieval(app, control, project_id, workspace):
     from cutback.core.retrieval import RetrievalSettings
     from cutback.core.workspace import private_directory
     from cutback.demo_retrieval import synthetic_executor
-    from cutback.retrieval_changes import review_change
     from cutback.sample_app.retrieval_fixture import fixture
     from cutback.server.worker import run_one
 
     workspace.mkdir(parents=True, exist_ok=True)
     root = private_directory(workspace, "agent-retrieval-" + uuid4().hex)
     shutil.copyfile(Path(__file__).parent / "sample_app/retrieval.py", root / "app.py")
+    if joint:
+        source = (root / "app.py").read_text(encoding="utf-8")
+        (root / "app.py").write_text(
+            source.replace('model="gpt-4.1-mini"', 'model="gpt-4.1"'), encoding="utf-8"
+        )
     corpus, cases = fixture()
     (root / "corpus.json").write_text(json.dumps(corpus) + "\n", encoding="utf-8")
     (root / "questions.jsonl").write_text(
@@ -40,6 +44,10 @@ def seed_agent_retrieval(app, control, project_id, workspace):
         'if __name__ == "__main__":\n    main()\n',
         encoding="utf-8",
     )
+    if joint:
+        shutil.copyfile(
+            Path(__file__).parent / "sample_app/retrieval_check.py", root / "check_application.py"
+        )
     git(root, "init")
     git(root, "config", "core.autocrlf", "false")
     git(root, "add", ".")
@@ -73,7 +81,8 @@ def seed_agent_retrieval(app, control, project_id, workspace):
         rights_ref="owned-agent-retrieval-corpus",
         max_usd="5",
         max_requests=500,
-        automatic=True,
+        automatic=joint,
+        retrieval=not joint,
         retrieval_corpus_authorized=True,
         minimum=1,
         independent_labels=True,
@@ -103,6 +112,7 @@ def seed_agent_retrieval(app, control, project_id, workspace):
                 row["candidate"]["key"]
                 for row in validated["decisions"]
                 if row.get("retrieval_automation_eligible") is True
+                and (not joint or len(row.get("search_axes_changed", [])) >= 2)
             ),
             None,
         )
@@ -135,6 +145,10 @@ def seed_agent_retrieval(app, control, project_id, workspace):
     receipt = run_checks(contract, root, proposed, execute_local=True)
     if not receipt["all_passed"]:
         raise ValueError("SYNTHETIC_AGENT_RETRIEVAL_APPLICATION_CHECK_FAILED")
+    if joint:
+        from cutback.joint_retrieval_changes import review_change
+    else:
+        from cutback.retrieval_changes import review_change
     review = review_change(
         artifact,
         contract.model_dump(mode="json"),
@@ -146,15 +160,28 @@ def seed_agent_retrieval(app, control, project_id, workspace):
     )
     patch.write_text(artifact["rollback_diff"], encoding="utf-8", newline="")
     git(proposed, "apply", str(patch))
-    if (proposed / "retrieval.json").read_bytes() != (root / "retrieval.json").read_bytes():
+    if any(
+        (proposed / name).read_bytes() != (root / name).read_bytes()
+        for name in ("app.py", "retrieval.json")
+    ):
         raise ValueError("SYNTHETIC_AGENT_RETRIEVAL_ROLLBACK_MISMATCH")
     return {
+        "dataset_id": prepared["dataset_id"],
         "validation_run_id": validated["run_id"],
         "confirmation_run_id": completed["run_id"],
         "native_sdk_calls": len(calls),
+        **(
+            {
+                "local_consumer_check_http_calls": 4,
+                "search_axes": ["model", "output_cap", "retrieval"],
+            }
+            if joint
+            else {}
+        ),
         "paid_provider_calls": 0,
         "review_status": review["status"],
         "rollback_verified": True,
         "application_changed": False,
         "production_deployed": False,
+        "source_change": artifact,
     }

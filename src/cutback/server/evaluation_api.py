@@ -984,6 +984,14 @@ def install_evaluation(app, sessions, authorize, scope):
             row = session.get(ExperimentPlanRecord, run.plan_id)
             active_policy(session, project_id, UUID(row.specification["policy_id"]))
             try:
+                metadata = row.specification.get("public_specification", {}).get(
+                    "retrieval_execution"
+                )
+                if (
+                    not isinstance(metadata, dict)
+                    or metadata.get("version") != "cutback.retrieval-execution.v1"
+                ):
+                    raise ValueError("RETRIEVAL_ROUTE_CONTRACT_MISMATCH")
                 prior = load_plan(store, project_id, row.specification)
                 plan = confirmation_plan(prior, run.results, str(run.id), body.budget)
             except ValueError:
@@ -1011,7 +1019,12 @@ def install_evaluation(app, sessions, authorize, scope):
             active_policy(session, project_id, UUID(row.specification["policy_id"]))
             try:
                 plan = load_plan(store, project_id, row.specification)
-                if not plan.retrieval_execution or not plan.predecessor_run_id:
+                from cutback.evals.retrieval import RetrievalExecutionSpec
+
+                if (
+                    type(plan.retrieval_execution) is not RetrievalExecutionSpec
+                    or not plan.predecessor_run_id
+                ):
                     raise ValueError("CONFIRMATION_REQUIRED")
                 validate_confirmation(session, store, project_id, plan, run_id=run.id)
             except ValueError:
@@ -1651,6 +1664,9 @@ def install_evaluation(app, sessions, authorize, scope):
     from cutback.server.joint_context_api import install_joint_context
 
     install_joint_context(app, sessions, authorize, scope, create_plan)
+    from cutback.server.joint_retrieval_api import install_joint_retrieval
+
+    install_joint_retrieval(app, sessions, authorize, scope, create_plan)
     from cutback.server.criteria_api import install_criteria
 
     install_criteria(app, sessions, authorize, scope, create_plan)

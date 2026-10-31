@@ -54,8 +54,16 @@ def public_config(value, *, redact_content_hashes=False, redact_criteria=False):
                 result[key] = None
             else:
                 from cutback.evals.retrieval import RetrievalExecutionSpec
+                from cutback.evals.retrieval_joint import (
+                    JOINT_RETRIEVAL_CONTRACT,
+                    JointModelRetrievalExecutionSpec,
+                )
 
-                result[key] = RetrievalExecutionSpec.model_validate(item).public_summary()
+                result[key] = (
+                    JointModelRetrievalExecutionSpec.model_validate(item).public_summary()
+                    if item.get("version") == JOINT_RETRIEVAL_CONTRACT
+                    else RetrievalExecutionSpec.model_validate(item).public_summary()
+                )
             continue
         if key in {"prompt_variables", "sampling_options", "content_nonce"} or (
             key == "request_contract"

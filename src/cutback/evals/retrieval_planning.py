@@ -101,7 +101,8 @@ def draft_retrieval_plan(
 def confirmation_plan(prior: ExperimentPlan, report, run_id: str, budget: Budget):
     """Select on validation only; server revalidates predecessor and holdout authority."""
     if (
-        prior.retrieval_execution is None
+        type(prior.retrieval_execution) is not RetrievalExecutionSpec
+        or prior.evaluator_version != "deterministic-v6"
         or prior.split != "validation"
         or prior.predecessor_run_id
         or report.get("status") != "COMPLETED"

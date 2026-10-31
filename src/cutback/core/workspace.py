@@ -30,6 +30,10 @@ def write_private(path: Path, value, *, exclusive=False):
     raw = json.dumps(value, sort_keys=True, ensure_ascii=True, indent=2).encode() + b"\n"
     if len(raw) > 2097152:
         raise ValueError("WORKSPACE_METADATA_TOO_LARGE")
+    _write_private_bytes(path, raw, exclusive=exclusive)
+
+
+def _write_private_bytes(path: Path, raw: bytes, *, exclusive=False):
     # A fixed-length temporary name avoids repeating a long destination name
     # in deep Windows application workspaces. O_EXCL still prevents reuse.
     temporary = path.with_name(".cutback-write-" + uuid4().hex)
@@ -80,6 +84,15 @@ def write_private_output(path: Path, value):
     """Write explicitly requested private JSON without following redirected parents."""
     path = prepare_private_output(path)
     write_private(path, value)
+
+
+def write_private_text_output(path: Path, value: str):
+    """Atomic UTF-8 artifact output, bounded and checked like private JSON outputs."""
+    path = prepare_private_output(path)
+    raw = value.encode("utf-8")
+    if len(raw) > 2097152:
+        raise ValueError("WORKSPACE_ARTIFACT_TOO_LARGE")
+    _write_private_bytes(path, raw)
 
 
 def read_private(path: Path):
