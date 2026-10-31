@@ -117,6 +117,7 @@ def demo(
     reviewed_criteria: bool = False,
     semantic_rubrics: bool = False,
     learned_routing: bool = False,
+    source_routing: bool = False,
 ):
     """Explore the complete sample. Requires Docker and Git; no API key or paid calls."""
     try:
@@ -137,6 +138,7 @@ def demo(
             reviewed_criteria=reviewed_criteria,
             semantic_rubrics=semantic_rubrics,
             learned_routing=learned_routing,
+            source_routing=source_routing,
         )
     except ImportError:
         fail(

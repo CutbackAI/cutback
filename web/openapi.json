@@ -3721,6 +3721,66 @@
         }
       }
     },
+    "/v1/projects/{project_id}/routing/fits/{fit_id}/source-proposal": {
+      "post": {
+        "summary": "Source Proposal",
+        "operationId": "source_proposal_v1_projects__project_id__routing_fits__fit_id__source_proposal_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "fit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Fit Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutingSourceProposalInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutingSourceProposal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{project_id}/routing/fits/{fit_id}/confirmation-drafts": {
       "post": {
         "summary": "Confirmation Draft",
@@ -19724,7 +19784,8 @@
               "deterministic-v12",
               "deterministic-v13",
               "deterministic-v14",
-              "deterministic-v15"
+              "deterministic-v15",
+              "deterministic-v16"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -20056,7 +20117,8 @@
               "deterministic-v12",
               "deterministic-v13",
               "deterministic-v14",
-              "deterministic-v15"
+              "deterministic-v15",
+              "deterministic-v16"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -23987,6 +24049,16 @@
             "type": "string",
             "format": "uuid",
             "title": "Training Run Id"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RoutingSourceBinding"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -29009,6 +29081,198 @@
         "type": "object",
         "title": "RoutingFitOptions"
       },
+      "RoutingSourceBinding": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.routing-source.v1",
+            "title": "Version",
+            "default": "cutback.routing-source.v1"
+          },
+          "producer_file": {
+            "type": "string",
+            "maxLength": 240,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_./-]+$",
+            "title": "Producer File"
+          },
+          "producer_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Producer Sha256"
+          },
+          "settings_file": {
+            "type": "string",
+            "maxLength": 240,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_./-]+$",
+            "title": "Settings File"
+          },
+          "settings_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Settings Sha256"
+          },
+          "source_tree_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Source Tree Hash"
+          },
+          "commit": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{40,64}$",
+            "title": "Commit"
+          },
+          "program_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Program Sha256",
+            "default": "67e0f1bf43b61b835e6c1a96e2efcd0456e5a9ef966c4bddfb749af5ea6ebe75"
+          },
+          "configuration_key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Configuration Key"
+          },
+          "configuration_model": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Configuration Model"
+          },
+          "policy_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Policy Sha256"
+          },
+          "baseline_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Baseline Sha256"
+          },
+          "max_input_bytes": {
+            "type": "integer",
+            "maximum": 95904.0,
+            "minimum": 1.0,
+            "title": "Max Input Bytes"
+          },
+          "provider": {
+            "type": "string",
+            "const": "openai",
+            "title": "Provider",
+            "default": "openai"
+          },
+          "surface": {
+            "type": "string",
+            "const": "responses.create",
+            "title": "Surface",
+            "default": "responses.create"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "producer_file",
+          "producer_sha256",
+          "settings_file",
+          "settings_sha256",
+          "source_tree_hash",
+          "commit",
+          "configuration_key",
+          "configuration_model",
+          "policy_sha256",
+          "baseline_sha256",
+          "max_input_bytes"
+        ],
+        "title": "RoutingSourceBinding"
+      },
+      "RoutingSourceProposal": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.routing-source-proposal.v1",
+            "title": "Version",
+            "default": "cutback.routing-source-proposal.v1"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Run Id"
+          },
+          "plan_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Plan Hash"
+          },
+          "dataset_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Dataset Hash"
+          },
+          "binding": {
+            "$ref": "#/components/schemas/RoutingSourceBinding"
+          },
+          "baseline": {
+            "$ref": "#/components/schemas/ModelSpec-Output"
+          },
+          "proposed": {
+            "$ref": "#/components/schemas/ModelSpec-Output"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "synthetic_local_review_only",
+              "sample_review_required",
+              "heldout_review_required"
+            ],
+            "title": "Decision"
+          },
+          "production_approval_required": {
+            "type": "boolean",
+            "const": true,
+            "title": "Production Approval Required",
+            "default": true
+          },
+          "full_task_cost_known": {
+            "type": "boolean",
+            "const": false,
+            "title": "Full Task Cost Known",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "run_id",
+          "plan_hash",
+          "dataset_hash",
+          "binding",
+          "baseline",
+          "proposed",
+          "decision"
+        ],
+        "title": "RoutingSourceProposal"
+      },
+      "RoutingSourceProposalInput": {
+        "properties": {
+          "purpose": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Purpose"
+          },
+          "confirmation_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Confirmation Run Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "purpose",
+          "confirmation_run_id"
+        ],
+        "title": "RoutingSourceProposalInput"
+      },
       "RoutingTrainingDraftInput": {
         "properties": {
           "request_id": {
@@ -29067,6 +29331,16 @@
             ],
             "title": "Transport",
             "default": "native_provider"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RoutingSourceBinding"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -29105,6 +29379,16 @@
             "minimum": 2.0,
             "title": "Max Cases",
             "default": 256
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RoutingSourceBinding"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,

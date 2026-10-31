@@ -23,10 +23,87 @@ test("routing training, private fitting, independent validation and confirmation
   await expect(
     page.getByRole("heading", { name: "Learn input-size routing" }),
   ).toBeVisible();
-  await page
-    .getByRole("button", { name: /^Inspect training plan / })
-    .first()
-    .click();
+  if (process.env.CUTBACK_ROUTING_INSPECTION) {
+    await page
+      .getByText("1. Prepare a training comparison", { exact: true })
+      .click();
+    const upload = page.getByLabel(
+      "Qualified application inspection (optional JSON)",
+      { exact: true },
+    );
+    await upload.setInputFiles({
+      name: "bad.json",
+      mimeType: "application/json",
+      buffer: Buffer.from("{broken"),
+    });
+    await expect(page.getByRole("alert")).toContainText(
+      "File contents omitted",
+    );
+    await upload.setInputFiles(process.env.CUTBACK_ROUTING_INSPECTION);
+    await expect(
+      page
+        .getByRole("region", {
+          name: "Learned input-size routing",
+          exact: true,
+        })
+        .getByRole("status"),
+    ).toContainText("Application bound: app.py");
+    await expect(
+      page.getByRole("combobox", { name: "Routing provider", exact: true }),
+    ).toBeDisabled();
+    await expect(
+      page.getByLabel("Shared task instruction", { exact: true }),
+    ).toHaveCount(0);
+    await page
+      .getByRole("button", {
+        name: "Clear application inspection",
+        exact: true,
+      })
+      .click();
+    await expect(
+      page.getByLabel("Shared task instruction", { exact: true }),
+    ).toBeVisible();
+    await upload.setInputFiles(process.env.CUTBACK_ROUTING_INSPECTION);
+    const form = page.getByRole("form", {
+      name: "Prepare routing training",
+      exact: true,
+    });
+    await form
+      .getByLabel("Required confirmation samples", { exact: true })
+      .fill("3");
+    await form
+      .getByLabel("Maximum USD for this stage", { exact: true })
+      .fill("2");
+    await form
+      .getByLabel("Maximum requests for this stage", { exact: true })
+      .fill("500");
+    const prepared = page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        response.url().endsWith("/routing/training-drafts") &&
+        response.status() === 201,
+    );
+    await form
+      .getByRole("button", { name: "Freeze training plan", exact: true })
+      .click();
+    const response = await prepared;
+    expect(response.request().postDataJSON().source.producer_file).toBe(
+      "app.py",
+    );
+    await expect(
+      page.getByRole("form", {
+        name: "Review exact routing plan",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await page
+      .getByText("1. Prepare a training comparison", { exact: true })
+      .click();
+  } else
+    await page
+      .getByRole("button", { name: /^Inspect training plan / })
+      .first()
+      .click();
 
   async function approve() {
     await page
@@ -201,6 +278,44 @@ test("routing training, private fitting, independent validation and confirmation
   await expect(evidence).toContainText("Verified at completion");
   await expect(evidence).toContainText("Count once using setup key");
   await expect(evidence).toContainText("Unknown");
+  if (process.env.CUTBACK_ROUTING_INSPECTION) {
+    await page
+      .getByLabel("Routing source proposal purpose", { exact: true })
+      .fill("owned-browser-source-review");
+    await page
+      .getByRole("button", {
+        name: "Read application routing proposal",
+        exact: true,
+      })
+      .click();
+    const sourceProposal = page.getByRole("region", {
+      name: "Application routing proposal",
+      exact: true,
+    });
+    await expect(sourceProposal).toContainText("synthetic_local_review_only");
+    const pendingDownload = page.waitForEvent("download");
+    await page
+      .getByRole("button", {
+        name: "Download private routing proposal",
+        exact: true,
+      })
+      .click();
+    expect((await pendingDownload).suggestedFilename()).toBe(
+      "routing-source-proposal.json",
+    );
+    await page
+      .getByRole("button", {
+        name: "Clear private application proposal",
+        exact: true,
+      })
+      .click();
+    await expect(
+      sourceProposal.getByRole("button", {
+        name: "Download private routing proposal",
+        exact: true,
+      }),
+    ).toHaveCount(0);
+  }
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.setViewportSize({ width: 390, height: 844 });
   expect(
@@ -241,6 +356,17 @@ test("routing training, private fitting, independent validation and confirmation
   ).toHaveCount(0);
   await expect(
     view.getByRole("button", { name: "Read fitted policy", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    view.getByLabel("Qualified application inspection (optional JSON)", {
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await expect(
+    view.getByRole("button", {
+      name: "Read application routing proposal",
+      exact: true,
+    }),
   ).toHaveCount(0);
   await view
     .getByRole("button", { name: /^Read test result / })

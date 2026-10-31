@@ -333,7 +333,19 @@ def run_one(
 
                 lock_lineage(session, project_id)
                 dataset_row = session.get(DatasetRecord, dataset_id)
-                dataset, policy = load_dataset(session, dataset_row, store)
+                source_routing = plan.routing_execution and plan.routing_execution.source
+                from cutback.core.input_routing import (
+                    SOURCE_DATASET_CASE_BOUND,
+                    SOURCE_DATASET_CONTENT_BOUND,
+                )
+
+                dataset, policy = load_dataset(
+                    session,
+                    dataset_row,
+                    store,
+                    max_cases=SOURCE_DATASET_CASE_BOUND if source_routing else None,
+                    max_content_bytes=SOURCE_DATASET_CONTENT_BOUND if source_routing else None,
+                )
                 if any(
                     provider not in policy.allowed_providers for provider in plan.approved_providers
                 ):

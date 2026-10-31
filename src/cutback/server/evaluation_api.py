@@ -968,7 +968,27 @@ def install_evaluation(app, sessions, authorize, scope):
             ):
                 raise HTTPException(403, "DATASET_OR_VENDOR_SCOPE_DENIED")
             try:
-                summary = plan_summary(body.specification, dataset_manifest(session, dataset))
+                manifest = dataset_manifest(session, dataset)
+                if (
+                    body.specification.routing_execution
+                    and body.specification.routing_execution.source
+                ):
+                    from cutback.core.input_routing import (
+                        SOURCE_DATASET_CASE_BOUND,
+                        SOURCE_DATASET_CONTENT_BOUND,
+                    )
+                    from cutback.server.worker import load_dataset
+
+                    # The metadata manifest cannot prove UTF-8 input bounds.
+                    # Read authorized encrypted cases rather than infer or omit them.
+                    manifest, _ = load_dataset(
+                        session,
+                        dataset,
+                        store,
+                        max_cases=SOURCE_DATASET_CASE_BOUND,
+                        max_content_bytes=SOURCE_DATASET_CONTENT_BOUND,
+                    )
+                summary = plan_summary(body.specification, manifest)
                 from cutback.evals.input_groups import effective_input_groups, requires_projection
 
                 if requires_projection(body.specification):

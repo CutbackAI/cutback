@@ -40,7 +40,12 @@ def reserve_training(session, run, environment_id, plan_sha256):
         or planned.project_id != run.project_id
         or planned.approval_status != "consumed"
         or planned.specification.get("plan_hash") != plan_sha256
-        or public.get("evaluator_version") != "deterministic-v15"
+        or public.get("evaluator_version")
+        != (
+            "deterministic-v16"
+            if public.get("routing_execution", {}).get("source")
+            else "deterministic-v15"
+        )
         or public.get("split") != "train"
         or public.get("routing_execution", {}).get("phase") != "training"
         or not environment
@@ -360,6 +365,7 @@ def validate_binding(session, store, project, plan, *, dataset_id=None):
         or plan.criteria != training.criteria
         or plan.approved_providers != training.approved_providers
         or binding.transport != training.routing_execution.transport
+        or binding.source != training.routing_execution.source
         or plan.candidates[0].model_dump(mode="json") != value["fit"]["candidate"]
     ):
         raise ValueError("ROUTING_FIT_FROZEN_POLICY_OR_OWNER_REQUIREMENTS_CHANGED")

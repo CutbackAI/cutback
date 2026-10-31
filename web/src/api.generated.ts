@@ -1089,6 +1089,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/routing/fits/{fit_id}/source-proposal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Source Proposal */
+        post: operations["source_proposal_v1_projects__project_id__routing_fits__fit_id__source_proposal_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/routing/fits/{fit_id}/confirmation-drafts": {
         parameters: {
             query?: never;
@@ -5742,7 +5759,7 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13" | "deterministic-v14" | "deterministic-v15";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13" | "deterministic-v14" | "deterministic-v15" | "deterministic-v16";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
             retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Input"] | null;
             /** Compression Execution */
@@ -5844,7 +5861,7 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13" | "deterministic-v14" | "deterministic-v15";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13" | "deterministic-v14" | "deterministic-v15" | "deterministic-v16";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
             retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Output"] | null;
             /** Compression Execution */
@@ -7469,6 +7486,7 @@ export interface components {
              * Format: uuid
              */
             training_run_id: string;
+            source?: components["schemas"]["RoutingSourceBinding"] | null;
         };
         /** LineageReconciliation */
         LineageReconciliation: {
@@ -9594,6 +9612,102 @@ export interface components {
              */
             max_fit_seconds: number;
         };
+        /** RoutingSourceBinding */
+        RoutingSourceBinding: {
+            /**
+             * Version
+             * @default cutback.routing-source.v1
+             * @constant
+             */
+            version: "cutback.routing-source.v1";
+            /** Producer File */
+            producer_file: string;
+            /** Producer Sha256 */
+            producer_sha256: string;
+            /** Settings File */
+            settings_file: string;
+            /** Settings Sha256 */
+            settings_sha256: string;
+            /** Source Tree Hash */
+            source_tree_hash: string;
+            /** Commit */
+            commit: string;
+            /**
+             * Program Sha256
+             * @default 67e0f1bf43b61b835e6c1a96e2efcd0456e5a9ef966c4bddfb749af5ea6ebe75
+             */
+            program_sha256: string;
+            /** Configuration Key */
+            configuration_key: string;
+            /** Configuration Model */
+            configuration_model: string;
+            /** Policy Sha256 */
+            policy_sha256: string;
+            /** Baseline Sha256 */
+            baseline_sha256: string;
+            /** Max Input Bytes */
+            max_input_bytes: number;
+            /**
+             * Provider
+             * @default openai
+             * @constant
+             */
+            provider: "openai";
+            /**
+             * Surface
+             * @default responses.create
+             * @constant
+             */
+            surface: "responses.create";
+        };
+        /** RoutingSourceProposal */
+        RoutingSourceProposal: {
+            /**
+             * Version
+             * @default cutback.routing-source-proposal.v1
+             * @constant
+             */
+            version: "cutback.routing-source-proposal.v1";
+            /**
+             * Run Id
+             * Format: uuid
+             */
+            run_id: string;
+            /** Plan Hash */
+            plan_hash: string;
+            /** Dataset Hash */
+            dataset_hash: string;
+            binding: components["schemas"]["RoutingSourceBinding"];
+            baseline: components["schemas"]["ModelSpec-Output"];
+            proposed: components["schemas"]["ModelSpec-Output"];
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "synthetic_local_review_only" | "sample_review_required" | "heldout_review_required";
+            /**
+             * Production Approval Required
+             * @default true
+             * @constant
+             */
+            production_approval_required: true;
+            /**
+             * Full Task Cost Known
+             * @default false
+             * @constant
+             */
+            full_task_cost_known: false;
+        };
+        /** RoutingSourceProposalInput */
+        RoutingSourceProposalInput: {
+            /** Purpose */
+            purpose: string;
+            /**
+             * Confirmation Run Id
+             * Format: uuid
+             */
+            confirmation_run_id: string;
+        };
         /** RoutingTrainingDraftInput */
         RoutingTrainingDraftInput: {
             /**
@@ -9629,6 +9743,7 @@ export interface components {
              * @enum {string}
              */
             transport: "native_provider" | "scripted_test_only";
+            source?: components["schemas"]["RoutingSourceBinding"] | null;
         };
         /** RoutingTrainingExecution */
         RoutingTrainingExecution: {
@@ -9649,6 +9764,7 @@ export interface components {
              * @default 256
              */
             max_cases: number;
+            source?: components["schemas"]["RoutingSourceBinding"] | null;
         };
         /** RoutingValidationDraftInput */
         RoutingValidationDraftInput: {
@@ -13862,6 +13978,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    source_proposal_v1_projects__project_id__routing_fits__fit_id__source_proposal_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                fit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutingSourceProposalInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutingSourceProposal"];
                 };
             };
             /** @description Validation Error */
