@@ -1,5 +1,126 @@
 # Implementation progress
 
+31 October 2026 source workflow stage runner, **implementation and qualification**.
+`workflow run` waits for one already approved native/cache/context/retrieval or
+routing stage. Its explicit local mode invokes the canonical worker once;
+remote mode never constructs a provider client. Neither mode approves or queues.
+It binds the saved source/project/destination/plan/run, bounds local polling,
+reconciles lost queue acknowledgement and stops before another approval or
+confirmation. Local recovery checks the canonical database scope and expired
+lease before constructing credentials. Source guard tests first passed **24 in
+5.82 seconds**, followed by **26 in 9.55 seconds** after more network/CLI guards.
+An initial integration collection imported a helper from the wrong test
+directory; it now uses the shared owned HTTP fixture. The first journey trial
+passed four and failed three in **72.71 seconds** because those configured-worker
+fixtures omitted their synthetic credential sentinel. The next trial passed six
+and stopped one routing case in **120.51 seconds**; SDK3 likewise passed 32 and
+stopped that case in **118.87 seconds**. Its same-process HTTP collector correctly
+refused a new encrypted routing fit after the fixture disabled content storage.
+The positive fixture now preserves that collector permission. A separate
+revocation regression requires the denial, preserves the exact pending fit and
+resumes only its nonbillable preparation after permission returns. Both routing
+checks passed **2 in 62.96 seconds**. New uncertain-charge, foreign-scope,
+canonical-plan, full installed and hosted gates remain required. The runner does
+not unify cross-engine strategy selection or grant all routing stages one budget.
+The subsequent complete focused source/migration scope passed **39 in 176.38
+seconds** on SDK2 and **39 in 179.38 seconds** on SDK3. It includes an actual
+expired billable reservation retaining its uncertain charge, local native
+outage without replay, canonical project/plan refusal and the five real-HTTP
+workflow paths. Later terminal-identity, driver-error suppression and CLI exit
+contracts are undergoing final qualification; these checkpoint totals are not
+attributed to the final installed artifact.
+The final focused SDK2 source scope passed **50 in 180.03 seconds**, including
+terminal run-identity checks, driver-error suppression and CLI exit contracts.
+Its private/public wheel is byte-identical
+(`4c8a2bce49eda806dd131f17ae690143ae53cd652dfd4a34373866a68f190197`)
+and both distributions pass identity/license/content/Twine checks. An invocation
+of the private build wrapper supplied a relative source path, so its later
+validation command resolved that path twice; the archives built successfully,
+but validation did not execute in that wrapper. Separate absolute-path checks
+then passed the full release validator for both archives; the wrapper now
+resolves its source before subprocesses. No product gate was weakened.
+The image matches all **414 application files** in a read-only, networkless
+probe. Fresh SDK2/SDK3 environments preserve **117 dependency versions** and
+match all **414 application files / 388 Python modules / five metadata files**.
+A core-only wheel consumer passes without server/provider SDKs. Source, public
+history and archives checked **1,214 files / 6,049 reachable objects / 1,630
+members / zero findings**. Complete installed/native and image gates are pending.
+
+A separate HTTP-only installation (`cutback[prompts]`, Pydantic 2.14.2,
+HTTPX 0.28.1) passed the actual subprocess/HTTP/PostgreSQL remote-agent journey
+in **35.01 seconds**. It has no provider SDK, server, database driver,
+cryptography, jsonschema, identity/storage/commercial SDK or pytest dependency.
+The child uses a project/environment-scoped key only in memory/environment,
+returns exit 2 while the same run is queued, then exit 0 after the real closed
+native worker completes; it never approves, queues or constructs a provider
+client. Tokens are absent from journal files and output. This adds a packaged
+HTTP-only installation to both full hosted verification jobs before acceptance;
+it does not establish real provider quality or production deployment.
+
+The first broad installed selections stopped on a retrieval test-fixture import
+ordering dependency: **71 passed / one unavailable Windows symlink privilege
+skip / one failure**, SDK2 **144.95 seconds**, SDK3 **150.41 seconds**. A helper's
+module-level encrypted-store class had already been imported before the test's
+key-capture patch. The retrieval fixture now constructs its own independent
+application and explicit encrypted store before importing any content. No
+runtime encryption or authority check is weakened; broad installed qualification
+must be repeated before accepting this increment.
+
+The corrected broad installed SDK2 selection passed **114 / one unavailable
+Windows symlink-privilege skip in 1,357.11 seconds**. It covers all new operator
+controls and the existing native/cache/context/retrieval/routing/reviewed-criteria
+journeys, source changes, the complete workload sample and authenticated
+desktop/mobile accessibility. The corresponding first SDK3 run was interrupted
+while investigating its long computation; it has no final acceptance result.
+An external stack-sampling tool could not read this owned Python process on
+Windows; no memory dump or locals were retained. A fresh synthetic SDK3 test
+session is running with per-test progress and bounded faulthandler diagnostics.
+It uses new disposable identities, not a retry of any customer/billable operation.
+Hosted acceptance remains required and is recorded on the containing PR.
+
+The runtime's exact non-root image
+`sha256:e73b28cb2432f11bf756b9024d2e9a51d63d5116921cbdecf6d12db5bc2c804e`
+passed the complete schema-0032 recovery gate: all **100 table counts**, **2,654**
+rekeyed encrypted objects, **24** profiles, **17** cache objects and **35** plans,
+including canonical workload campaigns, current source authority and costs.
+Two synthetic tenants accepted **2,000** events and deduplicated **2,000** replays
+in **2.359 seconds**, not a production SLA. Subsequent fixture/CI/documentation
+changes preserve every runtime, frontend, dependency/README/Docker input and
+exact wheel byte. The corrected private/public sdist is
+`c76f08fdd2c01f3a0cce38973265cdbd6655c8a230c89a6bb8954138ac916777`;
+source/history/archives checked **1,215 files / 6,067 reachable objects / 1,631
+members / zero findings**. Final release notes/checklist additions need their
+own archive check; no acceptance result is fabricated for a later archive.
+
+The preceding combined workload/source-guidance artifact's exact non-root image
+`sha256:487c6d68795a497765eeb9e9a2ed4cc3a0ec1187f06cab6655cadc08f359c191`
+passed revised recovery: schema **0032**, all **100 table counts**, **2,654**
+rekeyed encrypted objects, **24** profiles, **17** cache objects and **35** plans,
+including the canonical workload campaign parent, children, current source
+binding and costs. Main fixtures recorded **31 calls/five workflows** and the
+separate campaign **eight/one**. Two synthetic tenants accepted **2,000** events
+and deduplicated **2,000** replays in **1.828 seconds**, not a production SLA.
+The source/test/web/dependency/runtime-wheel bridge is byte-exact for the
+previously tested **126 / one skip** on each pinned SDK. The wheel is
+`22e57c38f2e52f5bb16b598ef23539df77be955ffc31cdb045e4fcec65001d19`;
+the sdist is
+`ec52b05ab17540574adcd5bf670bb33fda0ac6023612dba895a7f6fdbf018399`.
+Private/public archives match; distribution/Twine and the public boundary
+checked **1,211 files / 6,021 reachable objects / 1,626 members / zero findings**.
+[PR 74](https://github.com/CutbackAI/cutback/pull/74) merged as
+`ed9408e227b81d8896403a574b307dac0ffa3e88` after all **17** required jobs passed
+for reviewed head `954cf612d4eef71017057f63f63a33abac86b38c`. Reviewed and merged
+tree `6896b69d94d9b1072b88a18a07754fabbac8ec8e` matches the qualified source.
+It consolidates the 72/73 journey with source guidance; those drafts are closed
+as superseded. Hosted Python 3.11 passed **2,351 / 40 skips in 2,249.65 seconds**,
+Python 3.13 **2,350 / 41 in 2,526.95 seconds**. SDK3 core passed **1,465 / five**
+and **1,466 / four**; workflows **272 / nine** and systems **365 / five** on both.
+Both legacy jobs passed **21**, isolated tools **13**, infrastructure **seven**,
+with both CodeQL jobs, aggregates and dependency audit passing. CI run
+`41247916610` and security run `41247916605` retain exact-head evidence.
+This evidence predates the new runner and is not its installed acceptance.
+PyPI dev5 remains unchanged; no paid inference or production deployment.
+
 31 October 2026 offline source guidance, **active source work**. A new
 `workflow explain` command renders readable or JSON metadata from saved discovery.
 Known request blockers receive fixed, concrete inspection guidance without raw

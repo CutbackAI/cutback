@@ -6,6 +6,22 @@ Find where an AI application spends money. Test cheaper alternatives against its
 
 Cutback is an Apache-2.0 Python tool with an offline scanner and a self-hosted collector, PostgreSQL worker and dashboard. **Pre-alpha: synthetic tests demonstrate the workflow; production behavior and real customer savings are not validated.**
 
+For the latest complete source walkthrough, start Docker Desktop with Linux
+containers and install Git, Python 3.11–3.13 and uv 0.13.6, then run:
+
+```sh
+git clone https://github.com/CutbackAI/cutback.git
+cd cutback
+uv sync --locked --no-dev --extra server --extra openai
+uv run --no-sync cutback demo --workload-portfolio
+```
+
+Open the printed **Ready** address and choose **Explore sample**. Follow the
+observed workload through comparison, separate confirmation, a checked source
+change and exact rollback. All model replies are fixtures; no API key, paid
+inference or Node setup is needed. Press Ctrl+C to stop its owned temporary
+database. [Expected results and troubleshooting](https://github.com/CutbackAI/cutback/blob/main/examples/workload-portfolio/README.md).
+
 [What works, which version to install, and what remains](https://github.com/CutbackAI/cutback/blob/main/docs/status.md). The GitHub source contains workflows that are not yet in the published PyPI package. The source-built demo also requires Git on PATH to prepare its source-bound retrieval application; the collector image includes a pinned Git package.
 
 Source checkouts also include [agent and RAG evaluation](https://github.com/CutbackAI/cutback/blob/main/docs/agent-evaluation.md): native tool-call conversations, declared final-state checks, retrieval/citation evidence and individual durable request receipts. Try the [independent applications](https://github.com/CutbackAI/cutback/blob/main/examples/agent-evaluation/README.md), then inspect them in the guided demo. PyPI dev5 remains the earlier package.
