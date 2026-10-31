@@ -1,6 +1,7 @@
 """Real PostgreSQL, native SDK and SQLite; no OS-isolation claim in this module."""
 
 import hashlib
+import importlib
 import json
 import secrets
 from contextlib import contextmanager
@@ -12,6 +13,8 @@ import httpx
 import pytest
 from alembic import command
 from alembic.config import Config
+from alembic.migration import MigrationContext
+from alembic.operations import Operations
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -314,8 +317,20 @@ def test_guard_decisions_bracket_real_broker_effects_without_erasing_writes(
             )
             monkeypatch.setenv("CUTBACK_DATABASE_URL", api_database_url)
             command.check(cfg)
-            with pytest.raises(RuntimeError, match="GUARDED_TOOL_DOWNGRADE_REQUIRES"):
+            with pytest.raises(
+                RuntimeError, match="DELETE_OBSERVED_MODEL_EVIDENCE_BEFORE_DOWNGRADE"
+            ):
                 command.downgrade(cfg, "0025")
+            # The newer model-evidence guard is reached first in the real
+            # downgrade chain. Exercise the released tool guard directly,
+            # without deleting either kind of evidence to bypass a safeguard.
+            released = importlib.import_module(
+                "cutback.server.migrations.versions.0026_guarded_tool_delivery"
+            )
+            with sessions.begin() as session:
+                with Operations.context(MigrationContext.configure(session.connection())):
+                    with pytest.raises(RuntimeError, match="GUARDED_TOOL_DOWNGRADE_REQUIRES"):
+                        released.downgrade()
             assert (
                 api[0].get("/v1/health/ready", headers=api[1]).json()["schema_revision"]
                 == CURRENT_REVISION

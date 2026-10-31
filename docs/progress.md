@@ -1,5 +1,47 @@
 # Implementation progress
 
+Current reactive qualification retained three hosted SDK 3 failures (**1,564
+passed / 14 skips**) caused by the older guarded-tool migration test expecting
+its guard before the newly added observed-model guard. The corrected test checks
+the real chain's new refusal, then directly exercises the unchanged released
+tool-migration guard without erasing either receipt type. The complete guarded
+tool module passed against the exact installed application on default SDK
+**13 in 104.35 seconds** and SDK 3 **13 in 104.78 seconds**. These are scoped
+corrections, not a claim that the earlier full run passed. Current-head hosted
+and remaining full installed qualification continue. A separately observed local
+guarded-security Docker trial passed its exact focused rerun (**29.91 seconds**);
+the original failure remains part of the full-run record.
+
+The response-model/billing candidate's broader source regression passed **1,159
+tests / 26 skips in 580.16 seconds**. Its first full installed default attempt
+failed during collection because a reactive integration fixture depended on a
+unit module's import order. Shared reactive fixtures now live in ordinary test
+support, including the native-episode preparation path; application bytes are
+unchanged. The failed attempt is not passing installed acceptance. Corrected
+full installed and hosted gates remain pending.
+
+Observed response-model provenance is under source qualification. Native target,
+simulator and batch receipts retain bounded SDK-reported model identifiers
+separately from requested configuration; missing historical metadata stays
+unknown. Additive migration `0030` refuses a downgrade that would discard observed
+identities. Duplicate and late receipts preserve identity without double-counting
+known spend; conflicting final identities reject. API/types/React build, Ruff
+and mypy **344 modules** passed. Focused default checks passed **70 in 35.95
+seconds**, followed by native/accounting/authenticated admin/viewer/mobile/axe
+checks **55 in 86.39 seconds**. SDK 3 focused checks passed **113 in 136.06
+seconds**. The final null-history migration and invalid batch-usage identity
+regressions passed on SDK 3 with **48 checks in 23.74 seconds**; the broader
+default suite is running. Final archives, installed
+image and exact-head hosted gates remain pending; preceding package hashes do
+not qualify this implementation. Response identity and modeled prices do not
+constitute invoice verification or customer savings.
+
+Reactive billing regression follow-up: native transports exposed continued dispatch after a known modeled cost exceeded its reserved request bound (**three instead of one** target-path calls; **four instead of two** simulator-path calls). The shared ledger now blocks later calls and the episode run fails after preserving the known subtotal. Default focused native/PostgreSQL checks passed **25 in 76.46 seconds**; SDK 3 native/PG/authenticated-browser checks passed **36 in 62.27 seconds**. Post-fix broader source regression passed **1,163 / 26 skips in 529.37 seconds**; Ruff and mypy **342 modules** passed. The preceding f8 wheel does not contain this fix and is not the final candidate. Source archives now include every public documentation page, with explicit scenario/reactive source-input gates; the initially omitted guides remain recorded as failed qualification, not accepted artifacts.
+
+Reactive user simulation is a source implementation under qualification, not a published package feature. A separate frozen v17 contract adds one to three user-model calls after the original scripted prefix, with observed-only input, closed user-role output, original tool/assertion/turn limits and distinct simulation/target budgets. Broader source regression passed **1,155 / 26 skips in 548.11 seconds**. Final forecast/metadata-cost-view default checks passed **30 in 70.29 seconds**, followed by **two in 2.18 seconds** for end/follow-up ordering and strict ordinary evaluation. Final source SDK 3 passed **32 in 57.83 seconds**, including native Responses/Chat/Anthropic targets, user simulation, PostgreSQL concurrency/vendor/rights/downgrade checks and actual authenticated admin/viewer/desktop/mobile/axe. API/types/React and Ruff/format/mypy (**342 modules**) pass. The preceding candidate also passed reproducible archives, exact **366-file** installed/image payload, core-only consumption, installed SDK 3 **36 in 130.32 seconds**, and schema-0029 non-root restore/rekey (**99 tables / 2,028 encrypted objects / one cache object / 29 plans**). That candidate precedes the final forecast guard and metadata-cost view; final artifacts and exact-head hosted gates remain pending. No paid calls or production deployment occurred. See [contract and runnable independent example](reactive-users.md).
+
+Source-bound routing is publicly merged in [PR 56](https://github.com/CutbackAI/cutback/pull/56), merge `c339085fb7aac10bc149207c4e25606f33ecf4af`, matching the qualified tree `64763076cb4a5acd1d9fde1d1681a42653f0f364`. Exact reviewed head `22d34f9007ac67b0a009b963dbc1e462473a4635` passed all eleven actual hosted jobs: default **1,730 / 40 skips** and **1,729 / 41**, SDK 3 **1,488 / 13** and **1,489 / 12**, both legacy jobs, infrastructure, isolated tools, audit and both CodeQL analyses. Its reproducible archives, installed/image identities, core consumer and schema-0027 restore/rekey passed. Failed local timeout/configuration trials and their corrected scoped reruns remain recorded in the PR; they are not described as a single full passing local run. GitHub required a squash merge; the next scenario branch verifies the complete incorporated foundation tree before aligning ancestry. Published PyPI dev5 remains unchanged.
+
 Scenario container qualification retained a failed combined-demo trial: shared ticket inputs overlapped protected families from the larger support-desk cohort, so training preparation was refused before inference. The scenario demo now uses its own synthetic input and declared family namespace. A real HTTP regression first confirms that known protected ticket cases are still refused, then runs generation/review/import/validation successfully with the independent cohort. That regression passed on the default SDK **one in 12.63 seconds** and SDK 3 **one in 12.53 seconds**. Isolated sample/browser acceptance also passed **two in 26.23 seconds**. The original container artifact is not accepted; the corrected artifact must complete container recovery and installed qualification.
 
 Learned routing is publicly merged: [PR 55](https://github.com/CutbackAI/cutback/pull/55) merged as `f9b9461aaa99ab38ce718302c8134e4c1991b51d`, after exact reviewed head `62ec1670fb7067e85c29b11b30b8a7aeebaa8622` passed all eleven hosted jobs, full installed default **1,689 / 36 skips in 4,166.41 seconds** and full installed SDK 3 **1,460 / seven skips in 3,244.85 seconds**. Reproducible archives, core consumer, exact 344-file payload and non-root schema-0027 recovery/rekey acceptance passed. This is the bounded fitted-routing foundation; source-bound integration remains a separate draft and no PyPI upload occurred.

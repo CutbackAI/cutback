@@ -134,15 +134,38 @@ def synthetic_executor():
             raise ValueError("SAMPLE_REQUEST_SURFACE_UNEXPECTED")
         body = json.loads(request.content)
         judgment = body.get("text", {}).get("format", {}).get("name") == "cutback_episode_judgments"
-        scope = json.loads(body["input"]) if judgment else None
-        messages = [] if judgment else body["input"]
+        simulated = body.get("text", {}).get("format", {}).get("name") == "cutback_reactive_user"
+        scope = json.loads(body["input"]) if judgment or simulated else None
+        messages = [] if judgment or simulated else body["input"]
         serialized = json.dumps(messages)
         wrong = "intentionally_wrong" in serialized
         tool_results = [m for m in messages if m.get("type") == "function_call_output"]
         functions = [m.get("name") for m in messages if m.get("type") == "function_call"]
         rag = any(t["name"] == "search_policy" for t in body.get("tools", []))
         output: list[dict[str, Any]]
-        if judgment:
+        if simulated:
+            assert scope is not None
+            latest = scope["observed_conversation"][-1]["text"]
+            output = [
+                {
+                    "id": "msg_owned",
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "output_text",
+                            "annotations": [],
+                            "text": json.dumps(
+                                {
+                                    "action": "followup",
+                                    "message": "You said: " + latest[:100] + " Can you confirm?",
+                                }
+                            ),
+                        }
+                    ],
+                }
+            ]
+        elif judgment:
             assert scope is not None
             # Deliberate fixtures illustrate accounting and UI, not model intelligence.
             wrong = scope["final_answer"] in {
@@ -257,7 +280,10 @@ def specification(
     split="test",
     sample_limit=None,
     semantic=False,
+    reactive=False,
 ):
+    if semantic and reactive:
+        raise ValueError("SAMPLE_REACTIVE_AND_SEMANTIC_CONTRACTS_ARE_SEPARATE")
     plan = ExperimentPlan.model_validate(
         {
             "name": name,
@@ -317,10 +343,35 @@ def specification(
             },
         )
         plan = ExperimentPlan.model_validate(raw)
+    if reactive:
+        from uuid import uuid4
+
+        from cutback.evals.experiments import ModelSpec
+        from cutback.evals.user_simulation import user_simulation_model
+
+        raw = plan.model_dump(mode="json")
+        raw.update(evaluator_version="deterministic-v17", content_nonce=str(uuid4()))
+        raw["episode_execution"].update(
+            version="native-fixture-reactive-user-v1",
+            user_simulation={
+                "model": user_simulation_model(
+                    ModelSpec(
+                        key="simulated-user",
+                        provider="openai",
+                        model="gpt-4.1-mini",
+                        max_input_tokens=32768,
+                        max_output_tokens=512,
+                    )
+                ).model_dump(mode="json"),
+                "persona": "skeptical",
+                "max_turns": 1,
+            },
+        )
+        plan = ExperimentPlan.model_validate(raw)
     return plan
 
 
-def demonstrate(*, semantic=False):
+def demonstrate(*, semantic=False, reactive=False):
     dataset = {
         "immutable_hash": "a" * 64,
         "items": [
@@ -328,7 +379,7 @@ def demonstrate(*, semantic=False):
             for c in [support_case(), rag_case()]
         ],
     }
-    plan = specification(dataset["immutable_hash"], semantic=semantic)
+    plan = specification(dataset["immutable_hash"], semantic=semantic, reactive=reactive)
     executor = synthetic_executor()
     try:
         report = run(
@@ -342,7 +393,7 @@ def demonstrate(*, semantic=False):
     }
 
 
-def seed_agent_episodes(app, control, project_id):
+def seed_agent_episodes(app, control, project_id, *, reactive=False):
     from datetime import UTC, datetime, timedelta
     from uuid import UUID
 
@@ -394,9 +445,9 @@ def seed_agent_episodes(app, control, project_id):
             "cases": cases,
         },
     )
-    spec = specification(dataset["immutable_hash"], semantic=True).model_copy(
-        update={"retain_case_outputs": True}
-    )
+    spec = specification(
+        dataset["immutable_hash"], semantic=not reactive, reactive=reactive
+    ).model_copy(update={"retain_case_outputs": True})
     plan = post(
         base + "/experiments/plans",
         {"dataset_id": dataset["id"], "specification": spec.model_dump(mode="json")},
@@ -427,4 +478,5 @@ def seed_agent_episodes(app, control, project_id):
         "dataset_id": dataset["id"],
         "transport": "scripted_test_only",
         "paid_provider_calls": 0,
+        "reactive_user_simulation": reactive,
     }

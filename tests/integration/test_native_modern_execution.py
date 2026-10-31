@@ -108,6 +108,7 @@ def test_unknown_native_cost_keeps_reservation_and_cannot_retry_or_approve(
             assert run.requests_used == 1 and run.known_cost_requests == 0
             assert run.spent_usd == 0 and run.reserved_usd == upper_cost(baseline)
             assert len(receipts) == 1 and receipts[0].spent_usd is None
+            assert receipts[0].response_model == "gpt-6-luna"
             assert receipts[0].price_sha256 == baseline.native_contract.price_sha256
             assert run.results.get("recommendations", []) == []
         run_one(

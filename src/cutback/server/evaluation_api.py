@@ -29,7 +29,14 @@ from cutback.evals.datasets import (
     prepare_dataset,
     redact,
 )
-from cutback.evals.experiments import Budget, CriterionSpec, ExperimentPlan, ModelSpec, plan_summary
+from cutback.evals.experiments import (
+    Budget,
+    CriterionSpec,
+    ExperimentPlan,
+    ModelSpec,
+    UserSimulationInput,
+    plan_summary,
+)
 from cutback.evals.metrics import MetricSpec
 from cutback.evals.retrieval import AssumedCPURate
 from cutback.retrieval_changes import RetrievalProposal
@@ -151,6 +158,7 @@ class RetrievalConfirmationInput(StrictModel):
 
 
 class DraftInput(StrictModel):
+    user_simulation: UserSimulationInput | None = None
     isolated_tools: (
         IsolatedRecordExecution | IsolatedSecurityExecution | GuardedRecordExecution | None
     ) = None
@@ -771,6 +779,7 @@ def install_evaluation(app, sessions, authorize, scope):
                 episode_judging=body.episode_judging,
                 episode_judge=body.episode_judge,
                 episode_max_turns=body.episode_max_turns,
+                user_simulation=body.user_simulation,
                 isolated_tools=body.isolated_tools,
                 security_suite=body.security_suite,
             )

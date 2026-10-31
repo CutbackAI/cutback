@@ -113,6 +113,7 @@ def seed_support_desk(
     learned_routing=False,
     source_routing=False,
     generated_scenarios=False,
+    reactive_users=False,
 ):
     """Use actual scoped HTTP APIs and the durable worker, retaining the sample project."""
     require_demo_git()
@@ -371,7 +372,7 @@ def seed_support_desk(
             )
             from cutback.demo_agents import seed_agent_episodes
 
-            agent_sample = seed_agent_episodes(app, control, project["id"])
+            agent_sample = seed_agent_episodes(app, control, project["id"], reactive=reactive_users)
             from cutback.demo_campaigns import seed_campaign
             from cutback.demo_economics import seed_task_economics
 
@@ -539,6 +540,7 @@ def seed_support_desk(
                 ),
                 "execution_samples": execution_samples,
                 "agent_episode_run_id": agent_sample["run_id"],
+                "agent_episode_reactive_user_simulation": reactive_users,
                 "task_economics_sample": task_sample,
                 "improvement_campaign_sample": campaign_sample,
                 "retrieval_sample": {
@@ -630,6 +632,7 @@ def launch_demo(
     learned_routing=False,
     source_routing=False,
     generated_scenarios=False,
+    reactive_users=False,
 ):
     """Own one temporary Docker database. Never connect to production or reuse app keys."""
     require_demo_git()
@@ -773,6 +776,7 @@ def launch_demo(
                 learned_routing=learned_routing,
                 source_routing=source_routing,
                 generated_scenarios=generated_scenarios,
+                reactive_users=reactive_users,
             )
             if learned_routing or source_routing:
                 from cutback.demo_routing import routing_worker

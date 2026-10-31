@@ -21,6 +21,7 @@ class CallReceipt(StrictModel):
     model_key: str
     provider: str
     model: str
+    response_model: str | None = None
     purpose: str
     state: str
     price_sha256: str

@@ -7,6 +7,7 @@ from decimal import Decimal
 
 from cutback.core.agent_turns import EPISODE_FINAL_SCHEMA
 from cutback.core.episodes import EpisodeAssistant, EpisodeCitation, EpisodeToolCall
+from cutback.core.model_identity import reported_model_identifier
 from cutback.core.models import LLMEvent
 from cutback.evals._logging import owned_sdk_request
 from cutback.evals.executors import ConfiguredExecutor
@@ -205,4 +206,5 @@ class NativeAgentExecutor(ConfiguredExecutor):
             event.finish != "incomplete",
             agent_turn=event,
             agent_citations=citations,
+            response_model=reported_model_identifier(response.model),
         )

@@ -11,6 +11,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import func, select, true
 
 from cutback.core.input_routing import RoutingTrainingExecution
+from cutback.core.model_identity import reported_model_identifier
 from cutback.evals.datasets import digest
 from cutback.evals.experiments import provider_models, upper_cost
 from cutback.pricing import Catalog
@@ -26,7 +27,7 @@ from cutback.server.execution_db import ExecutionCall, ExecutionEpisode
 from cutback.server.principals import principal_role
 
 MAX_EXECUTION_CALLS = 100000
-PURPOSES = {"evaluation", "judge", "optimization"}
+PURPOSES = {"evaluation", "judge", "optimization", "simulation"}
 
 
 def recover_execution_leases(sessions, *, only_run_id=None, now=None):
@@ -131,6 +132,10 @@ class ExecutionLedger:
             max_requests
         ) is not int or not 1 <= max_requests <= self.plan.episode_execution.max_turns + int(
             self.plan.episode_execution.semantic_judging is not None
+        ) + (
+            self.plan.episode_execution.user_simulation.max_turns
+            if self.plan.episode_execution.user_simulation
+            else 0
         ):
             raise ValueError("EXECUTION_EPISODE_REQUEST_BOUND_INVALID")
         identifier = uuid4()
@@ -229,6 +234,11 @@ class ExecutionLedger:
                 self.plan.baseline,
                 *self.plan.candidates,
                 *([self.plan.judge] if self.plan.judge else []),
+                *(
+                    [self.plan.episode_execution.user_simulation.model]
+                    if self.plan.episode_execution and self.plan.episode_execution.user_simulation
+                    else []
+                ),
             ]
             for target in provider_models(candidate)
         ]
@@ -260,6 +270,13 @@ class ExecutionLedger:
         semantic = bool(
             self.plan.episode_execution and self.plan.episode_execution.semantic_judging
         )
+        simulation = (
+            self.plan.episode_execution.user_simulation if self.plan.episode_execution else None
+        )
+        if (purpose == "simulation") != bool(simulation and model.key == simulation.model.key):
+            raise ValueError("SIMULATED_USER_PURPOSE_AND_MODEL_MUST_MATCH_APPROVAL")
+        if purpose == "simulation" and self.episode_id is None:
+            raise ValueError("SIMULATED_USER_REQUIRES_ACTIVE_TARGET_EPISODE")
         if semantic and ((purpose == "judge") != (model.key == self.plan.judge.key)):
             raise ValueError("EPISODE_JUDGE_PURPOSE_AND_MODEL_MUST_MATCH_APPROVAL")
         if semantic and self.episode_id is None:
@@ -342,13 +359,12 @@ class ExecutionLedger:
                 ) != (run.id, run.project_id, self.environment_id, "running"):
                     raise ValueError("EXECUTION_EPISODE_SCOPE_OR_STATE_MISMATCH")
                 if episode.model_key != model.key and not (
-                    semantic
-                    and purpose == "judge"
+                    ((semantic and purpose == "judge") or (simulation and purpose == "simulation"))
                     and episode.model_key
                     in {m.key for m in [self.plan.baseline, *self.plan.candidates]}
                 ):
                     raise ValueError("EXECUTION_EPISODE_SCOPE_OR_STATE_MISMATCH")
-                if semantic:
+                if semantic or simulation:
                     used = session.scalar(
                         select(func.count())
                         .select_from(ExecutionCall)
@@ -359,7 +375,15 @@ class ExecutionLedger:
                             ExecutionCall.purpose == purpose,
                         )
                     )
-                    cap = 1 if purpose == "judge" else episode.max_requests - 1
+                    cap = (
+                        1
+                        if purpose == "judge"
+                        else simulation.max_turns
+                        if purpose == "simulation" and simulation
+                        else episode.max_requests
+                        - int(semantic)
+                        - (simulation.max_turns if simulation else 0)
+                    )
                     if used >= cap:
                         raise ValueError("EXECUTION_EPISODE_PURPOSE_REQUEST_BOUND_EXHAUSTED")
                 if episode.requests_used >= episode.max_requests:
@@ -406,6 +430,7 @@ class ExecutionLedger:
         if status == "completed" and spent is None:
             raise ValueError("COMPLETED_EXECUTION_CALL_REQUIRES_KNOWN_USAGE")
         tokens = [getattr(result, name, None) for name in ("input_tokens", "output_tokens")]
+        observed_model = reported_model_identifier(getattr(result, "response_model", None))
         tokens = [
             value if type(value) is int and 0 <= value <= 10**12 else None for value in tokens
         ]
@@ -423,11 +448,14 @@ class ExecutionLedger:
             row = session.get(ExecutionCall, UUID(str(identifier)), with_for_update=True)
             if not row or row.project_id != run.project_id or row.run_id != run.id:
                 raise ValueError("EXECUTION_CALL_SCOPE_MISMATCH")
+            if observed_model and row.response_model and observed_model != row.response_model:
+                raise ValueError("EXECUTION_CALL_RESPONSE_MODEL_ALREADY_FINAL")
             if row.state != "reserved":
                 if (
                     row.spent_usd == spent
                     and row.input_tokens == tokens[0]
                     and row.output_tokens == tokens[1]
+                    and (observed_model is None or row.response_model == observed_model)
                 ):
                     return
                 if row.spent_usd is not None or spent is None:
@@ -461,4 +489,5 @@ class ExecutionLedger:
             row.input_tokens, row.output_tokens = tokens
             row.duration_ms = duration
             row.complete = result.complete if result is not None else None
+            row.response_model = observed_model or row.response_model
             row.completed_at = now

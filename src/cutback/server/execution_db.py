@@ -47,7 +47,7 @@ class ExecutionEpisode(Base):
         ),
         CheckConstraint("repeat_index >= 0 AND repeat_index < 5", name="ck_episode_repeat"),
         CheckConstraint(
-            "max_requests >= 1 AND max_requests <= 33 AND requests_used <= max_requests",
+            "max_requests >= 1 AND max_requests <= 36 AND requests_used <= max_requests",
             name="ck_episode_turn_budget",
         ),
         CheckConstraint(
@@ -138,6 +138,7 @@ class ExecutionCall(Base):
     model_key: Mapped[str] = mapped_column(String(200))
     provider: Mapped[str] = mapped_column(String(30))
     model: Mapped[str] = mapped_column(String(200))
+    response_model: Mapped[str | None] = mapped_column(String(200), nullable=True)
     purpose: Mapped[str] = mapped_column(String(30))
     price_sha256: Mapped[str] = mapped_column(String(64))
     state: Mapped[str] = mapped_column(String(30), default="reserved")

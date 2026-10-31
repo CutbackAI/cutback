@@ -13,6 +13,7 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
+from cutback.core.model_identity import reported_model_identifier
 from cutback.core.models import LLMEvent
 from cutback.evals.datasets import digest
 from cutback.evals.experiments import qualified_native_model, upper_cost
@@ -145,6 +146,7 @@ class BatchResult:
     output_tokens: int | None = None
     complete: bool = False
     code: str = "BATCH_RESULT_UNCERTAIN"
+    response_model: str | None = None
     # Deliberately no latency field: the provider file does not report that metric.
 
 
@@ -228,6 +230,7 @@ def parse_response(row, model):
             else None,
             complete=native.status == "completed" and not unsupported and not refusal,
             code="BATCH_NATIVE_USAGE_INVALID",
+            response_model=reported_model_identifier(native.model),
         )
     cost = Catalog().price(event).amount
     # The serving mode is certified by the scoped batch job, not by response tier.
@@ -245,6 +248,7 @@ def parse_response(row, model):
         output_tokens=event.output_tokens,
         complete=complete,
         code="BATCH_NATIVE_RESPONSE_OBSERVED",
+        response_model=reported_model_identifier(native.model),
     )
 
 

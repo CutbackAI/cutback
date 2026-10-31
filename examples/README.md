@@ -6,6 +6,8 @@ For the native asynchronous batch lifecycle, use [`provider-batches`](provider-b
 
 The examples below are supplementary compatibility and integration references.
 
+For a user that reacts to the agent's observed replies, run the [reactive user example](reactive-user/README.md) or `uv run cutback demo --reactive-users` from source. It uses explicit synthetic native transports, separate user/target call accounting and encrypted trajectory review. This source addition is under qualification and is not included in PyPI dev5.
+
 For the agent's automatic model/output-cap portfolio, start with the [independent campaign example](automatic-portfolio/README.md). It explains the reference, static alternatives, reserved prompt-search fallback, untouched confirmation, exact diff and application-check review. Every synthetic transport remains explicit; none is a real-model benchmark.
 
 `uv run cutback demo --ticket-router` exposes its three-label task without copying a dashboard key. Use **Explore sample → Inspect ticket-routing failures** and read the authorized paired outputs. It uses independent synthetic source and declared related-case families.

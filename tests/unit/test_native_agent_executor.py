@@ -59,6 +59,7 @@ def test_native_agent_pins_tool_pairing_usage_refusals_no_retries_and_privacy(
                 executor.execute(model, "", 2)
         else:
             result = executor.execute(model, "", 2)
+            assert result.response_model == model.model
             assert result.agent_turn.finish == (
                 "tool_calls"
                 if mode == "tool"

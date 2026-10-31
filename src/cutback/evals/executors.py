@@ -5,6 +5,7 @@ import time
 from dataclasses import replace
 from datetime import UTC, datetime
 
+from cutback.core.model_identity import reported_model_identifier
 from cutback.core.models import LLMEvent
 from cutback.core.sdk_compat import OPENAI_TEXT_SDKS
 from cutback.evals._logging import owned_sdk_request
@@ -162,6 +163,7 @@ class OpenAIExecutor:
             event.output_tokens,
             complete=complete,
             actual_model="openai:" + response.model if model.native_contract is not None else None,
+            response_model=reported_model_identifier(response.model),
         )
 
     def close(self):
@@ -228,6 +230,7 @@ class LocalExecutor:
             model.local_cost_upper_usd,
             (time.perf_counter() - started) * 1000,
             complete=complete,
+            response_model=reported_model_identifier(response.model),
         )
 
     def close(self):
@@ -372,6 +375,7 @@ class AnthropicExecutor:
             event.input_tokens,
             event.output_tokens,
             complete,
+            response_model=reported_model_identifier(response.model),
         )
 
     def close(self):

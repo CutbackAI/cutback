@@ -16674,6 +16674,17 @@
             "type": "string",
             "title": "Model"
           },
+          "response_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Response Model"
+          },
           "purpose": {
             "type": "string",
             "title": "Purpose"
@@ -18830,7 +18841,7 @@
           "episode_execution": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/EpisodeExecutionSpec"
+                "$ref": "#/components/schemas/EpisodeExecutionSpec-Input"
               },
               {
                 "type": "null"
@@ -19111,6 +19122,16 @@
       },
       "DraftInput": {
         "properties": {
+          "user_simulation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserSimulationInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "isolated_tools": {
             "anyOf": [
               {
@@ -19484,13 +19505,14 @@
         "type": "object",
         "title": "EpisodeAssertions"
       },
-      "EpisodeExecutionSpec": {
+      "EpisodeExecutionSpec-Input": {
         "properties": {
           "version": {
             "type": "string",
             "enum": [
               "native-fixture-episode-v1",
               "native-fixture-episode-v2",
+              "native-fixture-reactive-user-v1",
               "native-isolated-record-episode-v1",
               "native-isolated-record-security-v1",
               "native-isolated-record-guarded-v1",
@@ -19562,6 +19584,116 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/SecurityEvaluationSpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "user_simulation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserSimulationSpec-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "EpisodeExecutionSpec"
+      },
+      "EpisodeExecutionSpec-Output": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "enum": [
+              "native-fixture-episode-v1",
+              "native-fixture-episode-v2",
+              "native-fixture-reactive-user-v1",
+              "native-isolated-record-episode-v1",
+              "native-isolated-record-security-v1",
+              "native-isolated-record-guarded-v1",
+              "native-isolated-record-guarded-security-v1"
+            ],
+            "title": "Version",
+            "default": "native-fixture-episode-v1"
+          },
+          "openai_surface": {
+            "type": "string",
+            "enum": [
+              "responses.create",
+              "chat.completions.create"
+            ],
+            "title": "Openai Surface",
+            "default": "responses.create"
+          },
+          "max_turns": {
+            "type": "integer",
+            "maximum": 32.0,
+            "minimum": 1.0,
+            "title": "Max Turns",
+            "default": 8
+          },
+          "max_tool_calls": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Max Tool Calls",
+            "default": 16
+          },
+          "transport": {
+            "type": "string",
+            "enum": [
+              "native_provider",
+              "scripted_test_only"
+            ],
+            "title": "Transport",
+            "default": "native_provider"
+          },
+          "semantic_judging": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EpisodeJudgingSpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "isolated_tools": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IsolatedRecordExecution"
+              },
+              {
+                "$ref": "#/components/schemas/IsolatedSecurityExecution"
+              },
+              {
+                "$ref": "#/components/schemas/GuardedRecordExecution"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isolated Tools"
+          },
+          "security_suite": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SecurityEvaluationSpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "user_simulation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserSimulationSpec-Output"
               },
               {
                 "type": "null"
@@ -20291,7 +20423,8 @@
               "deterministic-v13",
               "deterministic-v14",
               "deterministic-v15",
-              "deterministic-v16"
+              "deterministic-v16",
+              "deterministic-v17"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -20299,7 +20432,7 @@
           "episode_execution": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/EpisodeExecutionSpec"
+                "$ref": "#/components/schemas/EpisodeExecutionSpec-Input"
               },
               {
                 "type": "null"
@@ -20624,7 +20757,8 @@
               "deterministic-v13",
               "deterministic-v14",
               "deterministic-v15",
-              "deterministic-v16"
+              "deterministic-v16",
+              "deterministic-v17"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -20632,7 +20766,7 @@
           "episode_execution": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/EpisodeExecutionSpec"
+                "$ref": "#/components/schemas/EpisodeExecutionSpec-Output"
               },
               {
                 "type": "null"
@@ -34036,6 +34170,138 @@
           "training_rights_confirmed"
         ],
         "title": "TrainingSpec"
+      },
+      "UserSimulationInput": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "reactive-user-v1",
+            "title": "Version",
+            "default": "reactive-user-v1"
+          },
+          "model": {
+            "$ref": "#/components/schemas/ModelSpec-Input"
+          },
+          "persona": {
+            "type": "string",
+            "enum": [
+              "curious",
+              "skeptical",
+              "hurried",
+              "needs_clarification"
+            ],
+            "title": "Persona"
+          },
+          "max_turns": {
+            "type": "integer",
+            "maximum": 3.0,
+            "minimum": 1.0,
+            "title": "Max Turns",
+            "default": 2
+          },
+          "max_transcript_bytes": {
+            "type": "integer",
+            "maximum": 32000.0,
+            "minimum": 1000.0,
+            "title": "Max Transcript Bytes",
+            "default": 16000
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "model",
+          "persona"
+        ],
+        "title": "UserSimulationInput"
+      },
+      "UserSimulationSpec-Input": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "reactive-user-v1",
+            "title": "Version",
+            "default": "reactive-user-v1"
+          },
+          "model": {
+            "$ref": "#/components/schemas/ModelSpec-Input"
+          },
+          "persona": {
+            "type": "string",
+            "enum": [
+              "curious",
+              "skeptical",
+              "hurried",
+              "needs_clarification"
+            ],
+            "title": "Persona"
+          },
+          "max_turns": {
+            "type": "integer",
+            "maximum": 3.0,
+            "minimum": 1.0,
+            "title": "Max Turns",
+            "default": 2
+          },
+          "max_transcript_bytes": {
+            "type": "integer",
+            "maximum": 32000.0,
+            "minimum": 1000.0,
+            "title": "Max Transcript Bytes",
+            "default": 16000
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "model",
+          "persona"
+        ],
+        "title": "UserSimulationSpec"
+      },
+      "UserSimulationSpec-Output": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "reactive-user-v1",
+            "title": "Version",
+            "default": "reactive-user-v1"
+          },
+          "model": {
+            "$ref": "#/components/schemas/ModelSpec-Output"
+          },
+          "persona": {
+            "type": "string",
+            "enum": [
+              "curious",
+              "skeptical",
+              "hurried",
+              "needs_clarification"
+            ],
+            "title": "Persona"
+          },
+          "max_turns": {
+            "type": "integer",
+            "maximum": 3.0,
+            "minimum": 1.0,
+            "title": "Max Turns",
+            "default": 2
+          },
+          "max_transcript_bytes": {
+            "type": "integer",
+            "maximum": 32000.0,
+            "minimum": 1000.0,
+            "title": "Max Transcript Bytes",
+            "default": 16000
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "model",
+          "persona"
+        ],
+        "title": "UserSimulationSpec"
       },
       "ValidationError": {
         "properties": {
