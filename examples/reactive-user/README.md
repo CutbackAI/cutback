@@ -1,9 +1,10 @@
 # Reactive user example
 
-Run from the repository root after installing `cutback[server,evals,openai]`:
+From a source checkout, install the locked environment and run:
 
 ```shell
-python examples/reactive-user/app.py
+uv sync --locked --all-extras --dev
+uv run python examples/reactive-user/app.py
 ```
 
 This runs two independent synthetic applications through the pinned native SDK:
@@ -17,7 +18,7 @@ not the quality of any real model.
 For the HTTP collector, PostgreSQL ledger, encrypted evidence and dashboard:
 
 ```shell
-cutback demo --reactive-users
+uv run cutback demo --reactive-users
 ```
 
 Docker and Git are required. Choose **Explore sample**, then **Inspect agent and

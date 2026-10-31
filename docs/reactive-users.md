@@ -21,8 +21,9 @@ match the approved reactive bound and the recorded generated-turn count.
 
 ## Try it
 
-Run `python examples/reactive-user/app.py` for the offline native SDK example, or
-`cutback demo --reactive-users` for PostgreSQL and the dashboard. Both use explicitly
+From a source checkout, run `uv sync --locked --all-extras --dev`, then
+`uv run python examples/reactive-user/app.py` for the offline native SDK example, or
+`uv run cutback demo --reactive-users` for PostgreSQL and the dashboard. Both use explicitly
 synthetic transports. The test double reacts to the observed answer to demonstrate
 message flow; it provides no evidence of a real model's intelligence or savings.
 
