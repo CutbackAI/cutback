@@ -1,6 +1,7 @@
 """Automatic source adapter selection never grants rights, money or quality evidence."""
 
 import json
+import re
 
 import pytest
 from support_agent import fresh_application
@@ -10,13 +11,19 @@ from cutback.agent_strategy import freeze_preparation, preparation_options, sele
 from cutback.core.workspace import workspace_lock, write_private
 
 
-def test_cli_exposes_automatic_preparation_without_connecting():
+@pytest.mark.parametrize("force_color", [False, True])
+def test_cli_exposes_automatic_preparation_without_connecting(monkeypatch, force_color):
     from typer.testing import CliRunner
 
     from cutback.cli import app
 
+    if force_color:
+        monkeypatch.setenv("FORCE_COLOR", "1")
+    else:
+        monkeypatch.delenv("FORCE_COLOR", raising=False)
     response = CliRunner().invoke(app, ["workflow", "prepare", "--help"], color=False)
-    assert response.exit_code == 0 and "--automatic" in response.stdout
+    visible = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", response.stdout)
+    assert response.exit_code == 0 and "--automatic" in visible
 
 
 def test_wrapper_contracts_take_precedence_and_do_not_claim_economic_superiority():
