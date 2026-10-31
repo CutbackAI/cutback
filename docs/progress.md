@@ -1,5 +1,28 @@
 # Implementation progress
 
+The SDK capture-ingestion recovery fix passes **23 checks on SDK 2.29.0 in
+29.72 seconds** and **23 on 3.35.1 in 24.96 seconds**. A new PostgreSQL fault
+test first reproduced deletion of committed ciphertext after a lost commit
+acknowledgement. Cleanup now rechecks references behind the policy transaction
+barrier. Exact redacted-content retries preserve their object; changed content
+or event bindings conflict, missing committed content requires reconciliation,
+expired IDs cannot recreate content and concurrent writes share the policy's
+object limit. Sample expiry is capped by current authorization. Legacy rows
+without provider metadata remain unknown rather than being backfilled by a
+retry. Package/hosted acceptance follows; measured-workload profiling is not
+implemented by this transaction fix.
+
+The working authenticated encrypted-object expiry extension passes **81 / one
+host symlink skip in 57.17 seconds on SDK3**, including real PostgreSQL pending
+transactions, cache unavailability/no replacement call, dataset preservation,
+key rotation and existing privacy/content/migration checks. File and synthetic
+S3 tests cover authenticated expiry, old versions, conditional deletion,
+pagination, unknown keys, forged/corrupt/changed objects and delete-marker
+preservation. The independent worker scheduler and count-only logs are tested;
+Ruff and mypy (359 modules) pass. Final default regression, package/image and
+hosted acceptance are pending. This does not establish real-cloud erasure or
+resolve uncertain unexpired ownership; see [retention](encrypted-retention.md).
+
 The exact-cache PR's first Python CodeQL run failed on the direct provider-
 credential fingerprint (`py/weak-sensitive-data-hashing`). The failed public
 run and artifacts are retained. Working source replaces it with scope-bound

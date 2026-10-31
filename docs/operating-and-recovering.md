@@ -1,5 +1,10 @@
 # Operate and recover a self-hosted Cutback
 
+The worker's [authenticated encrypted-object expiry](encrypted-retention.md)
+handles expired orphan ciphertext independently from database maintenance and
+inference. Review its file/S3 boundaries, required permissions and backup limits
+before relying on physical retention in an authorized environment.
+
 The collector, PostgreSQL, encrypted object store and encryption keys form one recovery unit. A database-only restore cannot recover deleted ciphertext or a lost key. These instructions cover the local file backend; remote S3 versioning, customer KMS, PostgreSQL PITR and clean-host disaster recovery need a drill in the actual authorized environment.
 
 ## Installation and release controls

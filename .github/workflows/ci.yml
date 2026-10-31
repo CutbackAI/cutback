@@ -103,6 +103,9 @@ jobs:
           tests/integration/test_response_model_evidence.py
           tests/integration/test_native_fixture_source.py
           tests/integration/test_native_cache_workflow.py
+          tests/integration/test_encrypted_object_retention.py
+          tests/integration/test_capture_commit_recovery.py
+          tests/integration/test_object_recovery.py
           tests/integration/test_exact_cache_experiment.py
           tests/integration/test_agent_exact_cache.py
           tests/integration/test_cache_call_evidence.py

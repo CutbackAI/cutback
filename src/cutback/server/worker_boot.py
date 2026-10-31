@@ -1,5 +1,6 @@
 """Long-running self-host worker. Maintenance is available while inference stays disabled."""
 
+import json
 import os
 import time
 
@@ -8,7 +9,46 @@ from cutback.server.operations import maintain_all
 from cutback.server.worker import configured_execution_enabled, expire_payloads, run_one
 
 
-def worker_cycle(sessions, store, *, maintenance_due=True):
+def report_encrypted_expiry(outcomes):
+    """Emit bounded counts only; custom driver details are never operational logs."""
+    phase = outcomes.get("encrypted_object_expiry")
+    if not isinstance(phase, dict):
+        return
+    result = phase.get("result", {})
+    if not isinstance(result, dict):
+        result = {}
+    status = phase.get("status")
+    backend = result.get("backend")
+    safe: dict[str, object] = {
+        "phase": "encrypted_object_expiry",
+        "status": status
+        if type(status) is str and status in {"OK", "FAILED", "UNSUPPORTED"}
+        else "FAILED",
+        "backend": backend if type(backend) is str and backend in {"file", "s3"} else "custom",
+    }
+    for name in ("scanned", "deleted", "failures"):
+        value = result.get(name)
+        safe[name] = value if type(value) is int and 0 <= value <= 100 else None
+    complete = result.get("cycle_complete")
+    safe["cycle_complete"] = complete if type(complete) is bool else None
+    print(json.dumps(safe, sort_keys=True), flush=True)
+
+
+def encrypted_expiry_delay(phase):
+    if not isinstance(phase, dict):
+        return 60
+    if phase.get("status") == "UNSUPPORTED":
+        return 3600
+    result = phase.get("result")
+    if phase.get("status") != "OK" or not isinstance(result, dict):
+        return 60
+    complete = result.get("cycle_complete")
+    if type(complete) is not bool:
+        return 60
+    return 3600 if complete else 5
+
+
+def worker_cycle(sessions, store, *, maintenance_due=True, encrypted_expiry_due=True):
     """Independent failure domains: maintenance cannot starve an eligible job."""
     outcomes = {}
 
@@ -22,6 +62,16 @@ def worker_cycle(sessions, store, *, maintenance_due=True):
         except Exception:
             outcomes[phase] = {"status": "FAILED", "code": "WORKER_PHASE_FAILED"}
             print(f"Cutback worker phase {phase} failed; details suppressed", flush=True)
+
+    if store and encrypted_expiry_due:
+        expire = getattr(store, "expire_page", None)
+        if callable(expire):
+            attempt("encrypted_object_expiry", expire)
+        else:
+            outcomes["encrypted_object_expiry"] = {
+                "status": "UNSUPPORTED",
+                "code": "BACKEND_ENCRYPTED_EXPIRY_SWEEP_UNAVAILABLE",
+            }
 
     if maintenance_due:
         from cutback.server.campaign_retention import expire_campaigns
@@ -132,13 +182,28 @@ def main():
 
         store = configured_store()
     next_maintenance = float("-inf")
+    next_encrypted_expiry = float("-inf")
     try:
         while True:
             due = time.monotonic() >= next_maintenance
-            outcomes = worker_cycle(sessions, store, maintenance_due=due)
+            sweep_due = time.monotonic() >= next_encrypted_expiry
+            outcomes = worker_cycle(
+                sessions, store, maintenance_due=due, encrypted_expiry_due=sweep_due
+            )
             if due:
                 failed = any(value["status"] == "FAILED" for value in outcomes.values())
                 next_maintenance = time.monotonic() + (60 if failed else 3600)
+            if sweep_due:
+                report_encrypted_expiry(outcomes)
+                delay = encrypted_expiry_delay(outcomes.get("encrypted_object_expiry", {}))
+                next_encrypted_expiry = time.monotonic() + delay
             time.sleep(2)
     finally:
-        engine.dispose()
+        try:
+            close = getattr(store, "close", None)
+            if callable(close):
+                close()
+        except Exception:
+            print("Cutback worker storage shutdown failed; details suppressed", flush=True)
+        finally:
+            engine.dispose()
