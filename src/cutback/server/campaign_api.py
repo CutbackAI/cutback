@@ -12,6 +12,8 @@ from cutback.core.instruction_edits import LiteralInstructionEdit
 from cutback.core.models import Identifier, StrictModel
 from cutback.evals.campaign_budget import compile_campaign
 from cutback.evals.campaigns import (
+    PORTFOLIO_VERSIONS,
+    WORKLOAD_CAMPAIGN_VERSION,
     CampaignBudget,
     CampaignVersion,
     ImprovementCampaign,
@@ -151,6 +153,7 @@ class CampaignTemplate(StrictModel):
     baseline_provider: str
     baseline_model: str
     source_bound: bool
+    workload_bound_cache: bool = False
     instruction_edit: LiteralInstructionEdit | None = None
 
 
@@ -279,6 +282,9 @@ def install_campaigns(app, sessions, authorize, scope):
                         source_bound=bool(
                             r.specification["public_specification"].get("source_binding")
                         ),
+                        workload_bound_cache=bool(
+                            r.specification["public_specification"].get("workload_portfolio")
+                        ),
                         instruction_edit=edits.get(
                             (
                                 r.specification["public_specification"].get("source_binding") or {}
@@ -345,9 +351,12 @@ def install_campaigns(app, sessions, authorize, scope):
                 ):
                     raise HTTPException(403, "CAMPAIGN_VENDOR_POLICY_DENIED")
                 require_source_registered(session, project_id, campaign.template)
+                from cutback.server.workload_portfolio import validate_binding as validate_workload
+
+                validate_workload(session, project_id, campaign.template)
                 loaded, _ = load_dataset(session, dataset, store)
                 training_lineage(session, project_id, loaded)
-                if campaign.version != "cutback.improvement-campaign.v3":
+                if campaign.version not in PORTFOLIO_VERSIONS:
                     generation_input(campaign, loaded["items"])
                 snapshot = session.get(TaskCostSnapshot, campaign.baseline_snapshot_id)
                 cost = snapshot_cost(snapshot, project_id, env.id, campaign.template.workflow)
@@ -355,7 +364,7 @@ def install_campaigns(app, sessions, authorize, scope):
                 envelope["baseline_snapshot_sha256"] = snapshot.evidence_sha256
                 if envelope["eligible"]:
                     raw = campaign.model_dump(mode="json")
-                    if campaign.version == "cutback.improvement-campaign.v3":
+                    if campaign.version in PORTFOLIO_VERSIONS:
                         raw["static_portfolio"] = [
                             m.model_dump(mode="json")
                             for m in campaign.static_portfolio or []
@@ -367,7 +376,7 @@ def install_campaigns(app, sessions, authorize, scope):
                             variants_per_round=envelope["variants_per_round"],
                         )
                     campaign = ImprovementCampaign.model_validate(raw)
-                    if campaign.version == "cutback.improvement-campaign.v3" and envelope["rounds"]:
+                    if campaign.version in PORTFOLIO_VERSIONS and envelope["rounds"]:
                         generation_input(campaign, loaded["items"])
                 identity = uuid4()
                 expiry = min(
@@ -375,6 +384,13 @@ def install_campaigns(app, sessions, authorize, scope):
                     datetime.now(UTC) + timedelta(days=policy.retention_days),
                     datetime.fromisoformat(loaded["expires_at"]),
                 )
+                if campaign.template.workload_portfolio is not None:
+                    expiry = min(
+                        expiry,
+                        datetime.fromisoformat(
+                            campaign.template.workload_portfolio.assessment.valid_until
+                        ),
+                    )
                 context = SimpleNamespace(
                     id=identity, project_id=project_id, policy_id=policy_id, expires_at=expiry
                 )
@@ -454,6 +470,11 @@ def install_campaigns(app, sessions, authorize, scope):
                     session, project_id, UUID(template.specification["policy_id"])
                 )
                 plan = load_plan(require_store(app), project_id, template.specification)
+                workload = body.version == WORKLOAD_CAMPAIGN_VERSION
+                if workload != (plan.workload_portfolio is not None):
+                    raise HTTPException(
+                        409, "CACHE_CAMPAIGN_REQUIRES_EXPLICIT_WORKLOAD_V4_ENVELOPE"
+                    )
                 if (
                     plan.staged
                     or plan.predecessor_run_id
@@ -480,6 +501,11 @@ def install_campaigns(app, sessions, authorize, scope):
                         }
                     )
                 )
+                if workload:
+                    cache_controls = [m for m in plan.candidates if m.exact_cache is not None]
+                    if len(cache_controls) != 1:
+                        raise HTTPException(409, "WORKLOAD_CAMPAIGN_REQUIRES_ONE_CACHE_CONTROL")
+                    simple = cache_controls[0]
                 dataset = session.get(DatasetRecord, template.dataset_id)
                 raw = plan.model_dump(mode="json")
                 raw.update(
@@ -513,7 +539,7 @@ def install_campaigns(app, sessions, authorize, scope):
                                     )
                                 ]
                             }
-                            if body.version == "cutback.improvement-campaign.v3"
+                            if body.version in PORTFOLIO_VERSIONS
                             else {}
                         ),
                         "instruction_edit": instruction_edit.model_dump(mode="json")
@@ -521,6 +547,9 @@ def install_campaigns(app, sessions, authorize, scope):
                         else None,
                         "generator": {
                             "model": body.generator_model.model_dump(mode="json"),
+                            "transport": "scripted_test_only"
+                            if plan.native_fixture is not None
+                            else "native_provider",
                             "rounds": body.rounds,
                             "variants_per_round": body.variants_per_round,
                             "max_output_tokens": plan.baseline.max_output_tokens,

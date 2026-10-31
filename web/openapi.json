@@ -18275,7 +18275,8 @@
             "enum": [
               "cutback.improvement-campaign.v1",
               "cutback.improvement-campaign.v2",
-              "cutback.improvement-campaign.v3"
+              "cutback.improvement-campaign.v3",
+              "cutback.improvement-campaign.v4"
             ],
             "title": "Version",
             "default": "cutback.improvement-campaign.v1"
@@ -18523,6 +18524,11 @@
           "source_bound": {
             "type": "boolean",
             "title": "Source Bound"
+          },
+          "workload_bound_cache": {
+            "type": "boolean",
+            "title": "Workload Bound Cache",
+            "default": false
           },
           "instruction_edit": {
             "anyOf": [
@@ -24000,7 +24006,8 @@
             "enum": [
               "cutback.improvement-campaign.v1",
               "cutback.improvement-campaign.v2",
-              "cutback.improvement-campaign.v3"
+              "cutback.improvement-campaign.v3",
+              "cutback.improvement-campaign.v4"
             ],
             "title": "Version",
             "default": "cutback.improvement-campaign.v1"

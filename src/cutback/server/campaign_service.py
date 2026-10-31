@@ -148,6 +148,9 @@ def load_campaign(session, store, parent):
     ):
         raise ValueError("CAMPAIGN_VENDOR_POLICY_DENIED")
     require_source_registered(session, parent.project_id, campaign.template)
+    from cutback.server.workload_portfolio import validate_binding as validate_workload
+
+    validate_workload(session, parent.project_id, campaign.template)
     reference = session.get(CampaignEconomicReference, parent.id)
     snapshot = session.get(TaskCostSnapshot, reference.snapshot_id) if reference else None
     if (

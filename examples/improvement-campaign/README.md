@@ -1,5 +1,28 @@
 # Source-bound improvement campaign
 
+New workload-bound source sample, **under qualification**:
+
+```powershell
+uv run python examples/improvement-campaign/sample.py --local-target . --workload-cache-first
+```
+
+Use an already running owned local collector with authorized encrypted storage.
+The sample creates its own project and committed synthetic billing application,
+observes eight real SDK calls through closed HTTP fixtures, and qualifies a
+cache hypothesis from their retained source window. Ordinary agent preparation
+then freezes one native/cache campaign with a separate synthetic complete-task
+cost declaration and explicit opportunity assumptions. A successful cache trial
+skips the proposer and confirms on untouched groups under the same total budget.
+The sample prepares a reversible source diff, runs checks on both trees and
+verifies exact rollback. Inspect **Campaigns** using the printed project and
+campaign IDs. Add `--cleanup` to delete that sample project and its encrypted
+objects; its local synthetic source workspace remains for inspection.
+
+The source window's repetition opportunity is not a whole-task savings estimate.
+Responses, token counts and the task-cost declaration are synthetic. No vendor
+request, production change or runtime cache activation occurs. This option runs
+separately from `--outcomes`, `--watch`, `--modern-model` and `--ticket-router`.
+
 Status: locally accepted source; see the progress record for hosted/publication gates. PyPI dev5 does not contain it yet. No real model performance or customer savings is claimed.
 
 From this source checkout, run `uv run cutback demo` with Docker Desktop running. Choose **Explore sample**, then **Follow an automatic improvement campaign**. The demo uses PostgreSQL, encrypted content, actual pinned OpenAI SDK requests with owned HTTP transports, scoped HTTP APIs and the same durable execution ledger used by the operator worker. It requires no provider key and makes zero vendor requests.

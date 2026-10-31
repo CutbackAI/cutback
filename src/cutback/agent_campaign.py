@@ -55,6 +55,16 @@ def prepare(
             if simple_first is None
             else "cutback.improvement-campaign.v2"
         )
+        if state.get("workload_portfolio_sha256"):
+            from cutback.evals.campaigns import WORKLOAD_CAMPAIGN_VERSION
+
+            if simple_first is False:
+                raise ValueError("WORKLOAD_CACHE_CAMPAIGN_REQUIRES_SIMPLE_FIRST")
+            if control("GET", "/v1/health/ready").get("workload_campaign_contract") != (
+                WORKLOAD_CAMPAIGN_VERSION
+            ):
+                raise ValueError("COLLECTOR_WORKLOAD_CAMPAIGN_UPGRADE_REQUIRED")
+            version = WORKLOAD_CAMPAIGN_VERSION
         body = {
             "version": version,
             "template_plan_id": state["plan"]["id"],

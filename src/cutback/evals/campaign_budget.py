@@ -4,9 +4,13 @@ import json
 from decimal import ROUND_DOWN, Context, Decimal, localcontext
 
 from cutback.evals.campaigns import (
+    PORTFOLIO_VERSIONS,
     SIMPLE_FIRST_VERSIONS,
+    WORKLOAD_CAMPAIGN_VERSION,
     ImprovementCampaign,
+    generated_validation_controls,
     generation_input_upper_bytes,
+    generation_seeds,
     proposal_model,
     static_alternative_available,
     static_candidates,
@@ -19,7 +23,7 @@ def compile_campaign(campaign: ImprovementCampaign, dataset, baseline_cost):
     """Freeze conservative effort without reducing validation or confirmation samples."""
     # Cost compilation must not inherit an application's precision, rounding or traps.
     with localcontext(Context(prec=64)):
-        if campaign.version != "cutback.improvement-campaign.v3":
+        if campaign.version not in PORTFOLIO_VERSIONS:
             return _compile_campaign(campaign, dataset, baseline_cost)
         alternatives = static_candidates(campaign)
         # Narrow complete alternatives before approval, never validation/test samples.
@@ -51,7 +55,8 @@ def _compile_campaign(campaign: ImprovementCampaign, dataset, baseline_cost):
     """
     plan, generator = campaign.template, campaign.generator
     simple_first = campaign.version in SIMPLE_FIRST_VERSIONS
-    portfolio_version = campaign.version == "cutback.improvement-campaign.v3"
+    portfolio_version = campaign.version in PORTFOLIO_VERSIONS
+    workload_version = campaign.version == WORKLOAD_CAMPAIGN_VERSION
     initial_stage = simple_first and static_alternative_available(campaign)
     if plan.price_sha256 != Catalog().sha256 or dataset["immutable_hash"] != plan.dataset_hash:
         raise ValueError("CAMPAIGN_DATASET_OR_PRICE_CONTRACT_CHANGED")
@@ -82,7 +87,7 @@ def _compile_campaign(campaign: ImprovementCampaign, dataset, baseline_cost):
     simple = max((upper_cost(m) for m in alternatives), default=base)
     generated = max(
         upper_cost(m.model_copy(update={"max_output_tokens": generator.max_output_tokens}))
-        for m in models
+        for m in generation_seeds(campaign)
     )
     proposer = upper_cost(proposal_model(generator))
     judge_calls = (2 if plan.judge_swap_orders else 1) if plan.judge else 0
@@ -139,10 +144,12 @@ def _compile_campaign(campaign: ImprovementCampaign, dataset, baseline_cost):
                 )
             for rounds in range(1, generator.rounds + 1):
                 for variants in range(1, generator.variants_per_round + 1):
-                    static_targets = 0 if simple_first else 1
+                    controls = generated_validation_controls(campaign)
+                    static_targets = len(controls)
+                    control_cost = sum((upper_cost(m) for m in controls), Decimal(0))
                     val_cost = val_n * (
                         base
-                        + static_targets * simple
+                        + control_cost
                         + variants * generated
                         + (static_targets + variants) * judge_cost
                     )
@@ -170,7 +177,9 @@ def _compile_campaign(campaign: ImprovementCampaign, dataset, baseline_cost):
             if not reasons:
                 reasons.append("complete_campaign_exceeds_opportunity_request_or_input_cap")
     return {
-        "contract": "cutback.campaign-budget.v3"
+        "contract": "cutback.campaign-budget.v4"
+        if workload_version
+        else "cutback.campaign-budget.v3"
         if portfolio_version
         else "cutback.campaign-budget.v2"
         if simple_first
@@ -191,7 +200,9 @@ def _compile_campaign(campaign: ImprovementCampaign, dataset, baseline_cost):
         "forecast_gross_modeled_opportunity_usd": str(gross) if gross is not None else None,
         "baseline_cost_per_success_usd": str(baseline_cost) if baseline_cost is not None else None,
         "static_baseline_kind": (
-            "native_model_and_output_cap_portfolio"
+            "workload_qualified_native_and_exact_cache_portfolio"
+            if workload_version
+            else "native_model_and_output_cap_portfolio"
             if portfolio_version and alternatives
             else "unchanged_control_no_cheaper_static_variant"
             if portfolio_version
@@ -210,7 +221,9 @@ def _compile_campaign(campaign: ImprovementCampaign, dataset, baseline_cost):
             {
                 "strategy_order": (
                     [
-                        "static_native_portfolio"
+                        "workload_qualified_native_cache_portfolio"
+                        if workload_version
+                        else "static_native_portfolio"
                         if portfolio_version
                         else "static_native_alternative"
                     ]
@@ -222,7 +235,9 @@ def _compile_campaign(campaign: ImprovementCampaign, dataset, baseline_cost):
                 "initial_validation_requests": initial_calls,
                 "instruction_search_enabled": bool(rounds),
                 "optimization_overhead_scope": (
-                    "native_provider_calls_only_other_costs_not_measured"
+                    "native_and_declared_cache_operations_other_costs_unknown"
+                    if workload_version
+                    else "native_provider_calls_only_other_costs_not_measured"
                 ),
             }
             if simple_first
@@ -237,6 +252,7 @@ def _compile_campaign(campaign: ImprovementCampaign, dataset, baseline_cost):
                         "model": m.model,
                         "max_output_tokens": m.max_output_tokens,
                         "worst_case_request_usd": str(upper_cost(m)),
+                        **({"engine": "exact_cache"} if m.exact_cache else {}),
                     }
                     for m in alternatives
                 ]

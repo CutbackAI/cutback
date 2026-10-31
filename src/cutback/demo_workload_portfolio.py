@@ -12,10 +12,12 @@ from unittest.mock import patch
 from uuid import UUID, uuid4
 
 
-def seed_workload_portfolio(app, control, project_id, workspace, ingest_token):
+def seed_workload_portfolio(app, control, project_id, workspace, ingest_token, *, execute=True):
     from cutback.demo import require_demo_git
 
     require_demo_git()
+    if type(execute) is not bool:
+        raise ValueError("SYNTHETIC_WORKLOAD_EXECUTION_FLAG_REQUIRED")
 
     import httpx
     from openai import OpenAI
@@ -224,6 +226,19 @@ def seed_workload_portfolio(app, control, project_id, workspace, ingest_token):
         )
         if not planned["plan"].get("native_fixture"):
             raise ValueError("SYNTHETIC_WORKLOAD_FROZEN_FIXTURE_REQUIRED")
+        if not execute:
+            return {
+                "dataset_id": planned["dataset_id"],
+                "plan_id": planned["plan"]["id"],
+                "plan_hash": planned["plan"]["plan_hash"],
+                "source_directory": str(root),
+                "analysis_id": analysis["id"],
+                "observed_native_calls": len(calls),
+                "modeled_potential_hits": binding.assessment.modeled_potential_hits,
+                "paid_provider_calls": 0,
+                "target_runs_queued": 0,
+                "phase": "PLAN_READY",
+            }
         executor = OpenAIExecutor(
             http_client=httpx.Client(
                 transport=httpx.MockTransport(provider), trust_env=False, follow_redirects=False

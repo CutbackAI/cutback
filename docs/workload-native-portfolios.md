@@ -11,6 +11,13 @@ selection across routing, retrieval, compression, prompt generation and training
 
 ## Start with the independent application
 
+The [new v4 campaign extension](improvement-campaigns.md), under qualification,
+also combines this fixed cache control with native alternatives and conditional
+prompt search under one complete-task economic envelope. Its separate
+[cache-first sample](../examples/improvement-campaign/README.md) uses ordinary
+agent preparation and verifies both source trees and rollback. Generated native
+instructions do not inherit the cache window's opportunity forecast.
+
 The working source also adds a complete
 [fixture-only walkthrough](../examples/workload-portfolio/README.md), under
 qualification: `cutback demo --workload-portfolio`. It observes an independent

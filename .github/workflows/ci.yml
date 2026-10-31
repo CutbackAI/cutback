@@ -117,6 +117,8 @@ jobs:
           tests/integration/test_agent_cache_workload.py
           tests/end_to_end/test_native_profile_dashboard.py
           tests/end_to_end/test_request_reuse_example.py
+          tests/end_to_end/test_workload_portfolio_demo.py
+          tests/end_to_end/test_workload_campaign_pipeline.py
           tests/integration/test_object_recovery.py
           tests/integration/test_exact_cache_experiment.py
           tests/integration/test_agent_exact_cache.py
@@ -150,6 +152,7 @@ jobs:
           tests/integration/test_execution_ledger.py tests/integration/test_campaign_workflow.py
           tests/integration/test_campaign_simple_first.py
           tests/integration/test_campaign_portfolio.py
+          tests/integration/test_workload_campaign.py
           tests/integration/test_agent_case_retention.py
           tests/integration/test_campaign_operator.py tests/integration/test_campaign_operator_local.py
           tests/integration/test_campaign_preparation_basis.py

@@ -8,9 +8,11 @@ from sqlalchemy import func, or_, select
 
 from cutback.evals.campaigns import (
     SIMPLE_FIRST_VERSIONS,
+    WORKLOAD_CAMPAIGN_VERSION,
     GenerationFeedback,
     ProposalOnlyPlan,
     decode_proposals,
+    generated_validation_controls,
     generation_input,
     proposal_model,
     static_alternative_available,
@@ -470,7 +472,9 @@ def advance_one(
                         refs,
                         static=True,
                         derivation={
-                            "strategy": "static_native_portfolio"
+                            "strategy": "workload_qualified_native_cache_portfolio"
+                            if campaign.version == WORKLOAD_CAMPAIGN_VERSION
+                            else "static_native_portfolio"
                             if campaign.version == "cutback.improvement-campaign.v3"
                             else "static_native_alternative",
                             "proposer_calls": 0,
@@ -604,11 +608,7 @@ def advance_one(
                             known[identity] = str(version.id)
                     link.derivation = {**link.derivation, "candidate_dispositions": dispositions}
                     if fresh:
-                        controls = (
-                            campaign.template.candidates
-                            if campaign.version == "cutback.improvement-campaign.v1"
-                            else []
-                        )
+                        controls = generated_validation_controls(campaign)
                         plan = target_plan(parent, campaign, dataset, [*controls, *fresh])
                         child_run(
                             session,

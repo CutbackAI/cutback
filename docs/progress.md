@@ -1,5 +1,56 @@
 # Implementation progress
 
+31 October 2026 workload-bound campaigns, **active engineering; not accepted**.
+The v4 envelope combines the qualified exact-cache control and native alternatives
+before bounded prompt search, with a shared parent reservation and untouched
+confirmation. The cache control remains unchanged during generated validation
+and is excluded from proposer seeds. Current source-window authority is checked
+at admission, approval and call boundaries. A native-fixture draft now also
+freezes the proposer's synthetic-only transport. New real PostgreSQL tests passed
+**2 in 126.71 seconds**: cache success skips the proposer; a unique-input trial
+falls back to reserved prompt generation and confirms its native winner.
+The initial fallback fixture accidentally repeated every input twice; its cache
+success was correct. That fixture now explicitly uses one repetition. New
+authority, ordinary agent, application-check and authenticated dashboard gates
+are running; installed artifacts and exact-head hosted acceptance remain pending.
+The complete ordinary-agent sample, both source trees, exact rollback and real
+administrator/mobile-viewer browser/axe checks passed **1 in 120.30 seconds**.
+Source-window create/approve/per-call repricing and lost-draft reconciliation
+passed **2 in 35.05 seconds**. An initial approval-error assertion was corrected
+to the existing deliberately generic campaign authority error; the denial was
+already correct. Frontend units **14**, generated API/types, React build,
+Ruff and mypy (**386 modules**) pass.
+The SDK3 source follow-up passed **13 in 275.84 seconds**, including both
+cache/prompt source proposals, both-tree checks and rollback, repricing denial,
+lost-draft recovery, authenticated desktop/mobile accessibility and frozen-budget
+contracts. Pure campaign contracts passed **51 in 16.43 seconds**. Installed
+qualification and the new container campaign restore/rekey gate remain pending.
+
+Hosted predecessor qualification found an incomplete eight-profile capture in
+the independent request-reuse sample (one SDK3 workflow job: **268 passed / nine
+skips / one failure**). The old five-second drain did not record enough detail
+to distinguish pending exports from dropped ones. The sample now waits at most
+30 seconds for already queued exports and emits only allowlisted numeric loss
+counters on failure; it never resends inference or discarded capture. Slow-drain,
+bounded failure and all three actual SDK3/HTTP example modes passed **6 in 34.34
+seconds**. This does not establish the original failure's cause or close its
+hosted gate; current-head rerun remains required.
+This is not the full cross-engine optimizer or a complete market baseline.
+
+The preceding complete observed-workload demo passed **58 installed SDK2 tests
+in 899.75 seconds** and **58 installed SDK3 tests in 887.16 seconds**. Its matching
+container completed confirmation, source checks and restore/rekey across schema
+0032, 100 tables, 2,426 encrypted objects, 16 profiles, nine cache objects and 32
+plans. Corrected receipt counters record 31 application calls across five
+workflows; a prior receipt displayed stale counters, despite passing functional
+checks. The 2,000-event plus 2,000-replay two-tenant local smoke took 2.906 seconds,
+not a production SLA. [PR 73](https://github.com/CutbackAI/cutback/pull/73) remains
+under hosted qualification. The native/cache predecessor is
+[PR 72](https://github.com/CutbackAI/cutback/pull/72); the earlier joint-retrieval
+increment [PR 71](https://github.com/CutbackAI/cutback/pull/71) merged after all
+17 exact-head checks passed. PyPI dev5 remains unchanged. No paid inference,
+production deployment or private application integration occurred.
+
 31 October 2026 complete observed-workload sample, **working source under
 qualification**: [walkthrough](../examples/workload-portfolio/README.md).
 `demo --workload-portfolio` now wires an independent committed classifier,

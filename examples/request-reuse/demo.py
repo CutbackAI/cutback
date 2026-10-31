@@ -17,6 +17,31 @@ import cutback
 from cutback.instrumentation import workflow
 
 
+def require_profile_capture(observer, expected, *, timeout_seconds=30):
+    """Wait for queued local exports; never resend dropped or uncertain calls."""
+    deadline = time.monotonic() + timeout_seconds
+    while True:
+        drained = observer.flush(min(5, max(0, deadline - time.monotonic())))
+        health = observer.health()
+        keys = (
+            "native_profile_queued",
+            "native_profile_exported",
+            "native_profile_dropped",
+            "captured_dropped",
+            "export_failed",
+            "rejected",
+            "dropped",
+        )
+        counts = {key: value if type(value := health.get(key)) is int else 0 for key in keys}
+        losses = any(counts[key] for key in keys[2:])
+        if drained and counts["native_profile_exported"] == expected and not losses:
+            return
+        if drained or time.monotonic() >= deadline or losses:
+            # Only allowlisted numeric diagnostics: no policy, key, input or response.
+            detail = " ".join(f"{key}={value}" for key, value in counts.items())
+            raise ValueError("OWNED_PROFILE_CAPTURE_INCOMPLETE " + detail)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--endpoint", default="http://127.0.0.1:8080")
@@ -200,8 +225,7 @@ def main():
                         )
                     )
                     assert result.output_text == "billing"
-            if not observer.flush(5) or observer.health().get("native_profile_exported") != 8:
-                raise ValueError("OWNED_PROFILE_CAPTURE_INCOMPLETE")
+            require_profile_capture(observer, 8)
             body = {
                 "request_id": str(uuid4()),
                 "policy_id": policy["id"],

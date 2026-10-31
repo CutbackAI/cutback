@@ -1,5 +1,13 @@
 # What works and what remains
 
+The new [workload-bound campaign](improvement-campaigns.md) is active source work
+under qualification. It puts measured cache eligibility, native model/output
+alternatives and conditional prompt search under one reserved campaign budget.
+The [independent cache-first sample](../examples/improvement-campaign/README.md)
+uses ordinary agent preparation, untouched confirmation, source checks and exact
+rollback. The broader routing/retrieval/compression/training selection remains
+unfinished; this does not imply launch or customer acceptance.
+
 Working source adds [source-matched workload assessment](source-workload.md) and
 an [independent committed application](../examples/source-workload/README.md).
 It derives current source scope and models a separate trial's native-window
@@ -27,9 +35,9 @@ explicitly authorized encrypted fingerprints, monotonic
 timing and one-shot background analysis; they do not establish production hit
 rates, customer quality or unified strategy selection. None updates PyPI dev5.
 
-The [joint model/output/retrieval extension](joint-retrieval.md) is separately
-qualifying in [PR 71](https://github.com/CutbackAI/cutback/pull/71). Its installed
-and image checks pass; current-head hosted acceptance remains required. It does
+The [joint model/output/retrieval extension](joint-retrieval.md) merged in
+[PR 71](https://github.com/CutbackAI/cutback/pull/71) after installed, image and
+all 17 exact-head hosted checks passed. It does
 not close the remaining cross-engine or market requirements.
 
 [Reactive user simulation](reactive-users.md) is accepted in

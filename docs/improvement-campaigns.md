@@ -8,6 +8,23 @@ Start with the [independent runnable classifier](../examples/improvement-campaig
 
 ## Prepare without inference
 
+Working source under qualification also supports v4 workload-bound campaigns.
+A prepared positive source-window assessment adds one exact-cache control before
+the native model/output-limit alternatives. The automatic agent and dashboard
+select v4 for that bound template. This requires a complete declared task-cost
+snapshot and explicit opportunity assumptions; a native window alone never
+establishes complete task economics. Its source/workload/policy/price authority
+is rechecked before calls and bounds the campaign expiry.
+
+If an initial alternative succeeds, prompt generation is skipped. Otherwise the
+parent budget must already reserve the proposer, every generated validation
+round (including the unchanged cache control), and independent confirmation.
+The cache configuration is never a prompt-generation seed. A generated native
+winner has no cache payback forecast. Combined cache-plus-generated-instruction
+variants remain unsupported. V1–v3 serialization and approved hashes are
+preserved. Synthetic source templates force synthetic-only proposer transport.
+[Run the independent cache-first example](../examples/improvement-campaign/README.md).
+
 New v3 preparations freeze up to four qualified model/output-limit alternatives and follow this stopping rule. Each box uses the same frozen source/data authority and cumulative parent budget; arrows do not authorize paid calls or application deployment. Existing v2 campaigns retain their single static alternative.
 
 ```mermaid

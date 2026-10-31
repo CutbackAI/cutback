@@ -239,6 +239,7 @@ def main(
     joint_model_retrieval=False,
     workload_portfolio=False,
     workload_portfolio_demo=False,
+    workload_campaign=False,
     reviewed_criteria=False,
     semantic_rubrics=False,
     learned_routing=False,
@@ -373,6 +374,20 @@ if WORKLOAD_DEMO_EXPECTED:
  assert sample["observed_native_calls"]==8 and sample["modeled_potential_hits"]==3
  assert sample["rollback_verified"] is True and sample["runtime_cache_activated"] is False
  assert sample["paid_provider_calls"]==0 and sample["real_model_quality_verified"] is False
+if WORKLOAD_CAMPAIGN_EXPECTED:
+ import httpx
+ from cutback.demo_workload_campaign import seed_workload_campaign
+ headers={"Authorization":"Bearer "+os.environ["CUTBACK_ADMIN_TOKEN"]}
+ with httpx.Client(base_url="http://127.0.0.1:8080",trust_env=False,timeout=30,
+                   headers=headers) as control:
+  writer=control.post("/v1/projects/"+manifest["project_id"]+"/keys",json={"role":"ingest"})
+  writer.raise_for_status()
+  sample=seed_workload_campaign(app,control,manifest["project_id"],writer.json()["token"],
+                                Path("/tmp/owned-workload-campaign"))
+  assert sample["report"]["status"]=="COMPLETED" and sample["report"]["billing_complete"]
+  assert sample["report"]["specification"]["version"]=="cutback.improvement-campaign.v4"
+  assert sample["rollback_verified"] and sample["application_checks"]["receipt"]["all_passed"]
+  assert sample["paid_provider_calls"]==0 and not sample["runtime_cache_activated"]
 if RETRIEVAL_EXPECTED:
  assert manifest["agent_retrieval_sample"]["review_status"]=="READY_FOR_LOCAL_REVIEW"
  assert manifest["agent_retrieval_sample"]["rollback_verified"] is True
@@ -428,15 +443,18 @@ print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":mani
                 code = code.replace("JOINT_EXPECTED", repr(joint_model_context))
                 code = code.replace("RETRIEVAL_EXPECTED", repr(joint_model_retrieval))
                 code = code.replace("WORKLOAD_DEMO_EXPECTED", repr(workload_portfolio_demo))
+                code = code.replace("WORKLOAD_CAMPAIGN_EXPECTED", repr(workload_campaign))
                 manifest = json.loads(inside(container, code, values).strip().splitlines()[-1])
                 base = "/v1/projects/" + manifest["project_id"]
                 usage = client.get(
                     base + "/usage?traffic_kind=application&group_by=workflow"
                 ).json()
                 assert usage["summary"]["observed_attempts"] == (
-                    19 + 4 * runtime_guardrails + 8 * workload_portfolio_demo
+                    19 + 4 * runtime_guardrails + 8 * (workload_portfolio_demo + workload_campaign)
                 )
-                assert len(usage["groups"]) == 3 + runtime_guardrails + workload_portfolio_demo
+                assert len(usage["groups"]) == (
+                    3 + runtime_guardrails + workload_portfolio_demo + workload_campaign
+                )
                 source_groups = [
                     group
                     for group in usage["groups"]
@@ -514,9 +532,9 @@ with sessions() as session:
    rotating.rekey(row.project_id,row.native_profile_ref)
    assert new_only.get(row.project_id,row.native_profile_ref)==profile_before
  profile_objects=sum(row.native_profile_ref is not None for row in rows)
- assert profile_objects==8+8*WORKLOAD_DEMO_EXPECTED
+ assert profile_objects==8+8*(WORKLOAD_DEMO_EXPECTED+WORKLOAD_CAMPAIGN_EXPECTED)
  analyses=session.scalars(select(NativeProfileAnalysis)).all()
- assert len(analyses)==1+WORKLOAD_DEMO_EXPECTED
+ assert len(analyses)==1+WORKLOAD_DEMO_EXPECTED+WORKLOAD_CAMPAIGN_EXPECTED
  for analysis in analyses:
   assert analysis.state=="COMPLETED" and analysis.summary["profiled_attempts"]==8
   assert analysis.summary["modeled_potential_hits"]==3
@@ -628,20 +646,25 @@ with sessions() as session:
   assert current==frozen.workload_portfolio.assessment
   assert any(candidate.exact_cache for candidate in frozen.candidates)
   assert current.paid_calls_authorized is False and current.realized_savings_usd is None
- if WORKLOAD_DEMO_EXPECTED:
+ if WORKLOAD_DEMO_EXPECTED or WORKLOAD_CAMPAIGN_EXPECTED:
   from cutback.server.plan_artifacts import load_plan
   from cutback.server.workload_portfolio import validate_binding,economic_receipt
   from cutback.evals.search import regression_gate
   demo_plans=[row for row in plans
               if row.specification["public_specification"].get("workload_portfolio")
               and row.specification["public_specification"].get("native_fixture")]
-  assert len(demo_plans)==2
+  assert len(demo_plans)==2*WORKLOAD_DEMO_EXPECTED+3*WORKLOAD_CAMPAIGN_EXPECTED
+  pending=0
   for planned in demo_plans:
    frozen=load_plan(new_only,planned.project_id,planned.specification)
    assert frozen.native_fixture is not None and frozen.workload_portfolio is not None
    assert validate_binding(session,planned.project_id,frozen)==frozen.workload_portfolio.assessment
    executed=session.scalar(select(ExperimentRunRecord).where(
     ExperimentRunRecord.plan_id==planned.id))
+   if executed is None:
+    assert WORKLOAD_CAMPAIGN_EXPECTED and planned.approval_status=="pending"
+    pending+=1
+    continue
    assert executed.status=="COMPLETED" and executed.results["billing_complete"] is True
    assert executed.results["synthetic_execution"]["real_model_quality_verified"] is False
    expected=economic_receipt(session,planned.project_id,frozen,executed.results)
@@ -653,6 +676,24 @@ with sessions() as session:
                            sample_only=True)["passed"] is True
     assert regression_gate(executed.results,expected_plan_hash=planned.specification["plan_hash"])[
      "passed"] is False
+  assert pending==int(WORKLOAD_CAMPAIGN_EXPECTED)
+ if WORKLOAD_CAMPAIGN_EXPECTED:
+  from cutback.server.campaign_db import CampaignRecord,CampaignRun
+  from cutback.server.campaign_service import load_campaign
+  campaigns=[row for row in session.scalars(select(CampaignRecord)).all()
+             if row.specification.get("version")=="cutback.improvement-campaign.v4"]
+  assert len(campaigns)==1
+  parent=campaigns[0]
+  campaign,_,_,_=load_campaign(session,new_only,parent)
+  assert parent.status=="COMPLETED" and parent.approval_status=="consumed"
+  assert parent.requests_used==parent.known_cost_requests and parent.requests_used>0
+  assert parent.requests_used<=parent.economic_envelope["max_requests"]
+  assert campaign.template.workload_portfolio is not None
+  assert campaign.generator.transport=="scripted_test_only"
+  links=session.scalars(select(CampaignRun).where(CampaignRun.campaign_id==parent.id)).all()
+  assert {link.phase for link in links}=={"validation","confirmation"} and len(links)==2
+  assert parent.summary["search_decision"]=="static_alternative_passed_skip_instruction_generation"
+  assert parent.summary["deployment_authorized"] is False
  if REACTIVE_EXPECTED:
   from cutback.server.execution_db import ExecutionCall
   from cutback.server.plan_artifacts import load_plan
@@ -816,6 +857,7 @@ engine.dispose()
                     .replace("RETRIEVAL_EXPECTED", repr(joint_model_retrieval))
                     .replace("WORKLOAD_EXPECTED", repr(workload_portfolio))
                     .replace("WORKLOAD_DEMO_EXPECTED", repr(workload_portfolio_demo))
+                    .replace("WORKLOAD_CAMPAIGN_EXPECTED", repr(workload_campaign))
                     .replace("CRITERIA_EXPECTED", repr(reviewed_criteria))
                     .replace("RUBRICS_EXPECTED", repr(semantic_rubrics))
                     .replace("ROUTING_EXPECTED", repr(learned_routing or source_routing))
@@ -959,6 +1001,9 @@ engine.dispose()
                     "joint_retrieval_confirmation_and_both_tree_checks": joint_model_retrieval,
                     "pending_workload_portfolio_and_source_window_restored": workload_portfolio,
                     "complete_workload_fixture_confirmation_restored": workload_portfolio_demo,
+                    "workload_campaign_envelope_confirmation_and_source_checks_restored": (
+                        workload_campaign
+                    ),
                     "reviewed_generated_development_scenarios_restored": generated_scenarios,
                     "reactive_user_contracts_receipts_and_trajectories_restored": reactive_users,
                     "restored_tables": len(after),
@@ -1006,6 +1051,7 @@ if __name__ == "__main__":
     parser.add_argument("--joint-model-retrieval", action="store_true")
     parser.add_argument("--workload-portfolio", action="store_true")
     parser.add_argument("--workload-portfolio-demo", action="store_true")
+    parser.add_argument("--workload-campaign", action="store_true")
     parser.add_argument("--reviewed-criteria", action="store_true")
     parser.add_argument("--semantic-rubrics", action="store_true")
     parser.add_argument("--learned-routing", action="store_true")
@@ -1024,6 +1070,7 @@ if __name__ == "__main__":
         joint_model_retrieval=args.joint_model_retrieval,
         workload_portfolio=args.workload_portfolio,
         workload_portfolio_demo=args.workload_portfolio_demo,
+        workload_campaign=args.workload_campaign,
         reviewed_criteria=args.reviewed_criteria,
         semantic_rubrics=args.semantic_rubrics,
         learned_routing=args.learned_routing,

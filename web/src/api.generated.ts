@@ -5060,7 +5060,7 @@ export interface components {
              * @default cutback.improvement-campaign.v1
              * @enum {string}
              */
-            version: "cutback.improvement-campaign.v1" | "cutback.improvement-campaign.v2" | "cutback.improvement-campaign.v3";
+            version: "cutback.improvement-campaign.v1" | "cutback.improvement-campaign.v2" | "cutback.improvement-campaign.v3" | "cutback.improvement-campaign.v4";
             /**
              * Request Id
              * Format: uuid
@@ -5174,6 +5174,11 @@ export interface components {
             baseline_model: string;
             /** Source Bound */
             source_bound: boolean;
+            /**
+             * Workload Bound Cache
+             * @default false
+             */
+            workload_bound_cache: boolean;
             instruction_edit?: components["schemas"]["LiteralInstructionEdit"] | null;
         };
         /** CampaignTemplatePage */
@@ -7318,7 +7323,7 @@ export interface components {
              * @default cutback.improvement-campaign.v1
              * @enum {string}
              */
-            version: "cutback.improvement-campaign.v1" | "cutback.improvement-campaign.v2" | "cutback.improvement-campaign.v3";
+            version: "cutback.improvement-campaign.v1" | "cutback.improvement-campaign.v2" | "cutback.improvement-campaign.v3" | "cutback.improvement-campaign.v4";
             /**
              * Dataset Id
              * Format: uuid
