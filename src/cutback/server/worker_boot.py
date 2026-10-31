@@ -74,6 +74,9 @@ def worker_cycle(sessions, store, *, maintenance_due=True, encrypted_expiry_due=
             }
 
     if maintenance_due:
+        from cutback.server.native_profile_service import recover_native_profiles
+
+        attempt("native_profile_recovery", lambda: recover_native_profiles(sessions))
         from cutback.server.campaign_retention import expire_campaigns
         from cutback.server.criteria_worker import recover_criteria_states
         from cutback.server.execution_ledger import recover_execution_leases
@@ -104,6 +107,10 @@ def worker_cycle(sessions, store, *, maintenance_due=True, encrypted_expiry_due=
             attempt("payload_expiry", lambda: expire_payloads(sessions, store))
             attempt("cache_expiry", lambda: expire_cache(sessions, store))
             attempt("training_expiry", lambda: expire_training_artifacts(sessions, store))
+    if store:
+        from cutback.server.native_profile_service import run_native_profile_one
+
+        attempt("native_profile_analysis", lambda: run_native_profile_one(sessions, store))
     if store and configured_execution_enabled():
         from cutback.server.campaign_worker import advance_one
         from cutback.server.continuous import queue_schedules

@@ -625,6 +625,10 @@ def create_app(
     from cutback.server.evaluation_api import install_evaluation
 
     import_dataset = install_evaluation(app, sessions, authorize, scope)
+
+    from cutback.server.native_profile_api import install_native_profiles
+
+    install_native_profiles(app, sessions, authorize, scope)
     from cutback.server.campaign_api import install_campaigns
 
     install_campaigns(app, sessions, authorize, scope)

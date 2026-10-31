@@ -1,5 +1,62 @@
 # Implementation progress
 
+The final source regression for request profiling passed **1,357 / 27 explicit
+skips in 517.92 seconds**, including all collected units, real PostgreSQL,
+capture/object recovery, the independent eight-call SDK process and authenticated
+desktop/mobile/axe. A separate SDK3 scope passed **128 in 58.69 seconds**. New
+post-collection CLI checks passed **three**; analysis transaction/concurrency/
+deadline checks passed **four on each SDK**. The latter first exposed a completed
+commit with a lost acknowledgement being reported as failed; reconciliation now
+returns the durable terminal state without repeating storage reads. Expired
+summaries retain a minimal one-shot tombstone to prevent UUID reuse. These source
+results precede final installed artifact/image/hosted acceptance; the Linux drill
+now additionally seeds and restores the independent encrypted profile journey.
+
+Native exact-cache source acceptance is merged in [PR 63](https://github.com/CutbackAI/cutback/pull/63)
+at `a4ce4e4be3590582ad6c805dc63990178fc341fb`. Its tree matches reviewed head
+`2e0ad18599cfbed2bc2912dc1e18b9c9f7dc5e88`. All eleven required hosted checks
+passed: default Python 3.11 **2,065 / 40 skips**, Python 3.13 **2,064 / 41 skips**;
+the two SDK3 lanes **1,822 / 17 skips** and **1,823 / 16 skips**; both legacy
+lanes **21**, isolated tools **13**, infrastructure, audits and both CodeQL
+languages. The accepted wheel, source archive and image evidence remain scoped
+to that change; PyPI dev5 is unchanged. The retention/capture-recovery follow-up
+is [draft PR 67](https://github.com/CutbackAI/cutback/pull/67), with current-head
+hosted checks pending after installed/package/image qualification below.
+
+The unreleased request-reuse extension is in source qualification:
+[contract](request-reuse.md), [independent synthetic example](../examples/request-reuse/README.md).
+Explicit capture rights keep native request fingerprints in a separate encrypted
+object, outside default telemetry and ordinary dataset cases. A one-shot bounded
+analysis compares retained canonical attempts with profiles, models cold misses,
+completion/TTL and overlap, preserves unknown costs, and declines incomplete or
+sampled streams. Process clock domains remain separate; monotonic SDK timing
+drives the model. Queued storage reads require current owner authority and never
+replay after uncertain execution. CLI, dashboard and schema `0032` are implemented;
+released migrations `0001`–`0031` are unchanged. This does not complete unified
+strategy selection or establish production reuse, task quality or real savings.
+
+The pre-clock-domain source checks passed **20 PostgreSQL/profile/lifecycle
+checks in 19.74 seconds**, **77 profile/native checks on SDK3 in 19.63 seconds**,
+and **27 native/privacy/profile checks on SDK3 in 2.22 seconds**. The first
+authenticated dashboard/mobile/axe check passed in **12.40 seconds**. After
+adding separate clock domains and monotonic timing, **62 core/native/profile
+checks passed in 22.66 seconds**. Subsequent expiry-tombstone, independent-example,
+final browser, installed-package, image and hosted gates remain pending. An early
+queue test caught a missing preparation-lock kind; a later test used the wrong
+key-receipt field. Both failed attempts are retained. No paid inference,
+production deployment or PyPI upload occurred.
+
+The preceding encrypted-retention and capture-commit candidate has completed
+local installed qualification: **1,340 / 27 skips in 527.11 seconds** on the
+default SDK, plus **110 / one skip in 223.23 seconds** in its scoped SDK3 lane.
+Independent private/public builds reproduce the same wheel and sdist. Its Linux
+image matched all **384 application entries** and restored schema `0031`,
+**99 tables, 2,028 encrypted objects, one cache object and 29 encrypted plans**,
+including key rotation and preserved database pointers. The core-only wheel
+consumer passed. Its two-tenant 2,000-event/2,000-replay smoke took 2.063 seconds;
+this is a local synthetic result, not an SLA. Exact-head hosted/publication gates
+remain pending. This evidence does not cover the newer request-profile code.
+
 The SDK capture-ingestion recovery fix passes **23 checks on SDK 2.29.0 in
 29.72 seconds** and **23 on 3.35.1 in 24.96 seconds**. A new PostgreSQL fault
 test first reproduced deletion of committed ciphertext after a lost commit

@@ -14,6 +14,10 @@ from pydantic import Field, model_serializer, model_validator
 from cutback.core.episodes import EpisodeScenario
 from cutback.core.isolated_episodes import IsolatedRecordScenario
 from cutback.core.models import Identifier, StrictModel
+from cutback.core.native_request_profile import (
+    NativeRequestProfileAuthorization,
+    NativeRequestProfileSnapshot,
+)
 from cutback.core.security_suites import SecurityCase, SecuritySuiteIdentity
 
 
@@ -39,11 +43,23 @@ class CapturePolicy(StrictModel):
     max_payload_bytes: int = Field(default=64000, ge=1, le=512000)
     never_capture_fields: list[Identifier] = Field(default_factory=list, max_length=100)
     redaction_version: Literal["email-secret-v1"] = "email-secret-v1"
+    native_request_profile: NativeRequestProfileAuthorization | None = None
+
+    @model_serializer(mode="wrap")
+    def preserve_existing_policy_hashes(self, handler):
+        result = handler(self)
+        if self.native_request_profile is None:
+            result.pop("native_request_profile", None)
+        return result
 
     @model_validator(mode="after")
     def aware(self):
         if not self.expires_at.tzinfo:
             raise ValueError("capture expiry must include UTC offset")
+        if self.native_request_profile is not None and (
+            self.native_request_profile.prospective_ttl_seconds > self.retention_days * 86400
+        ):
+            raise ValueError("NATIVE_PROFILE_TTL_EXCEEDS_AUTHORIZED_RETENTION")
         return self
 
     def permits(self, environment, workflow):
@@ -64,6 +80,14 @@ class Sample(StrictModel):
     provider: Literal["openai", "anthropic"]
     input: str = Field(max_length=256000)
     reference: str | None = Field(default=None, max_length=256000)
+    native_request_profile: NativeRequestProfileSnapshot | None = None
+
+    @model_serializer(mode="wrap")
+    def preserve_existing_sample_wire_format(self, handler):
+        result = handler(self)
+        if self.native_request_profile is None:
+            result.pop("native_request_profile", None)
+        return result
 
 
 def redact(value, denied: list[str]):

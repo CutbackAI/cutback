@@ -67,6 +67,14 @@ def policy_object_count(session, policy_id):
         session.scalar(select(func.count()).select_from(cls).where(cls.policy_id == policy_id)) or 0
         for cls in (PayloadSample, CacheEntry)
     )
+    stored += (
+        session.scalar(
+            select(func.count(PayloadSample.native_profile_ref)).where(
+                PayloadSample.policy_id == policy_id
+            )
+        )
+        or 0
+    )
     reserved = (
         session.scalar(
             select(func.count())
@@ -557,7 +565,7 @@ def install_evaluation(app, sessions, authorize, scope):
             raise HTTPException(403, "INGEST_SCOPE_REQUIRED")
         store = require_store(app)
         project = auth["project_id"]
-        ref = None
+        refs: list[str] = []
         try:
             with sessions.begin() as session:
                 _, policy = active_policy(session, project, body.policy_id)
@@ -570,6 +578,16 @@ def install_evaluation(app, sessions, authorize, scope):
                     raise HTTPException(403, "CAPTURE_SCOPE_DENIED")
                 if body.sample_id.int / (2**128) >= policy.sample_rate:
                     raise HTTPException(403, "SAMPLE_OUTSIDE_APPROVED_RATE")
+                profile = body.native_request_profile
+                profile_value = profile.model_dump(mode="json") if profile is not None else None
+                profile_hash = digest(profile_value) if profile_value is not None else None
+                if profile is not None and (
+                    body.provider != "openai"
+                    or policy.native_request_profile is None
+                    or policy.never_capture_fields
+                    or profile.capture_policy_sha256 != digest(policy.model_dump(mode="json"))
+                ):
+                    raise HTTPException(403, "NATIVE_PROFILE_CAPTURE_POLICY_REQUIRED_OR_CHANGED")
                 case = redact(
                     {
                         "id": str(body.sample_id),
@@ -587,6 +605,7 @@ def install_evaluation(app, sessions, authorize, scope):
                         raise HTTPException(403, "SAMPLE_SCOPE_DENIED")
                     if (
                         existing.policy_id != body.policy_id
+                        or existing.native_profile_sha256 != profile_hash
                         or existing.content_hash != digest(case)
                         or any(
                             existing.metadata_safe.get(name) != value
@@ -607,24 +626,40 @@ def install_evaluation(app, sessions, authorize, scope):
                         restored = json.loads(store.get(project, existing.object_ref))
                         if digest(restored) != existing.content_hash:
                             raise ValueError("SAMPLE_CONTENT_INTEGRITY_FAILURE")
+                        if profile is not None:
+                            if existing.native_profile_ref is None:
+                                raise ValueError("SAMPLE_PROFILE_REFERENCE_UNAVAILABLE")
+                            restored_profile = json.loads(
+                                store.get(project, existing.native_profile_ref)
+                            )
+                            if digest(restored_profile) != profile_hash:
+                                raise ValueError("SAMPLE_PROFILE_INTEGRITY_FAILURE")
                     except Exception:
                         raise HTTPException(
                             409, "SAMPLE_COMMITTED_CONTENT_REQUIRES_RECONCILIATION"
                         ) from None
                     return {"status": "duplicate", "sample_id": str(body.sample_id)}
                 count = policy_object_count(session, body.policy_id)
-                if count >= policy.max_samples:
+                if count + (2 if profile is not None else 1) > policy.max_samples:
                     raise HTTPException(429, "CAPTURE_SAMPLE_QUOTA_EXCEEDED")
                 blob = json.dumps(case).encode()
-                if len(blob) > policy.max_payload_bytes:
+                profile_blob = json.dumps(profile_value).encode() if profile is not None else b""
+                if len(blob) + len(profile_blob) > policy.max_payload_bytes:
                     raise HTTPException(413, "SAMPLE_EXCEEDS_POLICY_BYTES")
                 ref = store.put(project, blob, policy.retention_days)
+                refs.append(ref)
+                profile_ref = None
+                if profile is not None:
+                    profile_ref = store.put(project, profile_blob, policy.retention_days)
+                    refs.append(profile_ref)
                 session.add(
                     PayloadSample(
                         id=body.sample_id,
                         project_id=project,
                         policy_id=body.policy_id,
                         object_ref=ref,
+                        native_profile_ref=profile_ref,
+                        native_profile_sha256=profile_hash,
                         content_hash=digest(case),
                         expires_at=min(
                             policy.expires_at,
@@ -642,10 +677,10 @@ def install_evaluation(app, sessions, authorize, scope):
                 )
             return {"status": "stored", "sample_id": str(body.sample_id)}
         except BaseException:
-            if ref:
+            if refs:
                 from cutback.server.campaign_content import discard_unreferenced
 
-                discard_unreferenced(sessions, store, project, [ref], policy_id=body.policy_id)
+                discard_unreferenced(sessions, store, project, refs, policy_id=body.policy_id)
             raise
 
     @app.get("/v1/projects/{project_id}/experiments/plans")

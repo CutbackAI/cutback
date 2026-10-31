@@ -167,6 +167,13 @@ class Exporter:
                 "captured_dropped",
                 "capture_enabled",
                 "gateway_delegated",
+                "native_profile_unconfigured",
+                "native_profile_unsupported",
+                "native_profile_dropped",
+                "native_profile_busy",
+                "native_profile_queued",
+                "native_profile_exported",
+                "native_profile_overhead_us_total",
             }
             health = HealthBatch(
                 project_id=self.project_id,

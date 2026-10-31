@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
-from sqlalchemy import select, text
+from sqlalchemy import or_, select, text
 
 from cutback.evals.datasets import CapturePolicy, digest
 from cutback.server.content_policy import policy_content, require_payloads_enabled
@@ -36,7 +36,12 @@ def discard_unreferenced(sessions, store, project, refs, *, policy_id=None):
                     )
                 payload = reader.scalar(
                     select(PayloadSample.id)
-                    .where(PayloadSample.project_id == project, PayloadSample.object_ref == ref)
+                    .where(
+                        PayloadSample.project_id == project,
+                        or_(
+                            PayloadSample.object_ref == ref, PayloadSample.native_profile_ref == ref
+                        ),
+                    )
                     .limit(1)
                 )
                 plan = reader.scalar(
