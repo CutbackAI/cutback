@@ -255,3 +255,60 @@ def test_original_scripted_turns_precede_simulation_and_receipts_do_not_weaken_p
             == "failed"
         )
     executor.close()
+
+
+@pytest.mark.parametrize("overrun_role", ["target", "simulator"])
+def test_reported_usage_priced_above_reserved_bound_stops_every_later_dispatch(
+    monkeypatch, overrun_role
+):
+    calls = []
+    breached = []
+
+    def handle(request):
+        body = json.loads(request.content)
+        calls.append(body)
+        simulated = body.get("text", {}).get("format", {}).get("name") == "cutback_reactive_user"
+        value = response_body("responses.create")
+        if simulated:
+            value["output"][0]["content"][0]["text"] = json.dumps({"action": "end", "message": ""})
+        if not breached and simulated == (overrun_role == "simulator"):
+            value["usage"].update(input_tokens=100000, total_tokens=100010)
+            breached.append(True)
+        return httpx.Response(200, json=value)
+
+    plan = reactive_plan()
+    dataset = {
+        "immutable_hash": "a" * 64,
+        "items": [
+            {"case": reactive_case(), "group_hash": "synthetic-bounds", "split": "test"},
+        ],
+    }
+    executor = native_executor("responses.create", monkeypatch, handle)
+    result = run(plan, dataset, executor, approval_hash=plan_summary(plan, dataset)["plan_hash"])
+    assert len(calls) == (1 if overrun_role == "target" else 2)
+    assert result["status"] == "FAILED" and result["billing_complete"] is False
+    assert Decimal(result["known_spend_subtotal_usd"]) > 0
+    executor.close()
+
+
+def test_shared_budget_ledger_refuses_a_second_native_dispatch_after_known_cost_overrun(
+    monkeypatch,
+):
+    calls = []
+
+    def handle(request):
+        calls.append(1)
+        value = response_body("responses.create")
+        value["usage"].update(input_tokens=100000, total_tokens=100010)
+        return httpx.Response(200, json=value)
+
+    plan = reactive_plan()
+    executor = native_executor("responses.create", monkeypatch, handle)
+    ledger = BudgetLedger(plan.budget)
+    with pytest.raises(ValueError, match="ACTUAL_USAGE_OUTSIDE_MODELED_BUDGET_BOUND"):
+        ledger.call(executor, plan.baseline, "Synthetic first request")
+    with pytest.raises(ValueError, match="COST_BOUND_EXCEEDED_NO_FURTHER_REQUESTS"):
+        ledger.call(executor, plan.candidates[0], "Synthetic second request")
+    assert calls == [1] and ledger.requests == ledger.known_cost_requests == 1
+    assert ledger.spent > 0 and not ledger.billing_complete
+    executor.close()

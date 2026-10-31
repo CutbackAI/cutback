@@ -74,6 +74,7 @@ def test_batch_input_and_output_order_native_usage_and_distinct_price_contract()
     )
     assert result[ids[0]].output == "billing" and result[ids[1]].output == "access"
     assert result[ids[0]].cost_usd == Decimal("0.000858")
+    assert result[ids[0]].response_model == "gpt-4.1-2025-04-14"
     assert result[ids[0]].cost_usd < reservation_bound(model())
     assert not hasattr(result[ids[0]], "latency_ms")
     assert price_reference()["discount_multiplier"] == "0.5"
@@ -104,6 +105,7 @@ def test_native_usage_never_coerces_counts_or_invents_unsupported_billing(kind):
     result = result_files([encoded(row)], {identifier: model()})[identifier]
     assert result.cost_usd is None
     assert result.output == "billing"
+    assert result.response_model == "gpt-4.1-2025-04-14"
 
 
 @pytest.mark.parametrize("kind", ["duplicate", "foreign", "duplicate_json", "nan", "big_line"])

@@ -138,6 +138,7 @@ class ExecutionCall(Base):
     model_key: Mapped[str] = mapped_column(String(200))
     provider: Mapped[str] = mapped_column(String(30))
     model: Mapped[str] = mapped_column(String(200))
+    response_model: Mapped[str | None] = mapped_column(String(200), nullable=True)
     purpose: Mapped[str] = mapped_column(String(30))
     price_sha256: Mapped[str] = mapped_column(String(64))
     state: Mapped[str] = mapped_column(String(30), default="reserved")

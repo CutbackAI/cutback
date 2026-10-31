@@ -945,6 +945,7 @@ class Execution:
     actual_model: str | None = None
     agent_turn: EpisodeAssistant | None = None
     agent_citations: tuple = ()
+    response_model: str | None = None
 
 
 class Executor(Protocol):
@@ -974,6 +975,7 @@ class BudgetLedger:
         self.receipt_uncertain = False
         self.last_call_id: UUID | None = None
         self.usage_invalid = False
+        self.cost_bound_exceeded = False
         self.started = time.monotonic()
         self.persist_reservation = reserve
         self.reserve_call = reserve_call
@@ -1003,6 +1005,8 @@ class BudgetLedger:
     ) -> Execution:
         # Never attach a previous call's receipt to a failed or uncertain call.
         self.last_call_id = None
+        if self.cost_bound_exceeded:
+            raise ValueError("NATIVE_COST_BOUND_EXCEEDED_NO_FURTHER_REQUESTS")
         if self.receipt_uncertain:
             raise ValueError("CALL_LEDGER_ACK_UNCERTAIN_NO_FURTHER_REQUESTS")
         if Catalog().sha256 != self.price_sha256:
@@ -1071,6 +1075,7 @@ class BudgetLedger:
         self.known_cost_requests += 1
         if cost > bound:
             self.usage_invalid = True
+            self.cost_bound_exceeded = True
             self._record(call_id, result, "usage_invalid")
             raise ValueError("ACTUAL_USAGE_OUTSIDE_MODELED_BUDGET_BOUND")
         self._record(call_id, result, "completed")

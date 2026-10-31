@@ -478,6 +478,8 @@ def run_episodes(
                                 **({"episode_judge_output": judge_raw} if semantic else {}),
                             }
                         )
+                    if ledger.cost_bound_exceeded:
+                        raise ValueError("NATIVE_COST_BOUND_EXCEEDED_NO_FURTHER_REQUESTS")
                     if semantic and judged.get("stop_execution"):
                         raise ValueError("EPISODE_JUDGE_BILLING_UNCERTAIN_NO_FURTHER_REQUESTS")
                     if observed.user_simulation and (

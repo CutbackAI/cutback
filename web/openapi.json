@@ -16674,6 +16674,17 @@
             "type": "string",
             "title": "Model"
           },
+          "response_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Response Model"
+          },
           "purpose": {
             "type": "string",
             "title": "Purpose"

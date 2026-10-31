@@ -30,7 +30,7 @@ from cutback.server.worker import run_one
 pytestmark = pytest.mark.postgres
 
 
-@pytest.mark.parametrize("mode", ["success", "unknown_usage", "revoked", "invalid"])
+@pytest.mark.parametrize("mode", ["success", "unknown_usage", "revoked", "invalid", "over_bound"])
 def test_reactive_worker_reserves_each_role_and_keeps_content_private(
     api, tenant, tmp_path, monkeypatch, mode
 ):
@@ -64,12 +64,17 @@ def test_reactive_worker_reserves_each_role_and_keeps_content_private(
             if mode == "revoked":
                 with app.state.sessions.begin() as session:
                     session.get(CapturePolicyRecord, policy_id).enabled = False
-            return native_text(
+            response = native_text(
                 "malformed"
                 if mode == "invalid"
                 else json.dumps({"action": "followup", "message": "synthetic-reactive-followup"}),
                 usage=mode != "unknown_usage",
             )
+            if mode == "over_bound":
+                raw = response.json()
+                raw["usage"].update(input_tokens=100000, total_tokens=100010)
+                return httpx.Response(200, json=raw)
+            return response
         tooling = "function_call_output" in json.dumps(body)
         return httpx.Response(
             200, json=response_body("responses.create", "final" if tooling else "tool")
@@ -79,7 +84,9 @@ def test_reactive_worker_reserves_each_role_and_keeps_content_private(
     result = run_one(
         app.state.sessions, store, executor=executor, execution_enabled=True, only_run_id=run_id
     )
-    assert result["status"] == ("FAILED" if mode in {"unknown_usage", "revoked"} else "COMPLETED")
+    assert result["status"] == (
+        "FAILED" if mode in {"unknown_usage", "revoked", "over_bound"} else "COMPLETED"
+    )
     with app.state.sessions() as session:
         receipts = session.scalars(
             select(ExecutionCall).where(ExecutionCall.run_id == run_id)

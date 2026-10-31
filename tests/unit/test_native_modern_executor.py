@@ -80,6 +80,7 @@ def test_native_luna_request_freezes_defaults_bounds_storage_and_known_cost(
         assert result.complete and result.output == "synthetic-label"
         assert result.cost_usd == Decimal("0.0001745")
         assert result.actual_model == "openai:gpt-6-luna"
+        assert result.response_model == "gpt-6-luna"
         assert upper_cost(spec) == Decimal("0.002176") * (2 if tier == "auto" else 1)
         (body,) = calls
         assert body["reasoning"] == {"effort": effort} and body["service_tier"] == tier
@@ -138,6 +139,9 @@ def test_native_modern_uncertainty_is_one_call_not_a_guessed_price_or_retry(monk
         else:
             result = executor.execute(model(), "synthetic", 2)
             assert result.complete and result.cost_usd is None
+            assert result.response_model == (
+                "gpt-4.1-mini" if damage == "wrong_model" else "gpt-6-luna"
+            )
         assert len(calls) == 1
     finally:
         executor.close()

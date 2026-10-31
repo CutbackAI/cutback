@@ -100,6 +100,7 @@ jobs:
           tests/integration/test_scenario_migrations.py
           tests/end_to_end/test_generated_scenarios_pipeline.py
           tests/integration/test_reactive_users.py
+          tests/integration/test_response_model_evidence.py
           tests/end_to_end/test_reactive_users_pipeline.py
           tests/integration/test_agent_reviewed_criteria.py
           tests/integration/test_generated_semantic_rubric_workflow.py

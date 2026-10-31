@@ -302,6 +302,10 @@ def check(directory: Path):
             "src/cutback/core/user_simulation.py",
             "src/cutback/evals/user_simulation.py",
             "src/cutback/server/migrations/versions/0029_reactive_user_call_budget.py",
+            "src/cutback/server/migrations/versions/0030_observed_response_models.py",
+            "src/cutback/core/model_identity.py",
+            "tests/unit/test_model_identity.py",
+            "tests/integration/test_response_model_evidence.py",
             "tests/integration/test_reactive_users.py",
             "tests/end_to_end/test_reactive_users_pipeline.py",
         ):

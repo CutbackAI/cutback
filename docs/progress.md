@@ -1,5 +1,23 @@
 # Implementation progress
 
+Observed response-model provenance is under source qualification. Native target,
+simulator and batch receipts retain bounded SDK-reported model identifiers
+separately from requested configuration; missing historical metadata stays
+unknown. Additive migration `0030` refuses a downgrade that would discard observed
+identities. Duplicate and late receipts preserve identity without double-counting
+known spend; conflicting final identities reject. API/types/React build, Ruff
+and mypy **344 modules** passed. Focused default checks passed **70 in 35.95
+seconds**, followed by native/accounting/authenticated admin/viewer/mobile/axe
+checks **55 in 86.39 seconds**. SDK 3 focused checks passed **113 in 136.06
+seconds**. The final null-history migration and invalid batch-usage identity
+regressions passed on SDK 3 with **48 checks in 23.74 seconds**; the broader
+default suite is running. Final archives, installed
+image and exact-head hosted gates remain pending; preceding package hashes do
+not qualify this implementation. Response identity and modeled prices do not
+constitute invoice verification or customer savings.
+
+Reactive billing regression follow-up: native transports exposed continued dispatch after a known modeled cost exceeded its reserved request bound (**three instead of one** target-path calls; **four instead of two** simulator-path calls). The shared ledger now blocks later calls and the episode run fails after preserving the known subtotal. Default focused native/PostgreSQL checks passed **25 in 76.46 seconds**; SDK 3 native/PG/authenticated-browser checks passed **36 in 62.27 seconds**. Post-fix broader source regression passed **1,163 / 26 skips in 529.37 seconds**; Ruff and mypy **342 modules** passed. The preceding f8 wheel does not contain this fix and is not the final candidate. Source archives now include every public documentation page, with explicit scenario/reactive source-input gates; the initially omitted guides remain recorded as failed qualification, not accepted artifacts.
+
 Reactive user simulation is a source implementation under qualification, not a published package feature. A separate frozen v17 contract adds one to three user-model calls after the original scripted prefix, with observed-only input, closed user-role output, original tool/assertion/turn limits and distinct simulation/target budgets. Broader source regression passed **1,155 / 26 skips in 548.11 seconds**. Final forecast/metadata-cost-view default checks passed **30 in 70.29 seconds**, followed by **two in 2.18 seconds** for end/follow-up ordering and strict ordinary evaluation. Final source SDK 3 passed **32 in 57.83 seconds**, including native Responses/Chat/Anthropic targets, user simulation, PostgreSQL concurrency/vendor/rights/downgrade checks and actual authenticated admin/viewer/desktop/mobile/axe. API/types/React and Ruff/format/mypy (**342 modules**) pass. The preceding candidate also passed reproducible archives, exact **366-file** installed/image payload, core-only consumption, installed SDK 3 **36 in 130.32 seconds**, and schema-0029 non-root restore/rekey (**99 tables / 2,028 encrypted objects / one cache object / 29 plans**). That candidate precedes the final forecast guard and metadata-cost view; final artifacts and exact-head hosted gates remain pending. No paid calls or production deployment occurred. See [contract and runnable independent example](reactive-users.md).
 
 Source-bound routing is publicly merged in [PR 56](https://github.com/CutbackAI/cutback/pull/56), merge `c339085fb7aac10bc149207c4e25606f33ecf4af`, matching the qualified tree `64763076cb4a5acd1d9fde1d1681a42653f0f364`. Exact reviewed head `22d34f9007ac67b0a009b963dbc1e462473a4635` passed all eleven actual hosted jobs: default **1,730 / 40 skips** and **1,729 / 41**, SDK 3 **1,488 / 13** and **1,489 / 12**, both legacy jobs, infrastructure, isolated tools, audit and both CodeQL analyses. Its reproducible archives, installed/image identities, core consumer and schema-0027 restore/rekey passed. Failed local timeout/configuration trials and their corrected scoped reruns remain recorded in the PR; they are not described as a single full passing local run. GitHub required a squash merge; the next scenario branch verifies the complete incorporated foundation tree before aligning ancestry. Published PyPI dev5 remains unchanged.

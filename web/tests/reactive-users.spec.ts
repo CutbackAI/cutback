@@ -37,6 +37,24 @@ test("reactive user receipts, private trajectory, guided draft and mobile access
     name: "Agent execution and call receipts",
   });
   await expect(receipts).toContainText("simulation");
+  const calls = receipts.getByRole("table", { name: "Reserved native calls" });
+  await expect(
+    calls.getByRole("columnheader", { name: "Requested model", exact: true }),
+  ).toBeVisible();
+  await expect(
+    calls.getByRole("columnheader", { name: "Response model", exact: true }),
+  ).toBeVisible();
+  const rows = calls.locator("tbody tr");
+  expect(await rows.count()).toBeGreaterThan(0);
+  for (const row of await rows.all()) {
+    const model = (await row.locator("td").nth(1).innerText()).trim();
+    expect([
+      "gpt-4.1",
+      "gpt-4.1-mini",
+      "gpt-4.1-2025-04-14",
+      "gpt-4.1-mini-2025-04-14",
+    ]).toContain(model);
+  }
   await page
     .getByLabel("Purpose for reading case evidence")
     .fill("synthetic-reactive-browser-review");

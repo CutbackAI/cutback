@@ -98,7 +98,8 @@ export function ExecutionEvidence({
                   <tr>
                     {[
                       "Call",
-                      "Model",
+                      "Requested model",
+                      "Response model",
                       "Purpose",
                       "State",
                       "Reserved",
@@ -118,6 +119,7 @@ export function ExecutionEvidence({
                         <br />
                         {row.provider}: {row.model}
                       </td>
+                      <td>{row.response_model ?? "Unknown"}</td>
                       <td>{row.purpose}</td>
                       <td>{row.state}</td>
                       <td>{money(row.reserved_usd)}</td>

@@ -123,6 +123,7 @@ def test_native_bundle_preserves_system_input_schema_and_no_storage(monkeypatch,
     try:
         result = client.execute(bound_model(provider, surface), "{{data}}", 2)
         assert result.complete and result.output == '{"label":"A"}'
+        assert result.response_model == "gpt-4.1-mini"
         assert len(calls) == 1 and client.client.max_retries == 0
     finally:
         client.close()
@@ -163,6 +164,7 @@ def test_anthropic_native_system_is_separate_and_incomplete_is_not_success(monke
     try:
         result = client.execute(bound_model("anthropic", "messages.create"), "synthetic", 2)
         assert result.complete == (stop == "end_turn")
+        assert result.response_model == "claude-sonnet-4-6"
         assert len(calls) == 1 and client.client.max_retries == 0
     finally:
         client.close()

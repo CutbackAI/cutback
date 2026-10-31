@@ -4505,6 +4505,8 @@ export interface components {
             provider: string;
             /** Model */
             model: string;
+            /** Response Model */
+            response_model?: string | null;
             /** Purpose */
             purpose: string;
             /** State */

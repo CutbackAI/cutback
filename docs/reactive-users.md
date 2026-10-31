@@ -1,5 +1,11 @@
 # Reactive user simulation
 
+Execution receipts distinguish the requested model from the model identifier
+returned by the native SDK. Missing, unsafe or historical identifiers remain
+unknown; configuration cannot reconstruct them. Response identity is metadata,
+not invoice verification. The receipt retains the approved price reference and
+known modeled cost separately.
+
 This source implementation is under qualification. It is not included in the
 already published development package until a separately approved release.
 
@@ -48,6 +54,11 @@ bound for every target/case/repeat. Atomic durable reservations precede every ca
 Simulator calls have purpose `simulation`, their own approved model identity and
 per-episode call cap. They also consume the shared run and project quotas. A
 simulator cannot spend a target turn slot or run outside its target episode.
+
+A finite modeled cost above the reserved request bound stops the evaluation and
+blocks later dispatch through the shared ledger. The reported usage and known
+modeled subtotal remain recorded. These amounts use the pinned rate catalog;
+invoice reconciliation is a separate evidence source.
 
 Reports separate target requests and target cost from the simulator subtotal while
 also showing total evaluation spend. Unknown usage stays unknown. Malformed,
