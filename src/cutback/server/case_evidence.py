@@ -269,7 +269,7 @@ def install_case_evidence(app, sessions, authorize, scope, *, import_dataset):
             original_id, original_hash = str(dataset.id), dataset.immutable_hash
             prepared = DatasetImport.model_validate({**provenance, "cases": cases})
         # A new import consumes the same shared policy quota; frozen evidence is never edited.
-        created = import_dataset(project_id, prepared, auth)
+        created = import_dataset(project_id, prepared, auth=auth)
         with sessions.begin() as session:
             session.add(
                 AuditEvent(

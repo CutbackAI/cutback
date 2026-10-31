@@ -731,8 +731,9 @@ def install_evaluation(app, sessions, authorize, scope):
     def import_dataset(
         project_id: UUID,
         body: DatasetImport,
-        request_id: UUID4 | None = None,
         auth=Depends(authorize),
+        *,
+        request_id: UUID4 | None = None,
     ):
         scope(auth, project_id, ("analyst",))
         store = require_store(app)
