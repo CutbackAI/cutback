@@ -376,18 +376,26 @@ if WORKLOAD_DEMO_EXPECTED:
  assert sample["paid_provider_calls"]==0 and sample["real_model_quality_verified"] is False
 if WORKLOAD_CAMPAIGN_EXPECTED:
  import httpx
+ from uuid import uuid4
  from cutback.demo_workload_campaign import seed_workload_campaign
  headers={"Authorization":"Bearer "+os.environ["CUTBACK_ADMIN_TOKEN"]}
  with httpx.Client(base_url="http://127.0.0.1:8080",trust_env=False,timeout=30,
                    headers=headers) as control:
-  writer=control.post("/v1/projects/"+manifest["project_id"]+"/keys",json={"role":"ingest"})
+  separate=control.post("/v1/projects",json={"slug":"owned-workload-campaign-"+uuid4().hex})
+  separate.raise_for_status()
+  campaign_project=separate.json()["id"]
+  writer=control.post("/v1/projects/"+campaign_project+"/keys",json={"role":"ingest"})
   writer.raise_for_status()
-  sample=seed_workload_campaign(app,control,manifest["project_id"],writer.json()["token"],
+  sample=seed_workload_campaign(app,control,campaign_project,writer.json()["token"],
                                 Path("/tmp/owned-workload-campaign"))
   assert sample["report"]["status"]=="COMPLETED" and sample["report"]["billing_complete"]
   assert sample["report"]["specification"]["version"]=="cutback.improvement-campaign.v4"
   assert sample["rollback_verified"] and sample["application_checks"]["receipt"]["all_passed"]
   assert sample["paid_provider_calls"]==0 and not sample["runtime_cache_activated"]
+  campaign_usage=control.get("/v1/projects/"+campaign_project+
+                             "/usage?traffic_kind=application&group_by=workflow").json()
+  assert campaign_usage["summary"]["observed_attempts"]==8
+  assert len(campaign_usage["groups"])==1
 if RETRIEVAL_EXPECTED:
  assert manifest["agent_retrieval_sample"]["review_status"]=="READY_FOR_LOCAL_REVIEW"
  assert manifest["agent_retrieval_sample"]["rollback_verified"] is True
@@ -431,7 +439,12 @@ if RUNTIME_GUARDS:
  assert manifest["runtime_guardrail_sample"]["status"]=="PASSED"
  assert manifest["runtime_guardrail_sample"]["native_fixture_calls"]==4
  assert manifest["runtime_guardrail_sample"]["complete_application_cost_usd"] is None
-print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":manifest["paid_provider_calls"]}))
+print(json.dumps({"project_id":manifest["project_id"],
+ "paid_provider_calls":manifest["paid_provider_calls"],
+ "workload_campaign_application_calls":campaign_usage["summary"]["observed_attempts"]
+  if WORKLOAD_CAMPAIGN_EXPECTED else 0,
+ "workload_campaign_application_workflows":len(campaign_usage["groups"])
+  if WORKLOAD_CAMPAIGN_EXPECTED else 0}))
 """
                 code = code.replace("RUNTIME_GUARDS", repr(runtime_guardrails))
                 code = code.replace("CRITERIA_EXPECTED", repr(reviewed_criteria))
@@ -450,11 +463,9 @@ print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":mani
                     base + "/usage?traffic_kind=application&group_by=workflow"
                 ).json()
                 assert usage["summary"]["observed_attempts"] == (
-                    19 + 4 * runtime_guardrails + 8 * (workload_portfolio_demo + workload_campaign)
+                    19 + 4 * runtime_guardrails + 8 * workload_portfolio_demo
                 )
-                assert len(usage["groups"]) == (
-                    3 + runtime_guardrails + workload_portfolio_demo + workload_campaign
-                )
+                assert len(usage["groups"]) == 3 + runtime_guardrails + workload_portfolio_demo
                 source_groups = [
                     group
                     for group in usage["groups"]
@@ -986,6 +997,12 @@ engine.dispose()
                     "source_linked_support_desk_calls": 12,
                     "source_workflows": 2,
                     "application_workflows": len(usage["groups"]),
+                    "workload_campaign_application_calls": manifest[
+                        "workload_campaign_application_calls"
+                    ],
+                    "workload_campaign_application_workflows": manifest[
+                        "workload_campaign_application_workflows"
+                    ],
                     "paid_provider_calls": 0,
                     "native_batch_fixture_restored": True,
                     "guarded_tool_effects_and_delivery_restored": guarded_tools,
