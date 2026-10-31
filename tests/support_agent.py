@@ -136,8 +136,11 @@ def prepare_fresh(
     for_campaign=False,
     campaign_generator_provider=None,
     retain_case_outputs=False,
+    fixture_transport=False,
+    min_test_samples=30,
     model=None,
     output_cap=None,
+    endpoint="http://127.0.0.1",
 ):
     import os
 
@@ -152,7 +155,7 @@ def prepare_fresh(
     client, admin, application = api
     monkeypatch.setenv("CUTBACK_ALLOW_PAYLOADS", "true")
     application.state.artifact_store = EncryptedFileStore(tmp_path / "encrypted", os.urandom(32))
-    control = Control("http://127.0.0.1", admin["Authorization"][7:], client=client)
+    control = Control(endpoint, admin["Authorization"][7:], client=client)
     workflow = state["profiles"][0]["binding"]["workflow_id"]
     args = dict(
         files=["cases.jsonl"],
@@ -168,6 +171,8 @@ def prepare_fresh(
         for_campaign=for_campaign,
         campaign_generator_provider=campaign_generator_provider,
         retain_case_outputs=retain_case_outputs,
+        fixture_transport=fixture_transport,
+        min_test_samples=min_test_samples,
     )
     result = prepare(root, control, tenant[0], **args)
     return root, control, result, args

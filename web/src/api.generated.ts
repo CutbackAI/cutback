@@ -5982,6 +5982,7 @@ export interface components {
             criteria_binding?: components["schemas"]["ReviewedCriteriaBinding"] | null;
             /** Routing Execution */
             routing_execution?: components["schemas"]["RoutingTrainingExecution"] | components["schemas"]["LearnedRoutingBinding"] | null;
+            native_fixture?: components["schemas"]["NativeFixtureExecution"] | null;
         };
         /** ExperimentPlan */
         "ExperimentPlan-Output": {
@@ -6084,6 +6085,7 @@ export interface components {
             criteria_binding?: components["schemas"]["ReviewedCriteriaBinding"] | null;
             /** Routing Execution */
             routing_execution?: components["schemas"]["RoutingTrainingExecution"] | components["schemas"]["LearnedRoutingBinding"] | null;
+            native_fixture?: components["schemas"]["NativeFixtureExecution"] | null;
         };
         /** FieldTransition */
         FieldTransition: {
@@ -8086,6 +8088,15 @@ export interface components {
              * Format: date-time
              */
             expires_at: string;
+        };
+        /** NativeFixtureExecution */
+        NativeFixtureExecution: {
+            /**
+             * Version
+             * @default native-source-fixture-v1
+             * @constant
+             */
+            version: "native-source-fixture-v1";
         };
         /** NativeGeneratorSpec */
         NativeGeneratorSpec: {

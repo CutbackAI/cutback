@@ -255,13 +255,17 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
             entries = site["entry_points"] or [
                 {"file": site["source_file"], "symbol": site["source_symbol"]}
             ]
-            selected = []
+            selected = {}
             for entry in entries:
                 identity, _ = workflow_identity(entry["file"], entry["symbol"])
                 if not workflow or identity == workflow:
-                    selected.append((entry, identity))
+                    # A function-root and HTTP-route hint can name the same
+                    # entry. Preserve its identity without creating ambiguous
+                    # duplicate native profiles for an ordinary web application.
+                    if identity not in selected or entry.get("kind") == "http_route":
+                        selected[identity] = (entry, identity)
             if selected:
-                matching.append((site, selected))
+                matching.append((site, list(selected.values())))
         profile_analysis = {
             "detected_call_sites": len(inventory["call_sites"]),
             "matching_call_sites": len(matching),
@@ -615,6 +619,8 @@ def prepare(
 
     if type(automatic) is not bool:
         raise ValueError("AUTOMATIC_PREPARATION_FLAG_MUST_BE_BOOLEAN")
+    if type(min_test_samples) is not int or not 1 <= min_test_samples <= 10000:
+        raise ValueError("EVIDENCE_SAMPLE_MINIMUM_ONE_TO_TEN_THOUSAND_REQUIRED")
     if automatic:
         if any(
             (
@@ -662,8 +668,10 @@ def prepare(
             min_test_samples=min_test_samples,
             fixture_transport=fixture_transport,
         )
-    if fixture_transport:
-        raise ValueError("FIXTURE_TRANSPORT_REQUIRES_LEARNED_ROUTING")
+    if fixture_transport and (
+        rights_basis != "synthetic" or joint_context or for_campaign or criteria_generator_provider
+    ):
+        raise ValueError("NATIVE_FIXTURE_REQUIRES_SYNTHETIC_NATIVE_SOURCE_SEARCH")
     if joint_context:
         if search or for_campaign or campaign_generator_provider or criteria_generator_provider:
             raise ValueError("JOINT_CONTEXT_REQUIRES_ITS_OWN_FROZEN_SEARCH")
@@ -817,17 +825,29 @@ def prepare(
                         CriterionSpec(
                             key=field,
                             metric=MetricSpec(
-                                kind="exact_label", output_field=field, minimum=minimum
+                                kind="exact_label",
+                                output_field=field,
+                                minimum=minimum,
+                                min_test_samples=min_test_samples,
                             ),
                         )
                     )
         spec = ExperimentPlan.model_validate(
             {
                 **spec.model_dump(mode="json"),
+                "metric": {
+                    **spec.metric.model_dump(mode="json"),
+                    "min_test_samples": min_test_samples,
+                },
                 "source_binding": profile.binding.model_dump(mode="json"),
                 "criteria": [c.model_dump(mode="json") for c in criteria],
                 "retain_case_outputs": retain_case_outputs,
                 "split": "validation" if search or for_campaign else "test",
+                **(
+                    {"native_fixture": {"version": "native-source-fixture-v1"}}
+                    if fixture_transport
+                    else {}
+                ),
                 **({"name": "Campaign preparation basis"} if for_campaign else {}),
             }
         )
@@ -893,11 +913,12 @@ def prepare(
             "campaign_generator_provider": campaign_generator_provider,
             "criteria_generator_provider": criteria_generator_provider,
             "min_test_samples": min_test_samples,
+            "fixture_transport": fixture_transport,
         }
         save_session(directory, state, "PREPARING")
         from cutback import agent_preparation as setup
 
-        setup.require_protocol(control)
+        setup.require_protocol(control, native_fixture=fixture_transport)
         inventory = read_private(directory / "inventory.json")
         setup.create(
             control,

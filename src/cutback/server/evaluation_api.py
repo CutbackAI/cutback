@@ -1029,6 +1029,18 @@ def install_evaluation(app, sessions, authorize, scope):
             dataset = session.get(DatasetRecord, body.dataset_id)
             if not dataset or dataset.project_id != project_id:
                 raise HTTPException(404, "DATASET_NOT_FOUND")
+            if body.specification.native_fixture is not None:
+                from cutback.server.native_fixture import require_fixture_inputs
+
+                _, fixture_policy = active_policy(
+                    session, project_id, UUID(dataset.provenance["policy_id"])
+                )
+                try:
+                    require_fixture_inputs(body.specification, dataset, fixture_policy)
+                except ValueError:
+                    raise HTTPException(
+                        409, "NATIVE_FIXTURE_REQUIRES_SYNTHETIC_DATA_AND_RIGHTS"
+                    ) from None
             binding = body.specification.source_binding
             from cutback.server.scenario_service import require_current_import
 

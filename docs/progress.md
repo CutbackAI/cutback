@@ -1,5 +1,37 @@
 # Implementation progress
 
+Native source fixture execution is under qualification; see
+[the contract and evidence limits](native-fixtures.md). The core, API, worker and
+agent preserve an explicit synthetic-only frozen plan, recheck actual data rights
+at admission and each call, and block live executors before SDK construction or
+reservation. The real quality gate stays closed. The authenticated dashboard
+labels this evidence as scripted. Final strategy/contract guards, eleven
+PostgreSQL workflows and the real TCP/admin/viewer/mobile/accessibility journey
+pass together under pinned SDK3 (**38 / 95.38 seconds**). Default scoped checks
+also pass. The broader pre-option-fix source passed **1,281 / 34 skips in 583.33
+seconds**. The independent lesson passed search, separate confirmation, source
+diff, both-tree application checks and exact rollback, rejecting both bad
+16-token alternatives. Final installed/archive/image/hosted acceptance and the
+example's new public source pin/read-only view remain open. No package upload,
+paid inference or deployment occurred.
+
+The independent consumer exposed duplicate HTTP-route/function-root hints for
+one source entry. A failing regression reproduced the resulting ambiguous pair
+of native profiles; analysis now deduplicates only identical workflow identities
+within one call site and retains its HTTP hint. Workflow identities are unchanged.
+Two failing PostgreSQL regressions also showed native preparation ignored a
+requested minimum case count. Label and per-field structured criteria now freeze
+that declared option; four PostgreSQL checks pass, including repeat preparation
+with the same plan hash. Existing default thirty-case plans retain their values.
+
+The previous consolidated bootstrap/public sample-link source passed all eleven
+actual hosted jobs at `163a6396ad3af34f881862c6f2f678ad8601b307`. A separate local
+full Windows/default run of the older attribution wheel stopped at a database
+setup error (**565 passes / 11 skips / one error**). The exact quality/migration
+scope then passed **nine in 56.74 seconds**. That rerun does not explain the
+full-run failure. Content-free SQL exception diagnostics have been added to test
+setup; current complete installed qualification is still required.
+
 The independent application is public at
 [CutbackAI/support-desk-example](https://github.com/CutbackAI/support-desk-example).
 Its original application checks pass without Cutback; optional observation uses

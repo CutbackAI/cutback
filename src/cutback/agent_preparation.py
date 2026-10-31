@@ -58,10 +58,15 @@ def expiry(intent):
     )
 
 
-def require_protocol(control):
+def require_protocol(control, *, native_fixture=False):
     ready = control("GET", "/v1/health/ready")
-    if ready.get("preparation_contract") != PREPARATION_CONTRACT:
+    if not isinstance(ready, dict) or ready.get("preparation_contract") != PREPARATION_CONTRACT:
         raise ValueError("COLLECTOR_DURABLE_PREPARATION_UPGRADE_REQUIRED")
+    if native_fixture:
+        from cutback.core.native_fixture import NATIVE_FIXTURE_CONTRACT
+
+        if ready.get("native_fixture_contract") != NATIVE_FIXTURE_CONTRACT:
+            raise ValueError("COLLECTOR_NATIVE_FIXTURE_UPGRADE_REQUIRED")
 
 
 def bind(original, intent, dataset, policy):

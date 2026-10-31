@@ -1,12 +1,22 @@
 # What works and what remains
 
-Updated 30 October 2026. Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business. [Executed acceptance](progress.md) records the exact artifacts, checks, failures and limits; [the baseline](market-baseline.md) records remaining requirements.
+Updated 31 October 2026. Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business. [Executed acceptance](progress.md) records the exact artifacts, checks, failures and limits; [the baseline](market-baseline.md) records remaining requirements.
 
-[Reactive user simulation](reactive-users.md) is a source addition under qualification. It reacts to observed replies with a separate approved model and call budget while preserving the original scripted prefix, tools and assertions. The independent example, guided dashboard and authenticated browser acceptance pass; final artifact and hosted acceptance is pending. It does not supply representative human behavior or production task validation.
+[Reactive user simulation](reactive-users.md) is accepted in
+[PR 58](https://github.com/CutbackAI/cutback/pull/58), with package/image and all
+eleven hosted checks recorded in progress. It reacts to observed replies with a
+separate approved model and call budget while preserving the original scripted
+prefix, tools and assertions. It does not supply representative human behavior
+or production task validation. PyPI dev5 is unchanged.
 
 [Source-bound routing](source-routing.md) is accepted in [PR 56](https://github.com/CutbackAI/cutback/pull/56) after all eleven exact-head hosted checks and package/image qualification. It adds a qualified wrapper's training, validation, confirmation, exact settings patch, both-tree application checks and rollback. Broader wrappers and cross-engine selection remain unfinished; this merge does not change PyPI dev5.
 
-[Reviewed generated scenarios](generated-scenarios.md) are a source addition under qualification: training-only native proposals, bounded synthetic personas/goal mapping, resumable agent intent, private owner review and development-only imports. Source tests and authenticated browser acceptance pass; installed/archive/image/hosted gates remain pending. These static cases do not supply reactive users, independent labels or representative coverage.
+[Reviewed generated scenarios](generated-scenarios.md) are accepted in
+[PR 57](https://github.com/CutbackAI/cutback/pull/57): training-only native
+proposals, bounded synthetic personas/goal mapping, resumable agent intent,
+private owner review and development-only imports. Package/image and hosted
+acceptance are recorded in progress. These cases do not supply independent
+labels or representative coverage. PyPI dev5 is unchanged.
 
 ## Choose the right installation
 

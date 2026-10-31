@@ -200,6 +200,20 @@ def run_one(
             from cutback.server.campaign_service import authorize_campaign_run
 
             if (
+                plan.native_fixture is not None
+                and getattr(executor, "synthetic_transport", False) is not True
+            ):
+                record.status = job.status = "BLOCKED"
+                job.available_at = None
+                record.results = {
+                    "code": "SCRIPTED_NATIVE_REQUIRES_EXPLICIT_SYNTHETIC_EXECUTOR",
+                    "next_action": "use the configured fixture worker for this saved plan",
+                    "provider_calls": 0,
+                    "native_fixture": plan.native_fixture.public_summary(),
+                }
+                return {"status": "BLOCKED", "run_id": str(record.id), "provider_calls": 0}
+
+            if (
                 plan.routing_execution is not None
                 and plan.routing_execution.transport == "scripted_test_only"
                 and getattr(executor, "synthetic_transport", False) is not True
@@ -359,6 +373,9 @@ def run_one(
                 ):
                     raise ValueError("PROVIDER_POLICY_DENIED")
                 provenance = dataset_row.provenance
+                from cutback.server.native_fixture import require_fixture_inputs
+
+                require_fixture_inputs(plan, dataset_row, policy)
                 from cutback.server.stages import validate_stage
 
                 validate_stage(session, store, project_id, plan, run_id=run_id)
@@ -380,6 +397,16 @@ def run_one(
 
             def authorize_execution(session):
                 require_payloads_enabled()
+                if plan.native_fixture is not None:
+                    from cutback.server.evaluation_api import active_policy
+
+                    fixture_dataset = session.get(DatasetRecord, dataset_id, populate_existing=True)
+                    if fixture_dataset is None:
+                        raise ValueError("NATIVE_FIXTURE_REQUIRES_SYNTHETIC_DATA_AND_RIGHTS")
+                    _, fixture_policy = active_policy(
+                        session, project_id, UUID(fixture_dataset.provenance["policy_id"])
+                    )
+                    require_fixture_inputs(plan, fixture_dataset, fixture_policy)
                 from cutback.server.scenario_service import require_current_import
 
                 require_current_import(session, store, session.get(DatasetRecord, dataset_id))

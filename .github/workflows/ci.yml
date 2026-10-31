@@ -101,6 +101,8 @@ jobs:
           tests/end_to_end/test_generated_scenarios_pipeline.py
           tests/integration/test_reactive_users.py
           tests/integration/test_response_model_evidence.py
+          tests/integration/test_native_fixture_source.py
+          tests/end_to_end/test_native_fixture_pipeline.py
           tests/integration/test_preparation_recovery.py
           tests/integration/test_bootstrap_recovery.py
           tests/integration/test_paired_cases.py

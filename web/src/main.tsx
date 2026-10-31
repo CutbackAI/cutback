@@ -1982,6 +1982,17 @@ function RunEvidence({ detail }: { detail: RecordData }) {
           ? "Complete modeled call accounting"
           : "Cost completeness unknown"}
       </p>
+      {result.native_fixture && (
+        <p
+          className="notice"
+          role="status"
+          aria-label="Synthetic native execution"
+        >
+          Local fixture responses and usage. This run tests the source workflow;
+          it does not verify real model quality, invoice charges or customer
+          savings. A live provider worker cannot execute this frozen plan.
+        </p>
+      )}
       {result.criteria_generation_cost && (
         <p className="notice">
           These checks were generated from training examples and reviewed by an

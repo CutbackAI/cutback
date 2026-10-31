@@ -20644,6 +20644,16 @@
               }
             ],
             "title": "Routing Execution"
+          },
+          "native_fixture": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NativeFixtureExecution"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -20978,6 +20988,16 @@
               }
             ],
             "title": "Routing Execution"
+          },
+          "native_fixture": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NativeFixtureExecution"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -25715,6 +25735,19 @@
           "expires_at"
         ],
         "title": "NamespaceReceipt"
+      },
+      "NativeFixtureExecution": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "native-source-fixture-v1",
+            "title": "Version",
+            "default": "native-source-fixture-v1"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "NativeFixtureExecution"
       },
       "NativeGeneratorSpec": {
         "properties": {

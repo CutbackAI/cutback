@@ -1,5 +1,14 @@
 # Cutback agent workflow
 
+For the independent public support-desk lesson, use its documented native fixture
+command and exact source pin. `--fixture-transport` requires the matching
+collector readiness contract and actual synthetic dataset/rights; it cannot
+authorize a live provider. Read `docs/native-fixtures.md`. A normal worker blocks
+these plans before SDK construction or reservation. Never remove the contract,
+clear a blocked/uncertain run, invent real quality/savings or promote a sample
+gate into production evidence. The local source proposal still needs checks on
+both trees, exact rollback and human review.
+
 When local project/key bootstrap reports
 `BOOTSTRAP_COLLECTOR_UNAVAILABLE_RESUME_SAVED_INTENT`, preserve the separate
 private bootstrap credential journal and rerun the original `workflow prepare
