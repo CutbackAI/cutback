@@ -109,6 +109,25 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
     assert job["phase"] == "ANALYZED" and job["profiles"]
     assert job["next_action"]["provider_calls"] == 0
     assert command("workflow", "status")["id"] == job["id"]
+    guide = command("workflow", "explain", "--json")
+    assert guide["qualified_request_profiles"] == 1 and guide["provider_calls"] == 0
+    assert guide["source_changed"] is None and guide["source_edit_performed"] is False
+    blocked = Path(temporary) / "unsupported-request"
+    blocked.mkdir()
+    blocked_source = (
+        "from openai import OpenAI\nclient=OpenAI()\ndef classify(text):\n"
+        "    return client.responses.create(model='gpt-4.1', input=text, **options)\n"
+        "raise RuntimeError('must-not-execute')\n"
+    )
+    (blocked / "app.py").write_text(blocked_source, encoding="utf-8")
+    unsupported = command("optimize", str(blocked), "--json")
+    assert not unsupported["profiles"]
+    explanation = command("workflow", "explain", "--target", str(blocked), "--json")
+    assert explanation["issues"][0]["diagnostic_code"] == (
+        "EXPANDED_REQUEST_ARGUMENTS_REQUIRE_REVIEW"
+    )
+    assert explanation["next_action"]["tool"] == "cutback workflow explain"
+    assert (blocked / "app.py").read_text(encoding="utf-8") == blocked_source
     git_env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
     git_env.update(GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull, GIT_ATTR_NOSYSTEM="1")
     for arguments in (

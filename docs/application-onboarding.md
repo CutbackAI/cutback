@@ -19,6 +19,18 @@ cutback workflow status
 cutback instrument --target . --entrypoint actual/entrypoint.py --plan --json
 ```
 
+Working-source follow-up under qualification: run
+`cutback workflow explain --target .` for a readable explanation of the saved
+discovery, or add `--json` for its bounded metadata report. It identifies missing
+request/output bounds, unresolved model references, expanded arguments, dynamic
+preprocessing, unsupported options, custom destinations and storage-policy
+differences, without showing their values. A call that needs an adapter does not
+become replayable by suppressing its diagnostic. Preserve required application
+behavior and qualify the adapter, then rerun `cutback optimize . --json`.
+The explanation reads the saved snapshot; it does not recheck current files,
+connect to a collector, call a provider or edit application code. PyPI dev5 does
+not contain this new command.
+
 Inspect startup before choosing the entrypoint. Scanning and fixture discovery parse/index files without importing application code, reading `.env` values, uploading payloads or performing inference. Ignore `.cutback/` before saving reports because inventory may identify application files and workflows. Run a full source review before sharing any resulting artifact externally.
 
 The checkpoint is complete when every detected call has a source reference, unsupported/dynamic calls are explicit, spend/volume/quality remain unknown where no runtime evidence exists, and the instrumentation proposal leaves application files unchanged. Existing provider pins stay in place; install a compatible instrumentation extra only as part of the reviewed integration. Unsupported SDKs require adapter work rather than a silent upgrade.

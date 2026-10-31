@@ -172,10 +172,19 @@ def next_action(state):
         ):
             return {
                 "code": "QUALIFY_CLIENT_DESTINATION",
-                "tool": "cutback workflow analyze",
+                "tool": "cutback optimize",
                 "requires": ["explicit_supported_client_options_or_inspected_destination_adapter"],
                 "effects": ["read_source_metadata"],
                 "provider_calls": 0,
+            }
+        if not state.get("profiles"):
+            return {
+                "code": "INSPECT_UNQUALIFIED_SOURCE_CONTRACTS",
+                "tool": "cutback workflow explain",
+                "requires": ["qualified_request_or_source_specific_adapter"],
+                "effects": ["read_saved_source_metadata"],
+                "provider_calls": 0,
+                "replay_qualified": False,
             }
         return {
             "code": "REVIEW_DATA_RIGHTS_AND_PREPARE",
@@ -311,17 +320,9 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
                         "source_file": site["source_file"],
                         "reason": "REQUEST_REQUIRES_INSPECTED_ADAPTER_OR_EXPLICIT_BOUND",
                     }
-                    # Never expose arbitrary parser/provider exception text. This
-                    # exact fixed code carries no URL, source content or credential.
-                    if (
-                        type(exc) is ValueError
-                        and str(exc) == "CUSTOM_PROVIDER_DESTINATION_REQUIRES_REVIEW"
-                    ):
-                        issue.update(
-                            diagnostic_code="CUSTOM_PROVIDER_DESTINATION_REQUIRES_REVIEW",
-                            next_action="Metadata observation can continue; source replay needs "
-                            "explicit client options and a qualified provider destination.",
-                        )
+                    from cutback.core.source_guidance import request_guidance
+
+                    issue.update(request_guidance(exc))
                     unresolved.append(issue)
                 entrypoints[entry["file"]] = entry
         fixtures = discover_fixtures(root)

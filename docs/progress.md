@@ -1,5 +1,18 @@
 # Implementation progress
 
+31 October 2026 offline source guidance, **active source work**. A new
+`workflow explain` command renders readable or JSON metadata from saved discovery.
+Known request blockers receive fixed, concrete inspection guidance without raw
+exception details, arguments, destinations or credentials. No qualified source
+now points to inspection instead of impossible preparation. The custom-client
+recovery hint uses the actual `cutback optimize` command. Discovery and related
+agent/client regressions passed **58 / one Windows symlink privilege skip in
+23.55 seconds**, including raw-detail suppression, bounded output and saved
+snapshot freshness. The final copy follow-up passed **58 / one skip in 18.81
+seconds**. Ruff/format and mypy (**387 modules**) pass.
+This does not qualify new dynamic adapters or close complete F05 coverage.
+Installed/package/publication qualification is pending.
+
 31 October 2026 workload-bound campaigns, **active engineering; not accepted**.
 The v4 envelope combines the qualified exact-cache control and native alternatives
 before bounded prompt search, with a shared parent reservation and untouched
@@ -30,6 +43,16 @@ execution. The sample now creates that requested directory; a regression startin
 with an absent directory passed **1 in 78.82 seconds**, including the actual
 campaign, source checks and rollback. The failed image remains retained and a
 new frozen artifact/image qualification is required for this correction.
+The first campaign wheel passed **159 installed SDK2 checks in 847.51 seconds**
+and **159 installed SDK3 checks in 853.56 seconds**. The workspace correction's
+new wheel passed **16 installed SDK2 checks in 331.25 seconds** and **16 installed
+SDK3 checks in 321.49 seconds**, including the fresh-directory full browser
+journey and both source-change paths. A second image fixture put two identical
+independent tasks in one project and did not complete its campaign. The image
+driver now gives the new campaign its own project, retaining all holdout and
+cross-version lineage guards. That revised full image gate is still pending;
+the failed run remains retained. Its exact failure cause is not asserted from
+the abbreviated error receipt.
 
 Hosted predecessor qualification found an incomplete eight-profile capture in
 the independent request-reuse sample (one SDK3 workflow job: **268 passed / nine

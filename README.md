@@ -90,6 +90,11 @@ The saved job prepares source contracts, fixture candidates, instrumentation cho
 
 The commands above target the published dev5 package. For the newer source-checkout workflows:
 
+The working source adds `cutback workflow explain --target .` to turn a saved
+scan into readable next steps and request-contract blockers. Add `--json` for
+agent-readable metadata. It makes no provider call and does not edit or recheck
+application files; rerun `cutback optimize` after resolving a blocker.
+
 | Follow this journey | Start here |
 |---|---|
 | Fit input-size routes on training receipts, then validate and independently confirm | [Independent ticket application, source acceptance in progress](https://github.com/CutbackAI/cutback/blob/main/examples/learned-routing/README.md) |
