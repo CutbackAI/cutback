@@ -183,6 +183,20 @@ jobs:
           tests/integration/test_guarded_security_episodes.py
           tests/integration/test_tool_ledger.py
           tests/integration/test_security_episodes.py
+  openai3-sdk-required:
+    name: openai3-sdk (${{ matrix.python }})
+    needs: [openai3-sdk]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    strategy:
+      matrix:
+        python: ['3.11.18', '3.13.18']
+    steps:
+      - name: Require every SDK3 shard before the protected compatibility check
+        env:
+          SDK3_SHARDS_RESULT: ${{ needs.openai3-sdk.result }}
+        run: test "$SDK3_SHARDS_RESULT" = success
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 75

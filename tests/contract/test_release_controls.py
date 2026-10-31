@@ -3,6 +3,20 @@ from pathlib import Path
 import yaml
 
 
+def test_sdk3_protected_names_require_all_matrix_shards_even_after_failure():
+    root = Path(__file__).resolve().parents[2]
+    jobs = yaml.safe_load((root / ".github/workflows/ci.yml").read_text())["jobs"]
+    shards, required = jobs["openai3-sdk"], jobs["openai3-sdk-required"]
+    assert set(shards["strategy"]["matrix"]["scope"]) == {"core", "workflows", "systems"}
+    assert set(required["needs"]) == {"openai3-sdk"}
+    assert required["if"] == "always()"
+    assert required["name"] == "openai3-sdk (${{ matrix.python }})"
+    assert required["strategy"]["matrix"]["python"] == shards["strategy"]["matrix"]["python"]
+    step = required["steps"][0]
+    assert step["env"]["SDK3_SHARDS_RESULT"] == "${{ needs.openai3-sdk.result }}"
+    assert step["run"] == 'test "$SDK3_SHARDS_RESULT" = success'
+
+
 def test_publish_waits_for_exact_revision_security_and_ci():
     root = Path(__file__).resolve().parents[2]
     workflow = yaml.safe_load((root / ".github/workflows/publish.yml").read_text())
