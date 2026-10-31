@@ -38,7 +38,7 @@ def test_observed_workload_campaign_and_authenticated_dashboard(
         ).json()["id"]
         base = f"/v1/projects/{project}"
         writer = control.post(base + "/keys", json={"role": "ingest"}).json()["token"]
-        result = seed_workload_campaign(app, control, project, writer, tmp_path)
+        result = seed_workload_campaign(app, control, project, writer, tmp_path / "new-workspace")
         report = result["report"]
         assert report["status"] == "COMPLETED" and report["billing_complete"]
         assert report["specification"]["version"] == "cutback.improvement-campaign.v4"

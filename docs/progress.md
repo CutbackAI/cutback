@@ -25,6 +25,11 @@ cache/prompt source proposals, both-tree checks and rollback, repricing denial,
 lost-draft recovery, authenticated desktop/mobile accessibility and frozen-budget
 contracts. Pure campaign contracts passed **51 in 16.43 seconds**. Installed
 qualification and the new container campaign restore/rekey gate remain pending.
+The first new image gate stopped at a missing campaign sample workspace before
+execution. The sample now creates that requested directory; a regression starting
+with an absent directory passed **1 in 78.82 seconds**, including the actual
+campaign, source checks and rollback. The failed image remains retained and a
+new frozen artifact/image qualification is required for this correction.
 
 Hosted predecessor qualification found an incomplete eight-profile capture in
 the independent request-reuse sample (one SDK3 workflow job: **268 passed / nine

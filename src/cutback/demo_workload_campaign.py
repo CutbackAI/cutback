@@ -21,6 +21,8 @@ def seed_workload_campaign(app, control, project_id, writer, workspace):
     from cutback.evals.executors import OpenAIExecutor
     from cutback.sample_app.workload_reuse import fixture_response
 
+    workspace = Path(workspace)
+    workspace.mkdir(parents=True, exist_ok=True)
     basis = seed_workload_portfolio(app, control, project_id, workspace, writer, execute=False)
     root = Path(basis["source_directory"])
     original = (root / "app.py").read_bytes()
