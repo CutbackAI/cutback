@@ -124,9 +124,17 @@ def test_finite_portfolio_covers_native_only_retrieval_only_and_combined_hypothe
 
 
 def test_legacy_v6_hash_is_identical_to_the_frozen_pre_extension_wheel():
+    from cutback.core.retrieval import CONTRACT_SHA256
+
     plan, _ = fixture()
     plan = plan.model_copy(update={"content_nonce": UUID("00000000-0000-4000-8000-000000000001")})
-    assert (
-        digest(plan.model_dump(mode="json"))
-        == "12aa530e7e985112bce17fb1f34d03b1a80cd4de2e4145256b2cae7053464a4c"
+    wire = plan.model_dump(mode="json")
+    assert wire["retrieval_execution"]["contract_sha256"] == CONTRACT_SHA256
+    # The recipe deliberately includes the interpreter's Unicode database.
+    # Normalize only that fixture metadata to the frozen wheel's Python 3.11
+    # recipe when comparing wire-format compatibility across interpreters.
+    # Execution still requires the actual local recipe above.
+    wire["retrieval_execution"]["contract_sha256"] = (
+        "05e5f5852cfb3d64bd0d4f56443424cc2685610975579ec18aac634cb9a6164c"
     )
+    assert digest(wire) == "12aa530e7e985112bce17fb1f34d03b1a80cd4de2e4145256b2cae7053464a4c"

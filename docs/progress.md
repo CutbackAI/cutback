@@ -1,5 +1,25 @@
 # Implementation progress
 
+31 October 2026 portable golden-fixture correction, **hosted qualification in
+progress**: Python 3.13's Unicode 15.1 recipe correctly produces legacy v6 hash
+`870f88c5732552d81a8dfa65920112b358291ef61899de2d07da6a235ee34791`, whereas the
+original fixture used Python 3.11's Unicode 14 recipe. The earlier frozen wheel
+reproduced the same Python 3.13 hash, confirming a test-fixture error. The wire
+compatibility test now normalizes only reference recipe metadata, after checking
+the actual runtime recipe. Execution still rejects incompatible recipes.
+All eight joint units pass on Python 3.13.18 in 0.88 seconds. No runtime code or
+SDK support claim changes in this correction; the failed hosted check remains
+recorded.
+
+The joint extension's installed SDK2 scope passed **40 in 509.12 seconds** and
+installed SDK3 scope **37 in 499.90 seconds**, including authenticated browser
+and both-tree native consumer checks. Its matching read-only image passed joint
+confirmation recovery and rekey across schema 0032, 100 tables, 2,002 encrypted
+objects, eight request-profile sidecars, one cache object and 29 plans. The
+two-tenant 2,000-event/2,000-replay smoke took 2.109 seconds, not an SLA. These
+local scopes do not replace the remaining current-head hosted gates. PyPI dev5
+is unchanged; unified cross-engine optimization remains unfinished.
+
 31 October 2026 joint native/retrieval extension, **working source under
 qualification**: [walkthrough](joint-retrieval.md). Automatic source preparation
 now compares qualified native model/output-only, retrieval-only and combined
