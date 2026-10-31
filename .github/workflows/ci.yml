@@ -255,16 +255,18 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy
+      - name: Build and validate distribution contents before long-running acceptance
+        run: |
+          uv build
+          uv run python scripts/check_release_artifacts.py
+          uv run python scripts/check_public_boundary.py --archive dist/cutback-*.whl --archive dist/cutback-*.tar.gz
+          uv run twine check dist/*
       - run: uv run python scripts/check.py --cov=cutback --cov-report=term-missing --cov-report=xml
         env:
           CUTBACK_TEST_BROWSER: 'true'
           CUTBACK_TEST_LOCAL_STACK: ${{ matrix.python == '3.11.18' && 'true' || 'false' }}
           CUTBACK_TEST_TRAINING_PYTHON: ${{ matrix.python == '3.11.18' && '/tmp/cutback-training/bin/python' || '' }}
       - run: uv run python scripts/check_source_snapshot.py
-      - run: uv build
-      - run: uv run python scripts/check_release_artifacts.py
-      - run: uv run python scripts/check_public_boundary.py --archive dist/cutback-*.whl --archive dist/cutback-*.tar.gz
-      - run: uv run twine check dist/*
       - run: uv run python scripts/wheel_smoke.py
   isolated-tools:
     runs-on: ubuntu-latest

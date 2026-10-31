@@ -34,7 +34,7 @@ The source [paired security sample](https://github.com/CutbackAI/cutback/blob/ma
 
 For the source-only cache eligibility workflow, see the [eight-call request-reuse example](https://github.com/CutbackAI/cutback/blob/main/examples/request-reuse/README.md). Its provider transport is synthetic; it distinguishes modeled potential reuse from measured delivery and real savings.
 
-The working-source follow-up adds `uv run cutback demo --workload-portfolio`: an [independent observed-workload walkthrough](examples/workload-portfolio/README.md) through fixture-only comparison, confirmation, source checks and rollback. It is under qualification and absent from published dev5; no provider key is needed.
+The working-source follow-up adds `uv run cutback demo --workload-portfolio`: an [independent observed-workload walkthrough](https://github.com/CutbackAI/cutback/blob/main/examples/workload-portfolio/README.md) through fixture-only comparison, confirmation, source checks and rollback. It is under qualification and absent from published dev5; no provider key is needed.
 
 Add `--source-workload` to include an independently committed application and [automatic source-matched assessment](https://github.com/CutbackAI/cutback/blob/main/docs/source-workload.md), without paid calls or source changes.
 

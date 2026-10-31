@@ -53,6 +53,13 @@ driver now gives the new campaign its own project, retaining all holdout and
 cross-version lineage guards. That revised full image gate is still pending;
 the failed run remains retained. Its exact failure cause is not asserted from
 the abbreviated error receipt.
+The shared-project fixture was then reproduced with an observed canonical
+lineage denial: reimported sample families could not claim a fresh campaign
+confirmation. That negative PostgreSQL journey passed **1 in 92.95 seconds**.
+The first assertion incorrectly expected an internal lineage code in the public
+parent receipt; the public generic error is intentional. The test now observes
+the actual typed lineage denial while requiring the generic public response.
+The independent-project image fixture retains these controls unchanged.
 
 Hosted predecessor qualification found an incomplete eight-profile capture in
 the independent request-reuse sample (one SDK3 workflow job: **268 passed / nine
@@ -78,6 +85,15 @@ under hosted qualification. The native/cache predecessor is
 increment [PR 71](https://github.com/CutbackAI/cutback/pull/71) merged after all
 17 exact-head checks passed. PyPI dev5 remains unchanged. No paid inference,
 production deployment or private application integration occurred.
+
+The complete demo's hosted test suites passed **2,326 / 40 skips in 3,172.58
+seconds** on Python 3.11 and **2,325 / 41 skips in 2,838.86 seconds** on Python
+3.13. Its later distribution validation correctly rejected a package README
+relative link. That link now uses an absolute public repository URL. CI builds,
+validates archive contents and checks package metadata before the long test
+suite, while retaining the post-test committed-source integrity check. The local
+build orchestrator also requires distribution validation before reporting a
+successful build. New package and exact-head hosted gates remain required.
 
 31 October 2026 complete observed-workload sample, **working source under
 qualification**: [walkthrough](../examples/workload-portfolio/README.md).
