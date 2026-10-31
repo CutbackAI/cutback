@@ -717,6 +717,8 @@ def expire_payloads(sessions, store, *, now=None):
         for row in rows:
             if not row.metadata_safe.get("deleted"):
                 store.delete(row.project_id, row.object_ref)
+                if row.native_profile_ref is not None:
+                    store.delete(row.project_id, row.native_profile_ref)
                 row.metadata_safe = {**row.metadata_safe, "deleted": True}
                 session.add(
                     AuditEvent(

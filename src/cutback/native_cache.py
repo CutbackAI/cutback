@@ -180,18 +180,11 @@ class NativeResponseCacheExecution:
 
             return construct_type(type_=Response, value=value)
 
-    @owned_sdk_request
-    def create(self, client, *, dispatch_timeout_seconds=None, **request):
+    def request_identity(self, client, **request):
+        """Validate and fingerprint a request without collector or provider I/O."""
         from openai import OpenAI
         from openai._types import Omit
 
-        started = time.monotonic()
-        if dispatch_timeout_seconds is not None and (
-            type(dispatch_timeout_seconds) not in {int, float}
-            or not math.isfinite(dispatch_timeout_seconds)
-            or not 0 < dispatch_timeout_seconds <= 30
-        ):
-            raise ValueError("NATIVE_CACHE_BOUNDED_DISPATCH_TIMEOUT_REQUIRED")
         sdk_version = version("openai")
         if sdk_version not in OPENAI_TEXT_SDKS or not isinstance(client, OpenAI):
             raise ValueError("NATIVE_CACHE_REQUIRES_QUALIFIED_SYNC_RESPONSES_SDK")
@@ -283,6 +276,19 @@ class NativeResponseCacheExecution:
             "model": request["model"],
             "key_sha256": key,
         }
+        return body, sdk_version
+
+    @owned_sdk_request
+    def create(self, client, *, dispatch_timeout_seconds=None, **request):
+        started = time.monotonic()
+        if dispatch_timeout_seconds is not None and (
+            type(dispatch_timeout_seconds) not in {int, float}
+            or not math.isfinite(dispatch_timeout_seconds)
+            or not 0 < dispatch_timeout_seconds <= 30
+        ):
+            raise ValueError("NATIVE_CACHE_BOUNDED_DISPATCH_TIMEOUT_REQUIRED")
+        body, sdk_version = self.request_identity(client, **request)
+        key = body["key_sha256"]
         status, found = self._post("/v1/ingest/cache/lookup", body)
         if status in {401, 403}:
             raise ValueError("NATIVE_CACHE_CURRENT_POLICY_AND_SCOPED_KEY_REQUIRED")

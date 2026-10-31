@@ -10,6 +10,7 @@ from sqlalchemy import (
     JSON,
     BigInteger,
     Boolean,
+    CheckConstraint,
     DateTime,
     ForeignKey,
     Index,
@@ -231,13 +232,23 @@ class CapturePolicyRecord(Base):
 
 class PayloadSample(Base):
     __tablename__ = "payload_samples"
-    __table_args__ = (UniqueConstraint("id", "project_id", name="uq_payload_project_scope"),)
+    __table_args__ = (
+        UniqueConstraint("id", "project_id", name="uq_payload_project_scope"),
+        Index("ix_payload_native_profile_scan", "project_id", "policy_id", "id"),
+        CheckConstraint(
+            "(native_profile_ref IS NULL AND native_profile_sha256 IS NULL) OR "
+            "(native_profile_ref IS NOT NULL AND native_profile_sha256 IS NOT NULL)",
+            name="ck_payload_native_profile_pair",
+        ),
+    )
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
     project_id: Mapped[UUID] = mapped_column(
         ForeignKey("projects.id", ondelete="CASCADE"), index=True
     )
     policy_id: Mapped[UUID] = mapped_column(ForeignKey("capture_policies.id"))
     object_ref: Mapped[str] = mapped_column(String(500))
+    native_profile_ref: Mapped[str | None] = mapped_column(String(500))
+    native_profile_sha256: Mapped[str | None] = mapped_column(String(64))
     content_hash: Mapped[str] = mapped_column(String(64))
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     metadata_safe: Mapped[dict] = mapped_column(JSON)
@@ -407,3 +418,4 @@ importlib.import_module("cutback.server.tool_db")
 importlib.import_module("cutback.server.guardrail_db")
 importlib.import_module("cutback.server.criteria_db")
 importlib.import_module("cutback.server.scenario_db")
+importlib.import_module("cutback.server.native_profile_db")

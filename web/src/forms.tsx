@@ -86,6 +86,14 @@ export function PolicyForm({
         submit="Create policy"
         description="Only authorize content you have permission to collect. Metadata observation does not require content capture."
         onSubmit={async (data) => {
+          if (
+            (data.profile_authorized === "on") !==
+            (data.profile_immutable === "on")
+          ) {
+            throw new Error(
+              "NATIVE_PROFILE_BOTH_EXPLICIT_AUTHORIZATIONS_REQUIRED",
+            );
+          }
           await json(api, base + "/capture-policies", {
             enabled: data.enabled === "on",
             approval_ref: data.approval,
@@ -101,6 +109,17 @@ export function PolicyForm({
               Date.now() + Number(data.expiry) * 86400000,
             ).toISOString(),
             never_capture_fields: list(data.denied),
+            ...(data.profile_authorized === "on" &&
+            data.profile_immutable === "on"
+              ? {
+                  native_request_profile: {
+                    freshness_ref: data.profile_freshness,
+                    prospective_ttl_seconds: Number(data.profile_ttl),
+                    fingerprint_capture_authorized: true,
+                    immutable_or_safely_invalidated: true,
+                  },
+                }
+              : {}),
           });
           reload();
           return "Policy saved. New capture still requires explicit SDK opt-in.";
@@ -190,6 +209,36 @@ export function PolicyForm({
           hint="Redaction is a safeguard, not a guarantee of deidentification."
         />
         <Check label="Enable this policy" name="enabled" />
+        <fieldset>
+          <legend>Optional encrypted request reuse analysis</legend>
+          <p>
+            Fingerprints remain in encrypted capture storage. Each profiled
+            example consumes two object slots. Configure a separate private SDK
+            profile key; do not enter it here. Field exclusions disable
+            profiling.
+          </p>
+          <Check
+            label="I explicitly authorize encrypted request fingerprint capture."
+            name="profile_authorized"
+          />
+          <Check
+            label="The profiled context is immutable or safely invalidated."
+            name="profile_immutable"
+          />
+          <Field
+            label="Profile freshness reference"
+            name="profile_freshness"
+            placeholder="approved-context-version"
+          />
+          <Field
+            label="Prospective cache TTL in seconds"
+            name="profile_ttl"
+            type="number"
+            min="1"
+            max="2592000"
+            defaultValue="300"
+          />
+        </fieldset>
         <Check
           label="I am authorized to approve this data, purpose, vendors and retention."
           name="rights_confirmed"

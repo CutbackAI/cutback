@@ -18,6 +18,7 @@ from cutback.cli_compression import register_compression
 from cutback.cli_criteria import register_criteria
 from cutback.cli_episodes import register_episodes
 from cutback.cli_guardrails import register_guardrails
+from cutback.cli_native_profiles import register_native_profiles
 from cutback.cli_qualification import register_qualification
 from cutback.cli_retrieval import register_retrieval
 from cutback.cli_routing import register_routing
@@ -563,6 +564,7 @@ register_scenario(app, output, request, fail)
 register_routing(app, output, request, fail)
 register_batch(app, output, request, fail)
 register_semantic_cache(app, output, request, fail)
+register_native_profiles(app, output, request, fail)
 
 if __name__ == "__main__":
     app()

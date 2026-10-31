@@ -4415,6 +4415,210 @@
         }
       }
     },
+    "/v1/projects/{project_id}/native-request-profiles/analyses": {
+      "post": {
+        "summary": "Queue",
+        "operationId": "queue_v1_projects__project_id__native_request_profiles_analyses_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NativeProfileAnalysisInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Analyses",
+        "operationId": "analyses_v1_projects__project_id__native_request_profiles_analyses_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 25,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100000,
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/native-request-profiles/analyses/{analysis_id}": {
+      "get": {
+        "summary": "Analysis",
+        "operationId": "analysis_v1_projects__project_id__native_request_profiles_analyses__analysis_id__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/native-request-profiles/analyses/{analysis_id}/cancel": {
+      "post": {
+        "summary": "Cancel",
+        "operationId": "cancel_v1_projects__project_id__native_request_profiles_analyses__analysis_id__cancel_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{project_id}/campaign-templates": {
       "get": {
         "summary": "Templates",
@@ -18031,6 +18235,16 @@
             "const": "email-secret-v1",
             "title": "Redaction Version",
             "default": "email-secret-v1"
+          },
+          "native_request_profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NativeRequestProfileAuthorization"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -23029,7 +23243,14 @@
                 "captured_exported",
                 "captured_dropped",
                 "capture_enabled",
-                "gateway_delegated"
+                "gateway_delegated",
+                "native_profile_unconfigured",
+                "native_profile_unsupported",
+                "native_profile_dropped",
+                "native_profile_busy",
+                "native_profile_queued",
+                "native_profile_exported",
+                "native_profile_overhead_us_total"
               ]
             },
             "type": "object",
@@ -26196,6 +26417,189 @@
           "cost_status"
         ],
         "title": "NativeObservation"
+      },
+      "NativeProfileAnalysisInput": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid4",
+            "title": "Request Id"
+          },
+          "policy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Policy Id"
+          },
+          "environment": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Environment"
+          },
+          "workflow": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Workflow"
+          },
+          "purpose": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Purpose"
+          },
+          "window_start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Window Start"
+          },
+          "window_end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Window End"
+          },
+          "max_observations": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Max Observations",
+            "default": 1000
+          },
+          "max_wall_seconds": {
+            "type": "integer",
+            "maximum": 300.0,
+            "minimum": 5.0,
+            "title": "Max Wall Seconds",
+            "default": 60
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "policy_id",
+          "environment",
+          "workflow",
+          "purpose",
+          "window_start",
+          "window_end"
+        ],
+        "title": "NativeProfileAnalysisInput"
+      },
+      "NativeRequestProfileAuthorization": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "native-request-profile-v1",
+            "title": "Version",
+            "default": "native-request-profile-v1"
+          },
+          "freshness_ref": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Freshness Ref"
+          },
+          "prospective_ttl_seconds": {
+            "type": "integer",
+            "maximum": 2592000.0,
+            "minimum": 1.0,
+            "title": "Prospective Ttl Seconds"
+          },
+          "fingerprint_capture_authorized": {
+            "type": "boolean",
+            "const": true,
+            "title": "Fingerprint Capture Authorized"
+          },
+          "immutable_or_safely_invalidated": {
+            "type": "boolean",
+            "const": true,
+            "title": "Immutable Or Safely Invalidated"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "freshness_ref",
+          "prospective_ttl_seconds",
+          "fingerprint_capture_authorized",
+          "immutable_or_safely_invalidated"
+        ],
+        "title": "NativeRequestProfileAuthorization"
+      },
+      "NativeRequestProfileSnapshot": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "native-request-profile-v1",
+            "title": "Version",
+            "default": "native-request-profile-v1"
+          },
+          "request_identity_contract": {
+            "type": "string",
+            "const": "native-exact-cache-v1",
+            "title": "Request Identity Contract",
+            "default": "native-exact-cache-v1"
+          },
+          "origin": {
+            "type": "string",
+            "const": "client_reported_sdk_capture",
+            "title": "Origin",
+            "default": "client_reported_sdk_capture"
+          },
+          "capture_policy_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Capture Policy Sha256"
+          },
+          "profile_key_id": {
+            "type": "string",
+            "format": "uuid4",
+            "title": "Profile Key Id"
+          },
+          "clock_domain_id": {
+            "type": "string",
+            "format": "uuid4",
+            "title": "Clock Domain Id"
+          },
+          "clock_basis": {
+            "type": "string",
+            "const": "process_perf_counter_ns_v1",
+            "title": "Clock Basis"
+          },
+          "monotonic_started_ns": {
+            "type": "integer",
+            "maximum": 9.223372036854776e+18,
+            "minimum": 0.0,
+            "title": "Monotonic Started Ns"
+          },
+          "request_hmac_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Request Hmac Sha256"
+          },
+          "sdk_version": {
+            "type": "string",
+            "enum": [
+              "2.29.0",
+              "3.35.1"
+            ],
+            "title": "Sdk Version"
+          },
+          "response_cache_eligible": {
+            "type": "boolean",
+            "title": "Response Cache Eligible"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "capture_policy_sha256",
+          "profile_key_id",
+          "clock_domain_id",
+          "clock_basis",
+          "monotonic_started_ns",
+          "request_hmac_sha256",
+          "sdk_version",
+          "response_cache_eligible"
+        ],
+        "title": "NativeRequestProfileSnapshot"
       },
       "NotificationInput": {
         "properties": {
@@ -30546,6 +30950,16 @@
               }
             ],
             "title": "Reference"
+          },
+          "native_request_profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NativeRequestProfileSnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,

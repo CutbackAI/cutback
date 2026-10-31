@@ -44,6 +44,56 @@ def inside(container, code, values):
     )
 
 
+def seed_owned_request_profiles(container, values):
+    """Execute the independent example inside the actual image, retaining it for recovery."""
+    source = (Path(__file__).resolve().parents[1] / "examples/request-reuse/demo.py").read_text(
+        encoding="utf-8"
+    )
+    code = """import json,os,sys,threading
+from uuid import uuid4
+from sqlalchemy import select
+from cutback.server.db import database,Project
+from cutback.server.native_profile_db import NativeProfileAnalysis
+from cutback.server.native_profile_service import run_native_profile_one
+from cutback.evals.artifacts import configured_store
+from cutback.server.runtime import configure_secrets
+configure_secrets()
+os.environ["CUTBACK_ALLOW_PAYLOADS"]="true"
+os.environ["CUTBACK_CONTROL_TOKEN"]=os.environ["CUTBACK_ADMIN_TOKEN"]
+slug="owned-image-profiles-"+uuid4().hex
+stop=threading.Event()
+engine,sessions=database(os.environ["CUTBACK_DATABASE_URL"])
+store=configured_store()
+def work():
+ while not stop.wait(0.05):
+  with sessions() as session:
+   identifier=session.scalar(select(NativeProfileAnalysis.id).join(Project).where(
+    Project.slug==slug,NativeProfileAnalysis.state=="QUEUED").limit(1))
+  if identifier:
+   run_native_profile_one(sessions,store,only_analysis_id=identifier)
+thread=threading.Thread(target=work,daemon=True)
+thread.start()
+sys.argv=["owned-request-reuse-example","--keep-project","--project-slug",slug]
+try:
+ exec(compile(SAMPLE_SOURCE,"<owned-request-reuse-example>","exec"),{"__name__":"__main__"})
+finally:
+ stop.set()
+ thread.join(5)
+ engine.dispose()
+assert not thread.is_alive()
+""".replace("SAMPLE_SOURCE", repr(source))
+    result = json.loads(inside(container, code, values).strip().splitlines()[-1])
+    assert result["paid_provider_calls"] == 0 and result["synthetic_native_calls"] == 8
+    assert result["analysis"]["summary"]["modeled_potential_hits"] == 3
+    assert result["analysis"]["summary"]["cache_trial_eligible"] is True
+    return {
+        "synthetic_native_calls": 8,
+        "modeled_potential_hits": 3,
+        "paid_provider_calls": 0,
+        "project_retained_for_recovery": True,
+    }
+
+
 def seed_owned_isolated_records(
     container,
     directory,
@@ -345,6 +395,7 @@ print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":mani
                 assert len(source_groups) == 2
                 assert sum(group["observed_attempts"] for group in source_groups) == 12
                 assert client.get(base + "/changes").json()
+                native_profiles = seed_owned_request_profiles(container, values)
                 if isolated_tools:
                     seed_owned_isolated_records(
                         container,
@@ -380,6 +431,8 @@ from cutback.server.enterprise_db import CacheEntry
 from cutback.server.semantic_cache_db import SemanticCacheNamespace,SemanticCacheQualification
 from cutback.server.semantic_upload_db import SemanticDatasetUpload
 from cutback.server.tool_db import ToolSessionRecord,ToolOperationRecord
+from cutback.server.native_profile_db import NativeProfileAnalysis
+from cutback.core.native_request_profile import NativeRequestProfileSnapshot
 from cutback.server.semantic_cache_service import read_catalog
 from cutback.core.semantic_cache import SemanticCacheIndex
 from cutback.evals.datasets import digest
@@ -401,6 +454,19 @@ with sessions() as session:
   before=original.get(row.project_id,row.object_ref)
   rotating.rekey(row.project_id,row.object_ref)
   assert new_only.get(row.project_id,row.object_ref)==before
+  if row.native_profile_ref:
+   profile_before=original.get(row.project_id,row.native_profile_ref)
+   profile=NativeRequestProfileSnapshot.model_validate_json(profile_before)
+   assert digest(profile.model_dump(mode="json"))==row.native_profile_sha256
+   rotating.rekey(row.project_id,row.native_profile_ref)
+   assert new_only.get(row.project_id,row.native_profile_ref)==profile_before
+ profile_objects=sum(row.native_profile_ref is not None for row in rows)
+ assert profile_objects==8
+ analyses=session.scalars(select(NativeProfileAnalysis)).all()
+ assert len(analyses)==1 and analyses[0].state=="COMPLETED"
+ assert analyses[0].summary["profiled_attempts"]==8
+ assert analyses[0].summary["modeled_potential_hits"]==3
+ assert analyses[0].summary["realized_savings_usd"] is None
  caches=session.scalars(select(CacheEntry)).all()
  assert caches
  for row in caches:
@@ -622,7 +688,7 @@ with sessions() as session:
     assert executed.results["lineage"]["fresh_test_claim"] is True
    comparisons+=1
   assert comparisons==2
-print(json.dumps({"restored_and_rekeyed_objects":len(rows)+len(caches),"restored_and_rekeyed_cache_objects":len(caches),"restored_and_rekeyed_plans":len(plans),"semantic_qualified_catalog_restored":True,"isolated_tool_receipts_restored":bool(TOOLS_EXPECTED),"paired_security_suite_restored":bool(SECURITY_EXPECTED),"runtime_guardrail_receipts_restored":bool(RUNTIME_GUARDS),"database_pointers_preserved":True}))
+print(json.dumps({"restored_and_rekeyed_objects":len(rows)+len(caches)+profile_objects,"restored_and_rekeyed_cache_objects":len(caches),"restored_and_rekeyed_plans":len(plans),"restored_native_profile_objects":profile_objects,"native_profile_analysis_restored":True,"semantic_qualified_catalog_restored":True,"isolated_tool_receipts_restored":bool(TOOLS_EXPECTED),"paired_security_suite_restored":bool(SECURITY_EXPECTED),"runtime_guardrail_receipts_restored":bool(RUNTIME_GUARDS),"database_pointers_preserved":True}))
 engine.dispose()
 """.replace("RECOVERED", repr(names[1]))
                     .replace("TOOLS_EXPECTED", repr(isolated_tools))
@@ -749,6 +815,7 @@ engine.dispose()
                     and otel_report["summary"]["external_otel_observations"] == 1
                 )
                 result = {
+                    "native_request_profile_sample": native_profiles,
                     "image": image,
                     "image_id": image_id,
                     "uid": 10001,

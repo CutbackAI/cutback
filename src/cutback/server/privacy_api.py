@@ -64,6 +64,7 @@ from cutback.server.monitoring_db import (
     OnlineRule,
     SavedView,
 )
+from cutback.server.native_profile_db import NativeProfileAnalysis
 from cutback.server.outcome_watch_db import OutcomeWatch, OutcomeWatchWindow
 from cutback.server.prompt_db import (
     PromptAlias,
@@ -170,6 +171,7 @@ def install_privacy(app, sessions, authorize, scope):
                     ExternalEvaluation,
                     TraceContent,
                     PayloadSample,
+                    NativeProfileAnalysis,
                     DatasetFamily,
                     DatasetAlias,
                     DatasetExposure,
@@ -208,7 +210,8 @@ def install_privacy(app, sessions, authorize, scope):
                         data = {
                             column.name: getattr(row, column.name)
                             for column in cls.__table__.columns
-                            if cls is not PayloadSample or column.name != "object_ref"
+                            if cls is not PayloadSample
+                            or column.name not in {"object_ref", "native_profile_ref"}
                             if cls is not GatewayKeyRow or column.name != "digest"
                             if cls is not GatewayCallRow or column.name != "request_hmac"
                         }
@@ -343,6 +346,8 @@ def install_privacy(app, sessions, authorize, scope):
                             store.delete(project_id, chunk["ref"])
                 for payload in payloads:
                     store.delete(project_id, payload.object_ref)
+                    if payload.native_profile_ref is not None:
+                        store.delete(project_id, payload.native_profile_ref)
                 for plan in plans:
                     if plan.specification.get("artifact_ref"):
                         store.delete(project_id, plan.specification["artifact_ref"])
