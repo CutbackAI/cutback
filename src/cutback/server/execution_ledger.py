@@ -431,6 +431,16 @@ class ExecutionLedger:
             raise ValueError("COMPLETED_EXECUTION_CALL_REQUIRES_KNOWN_USAGE")
         tokens = [getattr(result, name, None) for name in ("input_tokens", "output_tokens")]
         observed_model = reported_model_identifier(getattr(result, "response_model", None))
+        cache_observation = None
+        if getattr(result, "cache_observation", None) is not None:
+            from cutback.core.exact_cache import ExactCacheObservation
+
+            try:
+                cache_observation = ExactCacheObservation.model_validate(result.cache_observation)
+            except ValueError:
+                raise ValueError("EXECUTION_CACHE_OBSERVATION_INVALID") from None
+            if cache_observation.origin == "encrypted_cache" and observed_model is not None:
+                raise ValueError("CACHED_RESPONSE_MODEL_IS_HISTORICAL_NOT_FRESH_NATIVE_IDENTITY")
         tokens = [
             value if type(value) is int and 0 <= value <= 10**12 else None for value in tokens
         ]
@@ -448,6 +458,44 @@ class ExecutionLedger:
             row = session.get(ExecutionCall, UUID(str(identifier)), with_for_update=True)
             if not row or row.project_id != run.project_id or row.run_id != run.id:
                 raise ValueError("EXECUTION_CALL_SCOPE_MISMATCH")
+            if cache_observation is not None:
+                approved = next(
+                    (
+                        target
+                        for candidate in [self.plan.baseline, *self.plan.candidates]
+                        for target in provider_models(candidate)
+                        if target.key == row.model_key
+                    ),
+                    None,
+                )
+                if approved is None or approved.exact_cache is None:
+                    raise ValueError("EXECUTION_CACHE_OBSERVATION_OUTSIDE_APPROVED_MODEL")
+                if (
+                    cache_observation.cache_operation_cost_basis_ref
+                    != approved.exact_cache.operation_cost_basis_ref
+                ):
+                    raise ValueError("EXECUTION_CACHE_COST_BASIS_OUTSIDE_APPROVAL")
+                if cache_observation.cache_operation_cost_upper_usd != (
+                    cache_observation.cache_operations
+                    * approved.exact_cache.operation_cost_upper_usd
+                ):
+                    raise ValueError("EXECUTION_CACHE_OPERATION_COST_OUTSIDE_APPROVED_BOUND")
+                if spent is not None and (
+                    cache_observation.provider_modeled_cost_usd is None
+                    or spent
+                    != cache_observation.provider_modeled_cost_usd
+                    + cache_observation.cache_operation_cost_upper_usd
+                ):
+                    raise ValueError("EXECUTION_CACHE_COST_COMPONENTS_DO_NOT_MATCH")
+            cache_metadata = (
+                cache_observation.model_dump(mode="json") if cache_observation is not None else None
+            )
+            if (
+                row.cache_observation is not None
+                and cache_metadata is not None
+                and row.cache_observation != cache_metadata
+            ):
+                raise ValueError("EXECUTION_CACHE_OBSERVATION_ALREADY_FINAL")
             if observed_model and row.response_model and observed_model != row.response_model:
                 raise ValueError("EXECUTION_CALL_RESPONSE_MODEL_ALREADY_FINAL")
             if row.state != "reserved":
@@ -456,6 +504,7 @@ class ExecutionLedger:
                     and row.input_tokens == tokens[0]
                     and row.output_tokens == tokens[1]
                     and (observed_model is None or row.response_model == observed_model)
+                    and (cache_metadata is None or row.cache_observation == cache_metadata)
                 ):
                     return
                 if row.spent_usd is not None or spent is None:
@@ -490,4 +539,5 @@ class ExecutionLedger:
             row.duration_ms = duration
             row.complete = result.complete if result is not None else None
             row.response_model = observed_model or row.response_model
+            row.cache_observation = cache_metadata or row.cache_observation
             row.completed_at = now

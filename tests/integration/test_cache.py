@@ -12,6 +12,13 @@ from cutback.server.enterprise_db import CacheEntry
 pytestmark = pytest.mark.postgres
 
 
+@pytest.fixture
+def api_database_url(isolated_postgres_url):
+    # This worker drill expires every eligible tenant, not only this test's
+    # project. Give its exact one-entry assertion a fresh migrated database.
+    return isolated_postgres_url
+
+
 def test_cache_requires_explicit_rights_scope_and_immutable_context(
     api, tenant, monkeypatch, tmp_path
 ):

@@ -8,7 +8,7 @@ from cutback.evals.experiments import ModelSpec
 from cutback.pricing import Catalog
 
 
-def candidate_portfolio(baseline: ModelSpec, *, limit=5) -> list[ModelSpec]:
+def candidate_portfolio(baseline: ModelSpec, *, limit=5, exact_cache=None) -> list[ModelSpec]:
     """Propose known native models and smaller output bounds before reading any outcomes.
 
     A smaller cap is only a hypothesis. Actual usage must fall and incomplete outputs fail
@@ -18,6 +18,13 @@ def candidate_portfolio(baseline: ModelSpec, *, limit=5) -> list[ModelSpec]:
 
     if type(limit) is not int or not 1 <= limit <= 5:
         raise ValueError("SEARCH_LIMIT_ONE_TO_FIVE_REQUIRED")
+    if baseline.exact_cache is not None:
+        raise ValueError("SEARCH_REQUIRES_UNCACHED_NATIVE_BASELINE")
+    cache = None
+    if exact_cache is not None:
+        from cutback.core.exact_cache import ExactCacheExecution
+
+        cache = ExactCacheExecution.model_validate(exact_cache)
     if baseline.provider not in VALIDATED_MODELS or baseline.routes or baseline.prompt_cache:
         raise ValueError("SEARCH_REQUIRES_QUALIFIED_NATIVE_BASELINE")
     catalog = Catalog()
@@ -38,11 +45,17 @@ def candidate_portfolio(baseline: ModelSpec, *, limit=5) -> list[ModelSpec]:
         if cap < baseline.max_output_tokens:
             choices.extend((name, cap) for name in [baseline.model, *cheaper])
     result = []
-    for name, cap in choices[:limit]:
+    for name, cap in choices[: limit - int(cache is not None)]:
         value = baseline.model_dump(mode="json", exclude={"key"})
         value.update(model=name, max_output_tokens=cap)
         result.append(
             ModelSpec.model_validate({**value, "key": "search-" + fingerprint(value)[:12]})
+        )
+    if cache is not None:
+        value = baseline.model_dump(mode="json", exclude={"key"})
+        value["exact_cache"] = cache.model_dump(mode="json")
+        result.append(
+            ModelSpec.model_validate({**value, "key": "cache-" + fingerprint(value)[:12]})
         )
     if not result:
         raise ValueError("NO_QUALIFIED_SEARCH_VARIANT_SUBMIT_REVIEWED_CANDIDATE")
@@ -100,6 +113,11 @@ def sample_frontier(report: dict) -> dict:
                 "model": model["model"],
                 "baseline": index == 0,
                 "max_output_tokens": model["max_output_tokens"],
+                **(
+                    {"engine": "exact_cache", "exact_cache": result.get("exact_cache")}
+                    if model.get("exact_cache") is not None
+                    else {}
+                ),
                 "sample_quality_min": score,
                 "cost_per_request_usd": str(cost / count) if cost is not None and count else None,
                 "mean_latency_ms": latency,

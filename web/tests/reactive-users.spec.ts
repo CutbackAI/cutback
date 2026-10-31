@@ -37,7 +37,7 @@ test("reactive user receipts, private trajectory, guided draft and mobile access
     name: "Agent execution and call receipts",
   });
   await expect(receipts).toContainText("simulation");
-  const calls = receipts.getByRole("table", { name: "Reserved native calls" });
+  const calls = receipts.getByRole("table", { name: "Reserved execution operations" });
   await expect(
     calls.getByRole("columnheader", { name: "Requested model", exact: true }),
   ).toBeVisible();

@@ -4378,6 +4378,12 @@ export interface components {
         /** CacheKey */
         CacheKey: {
             /**
+             * Contract
+             * @default native-exact-cache-v1
+             * @constant
+             */
+            contract: "native-exact-cache-v1";
+            /**
              * Project Id
              * Format: uuid
              */
@@ -4407,6 +4413,12 @@ export interface components {
         };
         /** CachePut */
         CachePut: {
+            /**
+             * Contract
+             * @default native-exact-cache-v1
+             * @constant
+             */
+            contract: "native-exact-cache-v1";
             /**
              * Project Id
              * Format: uuid
@@ -4524,6 +4536,7 @@ export interface components {
             model: string;
             /** Response Model */
             response_model?: string | null;
+            cache_observation?: components["schemas"]["ExactCacheObservation"] | null;
             /** Purpose */
             purpose: string;
             /** State */
@@ -5880,6 +5893,99 @@ export interface components {
             project_id: string;
             /** Events */
             events: components["schemas"]["LLMEvent"][];
+        };
+        /** ExactCacheExecution */
+        "ExactCacheExecution-Input": {
+            /**
+             * Version
+             * @default native-exact-cache-v1
+             * @constant
+             */
+            version: "native-exact-cache-v1";
+            /** Freshness Ref */
+            freshness_ref: string;
+            /** Ttl Seconds */
+            ttl_seconds: number;
+            /**
+             * Content Retention Authorized
+             * @constant
+             */
+            content_retention_authorized: true;
+            /**
+             * Immutable Or Safely Invalidated
+             * @constant
+             */
+            immutable_or_safely_invalidated: true;
+            /** Operation Cost Upper Usd */
+            operation_cost_upper_usd: number | string;
+            /** Operation Cost Basis Ref */
+            operation_cost_basis_ref: string;
+            /**
+             * Namespace
+             * @default isolated_experiment_run
+             * @constant
+             */
+            namespace: "isolated_experiment_run";
+        };
+        /** ExactCacheExecution */
+        "ExactCacheExecution-Output": {
+            /**
+             * Version
+             * @default native-exact-cache-v1
+             * @constant
+             */
+            version: "native-exact-cache-v1";
+            /** Freshness Ref */
+            freshness_ref: string;
+            /** Ttl Seconds */
+            ttl_seconds: number;
+            /**
+             * Content Retention Authorized
+             * @constant
+             */
+            content_retention_authorized: true;
+            /**
+             * Immutable Or Safely Invalidated
+             * @constant
+             */
+            immutable_or_safely_invalidated: true;
+            /** Operation Cost Upper Usd */
+            operation_cost_upper_usd: string;
+            /** Operation Cost Basis Ref */
+            operation_cost_basis_ref: string;
+            /**
+             * Namespace
+             * @default isolated_experiment_run
+             * @constant
+             */
+            namespace: "isolated_experiment_run";
+        };
+        /** ExactCacheObservation */
+        ExactCacheObservation: {
+            /**
+             * Origin
+             * @enum {string}
+             */
+            origin: "native_provider" | "encrypted_cache";
+            /** Native Sdk Calls */
+            native_sdk_calls: number;
+            /**
+             * Cache Write
+             * @enum {string}
+             */
+            cache_write: "not_attempted" | "created" | "conflict" | "rejected" | "uncertain" | "not_eligible";
+            /** Cache Operations */
+            cache_operations: number;
+            /** Provider Modeled Cost Usd */
+            provider_modeled_cost_usd: string | null;
+            /** Cache Operation Cost Upper Usd */
+            cache_operation_cost_upper_usd: string;
+            /** Cache Operation Cost Basis Ref */
+            cache_operation_cost_basis_ref: string;
+            /** Invoice Verified Cost Usd */
+            invoice_verified_cost_usd?: null;
+            /** Historical Response Model */
+            historical_response_model?: string | null;
         };
         /** ExperimentPlan */
         "ExperimentPlan-Input": {
@@ -7966,6 +8072,7 @@ export interface components {
             prompt_cache?: ("anthropic-5m" | "anthropic-1h") | null;
             request_contract?: components["schemas"]["RequestContract"] | null;
             native_contract?: components["schemas"]["NativeModelContract"] | null;
+            exact_cache?: components["schemas"]["ExactCacheExecution-Input"] | null;
         };
         /** ModelSpec */
         "ModelSpec-Output": {
@@ -8003,6 +8110,7 @@ export interface components {
             prompt_cache?: ("anthropic-5m" | "anthropic-1h") | null;
             request_contract?: components["schemas"]["RequestContract"] | null;
             native_contract?: components["schemas"]["NativeModelContract"] | null;
+            exact_cache?: components["schemas"]["ExactCacheExecution-Output"] | null;
         };
         /** NamespaceInput */
         NamespaceInput: {

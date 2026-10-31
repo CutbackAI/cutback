@@ -5,20 +5,35 @@ from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from cutback.evals.datasets import CapturePolicy, digest
 from cutback.server.content_policy import policy_content, require_payloads_enabled
 from cutback.server.db import CapturePolicyRecord, ExperimentPlanRecord, PayloadSample
 
 
-def discard_unreferenced(sessions, store, project, refs):
+def discard_unreferenced(sessions, store, project, refs, *, policy_id=None):
     """After an uncertain commit, preserve every referenced or unreadable object."""
     for ref in refs:
         try:
             from cutback.server.enterprise_db import CacheEntry
 
             with sessions() as reader:
+                if policy_id is not None:
+                    # Cache writers hold this row until their transaction settles.
+                    # A plain MVCC read can otherwise see the old pointer while
+                    # a COMMIT acknowledgement is still uncertain. Allow a brief
+                    # concurrent request to settle; a longer lock keeps ciphertext
+                    # for operator reconciliation instead of risking data loss.
+                    reader.execute(text("SET LOCAL lock_timeout = '250ms'"))
+                    reader.scalar(
+                        select(CapturePolicyRecord)
+                        .where(
+                            CapturePolicyRecord.id == policy_id,
+                            CapturePolicyRecord.project_id == project,
+                        )
+                        .with_for_update()
+                    )
                 payload = reader.scalar(
                     select(PayloadSample.id)
                     .where(PayloadSample.project_id == project, PayloadSample.object_ref == ref)

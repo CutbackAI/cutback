@@ -85,12 +85,20 @@ def register_agent(app, output, fail):
         learned_routing: bool = False,
         fixture_transport: bool = False,
         automatic: bool = False,
+        exact_cache_contract: Path | None = None,
     ):
         """Prepare permitted examples and the request in an approved encrypted store."""
         from cutback.agent import prepare as run
         from cutback.agent_control import connect
         from cutback.cli_workflows import read_json
 
+        cache_contract = None
+        if exact_cache_contract is not None:
+            from cutback.core.exact_cache import ExactCacheExecution
+
+            cache_contract = ExactCacheExecution.model_validate(
+                read_json(exact_cache_contract)
+            ).model_dump(mode="json")
         control, identity = connect(target, local=local, endpoint=endpoint, project=project)
         output(
             run(
@@ -118,6 +126,7 @@ def register_agent(app, output, fail):
                 learned_routing=learned_routing,
                 fixture_transport=fixture_transport,
                 automatic=automatic,
+                exact_cache_contract=cache_contract,
             )
         )
 

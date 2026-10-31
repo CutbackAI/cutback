@@ -4,7 +4,10 @@ import os
 import time
 from dataclasses import replace
 from datetime import UTC, datetime
+from decimal import Decimal
+from typing import cast
 
+from cutback.core.exact_cache import ExactCacheObservation
 from cutback.core.model_identity import reported_model_identifier
 from cutback.core.models import LLMEvent
 from cutback.core.sdk_compat import OPENAI_TEXT_SDKS
@@ -40,6 +43,7 @@ class OpenAIExecutor:
     synthetic_transport = False
 
     def __init__(self, *, http_client=None):
+        self.exact_cache_factory = None
         key = os.getenv("CUTBACK_EXPERIMENT_OPENAI_KEY")
         if not key:
             raise ValueError("NO_EXPERIMENT_API_KEY")
@@ -58,6 +62,16 @@ class OpenAIExecutor:
         )
         self.client.organization = None
         self.client.project = None
+
+    @property
+    def exact_cache_ready(self):
+        return self.exact_cache_factory is not None
+
+    def configure_exact_cache(self, factory):
+        if factory is not None and not callable(factory):
+            raise ValueError("EXACT_CACHE_AUTHORIZED_FACTORY_REQUIRED")
+        previous, self.exact_cache_factory = self.exact_cache_factory, factory
+        return previous
 
     @owned_sdk_request
     def execute(self, model, text, timeout_seconds):
@@ -86,6 +100,8 @@ class OpenAIExecutor:
         from openai.types.responses import Response
 
         response: ChatCompletion | Response
+        cached = None
+        cache_operations = 0
         chat = contract is not None and contract.sdk_surface == "chat.completions.create"
         if contract and contract.sdk_surface not in {"responses.create", "chat.completions.create"}:
             raise ValueError("EXECUTOR_REQUEST_SURFACE_UNSUPPORTED")
@@ -102,15 +118,50 @@ class OpenAIExecutor:
             )
             output, complete, unsupported = chat_text_result(response)
         else:
-            response = self.client.responses.create(
+            native_request = dict(
                 model=model.model,
                 input=payload["input"] if bundle else payload,
                 instructions=payload.get("instructions") if bundle else model.instruction or None,
                 max_output_tokens=model.max_output_tokens,
                 store=False,
-                timeout=timeout_seconds,
                 **options,
             )
+            if model.exact_cache is not None:
+                if self.exact_cache_factory is None:
+                    raise ValueError("EXACT_CACHE_AUTHORIZED_BACKEND_REQUIRED")
+                adapter = self.exact_cache_factory(model)
+                cached = adapter.create(
+                    self.client, dispatch_timeout_seconds=timeout_seconds, **native_request
+                )
+                response = cast(Response, cached.response)
+                cache_operations = 1 + int(
+                    cached.receipt.cache_write not in {"not_attempted", "not_eligible"}
+                )
+                if cached.receipt.origin == "encrypted_cache":
+                    overhead = model.exact_cache.operation_cost_upper_usd
+                    hit_observation = ExactCacheObservation(
+                        origin="encrypted_cache",
+                        native_sdk_calls=0,
+                        cache_write="not_attempted",
+                        cache_operations=1,
+                        provider_modeled_cost_usd=Decimal(0),
+                        cache_operation_cost_upper_usd=overhead,
+                        cache_operation_cost_basis_ref=model.exact_cache.operation_cost_basis_ref,
+                        historical_response_model=reported_model_identifier(response.model),
+                    )
+                    return Execution(
+                        response.output_text,
+                        overhead,
+                        (time.perf_counter() - started) * 1000,
+                        0,
+                        0,
+                        complete=True,
+                        response_model=None,
+                        cache_observation=hit_observation.model_dump(mode="json"),
+                    )
+            else:
+                response = self.client.responses.create(**native_request, timeout=timeout_seconds)
+            response = cast(Response, response)
             complete, output = response.status == "completed", response.output_text
             unsupported = any(
                 item.type not in {"message", "reasoning"}
@@ -155,15 +206,30 @@ class OpenAIExecutor:
             cost = replace(
                 cost, amount=None, status="unpriced", reason="native_response_model_scope_mismatch"
             )
+        observation: dict | None = None
+        modeled_cost = cost.amount
+        if cached is not None:
+            overhead = cache_operations * model.exact_cache.operation_cost_upper_usd
+            observation = ExactCacheObservation(
+                origin="native_provider",
+                native_sdk_calls=1,
+                cache_write=cached.receipt.cache_write,
+                cache_operations=cache_operations,
+                provider_modeled_cost_usd=cost.amount,
+                cache_operation_cost_upper_usd=overhead,
+                cache_operation_cost_basis_ref=model.exact_cache.operation_cost_basis_ref,
+            ).model_dump(mode="json")
+            modeled_cost = cost.amount + overhead if cost.amount is not None else None
         return Execution(
             output,
-            cost.amount,
+            modeled_cost,
             latency,
             event.input_tokens,
             event.output_tokens,
             complete=complete,
             actual_model="openai:" + response.model if model.native_contract is not None else None,
             response_model=reported_model_identifier(response.model),
+            cache_observation=observation,
         )
 
     def close(self):
@@ -240,6 +306,19 @@ class LocalExecutor:
 class ConfiguredExecutor:
     def __init__(self):
         self.clients = {}
+        self.exact_cache_factory = None
+
+    @property
+    def exact_cache_ready(self):
+        return self.exact_cache_factory is not None
+
+    def configure_exact_cache(self, factory):
+        if factory is not None and not callable(factory):
+            raise ValueError("EXACT_CACHE_AUTHORIZED_FACTORY_REQUIRED")
+        previous, self.exact_cache_factory = self.exact_cache_factory, factory
+        if "openai" in self.clients:
+            self.clients["openai"].configure_exact_cache(factory)
+        return previous
 
     def prepare(self, provider):
         """Load a configured client before reserving an online judge request."""
@@ -252,6 +331,8 @@ class ConfiguredExecutor:
             if constructor is None:
                 raise ValueError("EXECUTOR_PROVIDER_UNSUPPORTED")
             self.clients[provider] = constructor()
+            if provider == "openai":
+                self.clients[provider].configure_exact_cache(self.exact_cache_factory)
 
     def execute(self, model, text, timeout_seconds):
         require_single_call_model(model)

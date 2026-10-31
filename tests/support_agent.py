@@ -138,6 +138,7 @@ def prepare_fresh(
     retain_case_outputs=False,
     fixture_transport=False,
     min_test_samples=30,
+    exact_cache_contract=None,
     model=None,
     output_cap=None,
     endpoint="http://127.0.0.1",
@@ -173,6 +174,11 @@ def prepare_fresh(
         retain_case_outputs=retain_case_outputs,
         fixture_transport=fixture_transport,
         min_test_samples=min_test_samples,
+        **(
+            {"exact_cache_contract": exact_cache_contract}
+            if exact_cache_contract is not None
+            else {}
+        ),
     )
     result = prepare(root, control, tenant[0], **args)
     return root, control, result, args

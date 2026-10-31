@@ -516,7 +516,29 @@ def run_one(
                     if guarded
                     else None,
                 )
-            with observation_scope("evaluation", run_id=run_id):
+            from cutback.server.native_cache import authorized_experiment_cache
+
+            with (
+                authorized_experiment_cache(
+                    executor,
+                    plan,
+                    sessions,
+                    store,
+                    project_id=project_id,
+                    policy_id=UUID(provenance["policy_id"]),
+                    environment=provenance["environment"],
+                    actor=plan_row.approved_by,
+                    run_id=run_id,
+                    job_id=job_id,
+                    authorize=authorize_execution,
+                    inputs=[
+                        item["case"]["input"]
+                        for item in dataset["items"]
+                        if item["split"] == plan.split
+                    ][: plan.sample_limit],
+                ),
+                observation_scope("evaluation", run_id=run_id),
+            ):
                 results = run(
                     plan,
                     dataset,

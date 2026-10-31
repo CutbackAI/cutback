@@ -139,6 +139,7 @@ class ExecutionCall(Base):
     provider: Mapped[str] = mapped_column(String(30))
     model: Mapped[str] = mapped_column(String(200))
     response_model: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    cache_observation: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     purpose: Mapped[str] = mapped_column(String(30))
     price_sha256: Mapped[str] = mapped_column(String(64))
     state: Mapped[str] = mapped_column(String(30), default="reserved")
