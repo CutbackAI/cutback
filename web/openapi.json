@@ -16441,6 +16441,12 @@
       },
       "CacheKey": {
         "properties": {
+          "contract": {
+            "type": "string",
+            "const": "native-exact-cache-v1",
+            "title": "Contract",
+            "default": "native-exact-cache-v1"
+          },
           "project_id": {
             "type": "string",
             "format": "uuid",
@@ -16508,6 +16514,12 @@
       },
       "CachePut": {
         "properties": {
+          "contract": {
+            "type": "string",
+            "const": "native-exact-cache-v1",
+            "title": "Contract",
+            "default": "native-exact-cache-v1"
+          },
           "project_id": {
             "type": "string",
             "format": "uuid",
@@ -16804,6 +16816,16 @@
               }
             ],
             "title": "Response Model"
+          },
+          "cache_observation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExactCacheObservation"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "purpose": {
             "type": "string",
@@ -20324,6 +20346,215 @@
           "events"
         ],
         "title": "EventBatch"
+      },
+      "ExactCacheExecution-Input": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "native-exact-cache-v1",
+            "title": "Version",
+            "default": "native-exact-cache-v1"
+          },
+          "freshness_ref": {
+            "type": "string",
+            "maxLength": 100,
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Freshness Ref"
+          },
+          "ttl_seconds": {
+            "type": "integer",
+            "maximum": 2592000.0,
+            "minimum": 1.0,
+            "title": "Ttl Seconds"
+          },
+          "content_retention_authorized": {
+            "type": "boolean",
+            "const": true,
+            "title": "Content Retention Authorized"
+          },
+          "immutable_or_safely_invalidated": {
+            "type": "boolean",
+            "const": true,
+            "title": "Immutable Or Safely Invalidated"
+          },
+          "operation_cost_upper_usd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Operation Cost Upper Usd"
+          },
+          "operation_cost_basis_ref": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Operation Cost Basis Ref"
+          },
+          "namespace": {
+            "type": "string",
+            "const": "isolated_experiment_run",
+            "title": "Namespace",
+            "default": "isolated_experiment_run"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "freshness_ref",
+          "ttl_seconds",
+          "content_retention_authorized",
+          "immutable_or_safely_invalidated",
+          "operation_cost_upper_usd",
+          "operation_cost_basis_ref"
+        ],
+        "title": "ExactCacheExecution"
+      },
+      "ExactCacheExecution-Output": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "native-exact-cache-v1",
+            "title": "Version",
+            "default": "native-exact-cache-v1"
+          },
+          "freshness_ref": {
+            "type": "string",
+            "maxLength": 100,
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Freshness Ref"
+          },
+          "ttl_seconds": {
+            "type": "integer",
+            "maximum": 2592000.0,
+            "minimum": 1.0,
+            "title": "Ttl Seconds"
+          },
+          "content_retention_authorized": {
+            "type": "boolean",
+            "const": true,
+            "title": "Content Retention Authorized"
+          },
+          "immutable_or_safely_invalidated": {
+            "type": "boolean",
+            "const": true,
+            "title": "Immutable Or Safely Invalidated"
+          },
+          "operation_cost_upper_usd": {
+            "type": "string",
+            "title": "Operation Cost Upper Usd"
+          },
+          "operation_cost_basis_ref": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Operation Cost Basis Ref"
+          },
+          "namespace": {
+            "type": "string",
+            "const": "isolated_experiment_run",
+            "title": "Namespace",
+            "default": "isolated_experiment_run"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "freshness_ref",
+          "ttl_seconds",
+          "content_retention_authorized",
+          "immutable_or_safely_invalidated",
+          "operation_cost_upper_usd",
+          "operation_cost_basis_ref"
+        ],
+        "title": "ExactCacheExecution"
+      },
+      "ExactCacheObservation": {
+        "properties": {
+          "origin": {
+            "type": "string",
+            "enum": [
+              "native_provider",
+              "encrypted_cache"
+            ],
+            "title": "Origin"
+          },
+          "native_sdk_calls": {
+            "type": "integer",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Native Sdk Calls"
+          },
+          "cache_write": {
+            "type": "string",
+            "enum": [
+              "not_attempted",
+              "created",
+              "conflict",
+              "rejected",
+              "uncertain",
+              "not_eligible"
+            ],
+            "title": "Cache Write"
+          },
+          "cache_operations": {
+            "type": "integer",
+            "maximum": 2.0,
+            "minimum": 1.0,
+            "title": "Cache Operations"
+          },
+          "provider_modeled_cost_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Modeled Cost Usd"
+          },
+          "cache_operation_cost_upper_usd": {
+            "type": "string",
+            "title": "Cache Operation Cost Upper Usd"
+          },
+          "cache_operation_cost_basis_ref": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Cache Operation Cost Basis Ref"
+          },
+          "invoice_verified_cost_usd": {
+            "type": "null",
+            "title": "Invoice Verified Cost Usd"
+          },
+          "historical_response_model": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Historical Response Model"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "origin",
+          "native_sdk_calls",
+          "cache_write",
+          "cache_operations",
+          "provider_modeled_cost_usd",
+          "cache_operation_cost_upper_usd",
+          "cache_operation_cost_basis_ref"
+        ],
+        "title": "ExactCacheObservation"
       },
       "ExperimentPlan-Input": {
         "properties": {
@@ -25430,6 +25661,16 @@
                 "type": "null"
               }
             ]
+          },
+          "exact_cache": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExactCacheExecution-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -25543,6 +25784,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/NativeModelContract"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "exact_cache": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExactCacheExecution-Output"
               },
               {
                 "type": "null"

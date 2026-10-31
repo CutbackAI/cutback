@@ -56,9 +56,10 @@ export function ExecutionEvidence({
     <section aria-label="Agent execution and call receipts">
       <h3>Execution and call receipts</h3>
       <p>
-        Inspect each reserved model call and the task it belonged to. Each
-        episode identifies its fixture or isolated record contract. Production
-        task success and total production task cost remain unverified.
+        Inspect each reserved execution operation and its task. Cache deliveries
+        identify historical model information separately. Each episode
+        identifies its fixture or isolated record contract. Production task
+        success and total production task cost remain unverified.
       </p>
       <button disabled={busy} onClick={() => load()}>
         {busy
@@ -71,7 +72,7 @@ export function ExecutionEvidence({
       {calls && (
         <>
           <p>
-            {calls.requests_reserved} reserved requests ·{" "}
+            {calls.requests_reserved} reserved operations ·{" "}
             {calls.known_cost_requests ?? "Unknown"} with known cost ·{" "}
             {money(calls.known_cost_subtotal_usd)} known subtotal. Cost
             coverage:{" "}
@@ -93,7 +94,7 @@ export function ExecutionEvidence({
           ) : (
             <div className="table-scroll" tabIndex={0}>
               <table>
-                <caption>Reserved native calls</caption>
+                <caption>Reserved execution operations</caption>
                 <thead>
                   <tr>
                     {[
@@ -119,7 +120,21 @@ export function ExecutionEvidence({
                         <br />
                         {row.provider}: {row.model}
                       </td>
-                      <td>{row.response_model ?? "Unknown"}</td>
+                      <td>
+                        {row.cache_observation?.origin === "encrypted_cache" ? (
+                          <>
+                            Cache delivery
+                            <br />
+                            <span className="hint">
+                              Historical model:{" "}
+                              {row.cache_observation
+                                .historical_response_model ?? "Unknown"}
+                            </span>
+                          </>
+                        ) : (
+                          (row.response_model ?? "Unknown")
+                        )}
+                      </td>
                       <td>{row.purpose}</td>
                       <td>{row.state}</td>
                       <td>{money(row.reserved_usd)}</td>
@@ -127,6 +142,18 @@ export function ExecutionEvidence({
                         {row.known_spent_usd == null
                           ? "Unknown"
                           : money(row.known_spent_usd)}
+                        {row.cache_observation && (
+                          <div className="hint">
+                            {
+                              row.cache_observation
+                                .cache_operation_cost_upper_usd
+                            }{" "}
+                            USD declared cache bound
+                            <br />
+                            {row.cache_observation.native_sdk_calls} native SDK
+                            calls; historical usage is not priced again
+                          </div>
+                        )}
                       </td>
                       <td>
                         {row.input_tokens ?? "Unknown"} /{" "}

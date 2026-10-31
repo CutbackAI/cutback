@@ -30,6 +30,7 @@ import { Prompts } from "./prompts";
 import { Monitoring } from "./monitoring";
 import { PriceSnapshots } from "./price-snapshots";
 import { NativeContracts } from "./native-contracts";
+import { ExactCacheContracts, ExactCacheEvidence } from "./exact-cache";
 const SecuritySuiteImport = React.lazy(() =>
   import("./security-suites").then((module) => ({
     default: module.SecuritySuiteImport,
@@ -1797,6 +1798,7 @@ function Experiments({
               <code>{p.plan_hash}</code>
             </p>
             <NativeContracts plan={p.specification} planId={p.id} />
+            <ExactCacheContracts plan={p.specification} planId={p.id} />
             <details>
               <summary>Frozen specification</summary>
               <JSONView data={p} />
@@ -2122,6 +2124,7 @@ function RunEvidence({ detail }: { detail: RecordData }) {
                   {row.model.model}
                   <br />
                   <span className="hint">{row.model.key}</span>
+                  <ExactCacheEvidence evidence={row.exact_cache} />
                 </th>
                 <td>
                   {row.quality.value === null

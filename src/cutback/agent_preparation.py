@@ -58,7 +58,7 @@ def expiry(intent):
     )
 
 
-def require_protocol(control, *, native_fixture=False):
+def require_protocol(control, *, native_fixture=False, exact_cache=False):
     ready = control("GET", "/v1/health/ready")
     if not isinstance(ready, dict) or ready.get("preparation_contract") != PREPARATION_CONTRACT:
         raise ValueError("COLLECTOR_DURABLE_PREPARATION_UPGRADE_REQUIRED")
@@ -67,6 +67,11 @@ def require_protocol(control, *, native_fixture=False):
 
         if ready.get("native_fixture_contract") != NATIVE_FIXTURE_CONTRACT:
             raise ValueError("COLLECTOR_NATIVE_FIXTURE_UPGRADE_REQUIRED")
+    if exact_cache:
+        from cutback.core.exact_cache import EXACT_CACHE_CONTRACT
+
+        if ready.get("exact_cache_contract") != EXACT_CACHE_CONTRACT:
+            raise ValueError("COLLECTOR_EXACT_CACHE_UPGRADE_REQUIRED")
 
 
 def bind(original, intent, dataset, policy):
@@ -181,6 +186,7 @@ def resume(root, control):
             "assumed_usd_per_cpu_hour",
             "learned_routing",
             "fixture_transport",
+            "exact_cache_contract",
         }
         if set(options) - allowed:
             raise ValueError("PREPARATION_OPTIONS_INVALID")

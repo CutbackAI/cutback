@@ -255,6 +255,7 @@ def create_app(
             revision = session.execute(text("SELECT version_num FROM alembic_version")).scalar()
             if revision != CURRENT_REVISION:
                 raise HTTPException(503, "MIGRATION_REQUIRED")
+        from cutback.core.exact_cache import EXACT_CACHE_CONTRACT
         from cutback.core.native_fixture import NATIVE_FIXTURE_CONTRACT
         from cutback.core.preparation import PREPARATION_CONTRACT
 
@@ -264,6 +265,7 @@ def create_app(
             "preparation_contract": PREPARATION_CONTRACT,
             "bootstrap_contract": BOOTSTRAP_CONTRACT,
             "native_fixture_contract": NATIVE_FIXTURE_CONTRACT,
+            "exact_cache_contract": EXACT_CACHE_CONTRACT,
         }
 
     @app.post("/v1/projects", status_code=201)

@@ -57,7 +57,7 @@ test("synthetic agent and retrieval evidence, per-call accounting, authorized tr
   });
   await expect(
     receipts
-      .getByRole("table", { name: "Reserved native calls" })
+      .getByRole("table", { name: "Reserved execution operations" })
       .locator("tbody tr"),
   ).toHaveCount(12);
   releaseInitial();
@@ -70,7 +70,7 @@ test("synthetic agent and retrieval evidence, per-call accounting, authorized tr
   );
   await expect(
     receipts
-      .getByRole("table", { name: "Reserved native calls" })
+      .getByRole("table", { name: "Reserved execution operations" })
       .locator("tbody tr"),
   ).toHaveCount(12);
   await expect(
@@ -78,7 +78,7 @@ test("synthetic agent and retrieval evidence, per-call accounting, authorized tr
       .getByRole("table", { name: "Synthetic task episodes" })
       .locator("tbody tr"),
   ).toHaveCount(4);
-  await expect(receipts).toContainText("12 reserved requests");
+  await expect(receipts).toContainText("12 reserved operations");
   await expect(
     page.getByRole("region", {
       name: "Semantic assessment for baseline",

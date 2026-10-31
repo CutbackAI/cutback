@@ -550,10 +550,10 @@ def permitted_file(root, relative):
     return path
 
 
-def search_candidates(baseline):
+def search_candidates(baseline, *, exact_cache=None):
     from cutback.evals.search import candidate_portfolio
 
-    return candidate_portfolio(baseline)
+    return candidate_portfolio(baseline, exact_cache=exact_cache)
 
 
 def campaign_basis_candidates(baseline):
@@ -608,6 +608,7 @@ def prepare(
     learned_routing=False,
     fixture_transport=False,
     automatic=False,
+    exact_cache_contract=None,
 ):
     """Read only explicitly permitted files; upload to the chosen encrypted collector; no calls."""
     from cutback.core.models import Identifier
@@ -616,6 +617,16 @@ def prepare(
     from cutback.evals.metrics import MetricSpec
     from cutback.evals.planning import draft_plan
     from cutback.evals.records import read_records
+
+    cache_contract = None
+    if exact_cache_contract is not None:
+        from cutback.core.exact_cache import ExactCacheExecution
+
+        cache_contract = ExactCacheExecution.model_validate(exact_cache_contract)
+        if for_campaign or joint_context or learned_routing or criteria_generator_provider:
+            raise ValueError("EXACT_CACHE_REQUIRES_NATIVE_MODEL_PORTFOLIO")
+        if not search and not automatic:
+            raise ValueError("EXACT_CACHE_REQUIRES_SEARCH_OR_AUTOMATIC_PREPARATION")
 
     if type(automatic) is not bool:
         raise ValueError("AUTOMATIC_PREPARATION_FLAG_MUST_BE_BOOLEAN")
@@ -640,6 +651,8 @@ def prepare(
         search = selected["mode"] == "native_search"
         joint_context = selected["mode"] == "joint_model_context"
         learned_routing = selected["mode"] == "source_routing"
+        if cache_contract is not None and selected["mode"] != "native_search":
+            raise ValueError("EXACT_CACHE_REQUIRES_NATIVE_MODEL_PORTFOLIO")
     if learned_routing:
         if (
             joint_context
@@ -796,6 +809,11 @@ def prepare(
         if bound > 100000:
             raise ValueError("REQUEST_EXCEEDS_QUALIFIED_INPUT_BOUND")
         baseline = baseline.model_copy(update={"max_input_tokens": max(8192, bound)})
+        if cache_contract is not None:
+            from cutback.evals.exact_cache import qualify_cache_inputs
+
+            cached_model = baseline.model_copy(update={"exact_cache": cache_contract})
+            qualify_cache_inputs(cached_model, [case.input for case in cases])
         spec = draft_plan(
             metadata,
             baseline,
@@ -804,7 +822,7 @@ def prepare(
             max_requests=max_requests,
             candidates=campaign_basis_candidates(baseline)
             if for_campaign
-            else search_candidates(baseline)
+            else search_candidates(baseline, exact_cache=cache_contract)
             if search
             else None,
         )
@@ -843,6 +861,11 @@ def prepare(
                 "criteria": [c.model_dump(mode="json") for c in criteria],
                 "retain_case_outputs": retain_case_outputs,
                 "split": "validation" if search or for_campaign else "test",
+                **(
+                    {"repeats": 2, "name": "Native model/output-cap/exact-cache comparison"}
+                    if cache_contract is not None
+                    else {}
+                ),
                 **(
                     {"native_fixture": {"version": "native-source-fixture-v1"}}
                     if fixture_transport
@@ -914,11 +937,18 @@ def prepare(
             "criteria_generator_provider": criteria_generator_provider,
             "min_test_samples": min_test_samples,
             "fixture_transport": fixture_transport,
+            **(
+                {"exact_cache_contract": cache_contract.model_dump(mode="json")}
+                if cache_contract is not None
+                else {}
+            ),
         }
         save_session(directory, state, "PREPARING")
         from cutback import agent_preparation as setup
 
-        setup.require_protocol(control, native_fixture=fixture_transport)
+        setup.require_protocol(
+            control, native_fixture=fixture_transport, exact_cache=cache_contract is not None
+        )
         inventory = read_private(directory / "inventory.json")
         setup.create(
             control,

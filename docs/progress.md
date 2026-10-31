@@ -1,5 +1,71 @@
 # Implementation progress
 
+The corrected exact-cache contract and complete source journey passed **130 /
+one skip on OpenAI 2.29.0 in 181.05 seconds**, and **130 / one skip on 3.35.1 in
+185.98 seconds**. This includes actual HTTP/PostgreSQL, the authenticated
+desktop/mobile accessibility check, cold validation and confirmation, encrypted
+patch round-trip, checks on both source trees, private runtime configuration and
+exact rollback. Ruff and mypy (358 modules) pass; the source publication boundary
+checked 1,132 files with zero findings. Installed artifacts, image recovery and
+hosted acceptance remain pending for these corrected bytes. The 130-test scopes
+do not replace the earlier broad regression or close unified strategy selection.
+
+The first exact-cache source regression passed **1,329 / 26 explicit skips in
+824.69 seconds**. Its scoped SDK3 integration/browser run passed **55 in 192.76
+seconds**. A further negative test then found that the runtime client accepted
+an unversioned collector reply; that package candidate is retained and is not
+the final release. The new request/response contract refuses an incompatible
+collector before native dispatch or payload storage, preserves existing cache
+identities and treats missing live ciphertext as unavailable. SDK3 protocol,
+native-response, actual HTTP/PostgreSQL/privacy/expiry checks passed **70 in
+44.58 seconds**. Final artifact qualification follows this fix; unified strategy
+selection and orphan reconciliation remain unfinished.
+
+[PR 62](https://github.com/CutbackAI/cutback/pull/62) is merged as
+`a8fa25d0a8f6660a58e277ef6bb73ebb2ee0ffc5`; its tree matches reviewed head
+`98a212047015b411143f0d1e0a782232a1aea2f6`. All eleven hosted checks passed.
+The exact installed SDK3 full regression passed **1,727 / eight skips in
+4,053.64 seconds**; default hosted Python 3.11/3.13 passed **1,952 / 40 skips**
+and **1,951 / 41 skips**. Final package/core/image recovery and publication
+boundaries passed as recorded below. The older bootstrap wheel's separate
+default run passed **1,926 / 37 skips in 5,158.90 seconds** and is not substituted
+for current artifact acceptance. Drafts 59–61 are closed as incorporated;
+their earlier failures remain recorded. The independent support-desk example's
+PR 1 is also merged after its own five hosted gates. PyPI dev5 is unchanged.
+
+The working exact-cache extension now includes one-budget native model/cap/cache
+planning, isolated validation/confirmation, canonical per-operation cache and
+cost-basis evidence, reviewed source diff/rollback, checks on both actual Git
+trees, encrypted patch round-trip and an explicitly configured runtime helper.
+The source journey and runtime configuration passed both pinned SDKs with
+closed native transports. Current default ledger/legacy/migration/failure checks
+passed **14 in 46.29 seconds**, and the updated real HTTP authenticated
+desktop/mobile/axe test passed **one in 15.11 seconds**. Main dashboard bundle
+is approximately **283 kB** after separating React; its earlier size warning is
+cleared. Migration `0031` is new; released `0001`–`0030` are unchanged.
+
+Final broader regression, installed package, image and public-source acceptance
+for this extension remain pending. It does not close unified measured selection
+across routing, retrieval, prompt generation and training or the remaining
+platform/specialty requirements. Uncertain unreferenced ciphertext is retained
+for operator reconciliation; access expiry is enforced, and automatic orphan
+reconciliation remains an engineering follow-up. No paid inference, production
+deployment or new PyPI upload occurred.
+
+Earlier component checkpoint, superseded by the extension above: exact native
+cache engineering is in progress; this does not close C05. The
+[local lesson](../examples/native-response-cache/README.md) passes on both pinned
+SDKs through real HTTP/PostgreSQL/encrypted storage: four synthetic requests,
+two native fixture calls and two hits. Shared HTTP/direct-worker cache checks
+passed **54 on SDK 2.29.0 in 37.08 seconds** and **54 on 3.35.1 in 38.69 seconds**,
+including current worker principal/lease, policy revocation, expired full-quota
+refresh, concurrent writers and rollback/lost-commit-acknowledgement cleanup.
+Ruff and mypy (354 modules before the new experimental contract) pass. Fifteen
+further exact-decimal/authority contract units pass. Cache usage remains
+historical; invoice and whole-task costs stay unknown. The experiment integration,
+automatic source proposal and unified measured engine selection remain unfinished.
+No new PyPI release, paid inference or production deployment occurred.
+
 The older bootstrap wheel's complete local SDK3 run stopped with **1,697 passes /
 eight skips / one failure in 3,719.84 seconds**. Its support-desk revocation test
 selected an unordered first policy from a project containing several independent

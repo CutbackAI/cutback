@@ -133,6 +133,14 @@ def _request_patch(
         raise ValueError("SOURCE_REQUEST_PROFILE_CHANGED")
     baseline = evidence["rollback"]["baseline"]
     candidate = evidence["candidate"]
+    if candidate.get("exact_cache") is not None or baseline.get("exact_cache") is not None:
+        if instruction_edit is not None:
+            raise ValueError("EXACT_CACHE_CANNOT_CHANGE_INSTRUCTIONS_IN_THE_SAME_PATCH")
+        from cutback.cache_changes import prepare_patch
+
+        return prepare_patch(
+            root, current, site, profile, recommendation, proposal_only=proposal_only
+        )
     if any(candidate.get(key) != baseline.get(key) for key in ("routes", "prompt_cache")):
         raise ValueError("REQUEST_VARIANT_REQUIRES_SEPARATE_PATCH")
     if candidate["provider"] != site["provider"] or baseline["provider"] != site["provider"]:

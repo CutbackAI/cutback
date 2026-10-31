@@ -48,6 +48,19 @@ training rights, compute or serving evidence cannot be inferred. Resume the same
 intent after interruption; never reinterpret a frozen engine or replay an
 uncertain billable operation.
 
+When the installed native preparation supports `--exact-cache-contract`, an
+explicit rights/freshness/TTL/compute-cost contract can add one exact-cache
+candidate to that same bounded model/output-cap search. Never infer immutable
+task state or production hit rate from duplicate examples. Validation and
+confirmation start with separate empty namespaces; cached usage is historical,
+and the declared cache-operation upper bound is not an invoice. Require the
+matching collector wire contract. After confirmation, review the exact source
+diff, run checks on both real Git trees and verify rollback. The generated
+helper stays disabled until the owner explicitly configures its private runtime
+scope file; credentials/HMAC material stay in the application's ignored
+workspace. A missing contract or unavailable ciphertext must stop before native
+dispatch. Read `docs/native-response-cache.md`; published dev5 lacks this path.
+
 When an installed version returns native model/price references, include each model's reasoning setting, requested tier, snapshot and SHA in the exact approval review. Preserve source choices and documented defaults. Observation compatibility alone grants no paid execution permission. Read the matching `docs/native-modern-text.md` before using a new contract; published dev5 lacks this source addition. Existing authorization for the same exact frozen scope remains valid.
 
 1. Inside the permitted application, run `cutback doctor --json` and `cutback optimize . --json`. Resume `.cutback/agent/session.json` with `cutback workflow status`; keep this directory ignored. Finish discovery when every detected workflow has either a qualified request/source contract or a concrete unresolved reason. Application source is parsed, never imported by discovery. Keep historical spend and missing coverage unknown.

@@ -6,6 +6,7 @@ from uuid import UUID
 from fastapi import Depends, HTTPException, Query
 from sqlalchemy import func, select, true
 
+from cutback.core.exact_cache import ExactCacheObservation
 from cutback.core.models import StrictModel
 from cutback.server.db import AuditEvent, ExperimentRunRecord
 from cutback.server.execution_db import ExecutionCall, ExecutionEpisode
@@ -22,6 +23,7 @@ class CallReceipt(StrictModel):
     provider: str
     model: str
     response_model: str | None = None
+    cache_observation: ExactCacheObservation | None = None
     purpose: str
     state: str
     price_sha256: str

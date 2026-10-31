@@ -14,6 +14,7 @@ from cutback.core.agent_turns import AgentTurnFrame
 from cutback.core.episode_judging import EpisodeJudgingSpec
 from cutback.core.episodes import EpisodeAssistant
 from cutback.core.evaluation_criteria import ReviewedCriteriaBinding
+from cutback.core.exact_cache import ExactCacheExecution, ExactCacheObservation, summarize_cache
 from cutback.core.input_routing import LearnedRoutingBinding, RoutingTrainingExecution
 from cutback.core.isolated_episodes import (
     GuardedRecordExecution,
@@ -58,6 +59,7 @@ class ModelSpec(StrictModel):
     prompt_cache: Literal["anthropic-5m", "anthropic-1h"] | None = None
     request_contract: RequestContract | None = None
     native_contract: NativeModelContract | None = None
+    exact_cache: ExactCacheExecution | None = None
     _agent_turn: AgentTurnFrame | None = PrivateAttr(default=None)
 
     @model_serializer(mode="wrap")
@@ -65,6 +67,8 @@ class ModelSpec(StrictModel):
         result = handler(self)
         if self.native_contract is None:
             result.pop("native_contract", None)
+        if self.exact_cache is None:
+            result.pop("exact_cache", None)
         return result
 
     @property
@@ -76,6 +80,7 @@ class ModelSpec(StrictModel):
             self.request_contract
             or self.provider not in {"openai", "anthropic"}
             or self.prompt_cache is not None
+            or self.exact_cache is not None
             or (self.instruction and not frame.system.startswith(self.instruction + "\n\n"))
         ):
             raise ValueError("AGENT_TURN_REQUIRES_SEPARATE_QUALIFIED_NATIVE_EXECUTION")
@@ -89,11 +94,25 @@ class ModelSpec(StrictModel):
 
     @model_validator(mode="after")
     def bound_prompt_instructions(self):
+        if self.exact_cache is not None and (
+            self.provider != "openai"
+            or self.routes
+            or self.native_contract is not None
+            or self.prompt_cache is not None
+            or self.agent_turn is not None
+            or self.request_contract is not None
+            and (
+                self.request_contract.sdk_surface != "responses.create"
+                or set(self.request_contract.options) - {"temperature", "top_p"}
+            )
+        ):
+            raise ValueError("EXACT_CACHE_REQUIRES_QUALIFIED_STATELESS_NATIVE_TEXT")
         if self.agent_turn is not None:
             if (
                 self.request_contract
                 or self.provider not in {"openai", "anthropic"}
                 or self.prompt_cache is not None
+                or self.exact_cache is not None
                 or (
                     self.instruction
                     and not self.agent_turn.system.startswith(self.instruction + "\n\n")
@@ -137,6 +156,8 @@ def provider_models(model: ModelSpec) -> list[ModelSpec]:
     if bounds != sorted(set(bounds)):
         raise ValueError("ROUTER_BOUNDS_MUST_BE_STRICTLY_INCREASING")
     for route in model.routes:
+        if route.target.exact_cache is not None:
+            raise ValueError("EXACT_CACHE_ROUTING_COMBINATION_NOT_QUALIFIED")
         if route.target.provider == "router" or route.target.routes:
             raise ValueError("NESTED_ROUTING_NOT_SUPPORTED")
         if (
@@ -384,6 +405,32 @@ class ExperimentPlan(StrictModel):
 
     @model_validator(mode="after")
     def eligibility(self):
+        cached = [model for model in self.candidates if model.exact_cache is not None]
+        if (
+            self.baseline.exact_cache is not None
+            or self.judge
+            and self.judge.exact_cache is not None
+        ):
+            raise ValueError("EXACT_CACHE_REQUIRES_UNCACHED_BASELINE_AND_JUDGE")
+        if cached:
+            if (
+                self.episode_execution
+                or self.retrieval_execution
+                or self.compression_execution
+                or self.routing_execution
+                or self.prompt_bindings
+                or self.criteria_binding
+                or self.judge
+                or self.pilot_samples
+                or self.staged
+            ):
+                raise ValueError("EXACT_CACHE_COMBINED_EXECUTION_NOT_QUALIFIED")
+            baseline = self.baseline.model_dump(mode="json", exclude={"key", "exact_cache"})
+            if any(
+                model.model_dump(mode="json", exclude={"key", "exact_cache"}) != baseline
+                for model in cached
+            ):
+                raise ValueError("EXACT_CACHE_MUST_PRESERVE_THE_UNCACHED_REQUEST_CONTRACT")
         if self.native_fixture is not None:
             if (
                 self.evaluator_version != "deterministic-v3"
@@ -822,7 +869,7 @@ def upper_cost(model: ModelSpec) -> Decimal:
             # usage still stops execution; reserve the documented Fast premium first.
             return amount * (2 if reference.service_tier == "auto" else 1)
     rate = Catalog().rate_info(model.provider, model.model)["rate"]
-    return (
+    amount = (
         Decimal(model.max_input_tokens)
         * max(
             Decimal(rate["input"]),
@@ -834,6 +881,9 @@ def upper_cost(model: ModelSpec) -> Decimal:
         )
         + Decimal(model.max_output_tokens) * Decimal(rate["output"])
     ) / Decimal(1000000)
+    return amount + (
+        2 * model.exact_cache.operation_cost_upper_usd if model.exact_cache is not None else 0
+    )
 
 
 def pilot_items(plan, dataset):
@@ -978,6 +1028,7 @@ class Execution:
     agent_turn: EpisodeAssistant | None = None
     agent_citations: tuple = ()
     response_model: str | None = None
+    cache_observation: dict | None = None
 
 
 class Executor(Protocol):
@@ -1050,6 +1101,8 @@ class BudgetLedger:
         # UTF-8 bytes plus generous message framing bounds supported text input tokens.
         # No tool schemas, images, arbitrary endpoints or hidden retries are accepted.
         target = route_target(model, text) if model.provider == "router" else model
+        if target.exact_cache is not None and not getattr(executor, "exact_cache_ready", False):
+            raise ValueError("EXACT_CACHE_REQUIRES_CURRENT_AUTHORIZED_EXECUTION_BACKEND")
         if target.agent_turn is not None:
             if not getattr(executor, "supports_agent_turns", False):
                 raise ValueError("AGENT_TURN_REQUIRES_QUALIFIED_EXECUTOR")
@@ -1099,6 +1152,24 @@ class BudgetLedger:
             self._record(call_id, None, "uncertain")
             raise
         cost = result.cost_usd
+        if target.exact_cache is not None:
+            try:
+                cache = ExactCacheObservation.model_validate(result.cache_observation)
+                expected_overhead = (
+                    cache.cache_operations * target.exact_cache.operation_cost_upper_usd
+                )
+                if (
+                    cache.provider_modeled_cost_usd is None
+                    or cache.cache_operation_cost_basis_ref
+                    != target.exact_cache.operation_cost_basis_ref
+                    or cache.cache_operation_cost_upper_usd != expected_overhead
+                    or cost != cache.provider_modeled_cost_usd + expected_overhead
+                ):
+                    raise ValueError("EXACT_CACHE_COST_COMPONENT_MISMATCH")
+            except ValueError:
+                self.usage_invalid = True
+                self._record(call_id, result, "usage_invalid")
+                raise ValueError("EXACT_CACHE_USAGE_AND_COST_EVIDENCE_INVALID") from None
         if not isinstance(cost, Decimal) or not cost.is_finite() or cost < 0:
             self.usage_invalid = True
             self._record(call_id, result, "usage_invalid")
@@ -1260,6 +1331,7 @@ def run(
             all_cost = Decimal(0)
             latencies = []
             routed_counts: dict[str, int] = {}
+            cache_observations = []
             for _ in range(plan.repeats):
                 answers = []
                 for case in cases:
@@ -1273,6 +1345,8 @@ def run(
                             else "evaluation",
                         )
                         answers.append(result.output if result.complete else None)
+                        if model.exact_cache is not None:
+                            cache_observations.append(result.cache_observation)
                         if plan.retain_case_outputs and record_case:
                             record_case(
                                 {
@@ -1440,6 +1514,15 @@ def run(
                     else "provider_usage_with_pinned_public_rate",
                 }
             )
+            if model.exact_cache is not None:
+                model_results[-1]["exact_cache"] = summarize_cache(
+                    cache_observations, len(cases) * plan.repeats
+                )
+                model_results[-1]["cost_evidence"] = (
+                    "scripted_fixture_usage_plus_declared_cache_operation_upper_bound"
+                    if getattr(executor, "synthetic_transport", False) is True
+                    else "provider_modeled_usage_plus_declared_cache_operation_upper_bound"
+                )
         judge_results = []
         if plan.judge:
             import json
@@ -1707,6 +1790,9 @@ def rank_results(plan, results, representative):
         base_cost = Decimal(baseline["known_cost_subtotal_usd"])
         costs_known = candidate["cost_complete"] and baseline["cost_complete"]
         passed = passed and costs_known
+        cache = candidate.get("exact_cache")
+        if cache is not None:
+            passed = passed and cache["execution_qualified"]
         status = (
             "VERIFIED_ON_HELDOUT_DATASET"
             if passed
@@ -1753,6 +1839,7 @@ def rank_results(plan, results, representative):
                 },
                 "next_action": "review_evidence_then_prepare_staging_patch",
                 "production_approval_required": True,
+                **({"exact_cache": cache} if cache is not None else {}),
             }
         )
     return sorted(

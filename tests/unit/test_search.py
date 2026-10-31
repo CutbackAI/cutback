@@ -52,6 +52,27 @@ def test_search_full_budget_is_frozen_before_any_call():
     assert not executor.calls
 
 
+def test_explicit_exact_cache_uses_one_portfolio_slot_and_preserves_the_request():
+    from cutback.core.exact_cache import ExactCacheExecution
+
+    baseline = ModelSpec(key="baseline", provider="openai", model="gpt-4.1", max_output_tokens=64)
+    cache = ExactCacheExecution(
+        freshness_ref="owned-immutable-fixture",
+        ttl_seconds=60,
+        content_retention_authorized=True,
+        immutable_or_safely_invalidated=True,
+        operation_cost_upper_usd="0.000000001",
+        operation_cost_basis_ref="owned-fixture-bound",
+    )
+    choices = candidate_portfolio(baseline, exact_cache=cache)
+    assert len(choices) == 5 and len({choice.key for choice in choices}) == 5
+    cached = choices[-1]
+    assert cached.exact_cache == cache
+    assert cached.model_dump(exclude={"key", "exact_cache"}) == baseline.model_dump(exclude={"key"})
+    cheapest = baseline.model_copy(update={"model": "gpt-4.1-mini", "max_output_tokens": 16})
+    assert len(candidate_portfolio(cheapest, exact_cache=cache)) == 1
+
+
 def frontier_report():
     rows = []
     decisions = []
