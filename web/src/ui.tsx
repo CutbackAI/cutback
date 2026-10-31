@@ -22,6 +22,38 @@ export const money = (value: unknown) =>
 export function explain(error: unknown) {
   const code = (error as Error)?.message || "REQUEST_FAILED";
   const messages: Record<string, string> = {
+    STORAGE_UNAVAILABLE:
+      "The collector could not complete its storage operation. Reconcile the saved preparation or execution before retrying; started uncertain work must not be replayed.",
+    ROUTING_SELECTION_CHANGED:
+      "The selected routing plan or policy changed while this read was pending. Read the current selection before approving it.",
+    ROUTING_TRAINING_GROUPS_INSUFFICIENT:
+      "These examples collapse into too few training families. Use distinct permitted task families; renamed copies do not count as new evidence.",
+    ROUTING_TRAINING_NO_LOWER_COST_FEASIBLE_POLICY:
+      "No cheaper routing policy met every required training check. Review the failed checks and retain the baseline until another policy has independent evidence.",
+    ROUTING_TRAINING_NO_FEASIBLE_PARTITION:
+      "No policy met both the required checks and leaf limits. Inspect the training failures and declared fitting limits.",
+    ROUTING_TRAINING_FAMILY_OVERLAPS_KNOWN_TEST_ASSIGNMENT:
+      "Training includes a family assigned to testing. Prepare distinct permitted training examples.",
+    ROUTING_TRAINING_CANONICAL_CASE_RECEIPT_REQUIRED:
+      "This training run lacks per-case native call receipts. Prepare a separately approved training comparison with matching software.",
+    ROUTING_FIT_COMPUTE_BOUND:
+      "Fitting stopped at its declared work limit. Use a smaller permitted training comparison or review the fitting limits.",
+    ROUTING_PRIVATE_EVIDENCE_READ_BOUND:
+      "The retained training evidence exceeds the bounded read size. Select a smaller permitted training comparison.",
+    EXACT_CURRENT_ROUTING_TRAINING_OR_FIT_REQUIRED:
+      "The routing source or policy is no longer current. Inspect training rights, approval, content expiry and the exact fitted version before preparing another stage.",
+    ROUTING_TRAINING_RETAINED_SEMANTICS_CHANGED:
+      "The retained output was changed by privacy processing. It cannot establish the original task checks. Prepare permitted deidentified examples before training.",
+    CURRENT_ROUTING_EVIDENCE_UNAVAILABLE:
+      "Routing authority or evidence ended before completion. Inspect current rights and source approval; the recorded spend remains, but this run cannot qualify a policy.",
+    SCRIPTED_ROUTING_REQUIRES_EXPLICIT_SYNTHETIC_EXECUTOR:
+      "This fixture-only plan needs the matching sample worker. A live provider worker cannot execute it. Recheck only if no request started.",
+    ROUTING_DEMO_REQUIRES_FIXTURE_RESPONSES:
+      "This sample accepts fixture routing only. Use the fixture response source and the sample worker.",
+    ONLY_UNSTARTED_BLOCKED_RUNS_CAN_RECHECK:
+      "Only blocked runs with zero started requests can be rechecked. Reconcile started or uncertain work without replaying it.",
+    PROJECT_CHANGED_REOPEN_ROUTING:
+      "The project or permissions changed while this request was pending. Reopen Routing and inspect the saved operation in its original project.",
     BATCH_REQUIRES_EXPLICIT_PLAIN_VALIDATION_PLAN:
       "Choose a plain text validation plan. Holdout tests, tools, source changes, judges and retained outputs use their separate workflows.",
     BATCH_CONTENT_EXPIRES_BEFORE_TURNAROUND:

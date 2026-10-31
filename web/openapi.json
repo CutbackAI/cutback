@@ -3387,6 +3387,398 @@
         }
       }
     },
+    "/v1/projects/{project_id}/routing/training-drafts": {
+      "post": {
+        "summary": "Training Draft",
+        "operationId": "training_draft_v1_projects__project_id__routing_training_drafts_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutingTrainingDraftInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/routing/fits": {
+      "get": {
+        "summary": "List Fits",
+        "operationId": "list_fits_v1_projects__project_id__routing_fits_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100000,
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Fit",
+        "operationId": "fit_v1_projects__project_id__routing_fits_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutingFitInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/routing/training-runs": {
+      "get": {
+        "summary": "Training Runs",
+        "operationId": "training_runs_v1_projects__project_id__routing_training_runs_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100000,
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/routing/fits/{fit_id}/content": {
+      "post": {
+        "summary": "Content",
+        "operationId": "content_v1_projects__project_id__routing_fits__fit_id__content_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "fit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Fit Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentPurpose"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/routing/fits/{fit_id}/validation-drafts": {
+      "post": {
+        "summary": "Validation Draft",
+        "operationId": "validation_draft_v1_projects__project_id__routing_fits__fit_id__validation_drafts_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "fit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Fit Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutingValidationDraftInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/routing/fits/{fit_id}/confirmation-drafts": {
+      "post": {
+        "summary": "Confirmation Draft",
+        "operationId": "confirmation_draft_v1_projects__project_id__routing_fits__fit_id__confirmation_drafts_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "fit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Fit Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutingConfirmationDraftInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{project_id}/campaign-templates": {
       "get": {
         "summary": "Templates",
@@ -19300,6 +19692,7 @@
           "split": {
             "type": "string",
             "enum": [
+              "train",
               "validation",
               "test"
             ],
@@ -19330,7 +19723,8 @@
               "deterministic-v11",
               "deterministic-v12",
               "deterministic-v13",
-              "deterministic-v14"
+              "deterministic-v14",
+              "deterministic-v15"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -19416,6 +19810,20 @@
                 "type": "null"
               }
             ]
+          },
+          "routing_execution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RoutingTrainingExecution"
+              },
+              {
+                "$ref": "#/components/schemas/LearnedRoutingBinding"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Routing Execution"
           }
         },
         "additionalProperties": false,
@@ -19616,6 +20024,7 @@
           "split": {
             "type": "string",
             "enum": [
+              "train",
               "validation",
               "test"
             ],
@@ -19646,7 +20055,8 @@
               "deterministic-v11",
               "deterministic-v12",
               "deterministic-v13",
-              "deterministic-v14"
+              "deterministic-v14",
+              "deterministic-v15"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -19732,6 +20142,20 @@
                 "type": "null"
               }
             ]
+          },
+          "routing_execution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RoutingTrainingExecution"
+              },
+              {
+                "$ref": "#/components/schemas/LearnedRoutingBinding"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Routing Execution"
           }
         },
         "additionalProperties": false,
@@ -23531,6 +23955,48 @@
           "status"
         ],
         "title": "LLMEvent"
+      },
+      "LearnedRoutingBinding": {
+        "properties": {
+          "phase": {
+            "type": "string",
+            "const": "fitted_policy",
+            "title": "Phase",
+            "default": "fitted_policy"
+          },
+          "transport": {
+            "type": "string",
+            "enum": [
+              "native_provider",
+              "scripted_test_only"
+            ],
+            "title": "Transport",
+            "default": "native_provider"
+          },
+          "fit_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Fit Id"
+          },
+          "fit_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Fit Sha256"
+          },
+          "training_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Training Run Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "fit_id",
+          "fit_sha256",
+          "training_run_id"
+        ],
+        "title": "LearnedRoutingBinding"
       },
       "LineageReconciliation": {
         "properties": {
@@ -28440,6 +28906,241 @@
           "target"
         ],
         "title": "RouteSpec"
+      },
+      "RoutingConfirmationDraftInput": {
+        "properties": {
+          "purpose": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Purpose"
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid4",
+            "title": "Request Id"
+          },
+          "validation_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Validation Run Id"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/Budget-Input"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "purpose",
+          "request_id",
+          "validation_run_id",
+          "budget"
+        ],
+        "title": "RoutingConfirmationDraftInput"
+      },
+      "RoutingFitInput": {
+        "properties": {
+          "purpose": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Purpose"
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid4",
+            "title": "Request Id"
+          },
+          "training_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Training Run Id"
+          },
+          "options": {
+            "$ref": "#/components/schemas/RoutingFitOptions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "purpose",
+          "request_id",
+          "training_run_id"
+        ],
+        "title": "RoutingFitInput"
+      },
+      "RoutingFitOptions": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.input-size-routing-fit.v1",
+            "title": "Version",
+            "default": "cutback.input-size-routing-fit.v1"
+          },
+          "max_routes": {
+            "type": "integer",
+            "maximum": 8.0,
+            "minimum": 2.0,
+            "title": "Max Routes",
+            "default": 4
+          },
+          "min_leaf_cases": {
+            "type": "integer",
+            "maximum": 256.0,
+            "minimum": 1.0,
+            "title": "Min Leaf Cases",
+            "default": 5
+          },
+          "min_training_groups": {
+            "type": "integer",
+            "maximum": 256.0,
+            "minimum": 2.0,
+            "title": "Min Training Groups",
+            "default": 3
+          },
+          "max_fit_seconds": {
+            "type": "integer",
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Max Fit Seconds",
+            "default": 10
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "RoutingFitOptions"
+      },
+      "RoutingTrainingDraftInput": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid4",
+            "title": "Request Id"
+          },
+          "content_nonce": {
+            "type": "string",
+            "format": "uuid4",
+            "title": "Content Nonce"
+          },
+          "dataset_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Dataset Id"
+          },
+          "baseline": {
+            "$ref": "#/components/schemas/ModelSpec-Input"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/ModelSpec-Input"
+            },
+            "type": "array",
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Candidates"
+          },
+          "metric": {
+            "$ref": "#/components/schemas/MetricSpec"
+          },
+          "criteria": {
+            "items": {
+              "$ref": "#/components/schemas/CriterionSpec"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Criteria"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/Budget-Input"
+          },
+          "max_cases": {
+            "type": "integer",
+            "maximum": 256.0,
+            "minimum": 2.0,
+            "title": "Max Cases",
+            "default": 256
+          },
+          "transport": {
+            "type": "string",
+            "enum": [
+              "native_provider",
+              "scripted_test_only"
+            ],
+            "title": "Transport",
+            "default": "native_provider"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "content_nonce",
+          "dataset_id",
+          "baseline",
+          "candidates",
+          "metric",
+          "budget"
+        ],
+        "title": "RoutingTrainingDraftInput"
+      },
+      "RoutingTrainingExecution": {
+        "properties": {
+          "phase": {
+            "type": "string",
+            "const": "training",
+            "title": "Phase",
+            "default": "training"
+          },
+          "transport": {
+            "type": "string",
+            "enum": [
+              "native_provider",
+              "scripted_test_only"
+            ],
+            "title": "Transport",
+            "default": "native_provider"
+          },
+          "max_cases": {
+            "type": "integer",
+            "maximum": 256.0,
+            "minimum": 2.0,
+            "title": "Max Cases",
+            "default": 256
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "RoutingTrainingExecution"
+      },
+      "RoutingValidationDraftInput": {
+        "properties": {
+          "purpose": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Purpose"
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid4",
+            "title": "Request Id"
+          },
+          "content_nonce": {
+            "type": "string",
+            "format": "uuid4",
+            "title": "Content Nonce"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/Budget-Input"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "purpose",
+          "request_id",
+          "content_nonce",
+          "budget"
+        ],
+        "title": "RoutingValidationDraftInput"
       },
       "RuleSwitch": {
         "properties": {

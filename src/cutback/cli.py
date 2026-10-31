@@ -20,6 +20,7 @@ from cutback.cli_episodes import register_episodes
 from cutback.cli_guardrails import register_guardrails
 from cutback.cli_qualification import register_qualification
 from cutback.cli_retrieval import register_retrieval
+from cutback.cli_routing import register_routing
 from cutback.cli_security import register_security
 from cutback.cli_semantic_cache import register_semantic_cache
 from cutback.cli_tools import register_tools
@@ -115,6 +116,7 @@ def demo(
     joint_model_context: bool = False,
     reviewed_criteria: bool = False,
     semantic_rubrics: bool = False,
+    learned_routing: bool = False,
 ):
     """Explore the complete sample. Requires Docker and Git; no API key or paid calls."""
     try:
@@ -134,6 +136,7 @@ def demo(
             joint_model_context=joint_model_context,
             reviewed_criteria=reviewed_criteria,
             semantic_rubrics=semantic_rubrics,
+            learned_routing=learned_routing,
         )
     except ImportError:
         fail(
@@ -549,6 +552,7 @@ register_retrieval(app, output, request, fail)
 register_compression(app, output, request, fail)
 register_compression(app, output, request, fail, joint=True)
 register_criteria(app, output, request, fail)
+register_routing(app, output, request, fail)
 register_batch(app, output, request, fail)
 register_semantic_cache(app, output, request, fail)
 

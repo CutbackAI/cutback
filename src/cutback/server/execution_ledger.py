@@ -10,6 +10,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import func, select, true
 
+from cutback.core.input_routing import RoutingTrainingExecution
 from cutback.evals.datasets import digest
 from cutback.evals.experiments import provider_models, upper_cost
 from cutback.pricing import Catalog
@@ -211,11 +212,14 @@ class ExecutionLedger:
         if purpose not in PURPOSES or self.plan.price_sha256 != Catalog().sha256:
             raise ValueError("EXECUTION_PURPOSE_OR_PRICE_CONTRACT_NOT_APPROVED")
         operation = getattr(self.plan, "operation", None)
+        if isinstance(getattr(self.plan, "routing_execution", None), RoutingTrainingExecution):
+            operation = "routing-training-v1"
         proposal = operation in {
             "candidate-generation-v1",
             "criteria-generation-v1",
             "criteria-generation-v2",
-        }
+            "routing-training-v1",
+        } or isinstance(getattr(self.plan, "routing_execution", None), RoutingTrainingExecution)
         if (purpose == "optimization") != proposal:
             raise ValueError("EXECUTION_PURPOSE_OUTSIDE_APPROVED_OPERATION")
         targets = [

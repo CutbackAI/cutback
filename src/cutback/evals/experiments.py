@@ -14,6 +14,7 @@ from cutback.core.agent_turns import AgentTurnFrame
 from cutback.core.episode_judging import EpisodeJudgingSpec
 from cutback.core.episodes import EpisodeAssistant
 from cutback.core.evaluation_criteria import ReviewedCriteriaBinding
+from cutback.core.input_routing import LearnedRoutingBinding, RoutingTrainingExecution
 from cutback.core.isolated_episodes import (
     GuardedRecordExecution,
     IsolatedRecordExecution,
@@ -297,7 +298,7 @@ class ExperimentPlan(StrictModel):
     pilot_minimum: float | None = Field(default=None, ge=0, le=1)
     judge: ModelSpec | None = None
     judge_rubric: str | None = Field(default=None, max_length=8000)
-    split: Literal["validation", "test"] = "test"
+    split: Literal["train", "validation", "test"] = "test"
     price_snapshot_id: str = Field(default_factory=lambda: Catalog().snapshot_id, max_length=100)
     price_sha256: Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")] = Field(
         default_factory=lambda: Catalog().sha256
@@ -315,6 +316,7 @@ class ExperimentPlan(StrictModel):
         "deterministic-v12",
         "deterministic-v13",
         "deterministic-v14",
+        "deterministic-v15",
     ] = "deterministic-v3"
     episode_execution: EpisodeExecutionSpec | None = None
     retrieval_execution: RetrievalExecutionSpec | None = None
@@ -325,6 +327,7 @@ class ExperimentPlan(StrictModel):
     )
     content_nonce: UUID | None = None
     criteria_binding: ReviewedCriteriaBinding | None = None
+    routing_execution: RoutingTrainingExecution | LearnedRoutingBinding | None = None
 
     @model_serializer(mode="wrap")
     def preserve_existing_plan_hashes(self, handler):
@@ -341,10 +344,56 @@ class ExperimentPlan(StrictModel):
             result.pop("content_nonce", None)
         if self.criteria_binding is None:
             result.pop("criteria_binding", None)
+        if self.routing_execution is None:
+            result.pop("routing_execution", None)
         return result
 
     @model_validator(mode="after")
     def eligibility(self):
+        routing_training = isinstance(self.routing_execution, RoutingTrainingExecution)
+        if self.routing_execution is not None:
+            if (
+                self.evaluator_version != "deterministic-v15"
+                or self.episode_execution
+                or self.retrieval_execution
+                or self.compression_execution
+                or self.criteria_binding
+                or self.source_binding
+                or self.prompt_bindings
+                or self.judge
+                or self.staged
+                or self.pilot_samples
+                or self.repeats != 1
+                or self.sample_limit is not None
+                or not self.retain_case_outputs
+                or self.content_nonce is None
+            ):
+                raise ValueError("LEARNED_ROUTING_REQUIRES_DISTINCT_BOUNDED_NATIVE_EVALUATION")
+            if routing_training:
+                if (
+                    self.split != "train"
+                    or self.predecessor_run_id
+                    or not 1 <= len(self.candidates) <= 4
+                    or any(
+                        model.provider == "router" for model in [self.baseline, *self.candidates]
+                    )
+                ):
+                    raise ValueError("ROUTING_TRAINING_REQUIRES_PAIRED_TRAIN_ONLY_NATIVE_MODELS")
+            elif (
+                self.split == "train"
+                or len(self.candidates) != 1
+                or self.baseline.provider == "router"
+                or self.candidates[0].provider != "router"
+                or (self.split == "test" and not self.predecessor_run_id)
+            ):
+                raise ValueError("FITTED_ROUTING_REQUIRES_VALIDATION_OR_UNTOUCHED_CONFIRMATION")
+            for model in [self.baseline, *self.candidates]:
+                for target in provider_models(model):
+                    if target.provider not in {"openai", "anthropic"}:
+                        raise ValueError("LEARNED_ROUTING_REQUIRES_QUALIFIED_NATIVE_TARGETS")
+                    qualified_native_model(target)
+        elif self.split == "train":
+            raise ValueError("TRAIN_EXECUTION_REQUIRES_EXPLICIT_ROUTING_TRAINING_CONTRACT")
         if self.criteria_binding and self.evaluator_version == "deterministic-v14":
             if (
                 not self.episode_execution
@@ -559,6 +608,8 @@ class ExperimentPlan(StrictModel):
                 if self.retrieval_execution
                 else "deterministic-v13"
                 if self.criteria_binding
+                else "deterministic-v15"
+                if self.routing_execution
                 else "deterministic-v3"
             )
             or self.metric.kind == "episode_contract"
@@ -740,6 +791,10 @@ def plan_summary(plan: ExperimentPlan, dataset: dict) -> dict:
     ):
         raise ValueError("EPISODE_DATASET_REQUIRES_EXPLICIT_EPISODE_MODE")
     n = sum(item["split"] == plan.split for item in dataset["items"])
+    if isinstance(plan.routing_execution, RoutingTrainingExecution) and not (
+        2 <= n <= plan.routing_execution.max_cases
+    ):
+        raise ValueError("ROUTING_TRAINING_CASE_BOUND")
     if plan.sample_limit:
         n = min(n, plan.sample_limit)
     models = [plan.baseline, *plan.candidates]
@@ -849,6 +904,7 @@ class BudgetLedger:
         self.requests = 0
         self.known_cost_requests = 0
         self.receipt_uncertain = False
+        self.last_call_id: UUID | None = None
         self.usage_invalid = False
         self.started = time.monotonic()
         self.persist_reservation = reserve
@@ -877,6 +933,8 @@ class BudgetLedger:
     def call(
         self, executor: Executor, model: ModelSpec, text: str, *, traffic_kind="evaluation"
     ) -> Execution:
+        # Never attach a previous call's receipt to a failed or uncertain call.
+        self.last_call_id = None
         if self.receipt_uncertain:
             raise ValueError("CALL_LEDGER_ACK_UNCERTAIN_NO_FURTHER_REQUESTS")
         if Catalog().sha256 != self.price_sha256:
@@ -948,6 +1006,7 @@ class BudgetLedger:
             self._record(call_id, result, "usage_invalid")
             raise ValueError("ACTUAL_USAGE_OUTSIDE_MODELED_BUDGET_BOUND")
         self._record(call_id, result, "completed")
+        self.last_call_id = call_id
         return result
 
 
@@ -1087,7 +1146,14 @@ def run(
                 answers = []
                 for case in cases:
                     try:
-                        result = ledger.call(executor, model, case["input"])
+                        result = ledger.call(
+                            executor,
+                            model,
+                            case["input"],
+                            traffic_kind="optimization"
+                            if isinstance(plan.routing_execution, RoutingTrainingExecution)
+                            else "evaluation",
+                        )
                         answers.append(result.output if result.complete else None)
                         if plan.retain_case_outputs and record_case:
                             record_case(
@@ -1095,6 +1161,15 @@ def run(
                                     "case": case,
                                     "model_key": model.key,
                                     "repeat": _,
+                                    "native_call": {
+                                        "id": str(ledger.last_call_id)
+                                        if ledger.last_call_id is not None
+                                        else None,
+                                        "known_cost_usd": str(result.cost_usd)
+                                        if result.cost_usd is not None
+                                        else None,
+                                        "price_sha256": plan.price_sha256,
+                                    },
                                     "output": result.output if result.complete else None,
                                     "complete": result.complete,
                                     "metric_minimum": plan.metric.minimum,
@@ -1239,7 +1314,10 @@ def run(
                     "routing_extra_provider_requests": 0 if model.provider == "router" else None,
                     "routing_compute_cost_usd": None,
                     "application_hosting_cost_usd": None,
-                    "cost_evidence": "customer_compute_upper_bound"
+                    "cost_evidence": "scripted_fixture_usage"
+                    if plan.routing_execution is not None
+                    and getattr(executor, "synthetic_transport", False) is True
+                    else "customer_compute_upper_bound"
                     if model.provider == "local"
                     else "provider_usage_with_pinned_public_rate",
                 }
@@ -1348,7 +1426,11 @@ def run(
                         "judge": plan.judge.model_dump(mode="json"),
                     }
                 )
-        recommendations = rank_results(plan, model_results, representative)
+        recommendations: list[dict] = (
+            []
+            if isinstance(plan.routing_execution, RoutingTrainingExecution)
+            else rank_results(plan, model_results, representative)
+        )
         for recommendation in recommendations:
             from cutback.evals.comparisons import paired_delta
 
@@ -1374,7 +1456,7 @@ def run(
                     decision_reason="judge_health_gate_failed",
                     next_action="calibrate_judge_and_review_invalid_votes",
                 )
-        report = {
+        report: dict = {
             "schema_version": "1.0",
             "status": "COMPLETED",
             "sample_n": len(cases),
@@ -1395,6 +1477,16 @@ def run(
             "requests": ledger.requests,
             "production_deployed": False,
         }
+        if plan.routing_execution is not None:
+            report["routing"] = {
+                "phase": plan.routing_execution.phase,
+                "fit_id": str(plan.routing_execution.fit_id)
+                if isinstance(plan.routing_execution, LearnedRoutingBinding)
+                else None,
+                "heldout_quality_claim": False if plan.split == "train" else None,
+                "routing_hosting_cost_usd": None,
+                "automatic_application_change": False,
+            }
         if input_grouping is not None:
             report["input_grouping"] = input_grouping
             for recommendation in report["recommendations"]:

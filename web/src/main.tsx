@@ -66,6 +66,9 @@ const Compression = React.lazy(() =>
 const ReviewedCriteria = React.lazy(() =>
   import("./criteria").then((module) => ({ default: module.ReviewedCriteria })),
 );
+const LearnedRouting = React.lazy(() =>
+  import("./routing").then((module) => ({ default: module.LearnedRouting })),
+);
 const ProviderBatches = React.lazy(() =>
   import("./provider-batches").then((module) => ({
     default: module.ProviderBatches,
@@ -150,6 +153,7 @@ const views = [
   "Semantic caching",
   "Retrieval",
   "Compression",
+  "Routing",
   "Opportunities",
   "Experiments",
   "Review",
@@ -335,6 +339,13 @@ function App() {
             ? await api(base + "/capture-policies")
             : [],
         };
+      }
+      if (view === "Routing") {
+        const [datasets, runs] = await Promise.all([
+          api(base + "/datasets"),
+          api(base + "/experiments"),
+        ]);
+        result = { datasets, runs };
       }
       if (view === "Training") {
         const [jobs, config, datasets] = await Promise.all([
@@ -917,6 +928,23 @@ function App() {
                     ].includes(
                       identity.project_roles?.[project] || identity.role,
                     )}
+                  />
+                </React.Suspense>
+              </BudgetViewBoundary>
+            )}
+            {view === "Routing" && project && data.datasets && (
+              <BudgetViewBoundary key={project}>
+                <React.Suspense
+                  fallback={<p role="status">Loading train-fitted routing…</p>}
+                >
+                  <LearnedRouting
+                    key={project}
+                    api={api}
+                    base={base}
+                    datasets={data.datasets}
+                    runs={data.runs || []}
+                    admin={admin}
+                    reload={load}
                   />
                 </React.Suspense>
               </BudgetViewBoundary>

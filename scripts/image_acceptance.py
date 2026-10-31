@@ -160,6 +160,7 @@ def main(
     joint_model_context=False,
     reviewed_criteria=False,
     semantic_rubrics=False,
+    learned_routing=False,
 ):
     from cutback.server.migrate import CURRENT_REVISION
 
@@ -275,7 +276,11 @@ assert os.getuid()==10001 and sys.version_info[:3]==(3,11,18)
 app=create_app(allow_insecure_http=True)
 app.state.artifact_store=configured_store()
 os.environ["CUTBACK_SEMANTIC_CACHE_ENABLED"]="true"
-manifest=seed_support_desk(app,"http://127.0.0.1:8080",os.environ["CUTBACK_ADMIN_TOKEN"],Path("/tmp/owned-support-desk"),provider_batch=True,semantic_cache=True,runtime_guardrails=RUNTIME_GUARDS,joint_model_context=JOINT_EXPECTED,reviewed_criteria=CRITERIA_EXPECTED,semantic_rubrics=RUBRICS_EXPECTED)
+manifest=seed_support_desk(app,"http://127.0.0.1:8080",os.environ["CUTBACK_ADMIN_TOKEN"],Path("/tmp/owned-support-desk"),provider_batch=True,semantic_cache=True,runtime_guardrails=RUNTIME_GUARDS,joint_model_context=JOINT_EXPECTED,reviewed_criteria=CRITERIA_EXPECTED,semantic_rubrics=RUBRICS_EXPECTED,learned_routing=ROUTING_EXPECTED)
+if ROUTING_EXPECTED:
+ assert manifest["learned_routing_sample"]["actual_declared_checks_passed"] is True
+ assert manifest["learned_routing_sample"]["paid_provider_calls"]==0
+ assert manifest["learned_routing_sample"]["source_patch_eligible"] is False
 if RUBRICS_EXPECTED:
  assert manifest["semantic_rubrics_sample"]["native_fixture_calls"]>1
  assert manifest["semantic_rubrics_sample"]["paid_provider_calls"]==0
@@ -301,6 +306,7 @@ print(json.dumps({"project_id":manifest["project_id"],"paid_provider_calls":mani
                 code = code.replace("RUNTIME_GUARDS", repr(runtime_guardrails))
                 code = code.replace("CRITERIA_EXPECTED", repr(reviewed_criteria))
                 code = code.replace("RUBRICS_EXPECTED", repr(semantic_rubrics))
+                code = code.replace("ROUTING_EXPECTED", repr(learned_routing))
                 code = code.replace("JOINT_EXPECTED", repr(joint_model_context))
                 manifest = json.loads(inside(container, code, values).strip().splitlines()[-1])
                 base = "/v1/projects/" + manifest["project_id"]
@@ -512,6 +518,37 @@ with sessions() as session:
      assert executed.results["lineage"]["fresh_test_claim"] is True
   assert generation_kinds.count("criteria-generation-v1")==int(CRITERIA_EXPECTED)
   assert generation_kinds.count("criteria-generation-v2")==int(RUBRICS_EXPECTED)
+ if ROUTING_EXPECTED:
+  from uuid import UUID
+  from cutback.server.routing_service import (read_fit,validate_binding as validate_routing,
+   receipt as routing_receipt)
+  from cutback.server.execution_db import ExecutionCall
+  fits=[row for row in rows if row.metadata_safe.get("kind")=="learned_routing_fit"]
+  assert len(fits)==1
+  sample,value,training,dataset=read_fit(session,new_only,fits[0].project_id,fits[0].id)
+  source=session.get(ExperimentRunRecord,UUID(value["training_run_id"]))
+  assert source.status=="COMPLETED" and source.results["billing_complete"] is True
+  calls=session.scalars(select(ExecutionCall).where(ExecutionCall.run_id==source.id)).all()
+  assert len(calls)==source.requests_used
+  assert all(call.purpose=="optimization" and call.state=="completed"
+   and call.spent_usd is not None for call in calls)
+  comparisons=0
+  for planned in plans:
+   bound=planned.specification["public_specification"].get("routing_execution",{})
+   if bound.get("phase")!="fitted_policy":
+    continue
+   frozen=load_plan(new_only,planned.project_id,planned.specification)
+   validate_routing(session,new_only,planned.project_id,frozen,dataset_id=dataset.id)
+   executed=session.scalar(select(ExperimentRunRecord).where(ExperimentRunRecord.plan_id==planned.id))
+   assert executed.status=="COMPLETED" and executed.results["billing_complete"] is True
+   expected=routing_receipt(session,new_only,planned.project_id,frozen)
+   assert all(executed.results.get(key)==value for key,value in expected.items())
+   assert expected["routing_setup_cost"]["shared_setup_key"]==str(source.id)
+   assert expected["routing_source_patch_eligible"] is False
+   if frozen.split=="test":
+    assert executed.results["lineage"]["fresh_test_claim"] is True
+   comparisons+=1
+  assert comparisons==2
 print(json.dumps({"restored_and_rekeyed_objects":len(rows)+len(caches),"restored_and_rekeyed_cache_objects":len(caches),"restored_and_rekeyed_plans":len(plans),"semantic_qualified_catalog_restored":True,"isolated_tool_receipts_restored":bool(TOOLS_EXPECTED),"paired_security_suite_restored":bool(SECURITY_EXPECTED),"runtime_guardrail_receipts_restored":bool(RUNTIME_GUARDS),"database_pointers_preserved":True}))
 engine.dispose()
 """.replace("RECOVERED", repr(names[1]))
@@ -523,6 +560,7 @@ engine.dispose()
                     .replace("JOINT_EXPECTED", repr(joint_model_context))
                     .replace("CRITERIA_EXPECTED", repr(reviewed_criteria))
                     .replace("RUBRICS_EXPECTED", repr(semantic_rubrics))
+                    .replace("ROUTING_EXPECTED", repr(learned_routing))
                 )
                 recovered = json.loads(inside(container, recovery, values).strip().splitlines()[-1])
 
@@ -653,6 +691,7 @@ engine.dispose()
                     ),
                     "reviewed_criteria_versions_and_confirmation_restored": reviewed_criteria,
                     "generated_semantic_rubrics_and_proxy_confirmation_restored": semantic_rubrics,
+                    "routing_fits_and_canonical_training_restored": learned_routing,
                     "restored_tables": len(after),
                     "row_counts_match": True,
                     **recovered,
@@ -697,6 +736,7 @@ if __name__ == "__main__":
     parser.add_argument("--joint-model-context", action="store_true")
     parser.add_argument("--reviewed-criteria", action="store_true")
     parser.add_argument("--semantic-rubrics", action="store_true")
+    parser.add_argument("--learned-routing", action="store_true")
     args = parser.parse_args()
     main(
         args.image,
@@ -708,4 +748,5 @@ if __name__ == "__main__":
         joint_model_context=args.joint_model_context,
         reviewed_criteria=args.reviewed_criteria,
         semantic_rubrics=args.semantic_rubrics,
+        learned_routing=args.learned_routing,
     )

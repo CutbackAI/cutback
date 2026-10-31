@@ -1003,6 +1003,109 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/routing/training-drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Training Draft */
+        post: operations["training_draft_v1_projects__project_id__routing_training_drafts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/routing/fits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Fits */
+        get: operations["list_fits_v1_projects__project_id__routing_fits_get"];
+        put?: never;
+        /** Fit */
+        post: operations["fit_v1_projects__project_id__routing_fits_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/routing/training-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Training Runs */
+        get: operations["training_runs_v1_projects__project_id__routing_training_runs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/routing/fits/{fit_id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Content */
+        post: operations["content_v1_projects__project_id__routing_fits__fit_id__content_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/routing/fits/{fit_id}/validation-drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Validation Draft */
+        post: operations["validation_draft_v1_projects__project_id__routing_fits__fit_id__validation_drafts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/routing/fits/{fit_id}/confirmation-drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirmation Draft */
+        post: operations["confirmation_draft_v1_projects__project_id__routing_fits__fit_id__confirmation_drafts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/campaign-templates": {
         parameters: {
             query?: never;
@@ -5629,7 +5732,7 @@ export interface components {
              * @default test
              * @enum {string}
              */
-            split: "validation" | "test";
+            split: "train" | "validation" | "test";
             /** Price Snapshot Id */
             price_snapshot_id?: string;
             /** Price Sha256 */
@@ -5639,7 +5742,7 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13" | "deterministic-v14";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13" | "deterministic-v14" | "deterministic-v15";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
             retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Input"] | null;
             /** Compression Execution */
@@ -5650,6 +5753,8 @@ export interface components {
             /** Content Nonce */
             content_nonce?: string | null;
             criteria_binding?: components["schemas"]["ReviewedCriteriaBinding"] | null;
+            /** Routing Execution */
+            routing_execution?: components["schemas"]["RoutingTrainingExecution"] | components["schemas"]["LearnedRoutingBinding"] | null;
         };
         /** ExperimentPlan */
         "ExperimentPlan-Output": {
@@ -5729,7 +5834,7 @@ export interface components {
              * @default test
              * @enum {string}
              */
-            split: "validation" | "test";
+            split: "train" | "validation" | "test";
             /** Price Snapshot Id */
             price_snapshot_id?: string;
             /** Price Sha256 */
@@ -5739,7 +5844,7 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13" | "deterministic-v14";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13" | "deterministic-v14" | "deterministic-v15";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec"] | null;
             retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Output"] | null;
             /** Compression Execution */
@@ -5750,6 +5855,8 @@ export interface components {
             /** Content Nonce */
             content_nonce?: string | null;
             criteria_binding?: components["schemas"]["ReviewedCriteriaBinding"] | null;
+            /** Routing Execution */
+            routing_execution?: components["schemas"]["RoutingTrainingExecution"] | components["schemas"]["LearnedRoutingBinding"] | null;
         };
         /** FieldTransition */
         FieldTransition: {
@@ -7335,6 +7442,33 @@ export interface components {
              * @enum {string}
              */
             sampling_policy_id: "all-supported-calls-v1" | "external-otel-spans-v1" | "gateway-native-text-v1";
+        };
+        /** LearnedRoutingBinding */
+        LearnedRoutingBinding: {
+            /**
+             * Phase
+             * @default fitted_policy
+             * @constant
+             */
+            phase: "fitted_policy";
+            /**
+             * Transport
+             * @default native_provider
+             * @enum {string}
+             */
+            transport: "native_provider" | "scripted_test_only";
+            /**
+             * Fit Id
+             * Format: uuid
+             */
+            fit_id: string;
+            /** Fit Sha256 */
+            fit_sha256: string;
+            /**
+             * Training Run Id
+             * Format: uuid
+             */
+            training_run_id: string;
         };
         /** LineageReconciliation */
         LineageReconciliation: {
@@ -9398,6 +9532,139 @@ export interface components {
             /** Max Input Bytes */
             max_input_bytes: number;
             target: components["schemas"]["ModelSpec-Output"];
+        };
+        /** RoutingConfirmationDraftInput */
+        RoutingConfirmationDraftInput: {
+            /** Purpose */
+            purpose: string;
+            /**
+             * Request Id
+             * Format: uuid4
+             */
+            request_id: string;
+            /**
+             * Validation Run Id
+             * Format: uuid
+             */
+            validation_run_id: string;
+            budget: components["schemas"]["Budget-Input"];
+        };
+        /** RoutingFitInput */
+        RoutingFitInput: {
+            /** Purpose */
+            purpose: string;
+            /**
+             * Request Id
+             * Format: uuid4
+             */
+            request_id: string;
+            /**
+             * Training Run Id
+             * Format: uuid
+             */
+            training_run_id: string;
+            options?: components["schemas"]["RoutingFitOptions"];
+        };
+        /** RoutingFitOptions */
+        RoutingFitOptions: {
+            /**
+             * Version
+             * @default cutback.input-size-routing-fit.v1
+             * @constant
+             */
+            version: "cutback.input-size-routing-fit.v1";
+            /**
+             * Max Routes
+             * @default 4
+             */
+            max_routes: number;
+            /**
+             * Min Leaf Cases
+             * @default 5
+             */
+            min_leaf_cases: number;
+            /**
+             * Min Training Groups
+             * @default 3
+             */
+            min_training_groups: number;
+            /**
+             * Max Fit Seconds
+             * @default 10
+             */
+            max_fit_seconds: number;
+        };
+        /** RoutingTrainingDraftInput */
+        RoutingTrainingDraftInput: {
+            /**
+             * Request Id
+             * Format: uuid4
+             */
+            request_id: string;
+            /**
+             * Content Nonce
+             * Format: uuid4
+             */
+            content_nonce: string;
+            /**
+             * Dataset Id
+             * Format: uuid
+             */
+            dataset_id: string;
+            baseline: components["schemas"]["ModelSpec-Input"];
+            /** Candidates */
+            candidates: components["schemas"]["ModelSpec-Input"][];
+            metric: components["schemas"]["MetricSpec"];
+            /** Criteria */
+            criteria?: components["schemas"]["CriterionSpec"][];
+            budget: components["schemas"]["Budget-Input"];
+            /**
+             * Max Cases
+             * @default 256
+             */
+            max_cases: number;
+            /**
+             * Transport
+             * @default native_provider
+             * @enum {string}
+             */
+            transport: "native_provider" | "scripted_test_only";
+        };
+        /** RoutingTrainingExecution */
+        RoutingTrainingExecution: {
+            /**
+             * Phase
+             * @default training
+             * @constant
+             */
+            phase: "training";
+            /**
+             * Transport
+             * @default native_provider
+             * @enum {string}
+             */
+            transport: "native_provider" | "scripted_test_only";
+            /**
+             * Max Cases
+             * @default 256
+             */
+            max_cases: number;
+        };
+        /** RoutingValidationDraftInput */
+        RoutingValidationDraftInput: {
+            /** Purpose */
+            purpose: string;
+            /**
+             * Request Id
+             * Format: uuid4
+             */
+            request_id: string;
+            /**
+             * Content Nonce
+             * Format: uuid4
+             */
+            content_nonce: string;
+            budget: components["schemas"]["Budget-Input"];
         };
         /** RuleSwitch */
         RuleSwitch: {
@@ -13375,6 +13642,252 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["CriteriaConfirmationInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    training_draft_v1_projects__project_id__routing_training_drafts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutingTrainingDraftInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_fits_v1_projects__project_id__routing_fits_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    fit_v1_projects__project_id__routing_fits_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutingFitInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    training_runs_v1_projects__project_id__routing_training_runs_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    content_v1_projects__project_id__routing_fits__fit_id__content_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                fit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentPurpose"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    validation_draft_v1_projects__project_id__routing_fits__fit_id__validation_drafts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                fit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutingValidationDraftInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirmation_draft_v1_projects__project_id__routing_fits__fit_id__confirmation_drafts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                fit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutingConfirmationDraftInput"];
             };
         };
         responses: {

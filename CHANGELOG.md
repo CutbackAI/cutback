@@ -1,5 +1,14 @@
 # Changelog
 
+Source follow-up, 30 October 2026: bounded training-only input-size route fitting
+from authenticated paired native observations, separate validation and untouched
+confirmation, shared setup accounting and encrypted policy lifecycle. The guided
+dashboard and independent ticket application include a fixture-only local worker,
+exact budget review and lost-reply reconciliation. Training fit is not independent
+quality; fitting/hosting/full task costs remain unknown. Automatic source integration
+is still unqualified. Final acceptance is recorded in docs/progress.md; PyPI dev5
+is unchanged, with no paid inference or production deployment.
+
 Source runtime follow-up: include pinned Git in the non-root image and check source-demo prerequisites before provisioning. The required infrastructure gate now runs the complete synthetic image demo, PostgreSQL restore, case/plan ciphertext rekey, tenant/replay and OTLP drill. Source-demo counts preserve 12 support-desk calls and distinguish seven task-economics calls. Failed missing-Git and stale-assertion trials remain in acceptance evidence. No paid call, new PyPI release or production deployment.
 
 Source agent robustness follow-up: exact-plan lost-queue recovery avoids bounded history searches, preserves read-only reconciliation and recovers late commits without a second queue request. Explicit workflow filtering precedes bounded source qualification; call-site and startup-file omissions are visible. No SDK support, migration, provider retry, content authority or production behavior is widened. Executed qualification is recorded in docs/progress.md; PyPI dev5 is unchanged.
