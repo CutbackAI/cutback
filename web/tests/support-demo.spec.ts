@@ -13,6 +13,7 @@ test("newcomer explores real sample decisions, unknown intervals, private cases 
   test.setTimeout(180000);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
+  const sample = await (await page.request.get("/v1/demo")).json();
   await page.goto("/dashboard/");
   await page
     .getByRole("button", { name: "Explore sample", exact: true })
@@ -165,7 +166,9 @@ test("newcomer explores real sample decisions, unknown intervals, private cases 
     page.getByRole("cell", { name: "16", exact: true }),
   ).toBeVisible();
   await page.getByLabel("Group by").selectOption("workflow");
-  await expect(page.locator("tbody tr")).toHaveCount(3);
+  await expect(page.locator("tbody tr")).toHaveCount(
+    3 + (sample.workload_portfolio_sample ? 1 : 0),
+  );
   await expect(
     page.getByRole("rowheader", { name: /app.py · triage/ }),
   ).toBeVisible();
@@ -173,7 +176,6 @@ test("newcomer explores real sample decisions, unknown intervals, private cases 
     page.getByRole("rowheader", { name: /app.py · needs_escalation/ }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Traces", exact: true }).click();
-  const sample = await (await page.request.get("/v1/demo")).json();
   await page.getByText("Filter retained traces", { exact: true }).click();
   await page
     .getByLabel("Workflow identifier", { exact: true })

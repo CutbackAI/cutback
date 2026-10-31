@@ -1,5 +1,34 @@
 # Implementation progress
 
+31 October 2026 complete observed-workload sample, **working source under
+qualification**: [walkthrough](../examples/workload-portfolio/README.md).
+`demo --workload-portfolio` now wires an independent committed classifier,
+eight actual intercepted SDK calls, encrypted profile analysis, source-window
+eligibility, a frozen fixture-only native/cache portfolio, automatic fixture
+selection, separate untouched confirmation, both application trees and exact
+rollback. The source component passed **1 real HTTP/PostgreSQL/SDK test in
+52.38 seconds**, and SDK3 plus prerequisite checks passed **8 in 49.48 seconds**.
+Both the standard and workload-extended complete dashboard journeys passed
+**2 in 224.92 seconds**, including administrator/mobile-viewer accessibility.
+The actual headless CLI also started its own Docker database and exposed a
+completed fixture confirmation with source checks and rollback. Its listener
+and exact owned container stopped after Ctrl+C. New installed qualification is
+pending. No live inference or runtime cache activation is granted. The ordinary
+support-desk executor is now explicitly marked synthetic too. Initial failures
+in the local check script's discovery shape and a journal field name were
+corrected against the actual contracts; they remain retained separately. An
+older browser assertion expected three cost workflows; this mode correctly adds
+a fourth, and the test now checks the active manifest. The first CLI probe
+omitted the same-origin JSON request shape and was refused; the browser-shaped
+request subsequently passed.
+
+The predecessor's corrected frozen wheel passed **130 installed SDK2 tests in
+512.70 seconds** and **130 installed SDK3 tests in 514.25 seconds**, plus full
+restore/rekey of the pending bound plan and existing recovery gates across schema
+0032, 100 tables, 2,202 encrypted objects, eight profiles, one cache and 30 plans.
+Its two-tenant 2,000-event plus 2,000-replay local smoke took 1.891 seconds; this
+is not a production SLA. Current-head hosted acceptance is still required.
+
 31 October 2026 workload-bound native/cache portfolios, **working source under
 qualification**: [walkthrough](workload-native-portfolios.md). A positive retained
 source-window assessment now qualifies an exact-cache hypothesis alongside

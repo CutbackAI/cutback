@@ -75,6 +75,38 @@ export function SampleGuide({
         money is useful only if urgent tickets still receive urgent priority.
       </p>
       <p className="disclosure">{demo.disclosure}</p>
+      {demo.workload_portfolio_sample && (
+        <section aria-label="Observed repeat-workload walkthrough">
+          <h3>Can repeated work avoid another provider call?</h3>
+          <p>
+            Observe the sample app, assess repeats, compare alternatives,
+            confirm a winner, then check the source change and its rollback.
+            Eight SDK calls produced three potential reuses. A separately
+            approved fixture trial selected the cache after comparing model and
+            output choices. Both application source trees passed their checks;
+            rollback was checked too. Runtime caching remains disabled.
+          </p>
+          <p>
+            These are synthetic replies and modeled costs. The walkthrough
+            establishes software behavior, not customer quality or savings.
+          </p>
+          <button
+            onClick={() =>
+              inspect(demo.workload_portfolio_sample.confirmation_run_id)
+            }
+          >
+            Inspect the repeat-workload confirmation
+          </button>
+          <details>
+            <summary>
+              Review the independent application's proposed change
+            </summary>
+            <pre>
+              <code>{demo.workload_portfolio_sample.source_change.diff}</code>
+            </pre>
+          </details>
+        </section>
+      )}
       <div className="actions sample-actions">
         <button onClick={() => inspect(demo.comparison_run_id)}>
           Compare sample candidates

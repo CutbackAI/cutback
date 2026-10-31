@@ -11,6 +11,17 @@ selection across routing, retrieval, compression, prompt generation and training
 
 ## Start with the independent application
 
+The working source also adds a complete
+[fixture-only walkthrough](../examples/workload-portfolio/README.md), under
+qualification: `cutback demo --workload-portfolio`. It observes an independent
+application, assesses repeats, compares alternatives, confirms the selected cache
+and verifies both source trees and rollback. Its explicit native-fixture plans
+cannot run through a live-provider worker. Runtime caching stays disabled and
+the real-quality gate remains closed. No provider credential is needed.
+
+The pending-trial example below is a separate path for an already running
+owned collector. It stops before inference approval.
+
 Use the existing owned loopback collector and encrypted profile worker setup in
 the [request-reuse example](../examples/request-reuse/README.md). Keep the
 administrator credential in the process environment. From the source checkout:

@@ -116,6 +116,7 @@ def seed_support_desk(
     reactive_users=False,
     agent_retrieval=False,
     joint_model_retrieval=False,
+    workload_portfolio=False,
 ):
     """Use actual scoped HTTP APIs and the durable worker, retaining the sample project."""
     require_demo_git()
@@ -223,6 +224,7 @@ def seed_support_desk(
                     transport=httpx.MockTransport(fixture_response), trust_env=False
                 )
             )
+            executor.synthetic_transport = True
             for case in cases[:6]:
                 for name in ("triage", "needs_escalation"):
                     result = application[name](
@@ -476,6 +478,13 @@ def seed_support_desk(
                     guarded=guarded_tools,
                     deny_tool_output=guarded_tools,
                 )
+            workload_sample = None
+            if workload_portfolio:
+                from cutback.demo_workload_portfolio import seed_workload_portfolio
+
+                workload_sample = seed_workload_portfolio(
+                    app, control, project["id"], workspace, ingest
+                )
             manifest = {
                 "available": True,
                 "title": "Support-desk triage",
@@ -492,6 +501,31 @@ def seed_support_desk(
                 "sample_source": "cutback/sample_app/app.py",
                 "source_diff": patch,
                 "paid_provider_calls": 0,
+                **(
+                    {
+                        "workload_portfolio_sample": {
+                            key: workload_sample[key]
+                            for key in (
+                                "dataset_id",
+                                "analysis_id",
+                                "validation_run_id",
+                                "confirmation_run_id",
+                                "selected_candidate",
+                                "observed_native_calls",
+                                "modeled_potential_hits",
+                                "native_sdk_calls",
+                                "paid_provider_calls",
+                                "source_change",
+                                "rollback_verified",
+                                "runtime_cache_activated",
+                                "real_model_quality_verified",
+                                "real_customer_savings_verified",
+                            )
+                        }
+                    }
+                    if workload_sample
+                    else {}
+                ),
                 **(
                     {"agent_retrieval_sample": agent_retrieval_sample}
                     if agent_retrieval_sample
@@ -653,6 +687,7 @@ def launch_demo(
     reactive_users=False,
     agent_retrieval=False,
     joint_model_retrieval=False,
+    workload_portfolio=False,
 ):
     """Own one temporary Docker database. Never connect to production or reuse app keys."""
     require_demo_git()
@@ -801,6 +836,7 @@ def launch_demo(
                 reactive_users=reactive_users,
                 agent_retrieval=agent_retrieval,
                 joint_model_retrieval=joint_model_retrieval,
+                workload_portfolio=workload_portfolio,
             )
             if learned_routing or source_routing:
                 from cutback.demo_routing import routing_worker
@@ -820,6 +856,13 @@ def launch_demo(
                 "Press Ctrl+C to stop this sample and remove its temporary database.",
                 flush=True,
             )
+            if workload_portfolio:
+                print(
+                    "In Sample, inspect the repeat-workload confirmation and source rollback.\n"
+                    "Independent source: .cutback/support-desk-demo/workload-reuse-*/app.py\n"
+                    "Runtime caching stays disabled. All provider calls are synthetic.",
+                    flush=True,
+                )
             if open_browser:
                 import webbrowser
 

@@ -5,13 +5,16 @@ import pytest
 from typer.testing import CliRunner
 
 
-@pytest.mark.parametrize("entry", ["launcher", "support_sample", "retrieval_sample", "cli"])
+@pytest.mark.parametrize(
+    "entry", ["launcher", "support_sample", "retrieval_sample", "workload_sample", "cli"]
+)
 def test_missing_git_is_actionable_before_workspace_database_or_http_setup(
     tmp_path, monkeypatch, entry
 ):
     from cutback.cli import app
     from cutback.demo import launch_demo, seed_support_desk
     from cutback.demo_retrieval import seed_retrieval
+    from cutback.demo_workload_portfolio import seed_workload_portfolio
 
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(shutil, "which", lambda name: None)
@@ -27,8 +30,10 @@ def test_missing_git_is_actionable_before_workspace_database_or_http_setup(
                 launch_demo(open_browser=False)
             elif entry == "support_sample":
                 seed_support_desk(None, "http://127.0.0.1:1", "not-used", tmp_path / "sample")
-            else:
+            elif entry == "retrieval_sample":
                 seed_retrieval(None, None, "not-used", tmp_path / "sample")
+            else:
+                seed_workload_portfolio(None, None, "not-used", tmp_path / "sample", "not-used")
     assert not list(tmp_path.iterdir())
 
 
