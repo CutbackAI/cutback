@@ -186,6 +186,7 @@ export function Form({
   onSubmit,
   submit = "Save",
   danger = false,
+  disabled = false,
 }: {
   title: string;
   description?: string;
@@ -195,12 +196,14 @@ export function Form({
   ) => Promise<string | void>;
   submit?: string;
   danger?: boolean;
+  disabled?: boolean;
 }) {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [success, setSuccess] = useState("");
   async function handle(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (busy || disabled) return;
     const data = values(event.currentTarget);
     setBusy(true);
     setError("");
@@ -217,12 +220,12 @@ export function Form({
     <form className="editor-form" onSubmit={handle} aria-label={title}>
       <h3>{title}</h3>
       {description && <p className="hint">{description}</p>}
-      <fieldset disabled={busy}>
+      <fieldset disabled={busy || disabled}>
         <legend className="sr-only">{title}</legend>
         <div className="form-grid">{children}</div>
         <button
           className={danger ? "danger" : undefined}
-          disabled={busy}
+          disabled={busy || disabled}
           type="submit"
         >
           {busy ? "Working…" : submit}

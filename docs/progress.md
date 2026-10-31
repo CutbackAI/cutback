@@ -1,5 +1,22 @@
 # Implementation progress
 
+The source-bound routing dashboard now blocks edits and plan submission while
+an application inspection is loading. Previously, the unbound form remained
+editable; binding the loaded source remounted it and could discard a just-entered
+sample minimum. A held-file-read browser regression first failed because the
+freeze button was still enabled. The fixed flow waits for the current inspection
+and asserts that the training request retains the declared three-sample minimum.
+Its Python 3.13 routing/native/source-review scope passed **19 checks in 390.74
+seconds**, including authenticated mobile/axe and actual independent application
+checks/rollback. OpenAPI/types/client regeneration, React build, lint and the
+14 frontend units passed. This confirms the UI race; the earlier hosted quality
+failure remains open until current-head CI verifies the complete change.
+The Python 3.11 native/browser scope also passed **three checks in 96.81
+seconds**. SDK3 CI now partitions core, workflow and systems checks on both
+existing Python pins; all **91 previous test selections** remain, without
+overlap or a longer job timeout. This addresses the profiling follow-up's
+20-minute single-job cancellation without dropping acceptance coverage.
+
 The SDK capture-ingestion recovery fix passes **23 checks on SDK 2.29.0 in
 29.72 seconds** and **23 on 3.35.1 in 24.96 seconds**. A new PostgreSQL fault
 test first reproduced deletion of committed ciphertext after a lost commit
