@@ -5,7 +5,9 @@ PyPI dev5. Public publication and exact-head hosted acceptance remain separate.
 It composes
 saved trace and incident metadata views for one project and environment. Current
 qualification and publication gates are recorded in [progress](progress.md).
-Comments, arbitrary chart queries and enterprise provisioning remain separate work.
+[Encrypted incident comments](incident-comments.md) have a separate source
+implementation under qualification. Arbitrary chart queries and enterprise
+provisioning remain separate work.
 
 ## Build a dashboard
 

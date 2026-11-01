@@ -13,6 +13,7 @@ import {
 import { Investigation } from "./traces";
 import { Quality } from "./quality";
 import { SharedDashboards } from "./shared-dashboards";
+import { IncidentComments } from "./incident-comments";
 
 const label = (value: unknown) =>
   String(value || "not observed").replaceAll("_", " ");
@@ -751,6 +752,14 @@ export function Monitoring({
               retains the complete available history.
             </p>
           )}
+          <IncidentComments
+            key={selected.incident.id}
+            api={api}
+            base={base}
+            incident={selected.incident.id}
+            admin={admin}
+            editor={editor}
+          />
           <h3>Retained evaluation receipts</h3>
           {!checks?.items.length && (
             <p>No evaluation receipts remain in retention.</p>

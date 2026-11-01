@@ -1,5 +1,235 @@
 # Implementation progress
 
+Application readiness diagnosis has **passed local component qualification**;
+exact-head hosted acceptance remains pending. The new offline
+command combines fresh bounded source discovery, known request blockers,
+workflow selection, guarded tracked check candidates, startup proposals and
+explicit missing permissions. It preserves active experiment intents and shows
+tool interpreter metadata separately from unknown application SDK pins. The
+first source selection passed **17 in 54.86 seconds**, including the existing
+source guidance tests. An expanded selection passed 31, skipped one platform
+fixture and failed one new startup expectation: the synthetic policy application
+also has a separate native test entrypoint. The report now lists fixed consumers
+separately and keeps valid external startup proposals. The corrected source
+selection passed **19 in 56.82 seconds**; counts overlap. Static checks passed
+for **462 modules**. No application command, provider request or collector probe
+is authorized. The final frozen source selection passed **22 in 36.82 seconds**,
+zero skips. Both fresh installed SDK selections passed **77**, with **two existing
+Windows directory-symlink privilege skips**, in **196.74 / 189.46 seconds**. The
+new readiness cases all passed. The fresh core-only wheel smoke passed without
+OpenAI, FastAPI or HTTPX. The actual new image's 489 application files match its
+wheel; offline non-root/read-only diagnosis passed for native and policy
+consumers. Actual Linux symlink root/workspace guards and verified-running-client
+loss/ownership-safe cleanup passed **three in 6.96 seconds**, zero skips. The
+checker uses a separate daemon deadline; expiry of that deadline was not tested
+in this component selection. No complete new-image server recovery is claimed
+for this CLI-only change; the preceding comment runtime has its separate full
+recovery evidence. The [receipt](evidence/application-readiness-acceptance.json)
+binds package/image identity, actual checker hash, log hashes and prior failures.
+
+Cached-current source-policy v2 and isolated local-container application checks
+have **passed all 18 reviewed-head hosted jobs and merged normally in
+[PR 82](https://github.com/CutbackAI/cutback/pull/82)**. The reviewed head was
+`bb48b7b4961373d6fbc9b7d1845571cde210f538`; the squash merge
+`28edb836215380681d449f991160c3306ffbe568` has the identical source tree. The full
+Python 3.11 run passed **2,942 / 57 skipped in 4,781.30 seconds**; Python 3.13
+passed **2,941 / 58 skipped in 6,290.27 seconds**. Separate native SDK shards,
+legacy contracts, producers, infrastructure, isolated tools, dependency audit and
+both CodeQL languages passed. Counts overlap and are not summed. The
+[hosted receipt](evidence/cached-container-hosted-acceptance.json) records the
+exact jobs and identical private/public wheel and source archive. This supersedes
+earlier publication-pending checkpoints for those two features. Later mixed
+capacity, routing publication, hook profiles and incident comments retain their
+own gates. No PyPI upload or production deployment occurred.
+
+Encrypted incident comments have **passed local component qualification**; the
+next exact-head hosted gate remains pending. Migration `0036`
+preserves released migrations and adds scoped immutable revision metadata with
+encrypted payload references, revision/tombstone checks, bounded discussion and
+shared capture quotas. The source PostgreSQL/migration selection first passed
+**14 in 30.86 seconds**, then **17 in 34.11 seconds** after expanded scope,
+pagination, erasure-outage and populated-downgrade checks. The current source
+selection including the independent resumable sample and lost create/edit/erase
+replies passed **20 in 32.30 seconds**. These overlap and are not summed. The
+authenticated browser flow passed **one in 16.78 seconds**, including current
+viewer access/revocation, immutable history, explicit-purpose reads, text/HTML
+separation, erasure, mobile layout, axe and no credential/content persistence.
+OpenAPI/client/types, React and 14 frontend unit tests pass. A source mypy run
+passed for **461 modules**, including the final policy chooser. Fresh installed
+SDK/minimal-client, browser and new image/recovery gates passed as detailed below;
+final source/archive identity and hosted gates remain separate. See
+[the contract](incident-comments.md) and
+[independent example](../examples/incident-collaboration/README.md).
+
+Both fresh installed SDK selections passed **69 cases** before the generic
+dashboard encountered a missing specialized browser fixture. The dedicated
+comments browser had already passed; its new spec now explicitly requires the
+owned incident supplied by that dedicated harness. Both corrected browser and
+remaining scanner/log/privacy/native-hook selections passed **17 tests**, zero
+skips, in **175.24 / 175.19 seconds**. The failed first cohorts remain separate
+records and are not called full-suite passes. The matching independent client
+has core/HTTPX only, with no SDK/server/crypto/test dependencies.
+
+The first and serialized full-image attempts reached completed canonical
+security workers but failed when launching the expanded recovery script. A
+harmless local process test reproduced Windows error 206 as `FileNotFoundError`
+for an oversized command; Microsoft documents the
+[32,767-character process bound](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessw).
+The checker now sends both fixture code and credentials through bounded anonymous
+stdin, with a short fixed executable trampoline and no change to its deadlines
+or assertions. The actual 70,000-character process/credential-boundary test,
+oversized-pipe refusal and release contracts passed **five in 1.11 seconds**.
+A separate attempt timed out at the earlier combined fixture under competing
+local load; its failure is retained. The fixed checker passed a complete new-image
+run in **455.906 seconds**, restoring **110 tables and 3,695 encrypted objects**,
+including both comment versions, and verifying exactly three additional
+purpose-read audit events. Every prior fixture remained enabled. The expanded
+recovery source was 33,133 characters: its former command would have been 33,850
+characters; the fixed command was 220. The same five pipe/release tests passed
+in the other pinned SDK installation in **1.65 seconds**. These changes affect
+test/tools only: the complete wheel remains byte-identical to the actual
+qualified runtime. The [component receipt](evidence/incident-comments-acceptance.json)
+binds actual runtime and test revisions, image, wheel, logs and retained failures.
+No paid request, customer outcome, PyPI upload or production deployment is claimed.
+
+Native synchronous hook profiling has **passed its declared local synthetic
+envelope; exact-head hosted acceptance remains pending**. Both pinned OpenAI SDK
+envelopes, with Anthropic 2.3.0, passed all six surface/collector conditions at
+200 measured calls per trial, four ABBA trials per condition. The largest signed
+median difference was **0.4426 milliseconds**, below the declared five-millisecond
+ceiling. Negative timing differences remain in the raw evidence as noise. Both
+profiles ran concurrently with other local qualification work; this is not an
+isolated hardware or production benchmark. The actual native response, outage,
+privacy, incomplete-trial and receipt-preservation selection passed **15 tests**
+for each SDK envelope in **9.13 / 19.74 seconds**, with zero skips. The raw receipts,
+measured script hash, unchanged actual runtime wheel and limitations are in the
+[acceptance evidence](evidence/native-hook-acceptance.json); reproduce it with the
+[SDK performance guide](sdk-performance.md). This tooling adds no SDK support or
+runtime source changes. Cold starts, serverless, async, streams, memory and live
+provider latency remain unmeasured by this profile.
+
+The routing publisher has **passed local component qualification; exact-head
+hosted acceptance remains pending**. Both
+first installed cohorts stopped with **99 passed / one failed** because the new
+HTTP-only test resumed the deliberately state-free checked copy and omitted
+explicit collector configuration. The fixture now resumes the original
+application's private saved program and configures its collector, as the existing
+remote-agent test does. Both corrected follow-ups passed **20 affected checks**
+before their browser gate stopped because that new frozen checkout lacked its
+locked web dependencies. After installing those dependencies, the remaining
+authenticated browser/mobile/accessibility and native-hook selection passed
+**13 tests per SDK** in **114.76 / 114.73 seconds**, with zero skips. The earlier
+20 checks took **463.70 / 463.56 seconds** including the browser setup refusal;
+those failed cohorts are not described as full-suite passes. The earlier 99
+passing unchanged cases, corrected HTTP-only/API/ledger/privacy/migration cases
+and final browser selection retain their separate logs in the
+[acceptance receipt](evidence/routing-publication-acceptance.json). Runtime code is
+unchanged by this fixture correction. Its first full recovery attempt failed
+at the owned guarded-security fixture; the focused test passed, and a second
+identical full fixture passed in **404.05 seconds**, restoring **108 tables /
+3,693 encrypted objects**, with every owned tool session closed and cleanup
+confirmed. The first failure's cause remains unresolved and is retained; no
+deadline or acceptance assertion was weakened. These hook timings do not turn
+any failed first cohort into a full-suite pass or an accepted public release.
+
+The checked routing draft publisher is **locally qualified**. Native routing
+program reviews now retain their exact contract/receipt wire, both source roots,
+coverage and program identity for a separately explicit upload operation. Its
+preview refreshes canonical authority and re-verifies the two trees; the draft
+publisher reuses the existing bounded Git-object transport and durable
+lost-reply reconciliation. It uploads only the checked routing settings and one
+commit, discloses the settings' instruction text, and does not push ancestors,
+merge or deploy. Synthetic/sample gates and removed review refs remain refused.
+Static and learned-route native/source fault tests, matching installed/minimal
+clients and container recovery passed as recorded above; exact-head public gates
+remain pending. Mypy for
+all **458 source modules** passes, as do Ruff and formatting for **949 Python
+files**. An initial default-SDK source selection passed **26 in 778.02 seconds**,
+covering actual native static/learned consumers and all five lost GitHub replies,
+preview/explicit dispatch, revoked rights, malformed reviews and removed refs.
+It excluded the separately required container case. The later source selection
+uses recorded portable checks across fresh independent copies for the transport
+cases, while retaining actual native checks for both policies and an explicit
+real-container receipt case. That expanded default-SDK source selection passed
+**44 tests in 652.45 seconds**, with no skips, including the actual non-root
+container receipt, legacy routing source/handoff recovery and scanner/log
+privacy guards. These source results do not replace fresh
+installed/minimal/image acceptance.
+[Contract and commands](routing-programs.md#preview-and-publish-a-checked-routing-draft).
+No actual external application publication or paid request occurred.
+
+The simultaneous owned-service harness **passed local component acceptance**.
+Both installed SDK selections passed **27 fault/regression checks**, with no
+skips, in **76.89 / 77.44 seconds**. Each then passed the complete declared
+**600-second** profile with two tenants and ten actors. The observed whole
+experiment-batch p95 was **4233.6373 / 4334.0806 ms**; gateway-operation p95 was
+**640.3575 / 662.5399 ms**. Those are closed-provider local actor timings, not
+live-provider or per-endpoint latency claims. Each actor completed at least
+**110 operations inside the window**, above the declared twenty minimum. Full
+worker/quality/gateway native attempts were **3552/401/518** and
+**3568/404/517**, exactly reconciled to canonical records and modeled subtotals.
+Half the separate metadata workload remained unpriced with unknown full cost.
+Both API project cleanups and supervisor database removals were confirmed.
+
+The SDK runs shared this Windows/Python 3.11.18/24-logical-CPU host and local
+PostgreSQL server concurrently; separate native/Git source tests also ran.
+Database resources and other background load are not independently attested.
+Public raw durations reproduce the reported quantiles; absolute clock-window
+markers were not retained, so within-window classifications remain the recorded
+live counters, not a reconstructed timestamp claim. The
+[acceptance receipt](evidence/mixed-service-capacity-acceptance.json) retains
+profiles, counts, raw durations, log/receipt hashes and limits.
+
+That mixed-service qualification wheel was identical to the original qualified
+container-deadline runtime; that increment adds test/operator tooling and CI, with no new application,
+image or environment claim. Source/archive reproducibility and exact public
+hosted qualification remain separate gates. New CI runs both SDK envelopes and
+retains synthetic complete/incomplete receipts. Intended deployment capacity,
+real provider behavior, customer quality and invoice costs remain unverified;
+PyPI dev5 is unchanged.
+
+A later operator-path check found that a fresh nested receipt directory was not
+created by the standalone supervisor. Its preflight now uses the existing
+protected-output helper, after rejecting remote database destinations and before
+any database write. The source boundary selection passed **15 in 8.70 seconds**,
+including both real PostgreSQL ownership failures with a new nested output path
+and remote rejection before network or directory creation. A new complete
+30-second supervised smoke through that previously absent nested directory
+passed and removed its exact disposable database. This narrow path follow-up
+does not change the load algorithm or application runtime. The preceding
+ten-minute results remain attributed to their actual qualification source;
+their counters are not represented as rerun against the path-only follow-up.
+
+Earlier development evidence, superseded by the component acceptance above:
+the simultaneous owned-service qualification was **under qualification**. Its
+ten actors overlap metadata ingest/replay/spans, retained queries, approved
+experiment workers, encrypted online model judging and native gateway-front
+HTTP across two synthetic tenants. Only provider transports are closed fixtures.
+The bounded supervisor's 30-second source smoke passed, reconciled durable
+worker/quality/gateway counts and known charges, and removed its exact newly
+created local database. The first stricter ten-second smoke failed its new
+within-window sample gate; a later harness assertion incorrectly expected
+cumulative reservation counters to be zero after settlement and was corrected
+to preserve their actual upper-bound semantics. Those failed development runs
+are not acceptance. Earlier success/outage/strict-latency/process-tree and sample
+boundary selection passed eleven tests; later ledger/receipt/cap changes require
+the final frozen selection again. The declared ten-minute installed profiles,
+distribution identity and new hosted matrix remain pending. [Contract and
+runnable profile](load-qualification.md#simultaneous-synthetic-service-qualification).
+This is absent from PyPI dev5 and establishes no production or customer claim.
+
+The first frozen installed fault selection passed 24 tests per SDK with one
+failure per SDK: the operation-cap fixture requested eight concurrent gateway
+calls under a two-request total budget, so setup correctly refused before its
+intended cap assertion. The fixture now bounds its concurrency by its declared
+total request count. A subsequent source selection passed **three in 15.82
+seconds**, including that actual operation cap plus real PostgreSQL migration
+timeout cleanup and a deliberately lost database-create acknowledgement. The
+supervisor now persists its exact random database intent before creation and
+refuses automatic reuse of the same receipt path; a lost acknowledgement does
+not become an invented cleanup success. Final frozen installed checks remain
+pending for this follow-up.
+
 The **v2 local-container application-check runner passed local component
 qualification**; exact public source and hosted gates remain pending. Each
 fresh installed SDK selection passed **119 tests**, with **three Windows

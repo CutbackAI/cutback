@@ -1,0 +1,112 @@
+{
+  "contract": "cutback.incident-comments-acceptance.v1",
+  "date": "2026-11-01",
+  "status": "LOCAL_COMPONENT_QUALIFIED_EXACT_HEAD_HOSTED_PENDING",
+  "actual_runtime_source_revision": "4a7c884d6208d0d3c5a6b15c9eca4353bb655864",
+  "test_source_revision": "459cc95cb2b9214057949705fb760bc96134f0e5",
+  "recovery_tool_source_revision": "622ffc5ea384bf2301003dbfc52e77c790990a4c",
+  "wheel_sha256": "68d50a51bc5efe370da2db891ca09b14df4a438252b615fe385e2df0c9bc6506",
+  "image_id": "sha256:453edf8599488acfac52497bcd0e86d38c39f71716ccb8e16631d9503c655f78",
+  "identical_application_files": 488,
+  "installed_sdk_tests": {
+    "2.29.0": {
+      "first_cohort": {
+        "passed_before_stop": 69,
+        "failed": 1,
+        "seconds": 226.79,
+        "log_sha256": "3a8668daa8a95b6d4c283fd78e855959b36df9c91c4c350375f4649946ef1238",
+        "reason": "Generic browser runner collected the dedicated comments spec without its owned incident fixture.",
+        "full_suite_passed": false,
+        "passed_selection": [
+          "comments API including signed live OIDC grants and four resumable sample cases",
+          "independent matching core/HTTPX-only client over actual collector HTTP",
+          "monitoring/shared dashboard/trace content/identity/privacy/retention regressions",
+          "migration and release contracts",
+          "dedicated comments and shared dashboard browser flows"
+        ]
+      },
+      "corrected_browser_and_remaining_selection": {
+        "passed": 17,
+        "skipped": 0,
+        "seconds": 175.24,
+        "log_sha256": "056d98ddae749d628201b6712531e16f0f8a22033b6429f96f96e0e55afd9d6a",
+        "selection": [
+          "dedicated comments browser with required fixture",
+          "generic authenticated dashboard/mobile/axe",
+          "scanner optional-dependency independence",
+          "test-log/check-runner privacy",
+          "native-hook functional profiling"
+        ]
+      }
+    },
+    "3.35.1": {
+      "first_cohort": {
+        "passed_before_stop": 69,
+        "failed": 1,
+        "seconds": 220.84,
+        "log_sha256": "1a5141c51c7e6f92899fd0a8722d0a9e807d07417d254537e84c718284404fb8",
+        "reason": "Generic browser runner collected the dedicated comments spec without its owned incident fixture.",
+        "full_suite_passed": false,
+        "passed_selection": [
+          "comments API including signed live OIDC grants and four resumable sample cases",
+          "independent matching core/HTTPX-only client over actual collector HTTP",
+          "monitoring/shared dashboard/trace content/identity/privacy/retention regressions",
+          "migration and release contracts",
+          "dedicated comments and shared dashboard browser flows"
+        ]
+      },
+      "corrected_browser_and_remaining_selection": {
+        "passed": 17,
+        "skipped": 0,
+        "seconds": 175.19,
+        "log_sha256": "152f33eee9b7f767343de444c730afe8766bebcacef2f75ada5a9c9a41c30fff",
+        "selection": [
+          "dedicated comments browser with required fixture",
+          "generic authenticated dashboard/mobile/axe",
+          "scanner optional-dependency independence",
+          "test-log/check-runner privacy",
+          "native-hook functional profiling"
+        ]
+      }
+    }
+  },
+  "test_only_followup_rebuilt_runtime": false,
+  "current_oidc_and_scoped_key_rights_tested": true,
+  "purpose_scoped_encrypted_revisions_and_current_policy": true,
+  "author_cas_and_durable_idempotent_version_ids": true,
+  "erasure_without_capture_authority_and_unconfirmed_storage_failures": true,
+  "lost_commit_ack_does_not_erase_canonically_referenced_content": true,
+  "compound_parent_payload_tenant_constraints_and_populated_downgrade_guard": true,
+  "metadata_export_project_erasure_and_expiry": true,
+  "full_recovery": {
+    "tables": 110,
+    "encrypted_objects": 3695,
+    "comment_versions": 2,
+    "exact_new_verification_audits": 3,
+    "seconds": 455.90600000019185,
+    "receipt_sha256": "62b21ba92e4e0d191eaddc8a67fe2b8ea0fd752fa3c173e2ae147e655079989d",
+    "diagnostic_sha256": "5ac6bfb01f1fbe8940ee12e51ee6530945e788350dc22ccf6c5329dbeac095fb",
+    "recovery_source_characters": 33133,
+    "legacy_expanded_command_characters": 33850,
+    "actual_fixed_command_characters": 220,
+    "pipe_tool_and_release_tests": {
+      "default": {
+        "passed": 5,
+        "seconds": 1.11
+      },
+      "sdk3": {
+        "passed": 5,
+        "seconds": 1.65
+      }
+    },
+    "failed_trials_preserved": [
+      "First and serial expanded recovery commands exceeded Windows process-argument limits.",
+      "A separate diagnostic stopped at the 180-second earlier combined fixture bound under competing local load."
+    ],
+    "fixture_protocol": "Bounded code and environment over anonymous stdin; short fixed trampoline; no deadline/assertion relaxed."
+  },
+  "real_customer_outcome_verified": false,
+  "production_changed": false,
+  "paid_provider_calls": 0,
+  "new_pypi_release": false
+}

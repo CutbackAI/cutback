@@ -11,6 +11,7 @@ from sqlalchemy import delete, inspect, select, text
 from sqlalchemy.exc import IntegrityError
 
 from cutback.server.db import Environment, Project
+from cutback.server.migrate import CURRENT_REVISION
 from cutback.server.policy_activity_db import PolicyActivityRecord
 
 pytestmark = pytest.mark.postgres
@@ -40,7 +41,7 @@ def test_additive_roundtrip_preserves_existing_project_and_refuses_populated_dow
     with pytest.raises(ValueError, match="POLICY_ACTIVITY_EXPORT_AND_REMOVE"):
         command.downgrade(cfg, "0034")
     with api[2].state.sessions.begin() as session:
-        assert session.scalar(text("SELECT version_num FROM alembic_version")) == "0035"
+        assert session.scalar(text("SELECT version_num FROM alembic_version")) == CURRENT_REVISION
         session.execute(delete(PolicyActivityRecord))
     command.downgrade(cfg, "0034")
     command.upgrade(cfg, "head")

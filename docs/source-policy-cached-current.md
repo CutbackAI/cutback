@@ -1,7 +1,7 @@
 # Improve a policy that already declares exact cache
 
-This **unreleased v2 source path passed local component qualification**; its
-exact public source and hosted gates remain separate. It is absent from PyPI
+This **v2 source path passed local and all 18 reviewed-head hosted gates**, then
+merged in [PR 82](https://github.com/CutbackAI/cutback/pull/82). It is absent from PyPI
 `0.1.0.dev5`. Use [progress](progress.md) for the exact tested source, installed
 wheel, container and public CI evidence. The existing v1 program keeps its wire
 format and refusal of a cached current reference.

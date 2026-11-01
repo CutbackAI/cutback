@@ -130,6 +130,7 @@ class AlertWindow(Base):
 class Incident(Base):
     __tablename__ = "incidents"
     __table_args__ = (
+        UniqueConstraint("id", "project_id", name="uq_incident_project_scope"),
         UniqueConstraint("alert_rule_id", "window_start", name="uq_incident_activation"),
         Index("ix_incident_page", "project_id", "created_at", "id"),
     )

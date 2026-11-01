@@ -22,6 +22,20 @@ export const money = (value: unknown) =>
 export function explain(error: unknown) {
   const code = (error as Error)?.message || "REQUEST_FAILED";
   const messages: Record<string, string> = {
+    INCIDENT_COMMENT_REVISION_CONFLICT:
+      "This comment changed. Refresh comments, read the current revision and review your edit again.",
+    INCIDENT_COMMENT_AUTHOR_REQUIRED:
+      "Only the original author can revise this comment. An administrator can erase inappropriate text.",
+    INCIDENT_COMMENT_POLICY_SCOPE_REQUIRED:
+      "Choose a current policy authorized for encrypted incident comments in this environment.",
+    INCIDENT_COMMENT_CONTENT_UNAVAILABLE:
+      "This comment revision expired or is unavailable. Its text cannot be reconstructed from metadata.",
+    INCIDENT_COMMENT_DELETED:
+      "This comment's text was erased. Refresh the discussion to view its retained metadata.",
+    INCIDENT_COMMENT_QUOTA_EXCEEDED:
+      "This discussion or project has reached its retained comment limit.",
+    INCIDENT_COMMENT_ERASURE_UNCONFIRMED:
+      "Erasure could not be confirmed. Inspect the same comment and retry its deletion when storage is available.",
     DASHBOARD_REVISION_CONFLICT:
       "A teammate changed this dashboard. Refresh it and review the current composition before saving again.",
     DASHBOARD_SOURCE_VIEW_CHANGED:

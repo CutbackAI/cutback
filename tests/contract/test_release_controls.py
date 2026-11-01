@@ -3,6 +3,30 @@ from pathlib import Path
 import yaml
 
 
+def test_mixed_capacity_runs_both_native_sdk_envelopes_and_retains_failures():
+    root = Path(__file__).resolve().parents[2]
+    jobs = yaml.safe_load((root / ".github/workflows/ci.yml").read_text())["jobs"]
+    job = jobs["mixed-services"]
+    assert job["strategy"]["fail-fast"] is False
+    assert job["strategy"]["matrix"]["sdk"] == ["default", "sdk3"]
+    steps = job["steps"]
+    sustained = next(step for step in steps if "ten-minute" in step.get("name", ""))
+    assert "--project infra/sdk-compat/openai3 --locked" in sustained["run"]
+    assert "uv run --locked python scripts/mixed_capacity_acceptance.py" in sustained["run"]
+    assert sustained["run"].count("--profile examples/load-qualification/mixed-profile.json") == 2
+    assert not sustained.get("continue-on-error", False)
+    native = next(step for step in steps if "Measure native hooks" in step.get("name", ""))
+    assert (
+        native["run"].count("--profile examples/load-qualification/native-hook-profile.json") == 2
+    )
+    assert "tests/unit/test_instrumentation_profile.py" in native["run"]
+    assert not native.get("continue-on-error", False)
+    retain = steps[-1]
+    assert retain["if"] == "${{ !cancelled() }}"
+    assert retain["with"]["if-no-files-found"] == "error"
+    assert ".cutback/qualification/native-hook.json" in retain["with"]["path"]
+
+
 def test_sdk3_protected_names_require_all_matrix_shards_even_after_failure():
     root = Path(__file__).resolve().parents[2]
     jobs = yaml.safe_load((root / ".github/workflows/ci.yml").read_text())["jobs"]
