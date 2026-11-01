@@ -30,7 +30,7 @@ Documentation = "https://github.com/CutbackAI/cutback/tree/main/docs"
 [project.optional-dependencies]
 prompts = ["httpx>=0.28,<1"]
 instrumentation = ["httpx>=0.28,<1", "opentelemetry-api>=1.38,<2"]
-openai = ["cutback[instrumentation]", "openai==2.29.0"]
+openai = ["cutback[instrumentation]", "openai==3.41.0"]
 server = ["cutback[eval]", "httpcore==1.0.9", "fastapi>=0.120,<1", "uvicorn>=0.38,<1", "sqlalchemy>=2.0.44,<3", "alembic>=1.17,<2", "psycopg[binary]>=3.2,<4"]
 gateway = ["cutback[server,instrumentation]"]
 guardrails = ["cutback[eval]", "httpx>=0.28,<1", "fastapi>=0.120,<1", "uvicorn>=0.38,<1"]
