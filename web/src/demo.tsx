@@ -75,6 +75,60 @@ export function SampleGuide({
         money is useful only if urgent tickets still receive urgent priority.
       </p>
       <p className="disclosure">{demo.disclosure}</p>
+      {demo.source_policy_sample && (
+        <section aria-label="One-budget improvement walkthrough">
+          <h3>
+            Follow one application from failed controls to a checked change
+          </h3>
+          <p>
+            This separate example classifies eighty synthetic tickets. One
+            approved program compares simple alternatives, uses its reserved
+            training path when those alternatives fail, and confirms one frozen
+            choice on untouched cases. An experiment that fails its checks is
+            useful evidence; it must not produce a source proposal.
+          </p>
+          <ol>
+            <li>
+              Open Automatic improvements and inspect the completed source
+              policy program. Start with its approved budget and recorded costs.
+            </li>
+            <li>
+              Follow the static comparison. The small model mishandles some long
+              tickets; the reduced output limits fail too.
+            </li>
+            <li>
+              Inspect the training and routed validation stages, then the one
+              untouched confirmation. Training results alone cannot justify a
+              change.
+            </li>
+            <li>
+              Review the private checked handoff produced by the demo command.
+              The application checks run on independent original and proposed
+              trees, and the inverse patch must restore the original bytes.
+            </li>
+          </ol>
+          <dl>
+            <dt>Program</dt>
+            <dd>
+              <code>{demo.source_policy_sample.program_id}</code>
+            </dd>
+            <dt>Recorded stages</dt>
+            <dd>{demo.source_policy_sample.phases.join(" → ")}</dd>
+            <dt>Original application changed</dt>
+            <dd>No</dd>
+            <dt>Paid provider requests</dt>
+            <dd>Zero; every reply uses the closed synthetic transport.</dd>
+          </dl>
+          <p>
+            This verifies the workflow and its failure cases. Model quality,
+            production savings, fitting compute and routing hosting costs are
+            not established. Nothing has been deployed.
+          </p>
+          <button onClick={() => navigate("Automatic improvements")}>
+            Follow the one-budget improvement
+          </button>
+        </section>
+      )}
       {demo.workload_portfolio_sample && (
         <section aria-label="Observed repeat-workload walkthrough">
           <h3>Can repeated work avoid another provider call?</h3>

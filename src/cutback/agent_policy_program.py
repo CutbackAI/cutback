@@ -72,7 +72,7 @@ def prepare(
     from cutback.core.improvement_policy import SourceImprovementPolicy
     from cutback.core.policy_execution import SourcePolicyExecutionSpec
     from cutback.evals.campaigns import CampaignBudget, NativeGeneratorSpec
-    from cutback.evals.experiments import ExperimentPlan, ModelSpec
+    from cutback.evals.experiments import ExperimentPlan, ModelSpec, provider_models, upper_cost
     from cutback.evals.learned_routing import RoutingFitOptions
     from cutback.evals.metrics import MetricSpec
     from cutback.evals.search import candidate_portfolio
@@ -84,11 +84,22 @@ def prepare(
         baseline_snapshot_id = str(UUID(str(baseline_snapshot_id)))
         TypeAdapter(Identifier).validate_python(purpose)
         original, binding = inspect_configuration(root, producer_file)
-        if original.strategy.provider != "openai" or original.cache_execution is not None:
-            raise ValueError("POLICY_PROGRAM_CURRENT_UNCACHED_NATIVE_REFERENCE_REQUIRED")
+        if original.cache_execution is not None:
+            raise ValueError("POLICY_PROGRAM_CURRENT_UNCACHED_REFERENCE_REQUIRED")
         ready = control("GET", "/v1/health/ready")
         if ready.get("source_policy_program_contract") != "cutback.source-policy-program.v1":
             raise ValueError("POLICY_PROGRAM_COLLECTOR_UPGRADE_REQUIRED")
+        if (
+            binding.async_consumer
+            and ready.get("source_policy_async_contract") != "cutback.source-policy-async.v1"
+        ):
+            raise ValueError("POLICY_PROGRAM_ASYNC_COLLECTOR_UPGRADE_REQUIRED")
+        if (
+            original.strategy.routes
+            and ready.get("source_policy_current_router_contract")
+            != "cutback.source-policy-current-router.v1"
+        ):
+            raise ValueError("POLICY_PROGRAM_CURRENT_ROUTER_COLLECTOR_UPGRADE_REQUIRED")
         dataset = control("GET", f"/v1/projects/{project_id}/datasets/{dataset_id}")
         if dataset.get("id") != dataset_id or dataset.get("workflow") != original.workflow:
             raise ValueError("POLICY_PROGRAM_DATASET_SOURCE_WORKFLOW_CHANGED")
@@ -118,10 +129,38 @@ def prepare(
             if cache_contract is not None
             else None
         )
+        if binding.async_consumer and cache is not None:
+            raise ValueError("POLICY_SOURCE_ASYNC_CACHE_RUNTIME_UNQUALIFIED")
         native_limit = limit - int(cache is not None)
-        candidates = (
-            candidate_portfolio(original.strategy, limit=native_limit) if native_limit else []
+        # A router descriptor's default model/output fields are not a native
+        # request. Generate controls from an actual current native leaf.
+        seed = max(
+            provider_models(original.strategy), key=lambda value: (upper_cost(value), value.key)
         )
+        candidates = []
+        if native_limit:
+            if original.strategy.routes:
+                anchor = seed.model_copy(
+                    update={
+                        "key": "source-native-"
+                        + fingerprint(seed.model_dump(mode="json", exclude={"key"}))[:12]
+                    }
+                )
+                anchor_policy = SourceImprovementPolicy.model_validate(
+                    {**original.model_dump(mode="json"), "strategy": anchor.model_dump(mode="json")}
+                )
+                if anchor_policy.behavior_sha256 != original.behavior_sha256:
+                    candidates.append(anchor)
+            remaining = native_limit - len(candidates)
+            if remaining:
+                try:
+                    candidates.extend(candidate_portfolio(seed, limit=remaining))
+                except ValueError as failure:
+                    if (
+                        not candidates
+                        or str(failure) != "NO_QUALIFIED_SEARCH_VARIANT_SUBMIT_REVIEWED_CANDIDATE"
+                    ):
+                        raise
         policies = {"reference": original}
         for candidate in candidates:
             raw = original.model_dump(mode="json")
@@ -146,7 +185,7 @@ def prepare(
                 transport=transport,
                 rounds=2,
                 variants_per_round=2,
-                max_output_tokens=original.strategy.max_output_tokens,
+                max_output_tokens=seed.max_output_tokens,
             )
             if generate
             else None

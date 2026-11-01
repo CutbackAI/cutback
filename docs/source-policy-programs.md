@@ -1,7 +1,7 @@
 # One budget for a source policy
 
 This source feature is being qualified. PyPI `0.1.0.dev5` does not contain it.
-It supports one fixed, stateless, synchronous OpenAI Responses consumer with a
+It supports the supplied fixed, stateless sync or async OpenAI Responses consumer with a
 plain text input and exact-label evaluation. See [current acceptance](progress.md)
 before treating a source checkout, wheel or container as a tested release.
 
@@ -26,8 +26,9 @@ uv sync --locked --extra server --extra openai
 uv run cutback demo --source-policy
 ```
 
-Open the loopback dashboard printed by the command and choose **Explore sample**,
-then **Automatic improvements**. Inspect the completed program, the static
+Open the loopback dashboard printed by the command and choose **Explore sample**.
+The one-budget walkthrough explains its four stages and displays the exact
+program ID. Choose **Follow the one-budget improvement**, then inspect that program. Inspect the static
 comparison, the conditional training/validation path and the single confirmation.
 The sample deliberately makes the small model fail some long tickets. The
 smaller output-cap alternatives also fail. Those fixture failures are intentional.
@@ -53,13 +54,28 @@ uv run python ./independent-policy-example/check_application.py
 Use the same source environment's Python for the last command. The application
 borrows the native client; the check supplies its own offline HTTP transport.
 
+For an asynchronous application, copy its qualified consumer and actual async
+native check:
+
+```sh
+uv run cutback source-policy sample ./independent-async-policy-example --async
+uv run python ./independent-async-policy-example/check_application.py
+```
+
+The async consumer awaits the caller's `AsyncOpenAI` response, preserves the
+caller's retries and cancellation, and returns the native response object. Both
+adapters retain the same bounded nonstreaming request frame. Async exact caching
+is explicitly unsupported: the scanner, import, plan and runtime refuse that
+combination rather than silently running it uncached. Streams, arbitrary async
+wrappers and additional client surfaces remain separate adapter requirements.
+
 ## Use permitted data in an application
 
 1. Commit the application and qualify its complete consumer. The supported
    pattern is in [the independent example](../examples/source-policy/README.md).
    Qualification parses the full producer and configuration; it never imports
    application code. Arbitrary wrappers, tools, stateful requests, custom
-   endpoints and asynchronous/streaming consumers require another qualified
+   endpoints and streaming consumers require another qualified
    adapter. An unsupported consumer is a blocker, not permission to replace its
    behavior.
 2. Configure a collector with real PostgreSQL, current migrations, encrypted
@@ -159,9 +175,25 @@ choice reports `CACHE_RUNTIME_CONFIGURATION_REQUIRED`, not a ready PR.
 
 ## Current boundaries
 
-The initial/current reference must be uncached native. A previously changed
-native instruction/model can be the next reference, but an already routed or
-cached production reference is not yet qualified for another common-program
+The initial/current reference must be uncached. A previously changed native
+instruction/model or source-bound input-size router can be the next reference.
+The comparison executes that current router's actual native leaf for every
+input. It does not substitute the policy's historical native anchor. Its plain
+native controls receive their own calls and costs. Conditional refitting uses
+only authenticated paired training receipts and preserves the current router's
+native targets above the largest training input. That preserved tail has no new
+quality claim. The result still needs independent validation and one untouched
+confirmation before a checked source review.
+
+For another revision, retain the earlier review artifacts, explicitly apply and
+commit the reviewed source yourself, then use a new independently labeled
+dataset with unexposed test families and a current complete cost snapshot. After
+the earlier program is terminal and all bills are known, `source-policy archive`
+preserves its journal. Prepare and approve a new program; earlier approvals and
+test results never authorize the next revision. Source edits alone do not
+establish a deployed release or production outcomes.
+
+An already cached current reference remains unqualified for another common-program
 cycle. Retained production windows are not yet the cache eligibility source.
 Retrieval, compression, local model training, semantic cache, structured/agent
 episodes and specialty/platform adapters keep separate execution contracts.

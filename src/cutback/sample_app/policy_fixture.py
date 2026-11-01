@@ -4,9 +4,9 @@ import json
 from pathlib import Path
 
 
-def fixture():
+def fixture(*, async_consumer=False):
     from cutback.core.improvement_policy import SourceImprovementPolicy
-    from cutback.core.policy_producer import PROGRAM
+    from cutback.core.policy_producer import ASYNC_PROGRAM, PROGRAM
     from cutback.demo_routing import sample_cases
     from cutback.evals.experiments import ModelSpec
 
@@ -24,9 +24,11 @@ def fixture():
         strategy=baseline,
     )
     return {
-        "app.py": PROGRAM,
+        "app.py": ASYNC_PROGRAM if async_consumer else PROGRAM,
         "policy.json": policy.configuration_bytes().decode(),
         "tickets.jsonl": "".join(json.dumps(case) + "\n" for case in sample_cases()),
-        "check_application.py": Path(__file__).with_name("policy_check.py").read_text("utf-8"),
+        "check_application.py": Path(__file__)
+        .with_name("policy_async_check.py" if async_consumer else "policy_check.py")
+        .read_text("utf-8"),
         ".gitignore": "__pycache__/\n.cutback/\n.venv/\n",
     }

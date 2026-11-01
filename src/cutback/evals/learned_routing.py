@@ -48,6 +48,9 @@ class RoutingTrainingEvidence(StrictModel):
 
     @model_validator(mode="after")
     def paired(self):
+        return self._paired()
+
+    def _paired(self, *, source_policy=False):
         keys = [model.key for model in self.models]
         if len(keys) != len(set(keys)) or self.baseline_key not in keys:
             raise ValueError("ROUTING_TRAINING_MODEL_IDENTITIES_INVALID")
@@ -66,9 +69,31 @@ class RoutingTrainingEvidence(StrictModel):
         if len(identities) > 256 or seen != {(case, key) for case in identities for key in keys}:
             raise ValueError("ROUTING_TRAINING_REQUIRES_BOUNDED_COMPLETE_PAIRING")
         for model in self.models:
+            if source_policy and model.key == self.baseline_key and model.routes:
+                if model.provider != "router":
+                    raise ValueError("POLICY_TRAINING_CURRENT_REFERENCE_ROUTER_REQUIRED")
+                for target in provider_models(model):
+                    qualified_native_model(target)
+                continue
             if model.provider not in {"openai", "anthropic"} or model.routes:
                 raise ValueError("ROUTING_TRAINING_REQUIRES_QUALIFIED_NATIVE_TARGETS")
             qualified_native_model(model)
+        return self
+
+
+class SourcePolicyRoutingTrainingEvidence(RoutingTrainingEvidence):
+    """Authenticated source-only router reference; ordinary training stays native."""
+
+    version: Literal["cutback.source-policy-routing-training.v1"] = (
+        "cutback.source-policy-routing-training.v1"
+    )
+
+    @model_validator(mode="after")
+    def paired(self):
+        self._paired(source_policy=True)
+        reference = next(model for model in self.models if model.key == self.baseline_key)
+        if reference.provider != "router" or not reference.routes:
+            raise ValueError("POLICY_TRAINING_CURRENT_REFERENCE_ROUTER_REQUIRED")
         return self
 
 
@@ -85,6 +110,8 @@ def fit_routes(
     and then the canonical model order. Every proposal still needs fresh
     validation and a separately approved untouched confirmation.
     """
+    if type(evidence) is not RoutingTrainingEvidence:
+        raise ValueError("ROUTING_TRAINING_REQUIRES_PLAIN_NATIVE_REFERENCE")
     deadline = clock() + options.max_fit_seconds
     models = {model.key: model for model in evidence.models}
     baseline = models[evidence.baseline_key]

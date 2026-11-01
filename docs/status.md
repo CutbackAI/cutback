@@ -8,9 +8,12 @@ variants, optional root exact cache and conditional learned routing under one
 search/confirmation budget, then prepares checked source copies and inverse
 rollback. Both pinned SDK installations passed 158 tests, including its CLI,
 client without SDK/server dependencies, checked handoff and authenticated dashboard.
-Public exact-head hosted acceptance remains required; this work
-is not in PyPI dev5. Cached/routed current references and common selection with
-retrieval/compression/local models remain unfinished. [Progress](progress.md)
+The foundation merged in PR 79 after all 17 exact-head hosted gates passed; it
+is not in PyPI dev5. A follow-up for current uncached routed references and the
+supplied async native consumer passed local installed/container qualification:
+both pinned SDKs passed 196 tests. Its public hosted/publication gates remain pending;
+cached current references and common selection with retrieval/compression/local models
+remain unfinished. [Progress](progress.md)
 records exact tests, failures and remaining gates.
 
 ## Which installation to use

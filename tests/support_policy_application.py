@@ -2,11 +2,11 @@
 
 from cutback.application_checks import git
 from cutback.core.improvement_policy import SourceImprovementPolicy
-from cutback.core.policy_producer import PROGRAM
+from cutback.core.policy_producer import ASYNC_PROGRAM, PROGRAM
 from cutback.evals.experiments import ModelSpec
 
 
-def application(path):
+def application(path, *, current_routed=False, async_consumer=False):
     root = path / "source-policy-application"
     root.mkdir()
     baseline = ModelSpec(
@@ -19,7 +19,20 @@ def application(path):
     policy = SourceImprovementPolicy(
         workflow="routing-task", max_input_bytes=512, baseline=baseline, strategy=baseline
     )
-    (root / "app.py").write_text(PROGRAM, encoding="utf-8")
+    if current_routed:
+        target = baseline.model_copy(
+            update={"key": "current-short", "instruction": "OWNED_CURRENT_ROUTED_INSTRUCTION"}
+        )
+        policy.strategy = ModelSpec(
+            provider="router",
+            key="current-router",
+            model="input-size-v1",
+            routes=[
+                {"max_input_bytes": 100, "target": target},
+                {"max_input_bytes": 512, "target": baseline},
+            ],
+        )
+    (root / "app.py").write_text(ASYNC_PROGRAM if async_consumer else PROGRAM, encoding="utf-8")
     (root / "policy.json").write_bytes(policy.configuration_bytes())
     (root / ".gitignore").write_text(".cutback/\n__pycache__/\n", encoding="utf-8")
     (root / "test_app.py").write_text(
@@ -65,6 +78,20 @@ if __name__ == "__main__":
 """,
         encoding="utf-8",
     )
+    if async_consumer:
+        check = (root / "test_app.py").read_text("utf-8")
+        check = check.replace("from openai import OpenAI", "from openai import AsyncOpenAI")
+        check = check.replace("unittest.TestCase", "unittest.IsolatedAsyncioTestCase")
+        check = check.replace(
+            "def test_native_short_and_long(self):", "async def test_native_short_and_long(self):"
+        )
+        check = check.replace("client = OpenAI(", "client = AsyncOpenAI(")
+        check = check.replace("http_client=httpx.Client(", "http_client=httpx.AsyncClient(")
+        check = check.replace(
+            "result = classify(client, text)", "result = await classify(client, text)"
+        )
+        check = check.replace("client.close()", "await client.close()")
+        (root / "test_app.py").write_text(check, encoding="utf-8")
     git(root, "init", "--template=")
     git(root, "add", ".")
     git(

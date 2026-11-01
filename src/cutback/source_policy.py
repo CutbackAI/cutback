@@ -12,7 +12,7 @@ from pathlib import Path
 from cutback.core.improvement_policy import SOURCE_POLICY_BYTES_BOUND, SourceImprovementPolicy
 from cutback.core.request_profiles import fingerprint
 from cutback.core.sdk_compat import OPENAI_TEXT_SDKS
-from cutback.evals._logging import owned_sdk_request
+from cutback.evals._logging import owned_async_sdk_request, owned_sdk_request
 
 MAX_POLICY_BYTES = SOURCE_POLICY_BYTES_BOUND
 
@@ -84,3 +84,21 @@ def responses_create(client, text: str, policy: SourceImprovementPolicy, *, scop
         expected_contract_sha256=fingerprint(policy.cache_execution.model_dump(mode="json")),
         **request,
     ).response
+
+
+@owned_async_sdk_request
+async def responses_create_async(client, text: str, policy: SourceImprovementPolicy):
+    """Borrow an exact native async client; uncached, nonstreaming and no fallback."""
+    from openai import AsyncOpenAI
+
+    if type(client) is not AsyncOpenAI or version("openai") not in OPENAI_TEXT_SDKS:
+        raise ValueError("SOURCE_POLICY_QUALIFIED_ASYNCHRONOUS_CLIENT_REQUIRED")
+    if str(client.base_url) != "https://api.openai.com/v1/":
+        raise ValueError("SOURCE_POLICY_OFFICIAL_NATIVE_ENDPOINT_REQUIRED")
+    try:
+        policy = SourceImprovementPolicy.model_validate(policy.model_dump(mode="json"))
+    except (ValueError, TypeError, AttributeError):
+        raise ValueError("SOURCE_POLICY_CURRENT_QUALIFIED_POLICY_REQUIRED") from None
+    if policy.cache_execution is not None:
+        raise ValueError("POLICY_SOURCE_ASYNC_CACHE_RUNTIME_UNQUALIFIED")
+    return await client.responses.create(**policy.request(text))

@@ -175,8 +175,11 @@ Use an isolated Cutback tool environment if absent. Consult the package's docs/a
 
 If offline discovery returns `policy_producers`, inspect installed `cutback
 source-policy --help` and read `docs/source-policy-programs.md`. This is a fixed
-plain-text synchronous Responses consumer; preserve the existing full input
-domain and native caller contract. It does not license converting an arbitrary
+plain-text Responses consumer with separately qualified sync/async producers;
+preserve the existing full input domain and native caller contract. Match the
+collector's explicit async/current-router capability before uploading a new
+variant. Async caching and streams remain unsupported and must not silently
+become uncached full responses. It does not license converting an arbitrary
 application into that pattern or dropping tools, state, streaming or client
 settings. PyPI dev5 does not contain it.
 
@@ -199,8 +202,10 @@ after dispatch requires explicit operator review. The original source and refs
 remain unchanged. Synthetic evidence stays local review evidence. Cached choices
 require separate explicit private runtime configuration and qualified runtime
 checks; a configuration diff alone is not cache activation. Whole cost/hosting,
-production savings, cached/routed current-reference cycles and common selection
-with other engines remain open. `source-policy archive` preserves only a terminal,
+production savings, cached current-reference cycles and common selection with
+other engines remain open. An uncached current router can be a new reference;
+preserve its actual per-input calls, full domain and required confirmation rather
+than substituting its historical native anchor. `source-policy archive` preserves only a terminal,
 fully accounted journal before a new revision; it transfers no approval.
 
 # Reactive user evaluation

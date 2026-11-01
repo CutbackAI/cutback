@@ -75,6 +75,8 @@ class SourcePolicyExecutionSpec(StrictModel):
             or len({value.policy_sha256 for value in values}) != len(values)
             or self.phase == "training"
             and any(value.cache_enabled for value in values)
+            or self.source.async_consumer
+            and any(value.cache_enabled for value in values)
         ):
             raise ValueError("POLICY_EXECUTION_DISTINCT_SOURCE_BOUND_REFERENCES_REQUIRED")
         return self
@@ -111,7 +113,7 @@ class SourcePolicyExecutionSpec(StrictModel):
             and (
                 plan.split != "train"
                 or plan.predecessor_run_id
-                or any(value.routes for value in values)
+                or any(value.routes for value in plan.candidates)
             )
             or self.phase == "evaluation"
             and plan.split not in {"validation", "test"}

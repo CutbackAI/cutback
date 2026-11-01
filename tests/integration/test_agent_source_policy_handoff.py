@@ -21,14 +21,24 @@ from cutback.server.db import CapturePolicyRecord, PayloadSample
 pytestmark = pytest.mark.postgres
 
 
-@pytest.mark.parametrize("revoke_after_checks", [False, True])
+@pytest.mark.parametrize(
+    "current_routed,revoke_after_checks,async_consumer",
+    [
+        (False, False, False),
+        (False, True, False),
+        (True, False, False),
+        (True, True, False),
+        (False, False, True),
+    ],
+)
 def test_http_agent_prepares_one_budget_and_checks_exact_policy_and_rollback_without_source_changes(
-    api, tenant, tmp_path, monkeypatch, revoke_after_checks
+    api, tenant, tmp_path, monkeypatch, revoke_after_checks, current_routed, async_consumer
 ):
-    root = application(tmp_path)
+    root = application(tmp_path, current_routed=current_routed, async_consumer=async_consumer)
     _, binding = inspect_configuration(root, "app.py")
+    assert binding.async_consumer is async_consumer
     base, store, dataset, policy_id, executor, calls, _, unused, request = prepared_program(
-        api, tenant, tmp_path, monkeypatch, source_binding=binding
+        api, tenant, tmp_path, monkeypatch, source_binding=binding, current_routed=current_routed
     )
     control = Control("http://127.0.0.1", api[1]["Authorization"][7:], client=api[0])
     options = {

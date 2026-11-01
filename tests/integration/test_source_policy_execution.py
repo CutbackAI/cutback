@@ -29,6 +29,7 @@ def prepared(
     cached=True,
     routed=True,
     binding=None,
+    current_routed=False,
 ):
     base, store, dataset, policy_id, _, executor, calls = source_data(
         api, tenant, tmp_path, monkeypatch
@@ -77,6 +78,32 @@ def prepared(
         if cached and phase != "training"
         else None,
     )
+    imports_policies = [("reference", reference), ("candidate", candidate)]
+    if current_routed:
+        assert not cached and phase == "evaluation" and not routed
+
+        # An existing router with two actual current native instructions. Its
+        # historical anchor is never substituted for the reference request.
+        current_target = original.model_copy(
+            update={"key": "current-short", "instruction": "OWNED_CURRENT_ROUTED_INSTRUCTION"}
+        )
+        reference.strategy = ModelSpec(
+            provider="router",
+            key="current-router",
+            model="input-size-v1",
+            routes=[
+                {"max_input_bytes": 100, "target": current_target},
+                {"max_input_bytes": 512, "target": original},
+            ],
+        )
+        control = SourceImprovementPolicy.model_validate(
+            {**reference.model_dump(mode="json"), "strategy": original.model_dump(mode="json")}
+        )
+        imports_policies = [
+            ("reference", reference),
+            ("candidate", candidate),
+            ("native-current-tail", control),
+        ]
     source = binding or PolicySourceBinding(
         producer_file="app.py",
         producer_sha256="a" * 64,
@@ -89,7 +116,7 @@ def prepared(
         max_input_bytes=512,
     )
     references, imports = [], []
-    for key, policy in (("reference", reference), ("candidate", candidate)):
+    for key, policy in imports_policies:
         body = {
             "purpose": "owned-synthetic-test",
             "request_id": str(uuid4()),
@@ -109,13 +136,13 @@ def prepared(
         transport="scripted_test_only",
         phase=phase,
     )
-    models = policy_descriptors(execution, {"reference": reference, "candidate": candidate})
+    models = policy_descriptors(execution, dict(imports_policies))
     plan = ExperimentPlan(
         name="owned-policy-comparison",
         workflow=reference.workflow,
         dataset_hash=dataset["immutable_hash"],
         baseline=models["reference"],
-        candidates=[models["candidate"]],
+        candidates=[models[key] for key, _ in imports_policies[1:]],
         metric={
             "kind": "exact_label",
             "minimum": 1,

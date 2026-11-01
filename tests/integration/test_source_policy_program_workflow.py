@@ -24,8 +24,10 @@ from cutback.server.policy_program_worker import advance_one
 pytestmark = pytest.mark.postgres
 
 
-def execution(api, tenant, tmp_path, monkeypatch, *, mode="routing", uncertain=False):
-    changes = {}
+def execution(
+    api, tenant, tmp_path, monkeypatch, *, mode="routing", uncertain=False, current_routed=False
+):
+    changes = {"current_routed": current_routed}
     if mode == "generation":
         changes["generator"] = {
             "model": {
@@ -112,11 +114,12 @@ def drive(api, store, executor, parent, path):
 
 
 @pytest.mark.parametrize("mode", ["static", "routing", "generation"])
+@pytest.mark.parametrize("current_routed", [False, True])
 def test_one_approval_selects_one_policy_and_confirms_once_without_running_unneeded_stages(
-    api, tenant, tmp_path, monkeypatch, mode
+    api, tenant, tmp_path, monkeypatch, mode, current_routed
 ):
     _, store, executor, calls, parent, path = execution(
-        api, tenant, tmp_path, monkeypatch, mode=mode
+        api, tenant, tmp_path, monkeypatch, mode=mode, current_routed=current_routed
     )
     try:
         current = drive(api, store, executor, parent, path)
@@ -182,6 +185,40 @@ def test_one_approval_selects_one_policy_and_confirms_once_without_running_unnee
             frozen = load_plan(store, row.project_id, planned.specification)
             report = confirmation.results
             assert policy_confirmation_gate(report, frozen, sample_only=True)["passed"] is True
+            assert bool(frozen.baseline.routes) is current_routed
+            assert row.economic_envelope["historical_anchor_substituted_for_reference"] is False
+            if current_routed and mode == "routing":
+                from cutback.evals.learned_routing import SourcePolicyRoutingTrainingEvidence
+                from cutback.server.routing_service import authenticated_training
+
+                training_id = next(
+                    UUID(link["id"]) for link in links if link["phase"] == "training"
+                )
+                evidence = authenticated_training(
+                    session, store, row.project_id, training_id, source_policy=True
+                )[0]
+                assert type(evidence) is SourcePolicyRoutingTrainingEvidence
+                assert next(
+                    model for model in evidence.models if model.key == evidence.baseline_key
+                ).routes
+                # An apparently valid receipt from the wrong current route is
+                # not evidence for this input. Re-reading must fail closed.
+                current_calls = [
+                    call
+                    for call in receipts
+                    if call.run_id == training_id and call.model == "gpt-4.1"
+                ]
+                assert len({call.model_key for call in current_calls}) >= 2
+                tampered = current_calls[0]
+                original_key = tampered.model_key
+                tampered.model_key = "policy-" + "f" * 24
+                session.flush()
+                with pytest.raises(ValueError, match="CALL_RECEIPT_CHANGED"):
+                    authenticated_training(
+                        session, store, row.project_id, training_id, source_policy=True
+                    )
+                tampered.model_key = original_key
+                session.flush()
             for change in (
                 "source",
                 "dataset",
@@ -223,11 +260,12 @@ def test_one_approval_selects_one_policy_and_confirms_once_without_running_unnee
         executor.close()
 
 
+@pytest.mark.parametrize("current_routed", [False, True])
 def test_uncertain_native_call_holds_the_whole_program_and_never_replays_on_later_ticks(
-    api, tenant, tmp_path, monkeypatch
+    api, tenant, tmp_path, monkeypatch, current_routed
 ):
     _, store, executor, calls, parent, path = execution(
-        api, tenant, tmp_path, monkeypatch, uncertain=True
+        api, tenant, tmp_path, monkeypatch, uncertain=True, current_routed=current_routed
     )
     try:
         current = drive(api, store, executor, parent, path)

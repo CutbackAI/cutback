@@ -18,6 +18,19 @@ or provider credential is needed. It exercises every supplied case, caller-owned
 retries, response types, the exact selected request, and rejection beyond the
 fixed input byte bound.
 
+For the async consumer:
+
+```sh
+uv run cutback source-policy sample ../independent-async-policy-application --async
+uv run python ../independent-async-policy-application/check_application.py
+```
+
+`async_app.py` shows the exact awaited producer; its check uses the actual pinned
+`AsyncOpenAI` client with closed synthetic HTTP. It borrows the client and
+preserves native cancellation and retry behavior. Async caching and streams are
+not qualified. Use the same prepare/approve/check/rollback commands for a clean,
+tracked copy of this producer and its configuration.
+
 For the whole collector/database/agent/change workflow, run this from the Cutback
 checkout:
 

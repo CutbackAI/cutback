@@ -12,8 +12,16 @@ pytestmark = pytest.mark.postgres
 
 def prepared_program(api, tenant, tmp_path, monkeypatch, **changes):
     binding = changes.pop("source_binding", None)
+    current_routed = changes.pop("current_routed", False)
     base, store, dataset, policy_id, executor, calls, template, saved, _ = prepared(
-        api, tenant, tmp_path, monkeypatch, cached=False, routed=False, binding=binding
+        api,
+        tenant,
+        tmp_path,
+        monkeypatch,
+        cached=False,
+        routed=False,
+        binding=binding,
+        current_routed=current_routed,
     )
     task = declaration(
         workflow=template.workflow,

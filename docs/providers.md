@@ -37,6 +37,19 @@ All ordinary inference is synthetic. No live provider or customer savings valida
 
 The source-only [provider batch workflow](provider-batches.md) separately qualifies synchronous control calls and bounded streamed file reads on OpenAI 2.29.0 / 3.35.1, with asynchronous provider jobs. Its first profile is GPT-4.1 / GPT-4.1-mini Responses plain text. Batch price identity, explicit provider storage, cancellation, uncertain submissions and file cleanup use their own frozen contract. This does not widen the observer's SDK matrix or claim support for other batch providers/surfaces. Synthetic wire tests preserve missing legacy usage fields on SDK3 without coercing invalid token counts or inventing zero.
 
+## Source policy consumers
+
+The common [source-policy program](source-policy-programs.md) has a separate
+fixed plain-text consumer contract. Its synchronous adapter preserves native
+OpenAI 2.29.0 / 3.35.1 responses and optional explicitly scoped exact caching. An
+awaited `AsyncOpenAI` consumer is under qualification with native response,
+concurrency, retry/outage, timeout, cancellation and payload-log checks. It
+supports neither async caching nor streams; those combinations are refused before
+dispatch. Parse-only source binding and actual checks on both source trees are
+required. The evaluation worker executes the same frozen request frame; its
+timing is not an async application's end-to-end latency. This extends no other
+provider, model or wrapper contract.
+
 ## Node observer and optimization adapters
 
 The independent source package `@cutbackai/sdk` targets Node 24+, OpenAI 7.43.0 and Anthropic 1.3.0. Native promise/response types, sync-compatible async methods, retries, cancellation, lazy SSE bytes, bounded health/export and collector-outage behavior are exercised against actual installed SDKs with synthetic transports. It does not capture payloads or use ambient proxies. Custom provider hosts and untested SDK versions pass through without observation. Source/tarball delivery is not an npm publication claim.
