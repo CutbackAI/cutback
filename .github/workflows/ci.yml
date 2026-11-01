@@ -266,6 +266,10 @@ jobs:
         run: |
           uv venv /tmp/cutback-remote-agent --python ${{ matrix.python }}
           uv pip install --python /tmp/cutback-remote-agent/bin/python dist/*.whl 'httpx==0.28.1'
+      - name: Qualify the HTTP-only client before the full regression
+        run: uv run python scripts/check.py -q tests/integration/test_workflow_remote_minimal.py
+        env:
+          CUTBACK_TEST_REMOTE_PYTHON: /tmp/cutback-remote-agent/bin/python
       - run: uv run python scripts/check.py --cov=cutback --cov-report=term-missing --cov-report=xml
         env:
           CUTBACK_TEST_REMOTE_PYTHON: /tmp/cutback-remote-agent/bin/python

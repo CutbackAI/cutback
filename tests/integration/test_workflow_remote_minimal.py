@@ -1,15 +1,14 @@
 """A separate HTTP-only agent process observes an actual approved collector run."""
 
-import json
 import os
 import subprocess
-from pathlib import Path
 from uuid import UUID
 
 import httpx
 import pytest
 from support_agent import native_response, prepare_fresh
 from support_http import owned_collector
+from support_remote_agent import remote_environment, remote_interpreter, remote_json
 
 from cutback.agent import advance, load_session
 from cutback.agent_control import Control
@@ -30,33 +29,19 @@ def test_http_only_installed_agent_reconciles_same_run_without_runtime_dependenc
     configured = os.getenv("CUTBACK_TEST_REMOTE_PYTHON")
     if not configured:
         pytest.skip("set CUTBACK_TEST_REMOTE_PYTHON to a fresh cutback[prompts]-only installation")
-    executable = Path(configured).resolve(strict=True)
+    executable = remote_interpreter(configured)
     root, _, state, _ = prepare_fresh(api, tenant, tmp_path, monkeypatch)
-    env = {
-        key: value
-        for key, value in os.environ.items()
-        if key not in {"PYTHONPATH", "PYTHONHOME"}
-        and not key.startswith(
-            (
-                "CUTBACK_",
-                "OPENAI_",
-                "ANTHROPIC_",
-                "AWS_",
-                "AZURE_",
-                "GOOGLE_",
-                "GCP_",
-                "STRIPE_",
-                "DATABASE_",
-            )
-        )
-    }
-    env["PYTHONUTF8"] = "1"
+    env = remote_environment()
     probe = subprocess.run(
         [
             str(executable),
+            "-I",
             "-c",
             (
-                "import importlib.util; assert all(importlib.util.find_spec(n) is None for n in "
+                "import importlib.util,sys; from pathlib import Path; import cutback; "
+                "assert Path(cutback.__file__).resolve().is_relative_to("
+                "Path(sys.prefix).resolve()); "
+                "assert all(importlib.util.find_spec(n) is None for n in "
                 "('openai','anthropic','fastapi','uvicorn','sqlalchemy','alembic','psycopg',"
                 "'cryptography','jsonschema','stripe','boto3','jwt','pytest'))"
             ),
@@ -96,6 +81,7 @@ def test_http_only_installed_agent_reconciles_same_run_without_runtime_dependenc
             response = subprocess.run(
                 [
                     str(executable),
+                    "-I",
                     "-m",
                     "cutback.cli",
                     "workflow",
@@ -113,9 +99,10 @@ def test_http_only_installed_agent_reconciles_same_run_without_runtime_dependenc
                 text=True,
                 timeout=30,
             )
-            assert scoped_token not in response.stdout + response.stderr
-            assert "Owned synthetic AA topic" not in response.stdout + response.stderr
-            return response, json.loads(response.stdout)
+            text = response.stdout + response.stderr
+            if scoped_token in text or "Owned synthetic AA topic" in text:
+                pytest.fail("REMOTE_AGENT_DISCLOSED_CREDENTIAL_OR_EXAMPLE", pytrace=False)
+            return response, remote_json(response)
 
         response, waiting = invoke()
         assert response.returncode == 2, "REMOTE_AGENT_EXPECTED_ONE_POLL_WAIT_BOUND"
