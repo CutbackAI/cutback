@@ -421,6 +421,19 @@ def instrument(
         fail("INSTRUMENTATION_PLAN_REQUIRES_REVIEW", "inspect entrypoint and existing bootstrap")
 
 
+@app.command("source-map")
+def source_map_refresh(target: Path = Path(".")):
+    """Refresh observation attribution after committing a reviewed source change."""
+    from cutback.core.instrumentation_plan import refresh_source_map
+
+    try:
+        output(refresh_source_map(target))
+    except (ValueError, OSError):
+        fail(
+            "SOURCE_MAP_REFRESH_STOPPED", "Commit reviewed changes and inspect the local map path."
+        )
+
+
 @collector.command("serve")
 def serve(host: str = "127.0.0.1", port: int = 8080, dev_http: bool = False):
     """Serve using the configured scoped credentials."""

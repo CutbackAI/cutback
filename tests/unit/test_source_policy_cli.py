@@ -41,6 +41,20 @@ def test_independent_sample_copies_and_runs_actual_native_consumer_without_paid_
     )
     assert checked.returncode == 0, checked.stdout + checked.stderr
     assert "contract passed" in checked.stdout
+    observed = subprocess.run(
+        [sys.executable, "observe_application.py"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        timeout=45,
+    )
+    assert observed.returncode == 0, observed.stdout + observed.stderr
+    import json
+
+    receipt = json.loads(observed.stdout)
+    assert receipt["native_sdk_calls"] == 7 and receipt["paid_provider_calls"] == 0
+    assert receipt["production_hit_rate"] is None
+    assert receipt["observer_health"] == {"enabled": False}
 
 
 def test_preparation_forwards_explicit_scope_and_budget_without_auto_approval(
@@ -89,6 +103,75 @@ def test_preparation_forwards_explicit_scope_and_budget_without_auto_approval(
     assert calls[0][3]["baseline_snapshot_id"] == snapshot
     assert calls[0][3]["generate"] is False
     assert output == [{"status": "READY_FOR_APPROVAL"}] and not errors
+
+
+def test_preparation_can_omit_ids_without_implying_approval(tmp_path, monkeypatch):
+    import cutback.agent_control as connection
+    import cutback.agent_policy_program as program
+
+    app, output, errors = command()
+    calls = []
+    monkeypatch.setattr(connection, "connect", lambda *a, **kw: (object(), str(uuid4())))
+    monkeypatch.setattr(
+        program, "prepare", lambda *a, **kw: calls.append(kw) or {"status": "READY_FOR_APPROVAL"}
+    )
+    result = CliRunner().invoke(
+        app,
+        [
+            "source-policy",
+            "prepare",
+            "--target",
+            str(tmp_path),
+            "--producer",
+            "app.py",
+            "--purpose-reference",
+            "owned-auto-data",
+            "--max-usd",
+            "1",
+            "--data-environment",
+            "staging",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert calls[0]["dataset_id"] is calls[0]["baseline_snapshot_id"] is None
+    assert calls[0]["data_environment"] == "staging"
+    assert output == [{"status": "READY_FOR_APPROVAL"}] and not errors
+
+
+@pytest.mark.parametrize("publish", [False, True])
+def test_policy_publication_cli_requires_the_explicit_upload_flag(tmp_path, monkeypatch, publish):
+    import cutback.agent_control as connection
+    import cutback.agent_policy_publication as publication
+
+    app, output, errors = command()
+    calls = []
+    monkeypatch.setattr(connection, "connect", lambda *a, **kw: (object(), str(uuid4())))
+
+    def action(root, control, **options):
+        calls.append(options)
+        return {"remote_published": options["publish"]}
+
+    monkeypatch.setattr(publication, "publish_review", action)
+    result = CliRunner().invoke(
+        app,
+        [
+            "source-policy",
+            "publish",
+            "--target",
+            str(tmp_path),
+            "--repository",
+            "example-owner/policy-app",
+            "--head-branch",
+            "cutback/checked-policy",
+            "--purpose-reference",
+            "owned-policy-preview",
+            *(["--publish"] if publish else []),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert len(calls) == 1 and calls[0]["publish"] is publish
+    assert calls[0]["repository"] == "example-owner/policy-app"
+    assert output == [{"remote_published": publish}] and not errors
 
 
 def test_uncertain_approval_is_not_repeated_and_content_errors_are_redacted(tmp_path, monkeypatch):

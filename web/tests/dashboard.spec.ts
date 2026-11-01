@@ -224,9 +224,16 @@ test("guided policy, CSV dataset, frozen plan approval, queue and cancellation r
       "This file is authorized for this policy, purpose and provider scope.",
     )
     .check();
+  const createdDatasetResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/datasets") &&
+      response.request().method() === "POST" &&
+      response.status() === 201,
+  );
   await dataset
     .getByRole("button", { name: "Import and freeze dataset" })
     .click();
+  const createdDataset = await (await createdDatasetResponse).json();
   await expect(dataset.getByRole("status")).toContainText(
     "Imported 40 examples",
   );
@@ -234,11 +241,11 @@ test("guided policy, CSV dataset, frozen plan approval, queue and cancellation r
   const plan = page.getByRole("form", {
     name: "Compare authorized alternatives",
   });
-  const selected = plan.getByLabel("Frozen dataset").locator("option");
-  await expect(selected).toHaveCount(2);
-  await plan
-    .getByLabel("Frozen dataset")
-    .selectOption((await selected.nth(1).getAttribute("value"))!);
+  const selected = plan.getByLabel("Frozen dataset");
+  await expect(
+    selected.locator(`option[value="${createdDataset.id}"]`),
+  ).toHaveCount(1);
+  await plan.getByLabel("Frozen dataset").selectOption(createdDataset.id);
   await plan.getByLabel("Maximum experiment USD").fill("1");
   await plan.getByLabel("Minimum labeled metric percent").fill("80");
   await plan.getByRole("button", { name: "Freeze proposed plan" }).click();

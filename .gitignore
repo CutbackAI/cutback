@@ -1,4 +1,5 @@
 .venv/
+.cloud-producers/
 __pycache__/
 *.py[cod]
 .pytest_cache/

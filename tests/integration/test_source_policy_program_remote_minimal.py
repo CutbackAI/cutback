@@ -1,5 +1,6 @@
 """Fresh core-plus-HTTPX wheel prepares a source program over actual scoped HTTP."""
 
+import json
 import os
 import subprocess
 from uuid import UUID
@@ -16,10 +17,11 @@ pytestmark = pytest.mark.postgres
 
 
 @pytest.mark.parametrize(
-    "current_routed,async_consumer", [(False, False), (True, False), (False, True)]
+    "current_routed,async_consumer,with_cache",
+    [(False, False, False), (False, False, True), (True, False, False), (False, True, False)],
 )
 def test_minimal_remote_program_prepare_reconcile_status_and_cancel_without_sdk_or_content_logs(
-    api, tenant, tmp_path, monkeypatch, current_routed, async_consumer
+    api, tenant, tmp_path, monkeypatch, current_routed, async_consumer, with_cache
 ):
     configured = os.getenv("CUTBACK_TEST_REMOTE_PYTHON")
     if not configured:
@@ -32,6 +34,7 @@ def test_minimal_remote_program_prepare_reconcile_status_and_cancel_without_sdk_
             "-c",
             "import importlib.util,sys; from pathlib import Path; import cutback; "
             "import cutback.agent_policy_program; "
+            "import cutback.agent_policy_data; "
             "assert Path(cutback.__file__).resolve().is_relative_to(Path(sys.prefix).resolve()); "
             "assert all(importlib.util.find_spec(name) is None for name in "
             "('openai','anthropic','fastapi','sqlalchemy','alembic','psycopg','cryptography',"
@@ -79,10 +82,6 @@ def test_minimal_remote_program_prepare_reconcile_status_and_cancel_without_sdk_
                 tenant[0],
                 "--producer",
                 "app.py",
-                "--dataset",
-                dataset["id"],
-                "--baseline-snapshot",
-                request["baseline_snapshot_id"],
                 "--purpose-reference",
                 "owned-minimal-policy",
                 "--max-usd",
@@ -102,8 +101,24 @@ def test_minimal_remote_program_prepare_reconcile_status_and_cancel_without_sdk_
                 "--min-test-groups",
                 "3",
             ]
+            if with_cache:
+                from unit.test_policy_workload_guards import contract
+
+                cache_contract = tmp_path / "owned-cache-contract.json"
+                cache_contract.write_text(json.dumps(contract()), encoding="utf-8")
+                arguments += ["--exact-cache-contract", str(cache_contract)]
             row = invoke(arguments)
             assert row["status"] == "READY_FOR_APPROVAL"
+            selection = row["local_preparation_data_selection"]
+            assert selection["selected_dataset_id"] == dataset["id"]
+            assert selection["selected_baseline_snapshot_id"] == request["baseline_snapshot_id"]
+            assert selection["encrypted_storage_reads"] == selection["provider_calls"] == 0
+            if with_cache:
+                assert row["local_preparation_workload_assessment"]["decision"] == "abstain"
+                assert row["local_cache_control_decision"]["included_in_preview"] is True
+                assert row["local_cache_control_decision"]["basis"] == (
+                    "frozen_synthetic_validation_inputs_only"
+                )
             assert row["economic_envelope"]["reference_kind"] == (
                 "current_source_router" if current_routed else "current_source_native"
             )

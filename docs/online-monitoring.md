@@ -4,6 +4,11 @@ Source-checkout functionality; not included in the published dev5 wheel. Migrati
 
 ## Evaluate outside the request
 
+To share an investigation across a team, compose [shared metadata dashboards](shared-dashboards.md)
+from saved trace and incident views. Panels retain reviewed filters through source
+view changes and bind every page to the displayed dashboard revision. Their
+retained samples preserve unknown population coverage and task success.
+
 For local Compose testing, explicitly set `CUTBACK_ONLINE_EXECUTION=true` before starting/recreating the worker service. The Compose default remains false; webhook execution remains false until a reviewed private override supplies approved configuration. A direct Python worker can use `CUTBACK_PROCESS=worker` with `python -m cutback.server.boot` and the ordinary private database configuration. These are self-hosting instructions, not a production deployment performed by this project.
 
 An administrator creates `/v1/projects/{project_id}/online-rules` with an explicit version UUID, expected previous revision, environment, typed metadata filter, event-time interval, deterministic sample rate, evaluation count ceiling and approval reference. A new version disables the previous version; it does not mutate its specification or results. Disabled old versions cannot be re-enabled over a newer version. Duplicate identical version requests return the original record. Sampling is stable for the server-assigned span identity and rule version.

@@ -8,6 +8,44 @@ def reject(code, next_action):
     raise ValueError(code)
 
 
+def refresh_source_map(target: Path):
+    """Rebind metadata to a clean revision without editing or importing application code."""
+    from cutback.application_checks import snapshot, source_root
+    from cutback.core.workspace import private_directory, workspace_lock, write_private
+    from cutback.instrumentation.attribution import SourceMap, build_source_map
+    from cutback.scanner import scan
+
+    root = source_root(target)
+    directory = private_directory(root, ".cutback")
+    with workspace_lock(directory):
+        before = snapshot(root)
+        value = build_source_map(root, scan(root))
+        if snapshot(root) != before or value["source_commit"] != before.commit:
+            raise ValueError("SOURCE_CHANGED_DURING_MAP_REFRESH")
+        # Keep map limits identical to the runtime reader, without replacing an
+        # existing useful map with a value the runtime would refuse to load.
+        import json
+
+        if (
+            len(value["files"]) > 256
+            or len(json.dumps(value, sort_keys=True, ensure_ascii=True, indent=2).encode()) + 1
+            > 1048576
+            or sum((root / entry["path"]).stat().st_size for entry in value["files"]) > 16 * 1048576
+        ):
+            raise ValueError("SOURCE_MAP_RESOURCE_BOUND")
+        write_private(directory / "source-map.json", value)
+        SourceMap(directory / "source-map.json")
+    return {
+        "status": "SOURCE_MAP_REFRESHED",
+        "source_commit": before.commit,
+        "mapped_files": len(value["files"]),
+        "source_map_path": ".cutback/source-map.json",
+        "provider_calls": 0,
+        "application_source_changed": False,
+        "source_lineage": "client_reported_not_independent_attestation",
+    }
+
+
 def instrument_plan(target: Path, entrypoint: Path | None = None, handler: str | None = None):
     import ast
 
@@ -45,6 +83,17 @@ def instrument_plan(target: Path, entrypoint: Path | None = None, handler: str |
     if "# cutback:bootstrap" in before:
         reject(
             "ALREADY_INSTRUMENTED", "inspect existing bootstrap and avoid duplicate instrumentation"
+        )
+    from cutback.core.policy_producer import qualify as qualify_policy
+
+    try:
+        qualify_policy(before.encode("utf-8"))
+    except ValueError:
+        pass
+    else:
+        reject(
+            "SOURCE_POLICY_EXTERNAL_STARTUP_REQUIRED",
+            "initialize observation in the actual process entry point outside the fixed consumer",
         )
     insert_after = 0
     for i, node in enumerate(tree.body):

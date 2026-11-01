@@ -272,6 +272,8 @@ def create_app(
             "native_fixture_contract": NATIVE_FIXTURE_CONTRACT,
             "exact_cache_contract": EXACT_CACHE_CONTRACT,
             "cache_workload_assessment_contract": CACHE_WORKLOAD_CONTRACT,
+            "source_policy_workload_contract": "cutback.policy-workload-assessment.v1",
+            "source_policy_runtime_contract": "cutback.source-policy-runtime.v1",
             "workload_portfolio_contract": WORKLOAD_PORTFOLIO_CONTRACT,
             "workload_campaign_contract": WORKLOAD_CAMPAIGN_VERSION,
             "routing_program_contract": "cutback.routing-improvement-program.v1",
@@ -731,6 +733,9 @@ def create_app(
     from cutback.server.traces import install_traces
 
     install_traces(app, sessions, authorize, scope)
+    from cutback.server.policy_activity_api import install_policy_activity
+
+    install_policy_activity(app, sessions, authorize, scope)
     from fastapi.staticfiles import StaticFiles
 
     dashboard = files("cutback").joinpath("dashboard")

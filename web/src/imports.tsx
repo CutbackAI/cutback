@@ -135,6 +135,15 @@ export function Imports({
               <option value="promptfoo-0.125.1-results.v3">
                 Promptfoo 0.125.1 result export v3
               </option>
+              <option value="bedrock-automated-model-jsonl.v1">
+                Amazon Bedrock automated text-model JSONL v1
+              </option>
+              <option value="azure-ai-evaluation-1.18.10-results.v1">
+                Azure AI Evaluation 1.18.10 row results
+              </option>
+              <option value="vertexai-1.153.1-metrics-jsonl.v1">
+                Vertex AI 1.153.1 pointwise table JSONL
+              </option>
             </Select>
             <Field
               type="file"
@@ -263,6 +272,49 @@ export function Imports({
                   ))}
                   {examples.cases_truncated && (
                     <p>Example display truncated.</p>
+                  )}
+                  {!!examples.source_asserted_checks?.length && (
+                    <section aria-label="Source-reported metric values">
+                      <h4>Source-reported metrics</h4>
+                      <p>
+                        These are external assertions. Original values are kept;
+                        no common scale, pass threshold or independent task
+                        success is inferred. Missing, error and skipped results
+                        stay separate. Metric names appear only in this
+                        authorized content view.
+                      </p>
+                      {examples.source_asserted_checks.map(
+                        (row: Data, index: number) => (
+                          <dl key={`${row.case_id}-${row.metric_id || index}`}>
+                            <dt>Source metric</dt>
+                            <dd>{String(row.metric_name || row.evaluator)}</dd>
+                            <dt>Source case</dt>
+                            <dd>{String(row.case_id)}</dd>
+                            {row.source_model_identifier != null && (
+                              <>
+                                <dt>Source model identifier</dt>
+                                <dd>{String(row.source_model_identifier)}</dd>
+                              </>
+                            )}
+                            <dt>Reported state</dt>
+                            <dd>{String(row.outcome)}</dd>
+                            <dt>Original value</dt>
+                            <dd>
+                              {row.score != null
+                                ? String(row.score)
+                                : row.boolean_value != null
+                                  ? String(row.boolean_value)
+                                  : "unknown"}
+                            </dd>
+                          </dl>
+                        ),
+                      )}
+                      {examples.checks_truncated && (
+                        <p>
+                          Only the first 25 source metric records are shown.
+                        </p>
+                      )}
+                    </section>
                   )}
                   <button onClick={() => setExamples(null)}>
                     Hide import examples

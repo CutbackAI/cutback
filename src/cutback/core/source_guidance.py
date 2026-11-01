@@ -102,7 +102,9 @@ def explain_source(state):
     if policies:
         note = (
             "A fixed source-policy consumer is qualified. Prepare its whole-budget program "
-            "using permitted frozen data and a measured task-cost snapshot."
+            "using permitted frozen data and a measured task-cost snapshot. Preparation can "
+            "discover a unique compatible pair; inspect source-policy discover when evidence "
+            "is missing or versions are ambiguous. Discovery grants no execution authority."
         )
     elif options:
         note = "Some workflows have inspected adapters. Unresolved calls stay outside them."

@@ -8,11 +8,35 @@ from uuid import UUID
 from pydantic import ConfigDict, Field, field_validator, model_validator
 
 from cutback.core.models import Identifier, StrictModel
+from cutback.core.policy_producer import PolicySourceBinding
 from cutback.core.request_profiles import fingerprint
 
 CACHE_WORKLOAD_CONTRACT = "cache-workload-assessment-v1"
+POLICY_WORKLOAD_CONTRACT = "cutback.policy-workload-assessment.v1"
 Digest = Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
 MoneyText = Annotated[str, Field(strict=True, min_length=1, max_length=64)]
+
+
+class PolicyWorkloadBinding(StrictModel):
+    """Client-reported policy attribution, distinct from a native literal edit span."""
+
+    version: Literal["cutback.policy-workload-source.v1"] = "cutback.policy-workload-source.v1"
+    source: PolicySourceBinding
+    call_site_id: Identifier
+
+    @model_validator(mode="after")
+    def synchronous(self):
+        if self.source.async_consumer:
+            raise ValueError("POLICY_WORKLOAD_ASYNC_REQUEST_PROFILE_UNQUALIFIED")
+        return self
+
+    @property
+    def workflow_id(self):
+        return self.source.workflow
+
+    @property
+    def source_commit(self):
+        return self.source.commit
 
 
 class CacheWorkloadAssessment(StrictModel):

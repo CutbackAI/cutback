@@ -142,6 +142,7 @@ include = [
   '/scripts/check.py','/scripts/demo.py','/scripts/export_openapi.py',
   '/scripts/generate_ts_client.py','/scripts/package_agent_workflows.py',
   '/scripts/backup_restore.py','/scripts/scanner_benchmark.py','/scripts/check_release_artifacts.py',
+  '/scripts/policy_runtime_acceptance.py',
 ]
 
 [tool.pytest.ini_options]
@@ -189,6 +190,8 @@ select = ["E", "F", "I", "UP", "B"]
 "src/cutback/server/prompt_playground.py" = ["B008"]
 "src/cutback/server/prompt_observations.py" = ["B008"]
 "src/cutback/server/monitoring_api.py" = ["B008"]
+"src/cutback/server/dashboard_api.py" = ["B008"]
+"src/cutback/server/policy_activity_api.py" = ["B008"]
 "src/cutback/server/notification_api.py" = ["B008"]
 "src/cutback/server/quality_api.py" = ["B008"]
 

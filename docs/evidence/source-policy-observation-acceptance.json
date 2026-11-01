@@ -1,0 +1,66 @@
+{
+  "contract": "cutback.local-source-policy-acceptance.v1",
+  "date": "2026-11-01",
+  "status": "local_qualification_complete_publication_gates_separate",
+  "scope": "fixed_source_observation_and_workload_aware_cache_preparation",
+  "observation": {
+    "wheel_sha256": "91e21aa67bbcc66c922b3f6424917ecbc1c6e3ec54b487341232bf57e423bae1",
+    "image_id": "sha256:701e42877f49ebd77865dec6ea85ec311b607ae191e95dc64202bde2d7828c58",
+    "identical_application_files": 467,
+    "installed_sdk_2_tests_passed": 319,
+    "installed_sdk_3_tests_passed": 319,
+    "recorded_full_matrix_log_note": "The two retained 319-test logs have identical bytes and duration; they are not treated as independent SDK-origin proof. Separate serial processes below assert the actual SDK and Cutback module origins before native/PostgreSQL checks. Final public source matrix acceptance remains separate.",
+    "additional_sdk_origin_confirmed_native_tests": {
+      "2.29.0": {"passed": 11, "seconds": 31.02},
+      "3.35.1": {"passed": 11, "seconds": 27.12}
+    },
+    "source_map_and_external_startup_preserve_consumer": true,
+    "sync_and_async_independent_processes_verified": true,
+    "default_capture_is_metadata_only": true,
+    "profile_assessment_requires_explicit_encrypted_capture": true,
+    "assessment_reads_encrypted_payloads": false
+  },
+  "automatic_workload_guidance": {
+    "wheel_sha256": "520cc471e2f7041a0e3138cd61c1269c502896acd26e524aaaf4b9c9f5d8b96c",
+    "image_id": "sha256:af4ed436a8cfcd2705dc66d2b1326e9ed5619b45b61e4af294d9ea74a49843c3",
+    "identical_application_files": 467,
+    "installed_sdk_2_tests": {"passed": 117, "seconds": 987.11},
+    "installed_sdk_3_tests": {"passed": 117, "seconds": 984.24},
+    "independent_core_httpx_client_verified": true,
+    "real_provider_preview_omits_unqualified_cache": true,
+    "synthetic_trial_basis_is_separate": true,
+    "current_rights_census_expiry_scope_and_source_guards": true,
+    "grants_inference_or_source_change_authority": false
+  },
+  "container_recovery": {
+    "migration": "0034",
+    "uid": 10001,
+    "tables": 107,
+    "encrypted_objects": 3527,
+    "cache_objects": 17,
+    "plans": 45,
+    "native_profile_objects": 24,
+    "both_source_trees_and_inverse_rollback_restored": true,
+    "async_native_cases_network_disabled_readonly": 80,
+    "external_observation_native_calls": 7,
+    "source_map_alias_guards_verified": true
+  },
+  "evidence_limits": {
+    "synthetic_transports": true,
+    "paid_provider_calls": 0,
+    "production_deployed": false,
+    "pypi_updated": false,
+    "real_model_quality_verified": false,
+    "production_hit_rate": null,
+    "realized_savings_usd": null,
+    "whole_task_cost_usd": null,
+    "source_lineage": "client_reported_not_independently_attested",
+    "unsupported": [
+      "async_exact_cache",
+      "async_native_request_fingerprints",
+      "multi_model_current_workload_assessment",
+      "current_cached_source_reference",
+      "unified_retrieval_compression_local_model_selection"
+    ]
+  }
+}

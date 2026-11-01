@@ -1,6 +1,10 @@
 # One budget for a source policy
 
 This source feature is being qualified. PyPI `0.1.0.dev5` does not contain it.
+For applications already declaring exact cache, inspect their actual retained
+[policy activity](policy-runtime-activity.md) before choosing an improvement
+reference. Configured cache is not proof it ran. Automatic cached-current
+reference evaluation remains an explicit open gate.
 It supports the supplied fixed, stateless sync or async OpenAI Responses consumer with a
 plain text input and exact-label evaluation. See [current acceptance](progress.md)
 before treating a source checkout, wheel or container as a tested release.
@@ -85,16 +89,42 @@ wrappers and additional client surfaces remain separate adapter requirements.
    complete baseline task-cost snapshot. [Onboarding](application-onboarding.md)
    and [task economics](task-economics.md) describe those prerequisites. A metadata
    scan cannot invent historical costs, examples or task outcomes.
-3. Freeze a preview. Substitute your own existing IDs, endpoint, declared
+3. Inspect compatible metadata and freeze a preview. Substitute your endpoint, declared
    opportunity assumptions and maximum spend:
 
    ```sh
+   cutback source-policy discover --target . --producer app.py \
+     --endpoint https://YOUR-COLLECTOR --project PROJECT_UUID \
+     --environment staging
+
    cutback source-policy prepare --target . --producer app.py \
      --endpoint https://YOUR-COLLECTOR --project PROJECT_UUID \
-     --dataset DATASET_UUID --baseline-snapshot SNAPSHOT_UUID \
+     --data-environment staging \
      --purpose-reference improvement-review --max-usd 2 \
      --max-requests 200 --max-wall-seconds 600 \
      --savings-per-success 0.001 --forecast-successful-tasks 100000
+   ```
+
+   When IDs are omitted, preparation selects only a unique compatible retained
+   dataset and complete declared task-cost snapshot for this workflow/environment.
+   `discover` lists IDs and hashes without reading encrypted examples or policies.
+   It considers at most 100 dataset summaries and 100 snapshot summaries. A full
+   dataset page or a remaining snapshot cursor leaves selection incomplete.
+   Missing independent labels, test cases, costs or ambiguous versions require
+   the corresponding input; nothing chooses a version by recency. To choose
+   deliberately, pass `--dataset DATASET_UUID --baseline-snapshot SNAPSHOT_UUID`.
+   Retried preparation retains the saved IDs even if another version appears.
+
+   Metadata compatibility does not verify baseline source alignment, population
+   coverage, label quality, current content rights or causal savings. Automatic
+   preparation refreshes the chosen frozen report's hash and actual workflow,
+   service and release identities. The collector still enforces content expiry,
+   rights, lineage and the final program contract before execution can be approved.
+
+   In PowerShell, put the same arguments on one line:
+
+   ```powershell
+   cutback source-policy prepare --target . --producer app.py --endpoint https://YOUR-COLLECTOR --project PROJECT_UUID --data-environment staging --purpose-reference improvement-review --max-usd 2 --max-requests 200 --max-wall-seconds 600 --savings-per-success 0.001 --forecast-successful-tasks 100000
    ```
 
    Supply `CUTBACK_CONTROL_TOKEN` privately in the process environment. The
@@ -156,6 +186,46 @@ wrappers and additional client surfaces remain separate adapter requirements.
    preserves its metadata journal and permits preparation for a new revision.
    It cannot transfer the prior approval or discard an unresolved bill.
 
+## Publish a qualifying checked policy as a draft
+
+This follow-up is under qualification; check the current acceptance record before
+using it. Complete `source-policy finish` with the reviewed commands, coverage and
+explicit local execution first. The declared coverage must include the producer's
+known workflow; it does not establish that all external consumers were discovered.
+For a current held-out review, preview the exact repository, branches, checked
+commit, changed file and publication intent:
+
+```sh
+cutback source-policy publish --target . --repository OWNER/REPOSITORY \
+  --base-branch main --head-branch cutback/source-policy-review \
+  --purpose-reference policy-publication-review
+```
+
+The preview refreshes collector confirmation/content rights and re-verifies the
+source proposal, both checked trees and retained application receipt. It makes no
+GitHub request. The changed policy file contains application-owned instruction
+text. Review that file and the private diff before explicitly uploading it. Set
+`CUTBACK_GITHUB_TOKEN` privately in the process environment, then repeat the exact
+command with `--publish`. No ambient provider or Git CLI credential is used.
+
+Publication uses the existing bounded draft publisher: one checked source blob,
+tree and commit, against the exact remote base. It sends no local ancestors, check
+output, evaluation examples or credentials. An existing different branch, moved
+head/base, closed or mismatched PR stops reconciliation. Each mutation is
+journaled before dispatch; uncertain unobservable writes are not blindly retried.
+The metadata journal is `.cutback/agent/policy-program-publication.json`.
+
+Synthetic/sample-only policy results remain local reviews and are refused before
+GitHub access. Cached policies still require separately qualified runtime checks
+and cannot use this publication path yet. The command creates a draft for human
+review; it grants no merge, deployment, traffic change or production-savings
+authority. A retained review cannot bypass later revoked content rights.
+
+If upgrading a handoff created before publication inputs were recorded, repeat
+the same `finish --execute-local` command and workspace with its original
+coverage. Known retained checks are reverified rather than rerun; a dispatched
+check with no receipt still requires operator review.
+
 ## Optional exact cache
 
 Pass an explicitly authorized `--exact-cache-contract PRIVATE_CONTRACT.json` at
@@ -172,6 +242,78 @@ contract. Ambient configuration cannot enable cache for an uncached policy.
 Changing `policy.json` alone does not activate runtime caching. Until runtime
 configuration and its application checks are separately qualified, a cached
 choice reports `CACHE_RUNTIME_CONFIGURATION_REQUIRED`, not a ready PR.
+
+When a cache contract is supplied, preparation automatically looks for retained
+source-matched workload analyses in `--workload-environment` (default `staging`).
+For ordinary provider transport, an absent, changed, unprofitable or unqualified
+workload omits the cache control and prepares the other native alternatives.
+The CLI explains that decision; it does not fill missing evidence with zero.
+An explicitly synthetic fixture can still compare cache on its frozen validation
+inputs, with that narrower basis recorded. The actual included controls determine
+the frozen budget and program hash. Observed workload metadata cannot approve
+calls, substitute for independent confirmation, enable runtime caching or become
+a production hit-rate claim. A new preview after changed eligibility may require
+review of the existing frozen intent rather than silently changing it.
+
+## Observe the application before considering cache
+
+The copied sample also contains `observe_application.py`, a separate process
+entry point that makes seven real SDK calls through a closed synthetic HTTP
+transport. Without instrumentation it prints `observer_health.enabled: false`.
+It does not contact a provider or establish real quality or production savings.
+Run it with the same environment used for the consumer check:
+
+```sh
+uv run python ./independent-policy-example/observe_application.py
+```
+
+Keep the fixed `app.py` unchanged. Preview the external startup change, inspect
+the diff, then apply that reviewed change and refresh attribution after commit:
+
+```sh
+cutback instrument --target ./independent-policy-example \
+  --entrypoint observe_application.py --plan
+cutback instrument --target ./independent-policy-example \
+  --entrypoint observe_application.py --apply
+# Commit the reviewed source changes in that application's Git repository.
+cutback source-map --target ./independent-policy-example
+```
+
+Applying observation inside the fixed consumer invalidates its full-program
+qualification. The
+scanner recognizes the native wrapper without reading `policy.json` or importing
+the application. Its static model and costs remain unknown. The reviewed startup
+requires explicit `CUTBACK_ENABLED=true`, service/environment, collector endpoint,
+project ID and scoped ingest credential in the process environment. Default
+observation captures metadata only. Commit the reviewed bootstrap and regenerate
+the source map so runtime events report the current client-reported commit.
+
+For an uncached synchronous native reference, explicitly authorized encrypted
+native request-profile capture can support a separate workload assessment. It
+needs a current capture policy, its private HMAC key and the documented profile
+analysis worker. See [request profiles and reuse](request-reuse.md). Then:
+
+```sh
+cutback source-policy assess-workload --target . --producer app.py \
+  --endpoint https://YOUR-COLLECTOR --project PROJECT_UUID \
+  --exact-cache-contract ../PRIVATE_CACHE_CONTRACT.json
+```
+
+This reads at most one hundred analysis summaries and assesses at most five
+eligible windows against the exact current source, commit, callsite, model,
+freshness and TTL. The server rechecks current rights, retained metadata census,
+coverage and complete known modeled provider costs without decrypting payloads.
+Changed metadata, expiry, revoked rights and unknown coverage stop qualification.
+The result in `.cutback/agent/policy-workload.json` is metadata only. It can
+recommend a separately approved trial; it cannot approve inference, activate
+cache, alter a policy, claim production hit rate or supply independent labels.
+Source lineage is client-reported attribution, not independent attestation.
+
+Async observation works for metadata and authorized payload capture, but native
+async cache fingerprints remain unqualified. Current input-size routers also
+require separate multi-model workload qualification. `assess-workload` refuses
+both before sending HTTP. Ordinary native literal-source assessment retains its
+separate binding and API; policy attribution cannot become a literal edit span.
 
 ## Current boundaries
 

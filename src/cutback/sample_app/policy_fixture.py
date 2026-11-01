@@ -30,5 +30,6 @@ def fixture(*, async_consumer=False):
         "check_application.py": Path(__file__)
         .with_name("policy_async_check.py" if async_consumer else "policy_check.py")
         .read_text("utf-8"),
+        "observe_application.py": Path(__file__).with_name("policy_observe.py").read_text("utf-8"),
         ".gitignore": "__pycache__/\n.cutback/\n.venv/\n",
     }

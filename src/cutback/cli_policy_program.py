@@ -25,10 +25,29 @@ def register_policy_program(app, output, fail):
             except (OSError, ValueError, KeyError, TypeError) as error:
                 code = str(error)
                 upgrade = code in {
+                    "POLICY_ACTIVITY_MATCHING_COLLECTOR_REQUIRED",
                     "POLICY_PROGRAM_COLLECTOR_UPGRADE_REQUIRED",
                     "POLICY_PROGRAM_ASYNC_COLLECTOR_UPGRADE_REQUIRED",
                     "POLICY_PROGRAM_CURRENT_ROUTER_COLLECTOR_UPGRADE_REQUIRED",
+                    "COLLECTOR_SOURCE_WORKLOAD_ASSESSMENT_UPGRADE_REQUIRED",
                 }
+                data_action = {
+                    "POLICY_DATA_SELECT_EXPLICIT_DATASET_OR_IMPORT_INDEPENDENT_LABELS": (
+                        "Run source-policy discover for compatible metadata. Import rights-cleared "
+                        "independently labeled cases or pass --dataset UUID; ambiguous versions "
+                        "are never chosen by recency."
+                    ),
+                    "POLICY_DATA_SELECT_EXPLICIT_BASELINE_OR_FREEZE_COMPLETE_TASK_COSTS": (
+                        "Run source-policy discover. Freeze a scoped task-cost window with "
+                        "declared outcomes, attempt coverage and complete costs, or pass "
+                        "--baseline-snapshot UUID. See docs/task-economics.md; missing costs "
+                        "are not zero."
+                    ),
+                    "POLICY_DATA_EXPLICIT_EXISTING_ENVIRONMENT_REQUIRED": (
+                        "Select an existing collector environment with --environment for discover "
+                        "or --data-environment for prepare."
+                    ),
+                }.get(code)
                 fail(
                     code
                     if type(error) is ValueError and re.fullmatch(r"[A-Z_]{3,120}", code)
@@ -37,19 +56,105 @@ def register_policy_program(app, output, fail):
                     "keep the application SDK pin unchanged, then prepare again. "
                     "No provider call was sent."
                     if upgrade
-                    else "Inspect the same saved program; private content omitted.",
+                    else data_action or "Inspect the same saved program; private content omitted.",
                 )
 
         return call
 
+    @group.command("inspect-activity")
+    @guarded
+    def inspect_activity(
+        producer: Annotated[str, typer.Option("--producer")],
+        service: Annotated[str, typer.Option("--service")],
+        target: Path = Path("."),
+        environment: str = "staging",
+        window_minutes: int = 60,
+        local: bool = False,
+        endpoint: str | None = None,
+        project: str | None = None,
+    ):
+        """Inspect current-source cache activity metadata; no application imports or inference."""
+        from cutback.agent_control import connect
+        from cutback.agent_policy_activity import inspect_current
+
+        control, project_id = connect(target, local=local, endpoint=endpoint, project=project)
+        output(
+            inspect_current(
+                target,
+                control,
+                project_id,
+                producer_file=producer,
+                service_name=service,
+                environment=environment,
+                window_minutes=window_minutes,
+            )
+        )
+
+    @group.command("assess-workload")
+    @guarded
+    def assess_workload(
+        producer: Annotated[str, typer.Option("--producer")],
+        exact_cache_contract: Annotated[Path, typer.Option("--exact-cache-contract")],
+        target: Path = Path("."),
+        environment: str = "staging",
+        analysis_id: str | None = None,
+        local: bool = False,
+        endpoint: str | None = None,
+        project: str | None = None,
+    ):
+        """Assess retained source-matched metadata; grant no execution or cache activation."""
+        from cutback.agent_control import connect
+        from cutback.agent_policy_workload import assess as action
+        from cutback.cli_checks import read
+
+        control, project_id = connect(target, local=local, endpoint=endpoint, project=project)
+        output(
+            action(
+                target,
+                control,
+                project_id,
+                producer_file=producer,
+                cache_execution=read(exact_cache_contract),
+                environment=environment,
+                analysis_id=analysis_id,
+            )
+        )
+
+    @group.command("discover")
+    @guarded
+    def discover(
+        producer: Annotated[str, typer.Option("--producer")],
+        target: Path = Path("."),
+        environment: str = "staging",
+        fixture_transport: bool = False,
+        local: bool = False,
+        endpoint: str | None = None,
+        project: str | None = None,
+    ):
+        """List bounded compatible data metadata; read no cases and approve no calls."""
+        from cutback.agent_control import connect
+        from cutback.agent_policy_data import discover as action
+
+        control, project_id = connect(target, local=local, endpoint=endpoint, project=project)
+        output(
+            action(
+                target,
+                control,
+                project_id,
+                producer_file=producer,
+                environment=environment,
+                fixture=fixture_transport,
+            )
+        )
+
     @group.command("prepare")
     @guarded
     def prepare(
-        dataset: Annotated[str, typer.Option("--dataset")],
-        baseline_snapshot: Annotated[str, typer.Option("--baseline-snapshot")],
         producer: Annotated[str, typer.Option("--producer")],
         purpose: Annotated[str, typer.Option("--purpose-reference")],
         max_usd: Annotated[str, typer.Option("--max-usd")],
+        dataset: Annotated[str | None, typer.Option("--dataset")] = None,
+        baseline_snapshot: Annotated[str | None, typer.Option("--baseline-snapshot")] = None,
         target: Path = Path("."),
         max_requests: int = 1000,
         max_wall_seconds: int = 600,
@@ -62,6 +167,8 @@ def register_policy_program(app, output, fail):
         generate: bool = True,
         fixture_transport: bool = False,
         exact_cache_contract: Path | None = None,
+        workload_environment: str = "staging",
+        data_environment: str = "staging",
         local: bool = False,
         endpoint: str | None = None,
         project: str | None = None,
@@ -93,6 +200,8 @@ def register_policy_program(app, output, fail):
                 generate=generate,
                 fixture_transport=fixture_transport,
                 cache_contract=read(exact_cache_contract) if exact_cache_contract else None,
+                workload_environment=workload_environment,
+                data_environment=data_environment,
             )
         )
 
@@ -199,6 +308,33 @@ def register_policy_program(app, output, fail):
         output(result)
         if result["status"] == "CHECKS_FAILED":
             raise typer.Exit(1)
+
+    @group.command("publish")
+    @guarded
+    def publish(
+        repository: Annotated[str, typer.Option("--repository")],
+        head_branch: Annotated[str, typer.Option("--head-branch")],
+        purpose: Annotated[str, typer.Option("--purpose-reference")],
+        target: Path = Path("."),
+        base_branch: str = "main",
+        publish: Annotated[bool, typer.Option("--publish")] = False,
+    ):
+        """Preview the checked policy file; upload a draft only with explicit --publish."""
+        from cutback.agent_control import connect
+        from cutback.agent_policy_publication import publish_review
+
+        control, _ = connect(target)
+        output(
+            publish_review(
+                target,
+                control,
+                purpose=purpose,
+                repository=repository,
+                base_branch=base_branch,
+                head_branch=head_branch,
+                publish=publish,
+            )
+        )
 
     @group.command("archive")
     @guarded

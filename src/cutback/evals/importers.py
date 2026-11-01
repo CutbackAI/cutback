@@ -3,9 +3,9 @@
 import hashlib
 import json
 from dataclasses import dataclass
-from decimal import Decimal
+from decimal import Decimal, DecimalException
 from pathlib import Path
-from typing import Literal, cast
+from typing import Any, Literal, cast
 
 from pydantic import TypeAdapter, ValidationError
 
@@ -13,9 +13,21 @@ from cutback.core.traces import SpanID, TraceID
 from cutback.evals.datasets import Case, digest
 
 ImportProfile = Literal[
-    "cutback-jsonl.v1", "openinference-otlp-json.v1", "promptfoo-0.125.1-results.v3"
+    "cutback-jsonl.v1",
+    "openinference-otlp-json.v1",
+    "promptfoo-0.125.1-results.v3",
+    "bedrock-automated-model-jsonl.v1",
+    "azure-ai-evaluation-1.18.10-results.v1",
+    "vertexai-1.153.1-metrics-jsonl.v1",
 ]
-PROFILES = ("cutback-jsonl.v1", "openinference-otlp-json.v1", "promptfoo-0.125.1-results.v3")
+PROFILES = (
+    "cutback-jsonl.v1",
+    "openinference-otlp-json.v1",
+    "promptfoo-0.125.1-results.v3",
+    "bedrock-automated-model-jsonl.v1",
+    "azure-ai-evaluation-1.18.10-results.v1",
+    "vertexai-1.153.1-metrics-jsonl.v1",
+)
 MAX_BYTES = 1048576
 
 
@@ -24,6 +36,25 @@ class SourceImportError(ValueError):
 
 
 MAPPINGS = {
+    "bedrock-automated-model-jsonl.v1": {
+        "input": "inputRecord.prompt",
+        "declared_expectation": "inputRecord.referenceResponse (unreviewed)",
+        "historical_reference": "one modelResponses.response",
+        "source_model": "modelResponses.modelIdentifier (encrypted content only)",
+        "checks": "automatedEvaluationResult.scores (raw, externally asserted, no normalization)",
+    },
+    "azure-ai-evaluation-1.18.10-results.v1": {
+        "input": "inputs.query; optional inputs.context preserved in explicit query/context JSON",
+        "declared_expectation": "inputs.ground_truth (unreviewed)",
+        "historical_reference": "inputs.response",
+        "checks": "numeric/boolean/null outputs fields (externally asserted, scale unknown)",
+    },
+    "vertexai-1.153.1-metrics-jsonl.v1": {
+        "input": "prompt; optional context preserved in explicit prompt/context JSON",
+        "declared_expectation": "reference (unreviewed)",
+        "historical_reference": "response",
+        "checks": "pointwise metric/score columns (raw, externally asserted, no normalization)",
+    },
     "cutback-jsonl.v1": {
         "input": "input",
         "declared_expectation": "gold (unreviewed)",
@@ -49,6 +80,44 @@ def import_profile(value: str) -> ImportProfile:
     if value not in PROFILES:
         raise SourceImportError("IMPORT_PROFILE_UNSUPPORTED")
     return cast(ImportProfile, value)
+
+
+def assertion_metadata(assertions):
+    """Project only owned scalar fields; source metric names stay encrypted.
+
+    The legacy Promptfoo projection is byte-for-byte equivalent. This projection
+    must also be used when assertions enter dataset provenance after commit.
+    """
+    fields = {
+        "case_id",
+        "outcome",
+        "score",
+        "error_code",
+        "evidence",
+        "evaluator",
+        "profile",
+        "boolean_value",
+        "value_kind",
+        "metric_id",
+        "scale",
+        "normalization",
+    }
+    cloud = any(row.get("profile") in PROFILES[3:] for row in assertions)
+    selected = assertions[:25] if cloud else assertions
+    return [{key: value for key, value in row.items() if key in fields} for row in selected]
+
+
+def assertion_provenance(assertions):
+    """Bound new cloud metadata without changing the released legacy projection."""
+    metadata = assertion_metadata(assertions)
+    result: dict[str, Any] = {"source_asserted_checks": metadata}
+    if any(row.get("profile") in PROFILES[3:] for row in assertions):
+        result.update(
+            source_asserted_checks_total=len(assertions),
+            source_asserted_checks_truncated=len(metadata) < len(assertions),
+            source_asserted_checks_scope="bounded_source_assertion_examples_not_task_or_population_coverage",
+        )
+    return result
 
 
 def _ordinary_json(value):
@@ -82,7 +151,7 @@ def _json(value):
         data = json.loads(
             value, object_pairs_hook=_unique, parse_float=Decimal, parse_constant=_nonfinite
         )
-    except (ValueError, RecursionError):
+    except (ValueError, RecursionError, DecimalException):
         raise SourceImportError("MALFORMED_OR_DUPLICATE_IMPORT_JSON") from None
     pending = [(data, 0)]
     while pending:
@@ -255,7 +324,12 @@ def prepare_import(raw: bytes, profile: ImportProfile) -> PreparedImport:
         text = raw.decode("utf-8-sig")
     except UnicodeError:
         raise SourceImportError("UTF8_IMPORT_REQUIRED") from None
-    if profile == "cutback-jsonl.v1":
+    rows: Any
+    if profile in {
+        "cutback-jsonl.v1",
+        "bedrock-automated-model-jsonl.v1",
+        "vertexai-1.153.1-metrics-jsonl.v1",
+    }:
         rows = [_json(line) for line in text.splitlines() if line.strip()]
     elif profile == "promptfoo-0.125.1-results.v3":
         body = _json(text)
@@ -266,6 +340,13 @@ def prepare_import(raw: bytes, profile: ImportProfile) -> PreparedImport:
         ):
             raise SourceImportError("PROMPTFOO_RESULTS_VERSION_THREE_REQUIRED")
         rows = body["results"].get("results")
+    elif profile == "azure-ai-evaluation-1.18.10-results.v1":
+        body = _json(text)
+        if not isinstance(body, dict):
+            raise SourceImportError("AZURE_EVALUATION_ROWS_ENVELOPE_REQUIRED")
+        if {"_evaluation_results_list", "oai_eval_run_ids"} & body.keys():
+            raise SourceImportError("AZURE_NATIVE_GRADER_RESULTS_REQUIRE_SEPARATE_PROFILE")
+        rows = body.get("rows")
     else:
         body = _json(text)
         if (
@@ -294,7 +375,10 @@ def prepare_import(raw: bytes, profile: ImportProfile) -> PreparedImport:
             raise SourceImportError("OTLP_IMPORT_EXCEEDS_200_SPANS")
     if not isinstance(rows, list) or not 1 <= len(rows) <= 10000:
         raise SourceImportError("IMPORT_REQUIRES_ONE_TO_TEN_THOUSAND_ROWS")
-    cases, rejected, assertions = [], [], []
+    source_sha256 = hashlib.sha256(raw).hexdigest()
+    cases: list[Case] = []
+    rejected: list[dict] = []
+    assertions: list[dict] = []
     projected, identifiers = 0, set()
     for i, row in enumerate(rows):
         try:
@@ -302,24 +386,29 @@ def prepare_import(raw: bytes, profile: ImportProfile) -> PreparedImport:
                 case, ignored, assertion = Case.model_validate(_ordinary_json(row)), 0, None
             elif profile == "openinference-otlp-json.v1":
                 case, ignored, assertion = _openinference(row)
-            else:
+            elif profile == "promptfoo-0.125.1-results.v3":
                 case, ignored, assertion = _promptfoo(row)
+            else:
+                from cutback.evals.cloud_imports import project_cloud_row
+
+                case, ignored, assertion = project_cloud_row(row, profile, i, source_sha256)
+            added = assertion if isinstance(assertion, list) else [assertion] if assertion else []
+            if len(assertions) + len(added) > 10000:
+                raise SourceImportError("IMPORT_METRIC_TOTAL_BOUND_EXCEEDED")
             if case.id in identifiers:
                 raise SourceImportError("DUPLICATE_SOURCE_CASE_IDENTITY")
             identifiers.add(case.id)
             cases.append(case)
             projected += ignored
             if assertion:
-                assertions.append(assertion)
+                assertions.extend(added)
         except SourceImportError as exc:
             rejected.append({"row": i, "code": str(exc)})
         except ValidationError:
             rejected.append({"row": i, "code": "CASE_FIELDS_OR_BOUNDS_INVALID"})
         except (ValueError, TypeError, KeyError):
             rejected.append({"row": i, "code": "ROW_NOT_COMPATIBLE_WITH_SELECTED_PROFILE"})
-    return PreparedImport(
-        profile, hashlib.sha256(raw).hexdigest(), cases, rejected, len(rows), projected, assertions
-    )
+    return PreparedImport(profile, source_sha256, cases, rejected, len(rows), projected, assertions)
 
 
 def preview_file(path: Path, profile: ImportProfile):

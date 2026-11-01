@@ -1,0 +1,1 @@
+{"automatedEvaluationResult":{"scores":[{"metricName":"Accuracy","result":0.75}]} ,"inputRecord":{"prompt":"Synthetic ticket: restore the unavailable test service","referenceResponse":"Urgent"},"modelResponses":[{"modelIdentifier":"synthetic-model-identifier","response":"Urgent"}]}

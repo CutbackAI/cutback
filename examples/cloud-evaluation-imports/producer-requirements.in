@@ -1,0 +1,4 @@
+# Fixture producers only. These are not Cutback runtime dependencies.
+azure-ai-evaluation==1.18.10
+google-cloud-aiplatform==1.153.1
+pandas==2.3.3

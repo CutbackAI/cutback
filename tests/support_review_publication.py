@@ -18,7 +18,7 @@ def object_hash(kind, value):
 class OwnedGitHub:
     """Closed HTTP transport computes actual Git object IDs; no external requests."""
 
-    def __init__(self, prepared, *, lose=None):
+    def __init__(self, prepared, *, lose=None, base_entries=None):
         self.prepared = prepared
         self.intent = prepared["intent"]
         self.refs = {"main": self.intent["base_commit"]}
@@ -37,6 +37,7 @@ class OwnedGitHub:
         self.requests = []
         self.lose = lose
         self.move_after_pr = False
+        self.base_entries = base_entries or {}
 
     def ref(self, branch):
         return {
@@ -83,12 +84,10 @@ class OwnedGitHub:
             entry = body["tree"][0]
             assert entry["path"] == self.prepared["tree"]["tree"][0]["path"]
             assert entry["type"] == "blob"
-            tree = (
-                entry["mode"].encode()
-                + b" "
-                + entry["path"].encode()
-                + b"\0"
-                + bytes.fromhex(entry["sha"])
+            entries = {**self.base_entries, entry["path"]: (entry["mode"], entry["sha"])}
+            tree = b"".join(
+                mode.encode() + b" " + path.encode() + b"\0" + bytes.fromhex(blob)
+                for path, (mode, blob) in sorted(entries.items())
             )
             value = {"sha": object_hash("tree", tree)}
             self.objects["trees"][value["sha"]] = value
@@ -124,7 +123,7 @@ class OwnedGitHub:
                 "state": "open",
                 "draft": True,
                 "merged_at": None,
-                "html_url": "https://github.com/example-owner/task-app/pull/1",
+                "html_url": f"https://github.com/{self.intent['repository']}/pull/1",
                 "body": body["body"],
                 "head": {
                     "sha": self.refs[body["head"]],

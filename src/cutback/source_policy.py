@@ -17,6 +17,20 @@ from cutback.evals._logging import owned_async_sdk_request, owned_sdk_request
 MAX_POLICY_BYTES = SOURCE_POLICY_BYTES_BOUND
 
 
+def _activity(policy, requested=False):
+    from cutback.instrumentation import _begin_policy_activity
+
+    cache = policy.cache_execution
+    return _begin_policy_activity(
+        workflow=policy.workflow,
+        policy_sha256=policy.policy_sha256,
+        cache_configured=cache is not None,
+        cache_requested=cache is not None and requested,
+        cache_operation_upper_usd=cache.operation_cost_upper_usd if cache else None,
+        cache_cost_basis_ref=cache.operation_cost_basis_ref if cache else None,
+    )
+
+
 def parse_policy(raw: bytes):
     def unique(pairs):
         values = {}
@@ -72,18 +86,31 @@ def responses_create(client, text: str, policy: SourceImprovementPolicy, *, scop
     except (ValueError, TypeError, AttributeError):
         raise ValueError("SOURCE_POLICY_CURRENT_QUALIFIED_POLICY_REQUIRED") from None
     request = policy.request(text)
-    if policy.cache_execution is None or scope_file is None:
-        return client.responses.create(**request)
-    from cutback.native_cache import responses_create_from_scope_file
+    from cutback.instrumentation import _finish_policy_activity
 
-    return responses_create_from_scope_file(
-        client,
-        scope_file=scope_file,
-        expected_workflow=policy.workflow,
-        expected_request_revision=policy.policy_sha256,
-        expected_contract_sha256=fingerprint(policy.cache_execution.model_dump(mode="json")),
-        **request,
-    ).response
+    activity = _activity(policy, scope_file is not None)
+    try:
+        if policy.cache_execution is None or scope_file is None:
+            response = client.responses.create(**request)
+            _finish_policy_activity(activity, completion="completed")
+            return response
+        from cutback.native_cache import responses_create_from_scope_file
+
+        result = responses_create_from_scope_file(
+            client,
+            scope_file=scope_file,
+            expected_workflow=policy.workflow,
+            expected_request_revision=policy.policy_sha256,
+            expected_contract_sha256=fingerprint(policy.cache_execution.model_dump(mode="json")),
+            **request,
+        )
+        _finish_policy_activity(activity, completion="completed", receipt=result.receipt)
+        return result.response
+    except BaseException as error:
+        _finish_policy_activity(
+            activity, completion="failed" if isinstance(error, Exception) else "cancelled"
+        )
+        raise
 
 
 @owned_async_sdk_request
@@ -101,4 +128,16 @@ async def responses_create_async(client, text: str, policy: SourceImprovementPol
         raise ValueError("SOURCE_POLICY_CURRENT_QUALIFIED_POLICY_REQUIRED") from None
     if policy.cache_execution is not None:
         raise ValueError("POLICY_SOURCE_ASYNC_CACHE_RUNTIME_UNQUALIFIED")
-    return await client.responses.create(**policy.request(text))
+    request = policy.request(text)
+    from cutback.instrumentation import _finish_policy_activity
+
+    activity = _activity(policy)
+    try:
+        response = await client.responses.create(**request)
+        _finish_policy_activity(activity, completion="completed")
+        return response
+    except BaseException as error:
+        _finish_policy_activity(
+            activity, completion="failed" if isinstance(error, Exception) else "cancelled"
+        )
+        raise

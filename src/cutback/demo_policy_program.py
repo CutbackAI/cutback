@@ -76,8 +76,6 @@ def run_sample(app, client, endpoint, admin, project, ingest_token, workspace):
         root,
         control,
         project,
-        dataset_id=dataset["id"],
-        baseline_snapshot_id=baseline["id"],
         producer_file="app.py",
         purpose="owned-source-policy-sample",
         max_usd="100",
@@ -91,6 +89,12 @@ def run_sample(app, client, endpoint, admin, project, ingest_token, workspace):
         generate=False,
         fixture_transport=True,
     )
+    discovery = current(root, control)["preparation_data_selection"]
+    if (
+        discovery["selected_dataset_id"] != dataset["id"]
+        or discovery["selected_baseline_snapshot_id"] != baseline["id"]
+    ):
+        raise ValueError("SOURCE_POLICY_SAMPLE_DATA_DISCOVERY_CHANGED")
     advance(
         root,
         control,
@@ -146,6 +150,7 @@ def run_sample(app, client, endpoint, admin, project, ingest_token, workspace):
             "phases": [value["phase"] for value in completed["runs"]],
             "native_sdk_calls": len(calls),
             "known_cost_requests": completed["known_cost_requests"],
+            "compatible_data_selected_automatically": True,
             "known_spend_subtotal_usd": completed["known_spend_subtotal_usd"],
             "paid_provider_calls": 0,
             "synthetic_only": True,

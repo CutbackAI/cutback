@@ -12,6 +12,7 @@ import {
 } from "./ui";
 import { Investigation } from "./traces";
 import { Quality } from "./quality";
+import { SharedDashboards } from "./shared-dashboards";
 
 const label = (value: unknown) =>
   String(value || "not observed").replaceAll("_", " ");
@@ -912,6 +913,14 @@ export function Monitoring({
           Load more delivery receipts
         </button>
       )}
+      <SharedDashboards
+        api={api}
+        base={base}
+        editor={editor}
+        views={data.savedViews.items}
+        reload={reload}
+        onIncident={openIncident}
+      />
       <h2>Shared saved views</h2>
       <p>
         Views contain typed filters, never credentials or raw query code.

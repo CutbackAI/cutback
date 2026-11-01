@@ -12,7 +12,12 @@ from sqlalchemy import select
 
 from cutback.core.models import Identifier, StrictModel
 from cutback.evals.datasets import Case, DatasetImport, digest
-from cutback.evals.importers import ImportProfile, SourceImportError, prepare_import
+from cutback.evals.importers import (
+    ImportProfile,
+    SourceImportError,
+    assertion_provenance,
+    prepare_import,
+)
 from cutback.server.content_policy import policy_content
 from cutback.server.db import AuditEvent, DatasetRecord, PayloadSample
 from cutback.server.evaluation_api import (
@@ -318,7 +323,7 @@ def install_imports(app, sessions, authorize, scope):
                         "import_preview_id": str(row.id),
                         "source_profile": row.metadata_safe["profile"],
                         "source_sha256": row.metadata_safe["source_sha256"],
-                        "source_asserted_checks": value["assertions"],
+                        **assertion_provenance(value["assertions"]),
                         "source_rejections_accepted": row.metadata_safe["rejected"],
                         "independent_labels": False,
                     },

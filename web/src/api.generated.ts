@@ -1636,6 +1636,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/native-request-profiles/analyses/{analysis_id}/source-policy-cache-trial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Assess Policy */
+        post: operations["assess_policy_v1_projects__project_id__native_request_profiles_analyses__analysis_id__source_policy_cache_trial_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/campaign-templates": {
         parameters: {
             query?: never;
@@ -2729,6 +2746,59 @@ export interface paths {
         put?: never;
         /** Diff */
         post: operations["diff_v1_projects__project_id__prompts__prompt_id__diff_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/dashboards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Dashboards */
+        get: operations["list_dashboards_v1_projects__project_id__dashboards_get"];
+        put?: never;
+        /** Save Dashboard */
+        post: operations["save_dashboard_v1_projects__project_id__dashboards_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/dashboards/{dashboard_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Dashboard */
+        get: operations["get_dashboard_v1_projects__project_id__dashboards__dashboard_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Dashboard */
+        delete: operations["delete_dashboard_v1_projects__project_id__dashboards__dashboard_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/dashboards/{dashboard_id}/panels/{view_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Panel Evidence */
+        get: operations["panel_evidence_v1_projects__project_id__dashboards__dashboard_id__panels__view_id__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4537,6 +4607,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/ingest/policy-runtime": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Intake */
+        post: operations["intake_v1_ingest_policy_runtime_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/policy-runtime/inspect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Inspect */
+        post: operations["inspect_v1_projects__project_id__policy_runtime_inspect_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -5943,6 +6047,179 @@ export interface components {
              * @default 1
              */
             weight: number;
+        };
+        /** DashboardDetail */
+        DashboardDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Key */
+            key: string;
+            /** Revision */
+            revision: number;
+            /** Environment */
+            environment: string;
+            /** Panel Count */
+            panel_count: number;
+            /** Definition Sha256 */
+            definition_sha256: string;
+            /** Panels */
+            panels: components["schemas"]["DashboardPanelDetail"][];
+            /**
+             * Content Included
+             * @default false
+             * @constant
+             */
+            content_included: false;
+            /**
+             * Population Coverage
+             * @default unknown
+             * @constant
+             */
+            population_coverage: "unknown";
+        };
+        /** DashboardEvidence */
+        DashboardEvidence: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "span" | "incident";
+            /** Trace Record Id */
+            trace_record_id?: string | null;
+            /** Span Id */
+            span_id?: string | null;
+            /** Workflow */
+            workflow?: string | null;
+            /** Service */
+            service?: string | null;
+            /** Release */
+            release?: string | null;
+            /** Span Kind */
+            span_kind?: string | null;
+            /** Status */
+            status?: string | null;
+            /** Started Ns */
+            started_ns?: string | null;
+            /** Incident State */
+            incident_state?: ("open" | "acknowledged" | "resolved") | null;
+            /** Owner */
+            owner?: string | null;
+        };
+        /** DashboardEvidencePage */
+        DashboardEvidencePage: {
+            /** Items */
+            items: components["schemas"]["DashboardEvidence"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+            /**
+             * Selection Basis
+             * @enum {string}
+             */
+            selection_basis: "matching_retained_spans" | "matching_incident_rule_filters";
+            /**
+             * Retention Coverage
+             * @default unknown
+             * @constant
+             */
+            retention_coverage: "unknown";
+            /**
+             * Population Coverage
+             * @default unknown
+             * @constant
+             */
+            population_coverage: "unknown";
+            /**
+             * Content Included
+             * @default false
+             * @constant
+             */
+            content_included: false;
+        };
+        /** DashboardInput */
+        DashboardInput: {
+            /**
+             * Dashboard Id
+             * Format: uuid
+             */
+            dashboard_id: string;
+            /** Key */
+            key: string;
+            /** Expected Revision */
+            expected_revision: number;
+            /** Environment */
+            environment: string;
+            /** Panels */
+            panels: components["schemas"]["DashboardViewRef"][];
+        };
+        /** DashboardPage */
+        DashboardPage: {
+            /** Items */
+            items: components["schemas"]["DashboardSummary"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
+        /** DashboardPanelDetail */
+        DashboardPanelDetail: {
+            /**
+             * View Id
+             * Format: uuid
+             */
+            view_id: string;
+            /** Revision */
+            revision: number;
+            /** Key */
+            key: string;
+            /**
+             * Page
+             * @enum {string}
+             */
+            page: "traces" | "incidents";
+            /** Environment */
+            environment: string;
+            filter: components["schemas"]["SpanFilter"];
+            /** Incident State */
+            incident_state?: ("open" | "acknowledged" | "resolved") | null;
+            /**
+             * Source State
+             * @enum {string}
+             */
+            source_state: "current" | "changed" | "deleted";
+        };
+        /** DashboardSummary */
+        DashboardSummary: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Key */
+            key: string;
+            /** Revision */
+            revision: number;
+            /** Environment */
+            environment: string;
+            /** Panel Count */
+            panel_count: number;
+            /** Definition Sha256 */
+            definition_sha256: string;
+        };
+        /** DashboardViewRef */
+        DashboardViewRef: {
+            /**
+             * View Id
+             * Format: uuid
+             */
+            view_id: string;
+            /** Revision */
+            revision: number;
         };
         /** DatasetImport */
         DatasetImport: {
@@ -7487,7 +7764,7 @@ export interface components {
              * Profile
              * @enum {string}
              */
-            profile: "cutback-jsonl.v1" | "openinference-otlp-json.v1" | "promptfoo-0.125.1-results.v3";
+            profile: "cutback-jsonl.v1" | "openinference-otlp-json.v1" | "promptfoo-0.125.1-results.v3" | "bedrock-automated-model-jsonl.v1" | "azure-ai-evaluation-1.18.10-results.v1" | "vertexai-1.153.1-metrics-jsonl.v1";
             /** Source Text */
             source_text: string;
             /** Source Sha256 */
@@ -9446,6 +9723,13 @@ export interface components {
             dataset_id: string;
             specification: components["schemas"]["ExperimentPlan-Input"];
         };
+        /** PolicyCacheWorkloadInput */
+        PolicyCacheWorkloadInput: {
+            source_binding: components["schemas"]["PolicyWorkloadBinding"];
+            /** Baseline Model */
+            baseline_model: string;
+            cache_execution: components["schemas"]["ExactCacheExecution-Input"];
+        };
         /** PolicyExecutionRef */
         "PolicyExecutionRef-Input": {
             /** Key */
@@ -9487,6 +9771,195 @@ export interface components {
             cache_enabled: boolean;
             /** Cache Operation Upper Usd */
             cache_operation_upper_usd?: string | null;
+        };
+        /** PolicyRuntimeBatch */
+        PolicyRuntimeBatch: {
+            /**
+             * Version
+             * @default cutback.source-policy-runtime-batch.v1
+             * @constant
+             */
+            version: "cutback.source-policy-runtime-batch.v1";
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Events */
+            events: components["schemas"]["PolicyRuntimeEvent"][];
+        };
+        /** PolicyRuntimeEvent */
+        PolicyRuntimeEvent: {
+            /**
+             * Version
+             * @default cutback.source-policy-runtime.v1
+             * @constant
+             */
+            version: "cutback.source-policy-runtime.v1";
+            /**
+             * Event Id
+             * Format: uuid
+             */
+            event_id: string;
+            /** Environment */
+            environment: string;
+            /** Service Name */
+            service_name: string;
+            /** Workflow */
+            workflow: string;
+            /** Call Site Id */
+            call_site_id: string;
+            /** Source Commit */
+            source_commit: string;
+            /** Policy Sha256 */
+            policy_sha256: string;
+            /** Started Ns */
+            started_ns: number;
+            /** Ended Ns */
+            ended_ns: number;
+            /** Cache Configured */
+            cache_configured: boolean;
+            /** Cache Requested */
+            cache_requested: boolean;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "inactive" | "native_miss" | "hit" | "unknown";
+            /**
+             * Completion
+             * @enum {string}
+             */
+            completion: "completed" | "failed" | "cancelled";
+            /** Native Sdk Invocations */
+            native_sdk_invocations: number | null;
+            /** Cache Operations */
+            cache_operations: number | null;
+            /** Cache Write */
+            cache_write: ("not_applicable" | "not_attempted" | "created" | "conflict" | "rejected" | "uncertain" | "not_eligible") | null;
+            /** Usage Origin */
+            usage_origin: ("native_response" | "historical_cached_response") | null;
+            /** Cache Operation Upper Usd */
+            cache_operation_upper_usd?: number | string | null;
+            /** Cache Cost Basis Ref */
+            cache_cost_basis_ref?: string | null;
+            /** Invoice Verified Cost Usd */
+            invoice_verified_cost_usd?: null;
+            /** Business Task Success */
+            business_task_success?: null;
+        };
+        /** PolicyRuntimeScope */
+        PolicyRuntimeScope: {
+            /** Environment */
+            environment: string;
+            /** Service Name */
+            service_name: string;
+            /** Workflow */
+            workflow: string;
+            /** Call Site Id */
+            call_site_id: string;
+            /** Source Commit */
+            source_commit: string;
+            /** Policy Sha256 */
+            policy_sha256: string;
+            /**
+             * Window Start
+             * Format: date-time
+             */
+            window_start: string;
+            /**
+             * Window End
+             * Format: date-time
+             */
+            window_end: string;
+        };
+        /** PolicyRuntimeSummary */
+        PolicyRuntimeSummary: {
+            /**
+             * Profile
+             * @default cutback.source-policy-runtime-summary.v1
+             * @constant
+             */
+            profile: "cutback.source-policy-runtime-summary.v1";
+            scope: components["schemas"]["PolicyRuntimeScope"];
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            /**
+             * Sample Limit
+             * @default 10000
+             * @constant
+             */
+            sample_limit: 10000;
+            /** Retained Operations */
+            retained_operations: number;
+            /** Truncated */
+            truncated: boolean;
+            /** Raw Sha256 */
+            raw_sha256: string;
+            /** States */
+            states: {
+                [key: string]: number;
+            };
+            /** Completions */
+            completions: {
+                [key: string]: number;
+            };
+            /** Configured Operations */
+            configured_operations: number;
+            /** Requested Cache Operations */
+            requested_cache_operations: number;
+            /** Known Native Sdk Invocations */
+            known_native_sdk_invocations: number;
+            /** Native Sdk Invocations */
+            native_sdk_invocations: number | null;
+            /** Unknown Native Operations */
+            unknown_native_operations: number;
+            /** Known Cache Operations */
+            known_cache_operations: number;
+            /** Cache Operations */
+            cache_operations: number | null;
+            /** Unknown Cache Operations */
+            unknown_cache_operations: number;
+            /** Cache Component Upper Usd */
+            cache_component_upper_usd: string | null;
+            /** Cache Cost Basis Refs */
+            cache_cost_basis_refs: string[];
+            /**
+             * Capture Coverage
+             * @default unknown
+             * @constant
+             */
+            capture_coverage: "unknown";
+            /**
+             * Identity Basis
+             * @default client_reported_source_map
+             * @constant
+             */
+            identity_basis: "client_reported_source_map";
+            /** Invoice Verified Cost Usd */
+            invoice_verified_cost_usd?: null;
+            /** Business Task Success */
+            business_task_success?: null;
+            /**
+             * Content Included
+             * @default false
+             * @constant
+             */
+            content_included: false;
+            /**
+             * Execution Authorized
+             * @default false
+             * @constant
+             */
+            execution_authorized: false;
         };
         /** PolicySourceBinding */
         PolicySourceBinding: {
@@ -9531,6 +10004,21 @@ export interface components {
              * @constant
              */
             surface: "responses.create";
+        };
+        /**
+         * PolicyWorkloadBinding
+         * @description Client-reported policy attribution, distinct from a native literal edit span.
+         */
+        PolicyWorkloadBinding: {
+            /**
+             * Version
+             * @default cutback.policy-workload-source.v1
+             * @constant
+             */
+            version: "cutback.policy-workload-source.v1";
+            source: components["schemas"]["PolicySourceBinding"];
+            /** Call Site Id */
+            call_site_id: string;
         };
         /** ProjectInput */
         ProjectInput: {
@@ -17242,6 +17730,42 @@ export interface operations {
             };
         };
     };
+    assess_policy_v1_projects__project_id__native_request_profiles_analyses__analysis_id__source_policy_cache_trial_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                analysis_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyCacheWorkloadInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CacheWorkloadAssessment"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     templates_v1_projects__project_id__campaign_templates_get: {
         parameters: {
             query?: {
@@ -19873,6 +20397,178 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_dashboards_v1_projects__project_id__dashboards_get: {
+        parameters: {
+            query?: {
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_dashboard_v1_projects__project_id__dashboards_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DashboardInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_dashboard_v1_projects__project_id__dashboards__dashboard_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                dashboard_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_dashboard_v1_projects__project_id__dashboards__dashboard_id__delete: {
+        parameters: {
+            query: {
+                expected_revision: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                dashboard_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    panel_evidence_v1_projects__project_id__dashboards__dashboard_id__panels__view_id__get: {
+        parameters: {
+            query: {
+                expected_revision: number;
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                dashboard_id: string;
+                view_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardEvidencePage"];
                 };
             };
             /** @description Validation Error */
@@ -24007,6 +24703,74 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    intake_v1_ingest_policy_runtime_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyRuntimeBatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    inspect_v1_projects__project_id__policy_runtime_inspect_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyRuntimeScope"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyRuntimeSummary"];
                 };
             };
             /** @description Validation Error */

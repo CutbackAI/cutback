@@ -186,6 +186,9 @@ def seed_support_desk(
         execution_samples = seed_execution_sample(
             control, project["id"], ingest, policy["id"], workflow
         )
+        from cutback.demo_shared_dashboards import seed_shared_dashboard
+
+        shared_dashboard_sample = seed_shared_dashboard(control, project["id"], workflow)
         cases = sample_cases()
         dataset = call(
             base + "/datasets",
@@ -495,6 +498,7 @@ def seed_support_desk(
                 )
             manifest = {
                 "available": True,
+                "shared_dashboard_sample": shared_dashboard_sample,
                 "title": "Support-desk triage",
                 "disclosure": (
                     "SYNTHETIC provider replies. Modeled fixture costs are not "

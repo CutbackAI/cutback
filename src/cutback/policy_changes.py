@@ -113,7 +113,15 @@ def prepare_patch(root: Path, proposal: SourcePolicyProposal):
 
 
 def review_change(
-    artifact, contract, receipt, base: Path, proposed: Path, coverage, *, branch=None
+    artifact,
+    contract,
+    receipt,
+    base: Path,
+    proposed: Path,
+    coverage,
+    *,
+    branch=None,
+    create_branch=True,
 ):
     from cutback.application_checks import ApplicationCheckContract, git, verify
 
@@ -142,6 +150,7 @@ def review_change(
     if (
         not isinstance(coverage, dict)
         or not 1 <= len(coverage) <= 32
+        or binding.workflow not in coverage
         or any(
             not isinstance(keys, list)
             or not 1 <= len(keys) <= 20
@@ -175,6 +184,8 @@ def review_change(
         if existing and existing != contract.proposed.commit:
             raise ValueError("POLICY_REVIEW_BRANCH_ALREADY_POINTS_ELSEWHERE")
         if not existing:
+            if create_branch is not True:
+                raise ValueError("POLICY_REVIEW_BRANCH_MISSING")
             git(
                 proposed,
                 "update-ref",

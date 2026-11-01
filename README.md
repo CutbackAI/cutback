@@ -14,20 +14,25 @@ Start Docker Desktop with Linux containers. Install Git, Python 3.11–3.13 and 
 git clone https://github.com/CutbackAI/cutback.git
 cd cutback
 uv sync --locked --no-dev --extra server --extra openai
-uv run --no-sync cutback demo --workload-portfolio
+uv run --no-sync cutback demo --source-policy
 ```
 
 Wait for the printed **Ready** address, open it and choose **Explore sample**. No provider key, paid inference or Node setup is needed. The dashboard is included.
 
 | Follow the sample | What to inspect |
 |---|---|
-| Observe the application | Native calls, source attribution and modeled spend |
-| Inspect repeated requests | Why reuse is a hypothesis until separately tested |
-| Compare alternatives | Which candidates meet the declared quality requirements |
+| Inspect the independent application | The unchanged consumer, current policy and exact program ID |
+| Compare simple alternatives | Why the cheaper model and smaller output caps fail some synthetic tickets |
+| Follow conditional training and routing | How later stages share the same approved search budget |
 | Confirm one candidate | A frozen choice tested on separate untouched groups |
 | Review the change | Exact source diff, checks on both trees and byte-exact rollback |
 
-Nothing is deployed. Press **Ctrl+C** to remove the command's owned temporary database and encrypted artifacts. [Expected results and troubleshooting](https://github.com/CutbackAI/cutback/blob/main/examples/workload-portfolio/README.md).
+Choose **Follow the one-budget improvement** in the sample guide and inspect that
+program's recorded stages. Nothing is deployed. Press **Ctrl+C** to remove the
+command's owned temporary database and encrypted artifacts.
+[Expected results and troubleshooting](https://github.com/CutbackAI/cutback/blob/main/examples/source-policy/README.md).
+For a separate eight-call observation/reuse journey, use
+[`demo --workload-portfolio`](https://github.com/CutbackAI/cutback/blob/main/examples/workload-portfolio/README.md).
 
 Prefer a small application outside this repository? Start with the [standalone support desk](https://github.com/CutbackAI/support-desk-example). It runs without Cutback and has an optional metadata collector walkthrough. Its deliberately unsafe alternative loses urgent tickets, demonstrating why cheaper is insufficient.
 
@@ -64,26 +69,32 @@ cutback workflow status
 
 These commands prepare or explain a saved local job. They do not authorize inference. Experiments need a configured collector, rights-cleared examples, meaningful task criteria, permitted vendors and a maximum budget. Follow [application onboarding](https://github.com/CutbackAI/cutback/blob/main/docs/application-onboarding.md) and [agent execution and recovery](https://github.com/CutbackAI/cutback/blob/main/docs/agent-workflow.md).
 
-For qualified native applications, [automatic campaigns](https://github.com/CutbackAI/cutback/blob/main/docs/improvement-campaigns.md) try model/output-limit alternatives before using reserved instruction-search effort. After confirmation and checks on both trees, [explicit draft-PR publication](https://github.com/CutbackAI/cutback/blob/main/docs/review-publication.md) hands off the reviewed change without pushing local history. It never merges or deploys.
+For qualified native calls, [automatic campaigns](https://github.com/CutbackAI/cutback/blob/main/docs/improvement-campaigns.md) try simple model/output-limit alternatives before instruction search. The [common source-policy program](https://github.com/CutbackAI/cutback/blob/main/docs/source-policy-programs.md) also compares conditional routing under one approved envelope and one untouched confirmation. It can discover a unique compatible dataset/cost snapshot and use current observed metadata to decide whether a cache trial qualifies. Missing evidence and ambiguous versions require an explicit choice.
 
-The new [campaign handoff](https://github.com/CutbackAI/cutback/blob/main/docs/campaign-handoff.md), accepted in PR 78, prepares both private source repositories and their checks automatically. It returns the detected consumers and command keys, requires their declared coverage before execution, and refreshes confirmation before saving the checked review. A missing receipt after dispatch stops execution; a known receipt resumes without rerunning checks.
+After confirmation, the agent prepares independent source copies, discovers the application's checks, requires their declared coverage, and checks both trees plus exact rollback. [Explicit draft-PR publication](https://github.com/CutbackAI/cutback/blob/main/docs/review-publication.md) requires its own upload flag and repository credential. It reconciles an interrupted reply without pushing local history or overwriting a remote branch. A missing check receipt stops continuation. Nothing merges or deploys.
 
-The new [routing program](https://github.com/CutbackAI/cutback/blob/main/docs/routing-programs.md), accepted in PR 77, tries simple alternatives before spending on routing training under one envelope. After confirmation, `routing program finish` prepares private source copies, previews existing checks, executes explicitly authorized checks on both trees and refreshes authority for a local review. It preserves the original application's source and Git history. Other strategies have distinct supported contracts. Unified selection across every optimization engine remains unfinished.
+Supported source and request contracts are listed in [adapter limits](https://github.com/CutbackAI/cutback/blob/main/docs/providers.md). Unified selection across retrieval, compression, local models and every other engine remains unfinished.
 
 ## Explore a specific task
 
 The source-only [common policy program](https://github.com/CutbackAI/cutback/blob/main/docs/source-policy-programs.md)
-is under qualification. `cutback demo --source-policy` demonstrates simple native
+has a merged foundation and separately qualified follow-ups. `cutback demo --source-policy` demonstrates simple native
 controls followed by conditional learned routing, one shared search/confirmation
 budget and a checked configuration diff with rollback in an independent app.
 The program can also include bounded instruction generation and authorized exact
 cache controls. The published dev5 package does not contain this work; broader
-cross-engine optimization and cached/routed current-reference cycles remain open.
+cross-engine optimization and cached current-reference cycles remain open.
+Current uncached routers and the supplied async consumer have separate installed
+acceptance. Source observation, workload-aware cache preparation, compatible-data
+selection and checked policy draft publication have local component acceptance.
+Their public hosted gates remain separate; consult [progress](https://github.com/CutbackAI/cutback/blob/main/docs/progress.md)
+for the exact tested source and publication state.
 
 | You want to… | Guide or independent example |
 |---|---|
 | Investigate a failed trace or conversation | [Workflow tracing and sessions](https://github.com/CutbackAI/cutback/blob/main/docs/workflow-tracing.md) |
 | Turn failures into reviewed regression data | [Imports, blind review and immutable datasets](https://github.com/CutbackAI/cutback/blob/main/examples/review-workflow/README.md) |
+| Import cloud text-evaluation results without running another evaluation | [Scoped AWS/Azure/Vertex export projections](https://github.com/CutbackAI/cutback/blob/main/examples/cloud-evaluation-imports/README.md) |
 | Evaluate tools, retrieved evidence or final state | [Support-agent and RAG applications](https://github.com/CutbackAI/cutback/blob/main/examples/agent-evaluation/README.md) |
 | Compare model, prompt and output-limit alternatives | [Automatic campaign with confirmation and rollback](https://github.com/CutbackAI/cutback/blob/main/examples/automatic-portfolio/README.md) |
 | Compare model and retrieval settings together | [Joint retrieval workflow](https://github.com/CutbackAI/cutback/blob/main/docs/joint-retrieval.md) |

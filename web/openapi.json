@@ -5745,6 +5745,66 @@
         }
       }
     },
+    "/v1/projects/{project_id}/native-request-profiles/analyses/{analysis_id}/source-policy-cache-trial": {
+      "post": {
+        "summary": "Assess Policy",
+        "operationId": "assess_policy_v1_projects__project_id__native_request_profiles_analyses__analysis_id__source_policy_cache_trial_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyCacheWorkloadInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CacheWorkloadAssessment"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{project_id}/campaign-templates": {
       "get": {
         "summary": "Templates",
@@ -10533,6 +10593,330 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/dashboards": {
+      "post": {
+        "summary": "Save Dashboard",
+        "operationId": "save_dashboard_v1_projects__project_id__dashboards_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DashboardInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List Dashboards",
+        "operationId": "list_dashboards_v1_projects__project_id__dashboards_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/dashboards/{dashboard_id}": {
+      "get": {
+        "summary": "Get Dashboard",
+        "operationId": "get_dashboard_v1_projects__project_id__dashboards__dashboard_id__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "dashboard_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Dashboard Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Dashboard",
+        "operationId": "delete_dashboard_v1_projects__project_id__dashboards__dashboard_id__delete",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "dashboard_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Dashboard Id"
+            }
+          },
+          {
+            "name": "expected_revision",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Expected Revision"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/dashboards/{dashboard_id}/panels/{view_id}": {
+      "get": {
+        "summary": "Panel Evidence",
+        "operationId": "panel_evidence_v1_projects__project_id__dashboards__dashboard_id__panels__view_id__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "dashboard_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Dashboard Id"
+            }
+          },
+          {
+            "name": "view_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "View Id"
+            }
+          },
+          {
+            "name": "expected_revision",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 2147483647,
+              "minimum": 1,
+              "title": "Expected Revision"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardEvidencePage"
+                }
               }
             }
           },
@@ -17231,6 +17615,92 @@
           }
         }
       }
+    },
+    "/v1/ingest/policy-runtime": {
+      "post": {
+        "summary": "Intake",
+        "operationId": "intake_v1_ingest_policy_runtime_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyRuntimeBatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/policy-runtime/inspect": {
+      "post": {
+        "summary": "Inspect",
+        "operationId": "inspect_v1_projects__project_id__policy_runtime_inspect_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyRuntimeScope"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyRuntimeSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -20799,6 +21269,492 @@
           "metric"
         ],
         "title": "CriterionSpec"
+      },
+      "DashboardDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Key"
+          },
+          "revision": {
+            "type": "integer",
+            "maximum": 2147483647.0,
+            "minimum": 1.0,
+            "title": "Revision"
+          },
+          "environment": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.-]{1,100}$",
+            "title": "Environment"
+          },
+          "panel_count": {
+            "type": "integer",
+            "maximum": 8.0,
+            "minimum": 1.0,
+            "title": "Panel Count"
+          },
+          "definition_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Definition Sha256"
+          },
+          "panels": {
+            "items": {
+              "$ref": "#/components/schemas/DashboardPanelDetail"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Panels"
+          },
+          "content_included": {
+            "type": "boolean",
+            "const": false,
+            "title": "Content Included",
+            "default": false
+          },
+          "population_coverage": {
+            "type": "string",
+            "const": "unknown",
+            "title": "Population Coverage",
+            "default": "unknown"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "key",
+          "revision",
+          "environment",
+          "panel_count",
+          "definition_sha256",
+          "panels"
+        ],
+        "title": "DashboardDetail"
+      },
+      "DashboardEvidence": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "span",
+              "incident"
+            ],
+            "title": "Kind"
+          },
+          "trace_record_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trace Record Id"
+          },
+          "span_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Span Id"
+          },
+          "workflow": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workflow"
+          },
+          "service": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service"
+          },
+          "release": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release"
+          },
+          "span_kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Span Kind"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "started_ns": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started Ns"
+          },
+          "incident_state": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "open",
+                  "acknowledged",
+                  "resolved"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Incident State"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "kind"
+        ],
+        "title": "DashboardEvidence"
+      },
+      "DashboardEvidencePage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DashboardEvidence"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "selection_basis": {
+            "type": "string",
+            "enum": [
+              "matching_retained_spans",
+              "matching_incident_rule_filters"
+            ],
+            "title": "Selection Basis"
+          },
+          "retention_coverage": {
+            "type": "string",
+            "const": "unknown",
+            "title": "Retention Coverage",
+            "default": "unknown"
+          },
+          "population_coverage": {
+            "type": "string",
+            "const": "unknown",
+            "title": "Population Coverage",
+            "default": "unknown"
+          },
+          "content_included": {
+            "type": "boolean",
+            "const": false,
+            "title": "Content Included",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "selection_basis"
+        ],
+        "title": "DashboardEvidencePage"
+      },
+      "DashboardInput": {
+        "properties": {
+          "dashboard_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Dashboard Id"
+          },
+          "key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Key"
+          },
+          "expected_revision": {
+            "type": "integer",
+            "maximum": 2147483646.0,
+            "minimum": 0.0,
+            "title": "Expected Revision"
+          },
+          "environment": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.-]{1,100}$",
+            "title": "Environment"
+          },
+          "panels": {
+            "items": {
+              "$ref": "#/components/schemas/DashboardViewRef"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Panels"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "dashboard_id",
+          "key",
+          "expected_revision",
+          "environment",
+          "panels"
+        ],
+        "title": "DashboardInput"
+      },
+      "DashboardPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DashboardSummary"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "DashboardPage"
+      },
+      "DashboardPanelDetail": {
+        "properties": {
+          "view_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "View Id"
+          },
+          "revision": {
+            "type": "integer",
+            "maximum": 2147483647.0,
+            "minimum": 1.0,
+            "title": "Revision"
+          },
+          "key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Key"
+          },
+          "page": {
+            "type": "string",
+            "enum": [
+              "traces",
+              "incidents"
+            ],
+            "title": "Page"
+          },
+          "environment": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.-]{1,100}$",
+            "title": "Environment"
+          },
+          "filter": {
+            "$ref": "#/components/schemas/SpanFilter"
+          },
+          "incident_state": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "open",
+                  "acknowledged",
+                  "resolved"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Incident State"
+          },
+          "source_state": {
+            "type": "string",
+            "enum": [
+              "current",
+              "changed",
+              "deleted"
+            ],
+            "title": "Source State"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "view_id",
+          "revision",
+          "key",
+          "page",
+          "environment",
+          "filter",
+          "source_state"
+        ],
+        "title": "DashboardPanelDetail"
+      },
+      "DashboardSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Key"
+          },
+          "revision": {
+            "type": "integer",
+            "maximum": 2147483647.0,
+            "minimum": 1.0,
+            "title": "Revision"
+          },
+          "environment": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.-]{1,100}$",
+            "title": "Environment"
+          },
+          "panel_count": {
+            "type": "integer",
+            "maximum": 8.0,
+            "minimum": 1.0,
+            "title": "Panel Count"
+          },
+          "definition_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Definition Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "key",
+          "revision",
+          "environment",
+          "panel_count",
+          "definition_sha256"
+        ],
+        "title": "DashboardSummary"
+      },
+      "DashboardViewRef": {
+        "properties": {
+          "view_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "View Id"
+          },
+          "revision": {
+            "type": "integer",
+            "maximum": 2147483647.0,
+            "minimum": 1.0,
+            "title": "Revision"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "view_id",
+          "revision"
+        ],
+        "title": "DashboardViewRef"
       },
       "DatasetImport": {
         "properties": {
@@ -24718,7 +25674,16 @@
                 "native_profile_busy",
                 "native_profile_queued",
                 "native_profile_exported",
-                "native_profile_overhead_us_total"
+                "native_profile_overhead_us_total",
+                "policy_runtime_observed",
+                "policy_runtime_queued",
+                "policy_runtime_dropped",
+                "policy_runtime_exported",
+                "policy_runtime_rejected",
+                "policy_runtime_export_failed",
+                "policy_runtime_unattributed",
+                "policy_runtime_normalization_failed",
+                "policy_runtime_queue_depth"
               ]
             },
             "type": "object",
@@ -24773,7 +25738,10 @@
             "enum": [
               "cutback-jsonl.v1",
               "openinference-otlp-json.v1",
-              "promptfoo-0.125.1-results.v3"
+              "promptfoo-0.125.1-results.v3",
+              "bedrock-automated-model-jsonl.v1",
+              "azure-ai-evaluation-1.18.10-results.v1",
+              "vertexai-1.153.1-metrics-jsonl.v1"
             ],
             "title": "Profile"
           },
@@ -29555,6 +30523,29 @@
         ],
         "title": "PlanInput"
       },
+      "PolicyCacheWorkloadInput": {
+        "properties": {
+          "source_binding": {
+            "$ref": "#/components/schemas/PolicyWorkloadBinding"
+          },
+          "baseline_model": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Baseline Model"
+          },
+          "cache_execution": {
+            "$ref": "#/components/schemas/ExactCacheExecution-Input"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_binding",
+          "baseline_model",
+          "cache_execution"
+        ],
+        "title": "PolicyCacheWorkloadInput"
+      },
       "PolicyExecutionRef-Input": {
         "properties": {
           "key": {
@@ -29658,6 +30649,511 @@
         ],
         "title": "PolicyExecutionRef"
       },
+      "PolicyRuntimeBatch": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.source-policy-runtime-batch.v1",
+            "title": "Version",
+            "default": "cutback.source-policy-runtime-batch.v1"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyRuntimeEvent"
+            },
+            "type": "array",
+            "maxItems": 200,
+            "minItems": 1,
+            "title": "Events"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "project_id",
+          "events"
+        ],
+        "title": "PolicyRuntimeBatch"
+      },
+      "PolicyRuntimeEvent": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.source-policy-runtime.v1",
+            "title": "Version",
+            "default": "cutback.source-policy-runtime.v1"
+          },
+          "event_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Event Id"
+          },
+          "environment": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Environment"
+          },
+          "service_name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Service Name"
+          },
+          "workflow": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Workflow"
+          },
+          "call_site_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Call Site Id"
+          },
+          "source_commit": {
+            "type": "string",
+            "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$",
+            "title": "Source Commit"
+          },
+          "policy_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Policy Sha256"
+          },
+          "started_ns": {
+            "type": "integer",
+            "maximum": 9.223372036854776e+18,
+            "exclusiveMinimum": 0.0,
+            "title": "Started Ns"
+          },
+          "ended_ns": {
+            "type": "integer",
+            "maximum": 9.223372036854776e+18,
+            "exclusiveMinimum": 0.0,
+            "title": "Ended Ns"
+          },
+          "cache_configured": {
+            "type": "boolean",
+            "title": "Cache Configured"
+          },
+          "cache_requested": {
+            "type": "boolean",
+            "title": "Cache Requested"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "inactive",
+              "native_miss",
+              "hit",
+              "unknown"
+            ],
+            "title": "State"
+          },
+          "completion": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "failed",
+              "cancelled"
+            ],
+            "title": "Completion"
+          },
+          "native_sdk_invocations": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Native Sdk Invocations"
+          },
+          "cache_operations": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 2.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Operations"
+          },
+          "cache_write": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "not_applicable",
+                  "not_attempted",
+                  "created",
+                  "conflict",
+                  "rejected",
+                  "uncertain",
+                  "not_eligible"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Write"
+          },
+          "usage_origin": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "native_response",
+                  "historical_cached_response"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usage Origin"
+          },
+          "cache_operation_upper_usd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Operation Upper Usd"
+          },
+          "cache_cost_basis_ref": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Cost Basis Ref"
+          },
+          "invoice_verified_cost_usd": {
+            "type": "null",
+            "title": "Invoice Verified Cost Usd"
+          },
+          "business_task_success": {
+            "type": "null",
+            "title": "Business Task Success"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "event_id",
+          "environment",
+          "service_name",
+          "workflow",
+          "call_site_id",
+          "source_commit",
+          "policy_sha256",
+          "started_ns",
+          "ended_ns",
+          "cache_configured",
+          "cache_requested",
+          "state",
+          "completion",
+          "native_sdk_invocations",
+          "cache_operations",
+          "cache_write",
+          "usage_origin"
+        ],
+        "title": "PolicyRuntimeEvent"
+      },
+      "PolicyRuntimeScope": {
+        "properties": {
+          "environment": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Environment"
+          },
+          "service_name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Service Name"
+          },
+          "workflow": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Workflow"
+          },
+          "call_site_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Call Site Id"
+          },
+          "source_commit": {
+            "type": "string",
+            "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$",
+            "title": "Source Commit"
+          },
+          "policy_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Policy Sha256"
+          },
+          "window_start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Window Start"
+          },
+          "window_end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Window End"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "environment",
+          "service_name",
+          "workflow",
+          "call_site_id",
+          "source_commit",
+          "policy_sha256",
+          "window_start",
+          "window_end"
+        ],
+        "title": "PolicyRuntimeScope"
+      },
+      "PolicyRuntimeSummary": {
+        "properties": {
+          "profile": {
+            "type": "string",
+            "const": "cutback.source-policy-runtime-summary.v1",
+            "title": "Profile",
+            "default": "cutback.source-policy-runtime-summary.v1"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/PolicyRuntimeScope"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Environment Id"
+          },
+          "sample_limit": {
+            "type": "integer",
+            "const": 10000,
+            "title": "Sample Limit",
+            "default": 10000
+          },
+          "retained_operations": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Retained Operations"
+          },
+          "truncated": {
+            "type": "boolean",
+            "title": "Truncated"
+          },
+          "raw_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Raw Sha256"
+          },
+          "states": {
+            "additionalProperties": {
+              "type": "integer",
+              "maximum": 10000.0,
+              "minimum": 0.0
+            },
+            "propertyNames": {
+              "enum": [
+                "hit",
+                "native_miss",
+                "inactive",
+                "unknown"
+              ]
+            },
+            "type": "object",
+            "title": "States"
+          },
+          "completions": {
+            "additionalProperties": {
+              "type": "integer",
+              "maximum": 10000.0,
+              "minimum": 0.0
+            },
+            "propertyNames": {
+              "enum": [
+                "completed",
+                "failed",
+                "cancelled"
+              ]
+            },
+            "type": "object",
+            "title": "Completions"
+          },
+          "configured_operations": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Configured Operations"
+          },
+          "requested_cache_operations": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Requested Cache Operations"
+          },
+          "known_native_sdk_invocations": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Known Native Sdk Invocations"
+          },
+          "native_sdk_invocations": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Native Sdk Invocations"
+          },
+          "unknown_native_operations": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Unknown Native Operations"
+          },
+          "known_cache_operations": {
+            "type": "integer",
+            "maximum": 20000.0,
+            "minimum": 0.0,
+            "title": "Known Cache Operations"
+          },
+          "cache_operations": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 20000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Operations"
+          },
+          "unknown_cache_operations": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Unknown Cache Operations"
+          },
+          "cache_component_upper_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Component Upper Usd"
+          },
+          "cache_cost_basis_refs": {
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+            },
+            "type": "array",
+            "maxItems": 10000,
+            "title": "Cache Cost Basis Refs"
+          },
+          "capture_coverage": {
+            "type": "string",
+            "const": "unknown",
+            "title": "Capture Coverage",
+            "default": "unknown"
+          },
+          "identity_basis": {
+            "type": "string",
+            "const": "client_reported_source_map",
+            "title": "Identity Basis",
+            "default": "client_reported_source_map"
+          },
+          "invoice_verified_cost_usd": {
+            "type": "null",
+            "title": "Invoice Verified Cost Usd"
+          },
+          "business_task_success": {
+            "type": "null",
+            "title": "Business Task Success"
+          },
+          "content_included": {
+            "type": "boolean",
+            "const": false,
+            "title": "Content Included",
+            "default": false
+          },
+          "execution_authorized": {
+            "type": "boolean",
+            "const": false,
+            "title": "Execution Authorized",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "scope",
+          "project_id",
+          "environment_id",
+          "retained_operations",
+          "truncated",
+          "raw_sha256",
+          "states",
+          "completions",
+          "configured_operations",
+          "requested_cache_operations",
+          "known_native_sdk_invocations",
+          "native_sdk_invocations",
+          "unknown_native_operations",
+          "known_cache_operations",
+          "cache_operations",
+          "unknown_cache_operations",
+          "cache_component_upper_usd",
+          "cache_cost_basis_refs"
+        ],
+        "title": "PolicyRuntimeSummary"
+      },
       "PolicySourceBinding": {
         "properties": {
           "version": {
@@ -29749,6 +31245,32 @@
           "max_input_bytes"
         ],
         "title": "PolicySourceBinding"
+      },
+      "PolicyWorkloadBinding": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.policy-workload-source.v1",
+            "title": "Version",
+            "default": "cutback.policy-workload-source.v1"
+          },
+          "source": {
+            "$ref": "#/components/schemas/PolicySourceBinding"
+          },
+          "call_site_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Call Site Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "call_site_id"
+        ],
+        "title": "PolicyWorkloadBinding",
+        "description": "Client-reported policy attribution, distinct from a native literal edit span."
       },
       "ProjectInput": {
         "properties": {

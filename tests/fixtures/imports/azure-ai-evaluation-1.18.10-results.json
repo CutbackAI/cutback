@@ -1,0 +1,22 @@
+{
+  "metrics": {
+    "owned_accuracy.passed": 0.5,
+    "owned_accuracy.score": 0.5
+  },
+  "rows": [
+    {
+      "inputs.ground_truth": "Urgent",
+      "inputs.query": "Synthetic ticket: restore the unavailable test service",
+      "inputs.response": "Urgent",
+      "outputs.owned_accuracy.passed": true,
+      "outputs.owned_accuracy.score": 1.0
+    },
+    {
+      "inputs.ground_truth": "Normal",
+      "inputs.query": "Synthetic ticket: explain the sample usage guide",
+      "inputs.response": "Urgent",
+      "outputs.owned_accuracy.passed": false,
+      "outputs.owned_accuracy.score": 0.0
+    }
+  ]
+}

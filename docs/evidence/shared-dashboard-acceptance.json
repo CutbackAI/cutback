@@ -1,0 +1,67 @@
+{
+  "contract": "cutback.shared-dashboard-acceptance.v1",
+  "date": "2026-11-01",
+  "status": "local_component_qualification_complete_publication_gates_separate",
+  "application_source_head": "bbc87178f177eea49e52b0463083c8f1449806ff",
+  "installed_test_source_head": "c87c81c7e15a97c5d1f08e9c72a3f93b77287225",
+  "wheel_sha256": "7591dd955a993775d69e07f19aa95a2414dcbbc91cafafd0520cbf090b5a873e",
+  "image_id": "sha256:db8c840029d5c924d2bd89f1eff914e7e91e29eb7a1b97aea6a3455b8f7241d1",
+  "identical_application_files": 474,
+  "installed_sdk_tests": {
+    "2.29.0": {
+      "passed": 49,
+      "seconds": 389.48,
+      "log_sha256": "412e4a64e9fbd5ae7b2249a420d412a33b89c84987ad4d6ad07350fb3a730a35"
+    },
+    "3.35.1": {
+      "passed": 49,
+      "seconds": 389.14,
+      "log_sha256": "f65ccc862de56393042b78d496b5022cd76ef7d41936c3513a8d1b3ff248eb69"
+    }
+  },
+  "additional_installed_scoped_editor_create_update_and_revocation_tests": {
+    "2.29.0": {
+      "passed": 1,
+      "seconds": 4.11,
+      "log_sha256": "a54a0a14c6c14c4db198d6e42ed2be48752d76c4385e6fa8d9f185dc8cb8f484"
+    },
+    "3.35.1": {
+      "passed": 1,
+      "seconds": 4.1,
+      "log_sha256": "d26ee46cb6c3ec5c3669e49afd1b2a4946f399be89c78ad6e8a93a2da0b5a3c1"
+    }
+  },
+  "shared_project_view_and_dashboard_quota": 100,
+  "max_panels": 8,
+  "single_environment": true,
+  "pinned_filters_survive_source_edits_deletion_and_changed_identity_recreation": true,
+  "concurrent_update_and_stale_delete_conflicts_verified": true,
+  "panel_reads_require_displayed_composition_revision": true,
+  "cross_project_cross_environment_and_recursive_compositions_refused": true,
+  "metadata_only_retained_spans_and_incident_rule_filter_matching": true,
+  "current_oidc_membership_and_key_revocation_regressions_verified": true,
+  "viewer_read_only_editor_write_and_ingest_denial_verified": true,
+  "project_export_and_deletion_include_dashboard_definitions": true,
+  "core_http_only_install_without_native_cloud_server_crypto_or_test_dependencies": true,
+  "authenticated_self_contained_browser_mobile_axe_and_empty_credential_storage": true,
+  "generic_full_dashboard_and_default_support_desk_regressions_verified": true,
+  "browser_failure_diagnostics_redaction": "implemented; not separately fault-injected",
+  "real_http_default_demo_seeder_verified": true,
+  "recovery": {
+    "migration": "0034",
+    "tables": 107,
+    "encrypted_objects": 3527,
+    "row_counts_match": true,
+    "database_pointers_preserved": true,
+    "exact_dashboard_definition_current_pins_and_actual_evidence_read_via_restored_http": true
+  },
+  "two_tenant_2000_event_accept_deduplicate_seconds": 1.938,
+  "content_included": false,
+  "population_coverage": "unknown",
+  "quantiles_reconstructed": false,
+  "previous_composition_body_history_available": false,
+  "freeform_comments_implemented": false,
+  "production_sla": false,
+  "paid_provider_calls": 0,
+  "new_pypi_release": false
+}

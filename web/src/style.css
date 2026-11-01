@@ -820,6 +820,10 @@ table {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.import-examples dd {
+  margin-inline-start: 0;
+  overflow-wrap: anywhere;
+}
 .review-text {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -837,4 +841,18 @@ table {
   max-height: 20rem;
   overflow: auto;
   padding: 1rem;
+}
+.shared-dashboard-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+  gap: 1.5rem;
+}
+.shared-dashboard-panels article {
+  min-width: 0;
+  border-top: 1px solid var(--line, #d4d4d8);
+  padding-top: 1rem;
+}
+.shared-dashboards code,
+.shared-dashboard-panels li {
+  overflow-wrap: anywhere;
 }

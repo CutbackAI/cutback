@@ -97,6 +97,7 @@ def test_independent_policy_program_confirms_one_checked_source_change(
             safe = (result.stdout + result.stderr).replace(api[1]["Authorization"][7:], "<omitted>")
             assert result.returncode == 0, safe
     assert receipt["status"] == "COMPLETED" and receipt["paid_provider_calls"] == 0
+    assert receipt["compatible_data_selected_automatically"] is True
     assert receipt["native_sdk_calls"] == receipt["known_cost_requests"]
     assert receipt["phases"] == [
         "static_validation",
