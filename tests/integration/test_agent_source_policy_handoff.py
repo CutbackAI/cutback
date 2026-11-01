@@ -32,8 +32,15 @@ pytestmark = pytest.mark.postgres
         (False, False, True),
     ],
 )
-def test_http_agent_prepares_one_budget_and_checks_exact_policy_and_rollback_without_source_changes(
-    api, tenant, tmp_path, monkeypatch, revoke_after_checks, current_routed, async_consumer
+def test_http_policy_handoff_binds_source_and_refreshes_current_rights(
+    api,
+    tenant,
+    tmp_path,
+    monkeypatch,
+    revoke_after_checks,
+    current_routed,
+    async_consumer,
+    container=None,
 ):
     root = application(tmp_path, current_routed=current_routed, async_consumer=async_consumer)
     _, binding = inspect_configuration(root, "app.py")
@@ -110,6 +117,7 @@ def test_http_agent_prepares_one_budget_and_checks_exact_policy_and_rollback_wit
             purpose="owned-source-review",
             commands=commands,
             branch="cutback/source-policy-review",
+            container=container,
         )
         assert preview["status"] == "CHECKS_READY", preview
         if revoke_after_checks:
@@ -134,6 +142,7 @@ def test_http_agent_prepares_one_budget_and_checks_exact_policy_and_rollback_wit
                     coverage=coverage,
                     execute_local=True,
                     branch="cutback/source-policy-review",
+                    container=container,
                 )
             assert not (destination / "review.json").exists()
         else:
@@ -146,6 +155,7 @@ def test_http_agent_prepares_one_budget_and_checks_exact_policy_and_rollback_wit
                 coverage=coverage,
                 execute_local=True,
                 branch="cutback/source-policy-review",
+                container=container,
             )
             assert result["status"] == "REVIEWED", result
             assert read_private(destination / "checks.json")["all_passed"] is True
@@ -161,6 +171,7 @@ def test_http_agent_prepares_one_budget_and_checks_exact_policy_and_rollback_wit
                     coverage=coverage,
                     execute_local=True,
                     branch="cutback/source-policy-review",
+                    container=container,
                 )["status"]
                 == "REVIEWED"
             )
@@ -190,5 +201,9 @@ def test_http_agent_prepares_one_budget_and_checks_exact_policy_and_rollback_wit
                         api=lambda *args: pytest.fail("REVOKED_REVIEW_MUST_NOT_CONTACT_GITHUB"),
                     )
         assert snapshot(root) == before and len(calls) == native_count
+        if container is not None:
+            assert read_private(destination / "checks.json")["isolation"] == (
+                "local_linux_container_network_none"
+            )
     finally:
         executor.close()

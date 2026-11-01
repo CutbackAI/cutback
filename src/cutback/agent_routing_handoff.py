@@ -50,6 +50,7 @@ def finish(
     commands=None,
     execute_local=False,
     branch=None,
+    container=None,
 ):
     from cutback.agent_routing_program import current, proposal, review
     from cutback.application_handoff import finish as shared_finish
@@ -95,6 +96,7 @@ def finish(
             commands=commands,
             execute_local=execute_local,
             branch=branch,
+            container=container,
         )
     except ValueError as exc:
         code = str(exc)

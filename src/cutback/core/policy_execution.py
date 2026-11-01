@@ -9,7 +9,14 @@ from decimal import Context, Decimal, localcontext
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import Field, StrictBool, StrictInt, field_validator, model_validator
+from pydantic import (
+    Field,
+    StrictBool,
+    StrictInt,
+    field_validator,
+    model_serializer,
+    model_validator,
+)
 
 from cutback.core.models import Identifier, StrictModel
 from cutback.core.policy_producer import PolicySourceBinding
@@ -22,6 +29,14 @@ class PolicyExecutionRef(StrictModel):
     policy_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
     cache_enabled: StrictBool = False
     cache_operation_upper_usd: Decimal | None = Field(default=None, ge=0, le=100, decimal_places=12)
+    cache_requested: StrictBool | None = None
+
+    @model_serializer(mode="wrap")
+    def preserve_v1_wire(self, handler):
+        value = handler(self)
+        if self.cache_requested is None:
+            value.pop("cache_requested", None)
+        return value
 
     @field_validator("cache_operation_upper_usd", mode="before")
     @classmethod
@@ -36,6 +51,8 @@ class PolicyExecutionRef(StrictModel):
             not self.payload_id.int
             or not self.cache_enabled
             and self.cache_operation_upper_usd is not None
+            or self.cache_requested is not None
+            and self.cache_requested != self.cache_enabled
         ):
             raise ValueError("POLICY_EXECUTION_PAYLOAD_OR_CACHE_METADATA_INVALID")
         return self
@@ -57,7 +74,9 @@ class PolicyExecutionRef(StrictModel):
 
 
 class SourcePolicyExecutionSpec(StrictModel):
-    version: Literal["cutback.source-policy-execution.v1"] = "cutback.source-policy-execution.v1"
+    version: Literal["cutback.source-policy-execution.v1", "cutback.source-policy-execution.v2"] = (
+        "cutback.source-policy-execution.v1"
+    )
     phase: Literal["evaluation", "training"] = "evaluation"
     transport: Literal["native_provider", "scripted_test_only"] = "native_provider"
     source: PolicySourceBinding
@@ -69,7 +88,15 @@ class SourcePolicyExecutionSpec(StrictModel):
     def unique_current_references(self):
         values = [self.reference, *self.candidates]
         if (
-            self.reference.policy_sha256 != self.source.policy_sha256
+            self.version == "cutback.source-policy-execution.v1"
+            and any(value.cache_requested is not None for value in values)
+            or self.version == "cutback.source-policy-execution.v2"
+            and (
+                self.reference.cache_requested is None
+                or self.source.async_consumer
+                or any(value.cache_enabled and value.cache_requested is None for value in values)
+            )
+            or self.reference.policy_sha256 != self.source.policy_sha256
             or len({value.key for value in values}) != len(values)
             or len({value.payload_id for value in values}) != len(values)
             or len({value.policy_sha256 for value in values}) != len(values)
@@ -124,7 +151,7 @@ class SourcePolicyExecutionSpec(StrictModel):
 
     def public_summary(self):
         values = [self.reference, *self.candidates]
-        return {
+        result = {
             "version": self.version,
             "phase": self.phase,
             "transport": self.transport,
@@ -154,6 +181,53 @@ class SourcePolicyExecutionSpec(StrictModel):
             "policy_contents_in_metadata": False,
             "execution_authorized": False,
         }
+        if self.version == "cutback.source-policy-execution.v2":
+            result["cache_activation"] = {
+                value.key: value.cache_requested
+                if value.cache_requested is not None
+                else value.cache_enabled
+                for value in values
+            }
+            result["uncached_training_shadow"] = self.phase == "training"
+        return result
+
+
+def qualified_cache(reference, policy, execution=None):
+    """Resolve explicit v2 activation without mutating the encrypted source policy.
+
+    A v2 training plan can request an uncached shadow of a cached source. Its
+    metadata binds that choice; the original policy and its SHA stay intact.
+    """
+    cache = policy.cache_execution
+    if reference.cache_requested is not None:
+        if getattr(execution, "version", None) != "cutback.source-policy-execution.v2":
+            raise ValueError("POLICY_EXECUTION_ACTIVATION_REQUIRES_DISTINCT_V2_BINDING")
+        if reference.cache_requested is False:
+            cache = None
+        elif cache is None:
+            raise ValueError("POLICY_EXECUTION_ACTIVATION_REQUIRES_DECLARED_CACHE")
+    if reference.cache_enabled != (cache is not None) or reference.cache_operation_upper_usd != (
+        cache.operation_cost_upper_usd if cache else None
+    ):
+        raise ValueError("POLICY_EXECUTION_EFFECTIVE_CACHE_BINDING_CHANGED")
+    return cache
+
+
+def effective_policy_behavior(reference, policy, execution):
+    return policy.model_copy(
+        update={"cache_execution": qualified_cache(reference, policy, execution)}
+    ).behavior_sha256
+
+
+def uncached_shadow_reference(reference: PolicyExecutionRef):
+    return PolicyExecutionRef.model_validate(
+        {
+            **reference.model_dump(mode="json"),
+            "cache_requested": False,
+            "cache_enabled": False,
+            "cache_operation_upper_usd": None,
+        }
+    )
 
 
 class PublicPolicySource(StrictModel):
@@ -174,7 +248,7 @@ class PublicPolicyCacheControl(StrictModel):
 class PublicPolicyExecution(StrictModel):
     """Idempotent metadata projection for plans, forecasts and result receipts."""
 
-    version: Literal["cutback.source-policy-execution.v1"]
+    version: Literal["cutback.source-policy-execution.v1", "cutback.source-policy-execution.v2"]
     phase: Literal["evaluation", "training"]
     transport: Literal["native_provider", "scripted_test_only"]
     source: PublicPolicySource
@@ -191,3 +265,5 @@ class PublicPolicyExecution(StrictModel):
     heldout_quality_claim: StrictBool | None = None
     routing_compute_cost_usd: None = None
     application_hosting_cost_usd: None = None
+    cache_activation: dict[Identifier, StrictBool] | None = Field(default=None, max_length=6)
+    uncached_training_shadow: StrictBool | None = None

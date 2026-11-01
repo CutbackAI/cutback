@@ -135,12 +135,12 @@ def prepare_patch(root: Path, proposal: JointRetrievalProposal):
 def review_change(
     artifact, contract, receipt, base: Path, proposed: Path, coverage, *, branch=None
 ):
-    from cutback.application_checks import ApplicationCheckContract, git, verify
+    from cutback.application_checks import git, validate_contract, verify
 
     proposal = JointRetrievalProposal.model_validate(artifact["proposal"])
     if artifact != prepare_patch(base, proposal):
         raise ValueError("JOINT_RETRIEVAL_REVIEW_ARTIFACT_CHANGED")
-    contract = ApplicationCheckContract.model_validate(contract)
+    contract = validate_contract(contract)
     checked = verify(contract, receipt, base, proposed)
     changed = {
         name

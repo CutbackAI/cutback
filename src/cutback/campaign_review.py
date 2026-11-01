@@ -4,7 +4,7 @@ import hashlib
 import re
 from pathlib import Path
 
-from cutback.application_checks import ApplicationCheckContract, git, verify
+from cutback.application_checks import git, validate_contract, verify
 from cutback.core.prompts import fingerprint
 
 
@@ -17,7 +17,7 @@ def review_change(
     command keys. A passing command does not independently establish that it
     exercises that workflow or represents customer quality.
     """
-    contract = ApplicationCheckContract.model_validate(contract)
+    contract = validate_contract(contract)
     if (
         artifact.get("status") != "DRY_RUN_ONLY"
         or artifact.get("production_deployed") is not False

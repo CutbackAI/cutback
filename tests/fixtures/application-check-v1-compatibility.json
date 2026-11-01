@@ -1,0 +1,69 @@
+{
+  "captured_from_application_source": "78051de8ce17188893dc7aa0afa4fc111ae2c895",
+  "captured_from_wheel_sha256": "078902aae35069bb593eb35db64502647eef1d92cafd71923a014c87280ba70c",
+  "contract": {
+    "schema_version": "cutback.application-check.v1",
+    "base": {
+      "commit": "1111111111111111111111111111111111111111",
+      "files": {
+        "app.py": "bfab2d28505823967a195d44679a39e97818daff7fd904104a26b51e06a3e1a3"
+      },
+      "tree_hash": "9802ef205571af8e4112245761367835269e30e3b8074855aa06d945f5b859ee"
+    },
+    "proposed": {
+      "commit": "1111111111111111111111111111111111111111",
+      "files": {
+        "app.py": "13b915888b3dcab8b8011393d161aa7c140894bc372f7c19d91d6e4902517083"
+      },
+      "tree_hash": "4dd774f9ff52e5c8a115f3e7dd94866122aecf12207199e8827a511f712324db"
+    },
+    "commands": [
+      {
+        "key": "synthetic-contract",
+        "runtime": "python",
+        "arguments": [
+          "check_application.py"
+        ],
+        "working_directory": ".",
+        "environment": {},
+        "timeout_seconds": 60,
+        "max_output_bytes": 65536
+      }
+    ]
+  },
+  "receipt": {
+    "schema_version": "cutback.application-check-receipt.v1",
+    "contract_hash": "e9dc94e6ede9432c0f088a1a68bfc7a22adaae5a10f32246e9216514e573f2c5",
+    "base_tree_hash": "9802ef205571af8e4112245761367835269e30e3b8074855aa06d945f5b859ee",
+    "proposed_tree_hash": "4dd774f9ff52e5c8a115f3e7dd94866122aecf12207199e8827a511f712324db",
+    "recorded_at": "2026-10-31T12:00:00+00:00",
+    "results": [
+      {
+        "phase": "base",
+        "command": "synthetic-contract",
+        "status": "passed",
+        "exit_code": 0,
+        "duration_seconds": 0.01,
+        "output_bytes_observed": 3,
+        "output_retained": false,
+        "runtime_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      {
+        "phase": "proposed",
+        "command": "synthetic-contract",
+        "status": "passed",
+        "exit_code": 0,
+        "duration_seconds": 0.01,
+        "output_bytes_observed": 3,
+        "output_retained": false,
+        "runtime_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ],
+    "all_passed": true,
+    "trust": "externally_executed_local_checks",
+    "source_scope": "tracked_git_files_only",
+    "isolation": "minimal_environment_no_os_sandbox",
+    "customer_quality": "not_established",
+    "receipt_hash": "4943fe687bed4b05b8ac3e8a9102ecdf04e0fa3b36e35f9a1ed635056d6306a8"
+  }
+}

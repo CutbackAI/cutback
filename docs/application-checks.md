@@ -2,6 +2,10 @@
 
 Source-checkout functionality, separate from scanner, collector and model worker. [Independent runnable example](../examples/application-checks/README.md). It does not execute application code during scanning or in a shared server.
 
+An opt-in [local container contract](application-containers.md) passed local
+component qualification for checks requiring a network-disabled, read-only
+source environment. The v1 process runner below retains its explicit limits.
+
 ## Discover existing checks
 
 Working source adds `cutback checks discover BASE_ROOT PROPOSED_ROOT --output contract.json --report discovery.json`. Both outputs must stay outside the frozen source roots. It prepares the ordinary executable contract and a separate hashed discovery report without requiring handwritten command JSON. Discovery inspects tracked configuration and guarded scripts, imports no application, runs no test collection or package script, and grants no model-call authority. Review the commands before the existing explicit local execution step.

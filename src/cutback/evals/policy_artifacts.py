@@ -7,7 +7,12 @@ from pydantic import ConfigDict, model_validator
 
 from cutback.core.improvement_policy import SourceImprovementPolicy
 from cutback.core.models import StrictModel
-from cutback.core.policy_execution import PolicyExecutionRef, SourcePolicyExecutionSpec
+from cutback.core.policy_execution import (
+    PolicyExecutionRef,
+    SourcePolicyExecutionSpec,
+    effective_policy_behavior,
+    qualified_cache,
+)
 from cutback.core.request_profiles import fingerprint
 
 
@@ -43,7 +48,7 @@ def decode_policy_payload(raw, reference: PolicyExecutionRef, execution: SourceP
     try:
         value = PolicyPayload.model_validate(raw)
         policy = value.policy
-        cached = policy.cache_execution
+        cached = qualified_cache(reference, policy, execution)
         if (
             fingerprint(raw) != reference.payload_sha256
             or fingerprint(value.model_dump(mode="json")) != reference.payload_sha256
@@ -78,7 +83,12 @@ def decode_policy_bundle(payloads: dict, execution: SourcePolicyExecutionSpec):
         for value in references
     }
     original = values[execution.reference.key]
-    if len({policy.behavior_sha256 for policy in values.values()}) != len(values):
+    if len(
+        {
+            effective_policy_behavior(reference, values[reference.key], execution)
+            for reference in references
+        }
+    ) != len(values):
         raise ValueError("POLICY_ARTIFACT_DUPLICATED_RUNTIME_CONFIGURATION")
     for candidate in execution.candidates:
         policy = values[candidate.key]

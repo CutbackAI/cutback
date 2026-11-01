@@ -11,15 +11,25 @@ CONTRACT = "cutback.source-policy-handoff.v1"
 
 
 def retained_review(destination, artifact, contract, receipt, proposed, branch):
+    from cutback.policy_changes import SourcePolicyProposal
+
     path = destination / "review.json"
     if not path.is_file():
         raise ValueError("POLICY_HANDOFF_REVIEW_RECEIPT_MISSING_REFRESH_SAME_HANDOFF")
     value = read_private(path)
     proposal = artifact["proposal"]
+    bound = SourcePolicyProposal.model_validate(proposal)
+    expected_version = (
+        "cutback.source-policy-review.v2"
+        if bound.version == "cutback.source-policy-proposal.v2"
+        else "cutback.source-policy-review.v1"
+    )
     ref = "refs/heads/" + branch if branch else None
     if (
         not isinstance(value, dict)
-        or value.get("version") != "cutback.source-policy-review.v1"
+        or value.get("version") != expected_version
+        or value.get("cache_runtime_required") != bound.cache_runtime_required
+        or any(value.get(key) != item for key, item in bound.cache_review_fields().items())
         or value.get("review_sha256")
         != fingerprint({key: item for key, item in value.items() if key != "review_sha256"})
         or any(
@@ -62,6 +72,7 @@ def finish(
     commands=None,
     execute_local=False,
     branch=None,
+    container=None,
 ):
     from cutback.agent_policy_program import current, proposal, review
     from cutback.application_handoff import finish as shared_finish
@@ -106,6 +117,7 @@ def finish(
             commands=commands,
             execute_local=execute_local,
             branch=branch,
+            container=container,
         )
     except ValueError as failure:
         code = str(failure)

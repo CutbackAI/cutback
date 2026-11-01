@@ -143,6 +143,7 @@ include = [
   '/scripts/generate_ts_client.py','/scripts/package_agent_workflows.py',
   '/scripts/backup_restore.py','/scripts/scanner_benchmark.py','/scripts/check_release_artifacts.py',
   '/scripts/policy_runtime_acceptance.py',
+  '/scripts/policy_cached_acceptance.py',
 ]
 
 [tool.pytest.ini_options]

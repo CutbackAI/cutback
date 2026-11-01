@@ -20,6 +20,33 @@ def register_checks(app, output, fail):
     )
     app.add_typer(checks, name="checks")
 
+    @checks.command("isolate")
+    def isolate_checks(
+        contract_file: Path,
+        image_id: Annotated[str, typer.Option()],
+        destination: Annotated[Path, typer.Option("--output")],
+        python_path: str = "/usr/local/bin/python",
+        node_path: str = "/usr/local/bin/node",
+    ):
+        """Bind reviewed checks to a local image without pulling or executing it."""
+        from cutback.application_checks import ApplicationCheckContract
+        from cutback.application_container import isolate
+
+        try:
+            if destination.resolve() == contract_file.resolve():
+                raise ValueError("APPLICATION_CONTAINER_KEEP_ORIGINAL_CONTRACT")
+            contract = ApplicationCheckContract.model_validate(read(contract_file))
+            result = isolate(
+                contract,
+                {"image_id": image_id, "python_path": python_path, "node_path": node_path},
+            )
+        except (ValueError, OSError):
+            fail(
+                "APPLICATION_CONTAINER_CONTRACT_INVALID",
+                "Use a reviewed v1 check contract, a sha256 local image ID and a separate output.",
+            )
+        output(result.model_dump(mode="json"), destination)
+
     @checks.command("discover")
     def discover_checks(
         base_root: Path,
@@ -74,7 +101,7 @@ def register_checks(app, output, fail):
         junit_file: Annotated[Path, typer.Option("--junit")],
         execute_local: bool = False,
     ):
-        from cutback.application_checks import ApplicationCheckContract, junit, run_checks
+        from cutback.application_checks import junit, run_checks, validate_contract
 
         if not execute_local:
             fail(
@@ -83,7 +110,7 @@ def register_checks(app, output, fail):
                 "in an isolated development or CI workspace.",
             )
         try:
-            contract = ApplicationCheckContract.model_validate(read(contract_file))
+            contract = validate_contract(read(contract_file))
             result = run_checks(contract, base_root, proposed_root, execute_local=True)
         except (ValueError, OSError):
             fail(
@@ -101,11 +128,11 @@ def register_checks(app, output, fail):
     def verify_application_checks(
         contract_file: Path, receipt_file: Path, base_root: Path, proposed_root: Path
     ):
-        from cutback.application_checks import ApplicationCheckContract, verify
+        from cutback.application_checks import validate_contract, verify
 
         try:
             result = verify(
-                ApplicationCheckContract.model_validate(read(contract_file)),
+                validate_contract(read(contract_file)),
                 read(receipt_file),
                 base_root,
                 proposed_root,

@@ -52,6 +52,18 @@ def public_config(value, *, redact_content_hashes=False, redact_criteria=False):
     redact_criteria = redact_criteria or bool(value.get("criteria_binding"))
     result: dict[str, Any] = {}
     for key, item in value.items():
+        if key == "runtime_reference" and item is not None:
+            from cutback.core.policy_runtime_reference import (
+                PolicyRuntimeReference,
+                PublicPolicyRuntimeReference,
+            )
+
+            result[key] = (
+                PolicyRuntimeReference.model_validate(item).public_summary()
+                if item.get("version") == "cutback.source-policy-runtime-reference.v1"
+                else PublicPolicyRuntimeReference.model_validate(item).model_dump(mode="json")
+            )
+            continue
         if key == "source_policy_execution" and item is not None:
             from cutback.core.policy_execution import (
                 PublicPolicyExecution,

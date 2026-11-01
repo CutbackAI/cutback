@@ -154,6 +154,9 @@ def register_campaign(app, output, guarded):
         command_file: Annotated[Path | None, typer.Option("--commands")] = None,
         execute_local: bool = False,
         branch: str | None = "cutback/campaign-review",
+        container_image: str | None = None,
+        container_python_path: str = "/usr/local/bin/python",
+        container_node_path: str = "/usr/local/bin/node",
         sample_only: bool = False,
     ):
         """Prepare private source copies and explicitly check the confirmed campaign change."""
@@ -171,6 +174,13 @@ def register_campaign(app, output, guarded):
             commands=read(command_file) if command_file is not None else None,
             execute_local=execute_local,
             branch=branch,
+            container={
+                "image_id": container_image,
+                "python_path": container_python_path,
+                "node_path": container_node_path,
+            }
+            if container_image
+            else None,
             sample_only=sample_only,
         )
         output(result)

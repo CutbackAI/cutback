@@ -115,14 +115,14 @@ def review_change(
     """Bind exact settings to checked trees and declared consumers. Never pushes."""
     from pydantic import TypeAdapter
 
-    from cutback.application_checks import ApplicationCheckContract, git, verify
+    from cutback.application_checks import git, validate_contract, verify
     from cutback.core.models import Identifier
     from cutback.core.request_profiles import fingerprint
 
     proposal = CompressionProposal.model_validate(artifact["proposal"])
     if artifact != prepare_patch(base, proposal):
         raise ValueError("COMPRESSION_REVIEW_ARTIFACT_CHANGED")
-    contract = ApplicationCheckContract.model_validate(contract)
+    contract = validate_contract(contract)
     checked = verify(contract, receipt, base, proposed)
     binding = proposal.binding
     changed = {

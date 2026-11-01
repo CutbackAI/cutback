@@ -2,11 +2,31 @@
 
 Updated 1 November 2026. Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business.
 
+The opt-in [local-container application checks](application-containers.md)
+passed **119 tests per installed SDK**, with three Windows symlink-privilege
+fixture skips covered by the actual non-root Linux path guards. The deadline
+build passed full encrypted database recovery and real host-crash/process,
+environment/network/source and resource-limit checks. It binds a reviewed local
+image to read-only tracked source and the existing automatic handoff. Exact
+public source and hosted gates remain separate; this is absent from PyPI dev5.
+
 [Policy activity inspection](policy-runtime-activity.md) now distinguishes actual
 cache hits, misses, configured-but-inactive cache and uncertain failures. Both
 installed SDK selections passed 168 tests and actual metadata survived container
-database recovery. This component awaits public hosted acceptance and is not in
-PyPI dev5. It does not yet enable automatic cached-current-reference optimization.
+database recovery. This component merged in
+[PR 81](https://github.com/CutbackAI/cutback/pull/81) after all 18 exact-head jobs
+passed and is absent from PyPI dev5. Its separate cached-current program
+extension has local qualification below.
+
+A separate [v2 cached-current program](source-policy-cached-current.md) passed
+local component qualification: **388 tests per installed SDK**, a separately
+frozen three-test boundary suite per SDK, both recovery profiles and non-root
+Linux source/path guards. It binds observed activation and uses uncached native
+training while preserving the complete source configuration. Source tests have
+passed for automatic instruction search, exact retry identities and checked
+handoff boundaries. Its matching SDK-free client and authenticated browser,
+mobile and axe checks are included. Exact public source and hosted CI gates
+remain pending; this is not a released capability or a completed platform.
 
 The new [common source-policy program](source-policy-programs.md) passed local,
 container and all 17 hosted gates and merged in [PR 79](https://github.com/CutbackAI/cutback/pull/79).
@@ -18,8 +38,8 @@ client without SDK/server dependencies, checked handoff and authenticated dashbo
 This work is not in PyPI dev5. Current routed references and async consumers
 passed 196 tests in each pinned SDK installation and all 17 exact-head hosted
 gates, then merged normally in [PR 80](https://github.com/CutbackAI/cutback/pull/80).
-Cached current references and common selection with retrieval/compression/local models
-remain unfinished. [Progress](progress.md)
+The cached-current extension has separate local acceptance above; common
+selection with retrieval/compression/local models remains unfinished. [Progress](progress.md)
 records exact tests, failures and remaining gates.
 
 A further source follow-up passed local observation/workload acceptance and adds
@@ -28,12 +48,12 @@ observation startup, source-map refresh and automatic source-matched cache-workl
 assessment during preparation. A real-provider preview omits an unqualified cache
 control; synthetic trials retain their explicitly narrower basis. This neither
 enables cache in an application nor establishes production hit rate or savings.
-Its public hosted acceptance remains separate. Checked source-policy draft PR
+Its public hosted acceptance merged normally in PR 81. Checked source-policy draft PR
 publication passed 51 tests on each pinned SDK installation, its HTTP-only client
 and container recovery. Automatic compatible-data discovery passed 90 tests in
 each fresh SDK installation, the independent HTTP-only client and authenticated
-sample/browser journey, plus the full recovery image. Their publication and
-hosted acceptance are still separate; [progress](progress.md) records exact identities.
+sample/browser journey, plus the full recovery image. Their public source and
+hosted acceptance merged in PR 81; [progress](progress.md) records exact identities.
 Discovery can replace manual ID copying only for a unique bounded compatible
 choice. It cannot invent labels, costs or permission to run an experiment.
 
@@ -42,12 +62,12 @@ choice. It cannot invent labels, costs or permission to run an experiment.
 Shared team metadata dashboards passed local component qualification, including
 49 tests per installed SDK plus a separate scoped-editor revocation case, the
 authenticated mobile/accessibility journey and restored definition/evidence
-checks. Their public hosted acceptance remains separate. The
+checks. Their public source and hosted acceptance merged in PR 81. The
 [walkthrough](shared-dashboards.md) covers pinned trace/incident views, teammate
 edits and bounded retained evidence. Comments and broader analytics remain open.
 
-Cloud text-evaluation file imports passed local component qualification;
-their public source and exact-head hosted gates remain separate. They connect
+Cloud text-evaluation file imports passed local and hosted qualification and
+merged in PR 81. They connect
 documented AWS and actual pinned Azure/Vertex export projections to encrypted
 preview, purpose-scoped original metric reads and unreviewed datasets. Raw
 numeric/boolean/missing/error/skipped states retain their own meaning and scale.
