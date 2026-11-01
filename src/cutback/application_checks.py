@@ -137,6 +137,7 @@ def git(root, *arguments):
         process = subprocess.Popen(
             [
                 executable,
+                "--no-replace-objects",
                 "-c",
                 "core.fsmonitor=false",
                 "-c",

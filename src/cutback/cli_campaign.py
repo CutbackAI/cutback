@@ -144,6 +144,35 @@ def register_campaign(app, output, guarded):
             )
         )
 
+    @group.command("publish")
+    @guarded
+    def publish(
+        repository: str = typer.Option(..., "--repository", help="Exact GitHub OWNER/REPO."),
+        head_branch: str = typer.Option(..., "--head-branch"),
+        purpose: str = typer.Option(..., "--purpose-reference"),
+        target: Path = Path("."),
+        base_branch: str = "main",
+        publish: bool = typer.Option(
+            False, "--publish", help="Upload the exact checked commit and create a draft PR."
+        ),
+    ):
+        """Preview a refreshed review; publish only with --publish and CUTBACK_GITHUB_TOKEN."""
+        from cutback.agent_control import connect
+        from cutback.agent_publication import publish_review
+
+        control, _ = connect(target)
+        output(
+            publish_review(
+                target,
+                control,
+                purpose=purpose,
+                repository=repository,
+                base_branch=base_branch,
+                head_branch=head_branch,
+                publish=publish,
+            )
+        )
+
     @group.command("observe")
     @guarded
     def observe(

@@ -1,7 +1,15 @@
 # What works and what remains
 
-The new [workload-bound campaign](improvement-campaigns.md) is active source work
-under qualification. It puts measured cache eligibility, native model/output
+The working-source [stage runner](agent-workflow.md) adds one `workflow run`
+command for an already approved native/cache/context/retrieval or routing stage.
+It can wait for a remote worker using an HTTP-only installation, or explicitly
+invoke the owned local worker once. It stops at the next approval/confirmation
+boundary and never retries an uncertain charge. Exact qualification and
+publication status are recorded in [progress](progress.md) and the containing PR.
+
+The [workload-bound campaign](improvement-campaigns.md) is accepted in
+[PR 74](https://github.com/CutbackAI/cutback/pull/74) after all 17 exact-head hosted
+checks, installed and container recovery acceptance. It puts measured cache eligibility, native model/output
 alternatives and conditional prompt search under one reserved campaign budget.
 The [independent cache-first sample](../examples/improvement-campaign/README.md)
 uses ordinary agent preparation, untouched confirmation, source checks and exact
@@ -15,8 +23,9 @@ opportunity from retained authorized profiles. It makes no inference call or
 source change. Acceptance and separate source-only follow-ups are in
 [progress](progress.md); this is not unified cross-engine economic selection.
 
-The source [native/cache portfolio](workload-native-portfolios.md) is under
-qualification. Its independent example can retain a committed synthetic
+The source [native/cache portfolio](workload-native-portfolios.md) and complete
+[independent walkthrough](../examples/workload-portfolio/README.md) are included
+in accepted PR 74. The separate setup example can retain a committed synthetic
 application and prepare a pending trial from observed source-window eligibility.
 It grants no inference approval. Confirmation, source review and exact rollback
 are separate steps, with cache-specific opportunity and unknown full-task costs.

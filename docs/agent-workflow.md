@@ -122,6 +122,60 @@ cutback workflow proposal --purpose-reference actual-evidence-review
 
 Subsequent continuations poll the same run. In the matching source release, a lost queue response reconciles through `GET /v1/projects/{project}/experiments/plans/{plan}/execution`, scoped to that exact plan. It does not search a bounded history page, so newer unrelated runs cannot hide the original identity. An uncertain approval without a recorded run requires operator reconciliation and never triggers a second POST. A later recorded run can be recovered by continuing the same session; recovery clears the obsolete local stop reason. A crashed billable operation is never automatically retried. Interrupted nonbillable preparation leaves its known policy/dataset references and `PREPARING` checkpoint for inspection rather than silently duplicating resources. This recovery endpoint requires the source-matched collector; it is not in published PyPI dev5.
 
+The working source adds one bounded stage runner, under qualification:
+
+```sh
+# After the exact plan was approved and queued above; a remote worker is running.
+cutback workflow run --target . --max-wait-seconds 300 --max-polls 300
+
+# Or explicitly execute this stage against the owned local collector and worker keys.
+cutback workflow run --target . --local-worker
+```
+
+The runner handles native model/output, exact cache, joint model/context, fixed
+or joint retrieval, learned routing and reviewed-criteria validation stages. It
+rechecks current source and the saved project, destination, workflow, plan and
+run. It neither approves nor queues. It reconciles an existing lost queue
+acknowledgement, polls remote work, or invokes the explicitly selected local
+worker once. Missing configuration, blocked work, source changes and uncertain
+responses stop without retry. Local lease recovery is scoped to that exact run
+and happens before credential construction. A routing training or validation
+completion may prepare the next nonbillable fit/stage, then stops at its new
+approval boundary. A completed search still needs separate untouched
+confirmation. This does not authorize all routing stages under one approval or
+choose a winner across every optimization engine.
+
+If another worker already owns the run, or claims it during the local handoff,
+the runner keeps observing that same identity. It does not construct another
+provider client for a known active worker, repeat its local invocation, mint a
+new run or reuse approval for another stage.
+
+Stdout contains one JSON object with `workflow` and `operator`; the operator's
+version is `cutback.workflow-operator.v1`. Stderr contains
+bounded numeric/boolean `workflow_progress` records, without example content,
+credentials, destinations or raw errors. `operator.code` is `STAGE_FINISHED`,
+`APPROVAL_REQUIRED`, `LOCAL_WAIT_BOUND_REACHED`, `RECONCILIATION_REQUIRED`,
+`LOCAL_WORKER_STOPPED_INSPECT_CANONICAL_RUN` or `ACTION_REQUIRED`. Exit 0 means a
+stage finished or a new approval is required; exit 2 means the local wait/poll
+bound was reached; exit 1 means an action/error stop. A local wait timeout does
+not cancel the approved remote job. A local worker invocation retains its own
+frozen execution deadline and can outlast the polling deadline. Inspect the
+same session with `workflow status`; after a wait timeout, rerun the same command
+to observe it. Source-only support is absent from published dev5.
+
+An agent that only monitors an already configured remote collector needs the
+HTTP client extra. In a separate matching source checkout, use
+`uv sync --locked --no-dev --extra prompts`, then
+`uv run --no-sync cutback workflow run --target /path/to/application`.
+Keep its scoped control credential in `CUTBACK_CONTROL_TOKEN`; the saved
+connection contains the endpoint and project, without that credential.
+The collector and its worker retain their own server/provider dependencies and
+approved keys. An independent subprocess test runs this path without OpenAI,
+Anthropic, FastAPI, Uvicorn, SQLAlchemy, Alembic, psycopg, cryptography, jsonschema,
+identity/storage/commercial SDKs or pytest installed in the agent environment.
+It observes the same queued run over HTTP and then its actual closed-transport
+worker completion. The minimal agent does not execute a local worker.
+
 The proposal reads authorized encrypted plan evidence, regenerates the source binding and emits a concrete diff, rollback, integrity/syntax checks and staging steps. It remains **human review required**; it neither accepts a recommendation nor applies/uploads/deploys the patch. The agent inspects/runs the application's authorized tests, reviews every affected workflow (including shared config consumers), then presents that evidence. Apply/staging/canary decisions remain separately scoped. Source changes, different instructions/output caps/options, incompatible request surfaces and old/unbound plans cannot authorize a model-only patch. The ordinary recommendation review and encrypted patch upload controls remain available after explicit acceptance.
 
 ## Qualified scope and tests

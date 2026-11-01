@@ -1,6 +1,7 @@
 # Watch the agent investigate repeated work
 
-Working-source walkthrough under qualification. The published PyPI dev5 package
+Available in the current GitHub source, accepted in
+[PR 74](https://github.com/CutbackAI/cutback/pull/74). The published PyPI dev5 package
 does not include this command. Use the matching source checkout; Docker and Git
 must be available. No provider account, API key or private application is needed.
 

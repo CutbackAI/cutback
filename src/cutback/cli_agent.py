@@ -322,6 +322,38 @@ def register_agent(app, output, fail):
         else:
             output(result)
 
+    @group.command("run")
+    @guarded
+    def run_stage(
+        target: Path = Path("."),
+        max_wait_seconds: int = 300,
+        poll_seconds: float = 1,
+        max_polls: int = 300,
+        local_worker: bool = False,
+    ):
+        """Finish one already approved stage; stop before another approval or confirmation."""
+        import json
+
+        from cutback.agent_control import connect
+        from cutback.workflow_operator import run_workflow
+
+        control, _ = connect(target)
+        result = run_workflow(
+            target,
+            control,
+            max_wait_seconds=max_wait_seconds,
+            poll_seconds=poll_seconds,
+            max_polls=max_polls,
+            local_worker=local_worker,
+            emit=lambda value: typer.echo(json.dumps(value, ensure_ascii=True), err=True),
+        )
+        output(result)
+        code = result["operator"]["code"]
+        if code == "LOCAL_WAIT_BOUND_REACHED":
+            raise typer.Exit(2)
+        if code not in {"STAGE_FINISHED", "APPROVAL_REQUIRED"}:
+            raise typer.Exit(1)
+
     @group.command("confirm")
     @guarded
     def confirm(

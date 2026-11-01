@@ -143,8 +143,16 @@ jobs:
           tests/integration/test_criteria_draft_reconciliation.py
           tests/integration/test_reviewed_criteria_migrations.py
           tests/end_to_end/test_reviewed_criteria_pipeline.py
+      - name: Prepare independent HTTP-only agent for systems journeys
+        if: matrix.scope == 'systems'
+        run: |
+          uv build --wheel --out-dir artifacts/remote-agent-dist
+          uv venv /tmp/cutback-remote-agent --python ${{ matrix.python }}
+          uv pip install --python /tmp/cutback-remote-agent/bin/python artifacts/remote-agent-dist/*.whl 'httpx==0.28.1'
       - name: Qualify execution, gateway and application systems
         if: matrix.scope == 'systems'
+        env:
+          CUTBACK_TEST_REMOTE_PYTHON: /tmp/cutback-remote-agent/bin/python
         run: >-
           uv run --project infra/sdk-compat/openai3 --locked python scripts/check.py -q
           tests/integration/test_native_episodes.py tests/integration/test_semantic_episodes.py
@@ -155,6 +163,10 @@ jobs:
           tests/integration/test_workload_campaign.py
           tests/integration/test_agent_case_retention.py
           tests/integration/test_campaign_operator.py tests/integration/test_campaign_operator_local.py
+          tests/integration/test_agent_campaign.py
+          tests/integration/test_review_publication_remote_minimal.py
+          tests/end_to_end/test_campaign_outcome_pipeline.py
+          tests/integration/test_workflow_stage_operator.py
           tests/integration/test_campaign_preparation_basis.py
           tests/integration/test_outcome_watches.py tests/integration/test_outcome_watch_controls.py
           tests/integration/test_outcome_watch_draft.py tests/integration/test_outcome_watch_migration.py
@@ -261,8 +273,17 @@ jobs:
           uv run python scripts/check_release_artifacts.py
           uv run python scripts/check_public_boundary.py --archive dist/cutback-*.whl --archive dist/cutback-*.tar.gz
           uv run twine check dist/*
+      - name: Prepare independent HTTP-only agent installation
+        run: |
+          uv venv /tmp/cutback-remote-agent --python ${{ matrix.python }}
+          uv pip install --python /tmp/cutback-remote-agent/bin/python dist/*.whl 'httpx==0.28.1'
+      - name: Qualify the HTTP-only client before the full regression
+        run: uv run python scripts/check.py -q tests/integration/test_workflow_remote_minimal.py
+        env:
+          CUTBACK_TEST_REMOTE_PYTHON: /tmp/cutback-remote-agent/bin/python
       - run: uv run python scripts/check.py --cov=cutback --cov-report=term-missing --cov-report=xml
         env:
+          CUTBACK_TEST_REMOTE_PYTHON: /tmp/cutback-remote-agent/bin/python
           CUTBACK_TEST_BROWSER: 'true'
           CUTBACK_TEST_LOCAL_STACK: ${{ matrix.python == '3.11.18' && 'true' || 'false' }}
           CUTBACK_TEST_TRAINING_PYTHON: ${{ matrix.python == '3.11.18' && '/tmp/cutback-training/bin/python' || '' }}

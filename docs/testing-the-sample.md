@@ -15,6 +15,46 @@ For source development, install Git on PATH and use uv 0.13.6, clone the reposit
 
 The first Docker run may download the pinned PostgreSQL image. The launcher creates its own database container and random scoped credentials. It never connects to your application or an existing customer database. Wait for `Ready:` and the browser to open. If the port is occupied, use `cutback demo --port 8877`; `--no-open-browser` prints the address without opening a tab.
 
+## Test the complete working-source journey first
+
+For a matching checkout that includes `demo --workload-portfolio`, use a separate
+Cutback environment. This path needs Git, Docker, Python and uv 0.13.6, with no
+provider account, Node setup or paid requests:
+
+```sh
+uv sync --locked --no-dev --extra server --extra openai
+uv run --no-sync cutback demo --workload-portfolio
+```
+
+1. Open the printed **Ready** address and choose **Explore sample**. In **Sample**,
+   find **Can repeated work avoid another provider call?** and choose
+   **Inspect the repeat-workload confirmation**.
+2. Check the independent application's **eight observed SDK calls** and **three
+   modeled potential reuses**. Those reuses are a hypothesis, not delivered
+   production cache hits. Runtime caching must remain disabled.
+3. Follow the canonical comparison and separate untouched fixture confirmation.
+   Read the modeled trial costs and evidence limits. The normal real-quality
+   gate must refuse this synthetic result; a fixture success cannot establish
+   customer quality or savings.
+4. Inspect the proposed source change, checks of both application trees and exact
+   rollback. The original source stays unchanged. No deployment is performed.
+5. In the standard support-desk comparison, confirm that the cheaper **unsafe**
+   alternative fails its required priority criterion. Open the technical-only
+   result and check that semantic quality and missing measurements remain unknown.
+6. Reload the page: the credential must not be present in its URL or browser
+   local/session storage. Choose **Explore sample** again to reconnect. Do not
+   paste a credential or private application data into an issue or chat.
+7. Press **Ctrl+C**. Its own temporary database and listener stop; the ignored
+   independent source workspace remains for inspection. Your other containers
+   and projects remain available.
+
+The [walkthrough](../examples/workload-portfolio/README.md) explains every
+component and its limits. These seven checks test the first user journey;
+maintainer regression/operational qualification is listed below. An unfamiliar
+developer's successful first use remains separate evidence from automated tests.
+The version-pinned PyPI dev5 walkthrough in the following section is the earlier
+support-desk journey and does not contain this source-only extension.
+
 ## What to check in the browser
 
 1. Click **Explore sample**. The comparison loads directly: **compact: Passes sample gates**, **unsafe: Not eligible**, with failed `priority`. These are synthetic fixture decisions, not measured model or customer performance. The short-lived scoped key stays in page memory.

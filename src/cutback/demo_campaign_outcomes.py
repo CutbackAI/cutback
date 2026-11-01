@@ -128,6 +128,7 @@ def run_sample(
     from cutback.agent_campaign import advance, proposal, review, status
     from cutback.agent_campaign import prepare as prepare_campaign
     from cutback.agent_control import Control
+    from cutback.agent_publication import publish_review
     from cutback.application_check_discovery import discover
     from cutback.application_checks import ApplicationCheckContract, git, run_checks
     from cutback.campaign_operator import CampaignOperator
@@ -294,6 +295,14 @@ def run_sample(
             branch="cutback/owned-outcome-review",
             sample_only=True,
         )
+        publication_preview = publish_review(
+            application,
+            control,
+            purpose="owned-synthetic-publication-preview",
+            repository="example-owner/task-app",
+            base_branch="main",
+            head_branch="cutback/owned-outcome-review",
+        )
         base = f"/v1/projects/{project}"
         control(
             "POST",
@@ -408,6 +417,7 @@ def run_sample(
             "paid_provider_calls": 0,
             "baseline_model": "gpt-6-luna" if modern_model else "gpt-4.1",
             "review": checked,
+            "publication_preview": publication_preview,
             "outcome_review": observed,
             **({"automatic_observation": watched} if watched else {}),
             "disclosure": (

@@ -98,6 +98,12 @@ def test_ordinary_campaign_checks_uploaded_diff_and_later_rollback_review(
     assert result["application_check_discovery"]["executed_during_discovery"] == 0
     assert len(result["application_check_discovery"]["commands"]) == 1
     assert result["review"]["status"] == "READY_FOR_PR_REVIEW"
+    preview = result["publication_preview"]
+    assert preview["status"] == "PREVIEW_ONLY_EXPLICIT_PUBLICATION_REQUIRED"
+    assert preview["proposed_commit"] == result["review"]["proposed_commit"]
+    assert preview["source_files"] == ["app.py"]
+    assert preview["provider_calls"] == 0 and not preview["remote_published"]
+    assert preview["publishes_local_ancestors"] is False
     assert result["outcome_review"]["next_action"] == "REVIEW_ROLLBACK"
     evidence = result["outcome_review"]["receipt"]["evidence"]
     assert len(evidence["run_costs"]) == (2 if modern_model else 4) and evidence["change_id"]
