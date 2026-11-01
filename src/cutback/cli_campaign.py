@@ -144,6 +144,39 @@ def register_campaign(app, output, guarded):
             )
         )
 
+    @group.command("finish")
+    @guarded
+    def finish(
+        private_workspace: Annotated[Path, typer.Option("--workspace")],
+        purpose: Annotated[str, typer.Option("--purpose-reference")],
+        target: Path = Path("."),
+        coverage: Annotated[Path | None, typer.Option("--coverage")] = None,
+        command_file: Annotated[Path | None, typer.Option("--commands")] = None,
+        execute_local: bool = False,
+        branch: str | None = "cutback/campaign-review",
+        sample_only: bool = False,
+    ):
+        """Prepare private source copies and explicitly check the confirmed campaign change."""
+        from cutback.agent_campaign_handoff import finish as action
+        from cutback.agent_control import connect
+        from cutback.cli_checks import read
+
+        control, _ = connect(target)
+        result = action(
+            target,
+            control,
+            destination=private_workspace,
+            purpose=purpose,
+            coverage=read(coverage) if coverage is not None else None,
+            commands=read(command_file) if command_file is not None else None,
+            execute_local=execute_local,
+            branch=branch,
+            sample_only=sample_only,
+        )
+        output(result)
+        if result["status"] == "CHECKS_FAILED":
+            raise typer.Exit(1)
+
     @group.command("publish")
     @guarded
     def publish(

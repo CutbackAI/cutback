@@ -35,6 +35,8 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
             "from cutback.workflow_operator import run_workflow; "
             "from cutback.agent_routing_program import run as run_routing_program; "
             "from cutback.agent_routing_handoff import finish as finish_routing_program; "
+            "from cutback.agent_campaign_handoff import finish as finish_campaign; "
+            "from cutback.application_patch import apply_exact_diff; "
             "from cutback.application_workspaces import materialize; "
             "from cutback.agent_publication import publish_review; "
             "from cutback.review_publication import prepare_publication; "
@@ -212,6 +214,15 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
     )
     visible_finish_help = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", finish_help.stdout)
     assert "--workspace" in visible_finish_help and "--execute-local" in visible_finish_help
+    campaign_finish_help = subprocess.run(
+        [str(executable), "-m", "cutback.cli", "campaign", "finish", "--help"],
+        capture_output=True,
+        text=True,
+        cwd=consumer,
+        check=True,
+    )
+    visible_campaign_finish = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", campaign_finish_help.stdout)
+    assert "--workspace" in visible_campaign_finish and "--execute-local" in visible_campaign_finish
     subprocess.run(
         [str(executable), "-m", "cutback.cli", "sample", str(Path(temporary) / "support-desk")],
         check=True,

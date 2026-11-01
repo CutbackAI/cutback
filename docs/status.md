@@ -12,6 +12,11 @@ Updated 31 October 2026. Cutback is a pre-alpha product with tested, bounded wor
 
 Source merges do not update PyPI. The stage runner and checked campaign draft-PR publisher are accepted in [PR 76](https://github.com/CutbackAI/cutback/pull/76), after all 17 exact-head hosted gates passed. The new [whole routing program](routing-programs.md), including private workspace preparation, existing checks and refreshed local review through `routing program finish`, is implemented and under final qualification in PR 77; its publication gates remain open.
 
+The new [native campaign handoff](campaign-handoff.md) shares the bounded private
+workspace/check runner with routing and feeds the existing campaign publication
+preview. Its own installed, container and hosted qualification is in progress.
+It does not combine the different optimization engines' budgets or selections.
+
 ## Working source journeys
 
 Each link states supported adapters, evidence semantics and limits. Executed checks, failures, package identities and publication state are recorded in [progress](progress.md).

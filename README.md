@@ -66,6 +66,8 @@ These commands prepare or explain a saved local job. They do not authorize infer
 
 For qualified native applications, [automatic campaigns](https://github.com/CutbackAI/cutback/blob/main/docs/improvement-campaigns.md) try model/output-limit alternatives before using reserved instruction-search effort. After confirmation and checks on both trees, [explicit draft-PR publication](https://github.com/CutbackAI/cutback/blob/main/docs/review-publication.md) hands off the reviewed change without pushing local history. It never merges or deploys.
 
+The new [campaign handoff](https://github.com/CutbackAI/cutback/blob/main/docs/campaign-handoff.md), under qualification, prepares both private source repositories and their checks automatically. It returns the detected consumers and command keys, requires their declared coverage before execution, and refreshes confirmation before saving the checked review. A missing receipt after dispatch stops execution; a known receipt resumes without rerunning checks.
+
 The new [routing program](https://github.com/CutbackAI/cutback/blob/main/docs/routing-programs.md), under qualification, tries simple alternatives before spending on routing training under one envelope. After confirmation, `routing program finish` prepares private source copies, previews existing checks, executes explicitly authorized checks on both trees and refreshes authority for a local review. It preserves the original application's source and Git history. Other strategies have distinct supported contracts. Unified selection across every optimization engine remains unfinished.
 
 ## Explore a specific task

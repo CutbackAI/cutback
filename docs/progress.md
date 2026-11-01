@@ -1,5 +1,74 @@
 # Implementation progress
 
+31 October 2026 native campaign handoff, **implementation/source qualification
+in progress; installed/archive/image/hosted gates pending**. `campaign finish`
+uses the same bounded private source/check execution state machine as routing,
+with separate canonical campaign authority, project/collector/confirmation
+identity, exact affected-workflow coverage and a separately scoped journal.
+The current confirmed forward/inverse patch reconstructs bounded source bytes
+without executing application code. Original source/index/refs remain unchanged.
+Current authority is refreshed after checks; known receipts reconcile lost
+acknowledgements and unknown dispatched checks stop. The saved exact campaign
+review continues into the existing explicitly authorized draft-PR workflow.
+
+The observed-workload/cache and campaign/outcome samples now invoke this public
+handoff instead of hand-copying Git repositories and assembling their own check
+pipeline. The first PostgreSQL workload run failed because campaign identity
+was incorrectly read from the local request journal; the corrected adapter binds
+the hash from the refreshed canonical artifact, plus local project/destination.
+Its rerun passed **two in 252.65 seconds**. A separate new CLI fixture initially
+lacked a committed repository; it is corrected to commit before source analysis.
+The corrected actual CLI/native/PostgreSQL selection passed **two in 213.15
+seconds**, including content revocation after checks and no extra native spend.
+These failed runs remain failures.
+
+Earlier overlapping unit selections passed **19 in 291.70 seconds** and **four
+in 170.93 seconds**, before the canonical-identity correction. The current
+combined source rerun passed **23 in 498.77 seconds**. Additional collector/project
+intent tests passed **two in 77.05 seconds**; the outcomes/ticket samples are
+**four passed / one browser-disabled skip in 511.20 seconds**. That source run
+did not set the authenticated browser flag and supplies no browser acceptance;
+the frozen installed run must include it. The fresh
+HTTP-only installed consumer and later installed/image/hosted acceptance remain
+open gates; source passes do not imply their results.
+Ruff and mypy **407** modules pass. No new API/migration/frontend contract,
+paid inference, production change or PyPI upload is implied. Shared native/
+routing handoff is not the unfinished cross-engine selection/budget optimizer.
+
+31 October 2026 integrated routing handoff, **local installed/image acceptance
+passed; final hosted gates pending at PR 77 head
+`38143c9855c916b5eb175b7bbd36204e3fd551d5`**. The complete frozen selection passed
+**112 / three skipped in 1,535.51 seconds** on OpenAI **2.29.0**, and **112 /
+three in 1,530.53 seconds** on **3.35.1**, both Pydantic **2.14.1**. It includes
+real PostgreSQL migrations/tenant/rights/shared budgets, unknown billing and
+recovery, independent HTTP-only client, actual source/check/rollback samples,
+and authenticated admin/viewer/desktop/mobile/accessibility acceptance.
+The three skips are Windows directory-symlink fixtures (discovery/manual
+preparation plus source/export destination). A separate run records their exact
+skip reasons; the exact non-root Linux image passes all three guards with no
+source changes. Hosted Linux tests remain independently required.
+
+The matching wheel is
+`22d5f6bc7b556dda2827d04a1f264bd239a10a548722e5535a2d67b6415d94c9`,
+and sdist
+`1daf6757510ea99c6a0777095a32ca869752dade8b7bd69db65d703b3cc78964`.
+Private/public builds reproduce exactly, and all **430** application files match
+the installed environments and image
+`sha256:4e77c38dd886aa526650e110e5694e547ef268143e02777f7eb061098e0e719e`.
+Its full schema-0033 recovery passes **103 matching table counts / 3,120 rekeyed
+objects**, including **40 plans / 17 cache objects / 24 profiles**, current
+routing budget/approval/selection/source and actual both-tree checks/rollback.
+The initial harness used an obsolete local tool environment and failed the
+final expected-schema assertion; the full rerun used the matching installed
+environment and passed. That failed run is not counted as acceptance.
+
+The fresh core-only consumer and core-plus-HTTPX remote install pass with SDK/
+server dependencies absent. Public source/history/four-archive checks cover
+**1,260 files / 6,326 reachable public objects / 3,384 members / zero findings**;
+no private Git history is transferred. All **17** current-head hosted gates
+remain mandatory before protected merge. No paid inference, production change,
+new PyPI release or customer performance claim is implied.
+
 31 October 2026 integrated checked routing handoff, **source acceptance;
 installed/archive/image/final hosted gates pending**. `routing program finish`
 now prepares two private independent repositories, preserving the exact base

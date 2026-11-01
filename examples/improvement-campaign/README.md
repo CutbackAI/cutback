@@ -13,8 +13,11 @@ cache hypothesis from their retained source window. Ordinary agent preparation
 then freezes one native/cache campaign with a separate synthetic complete-task
 cost declaration and explicit opportunity assumptions. A successful cache trial
 skips the proposer and confirms on untouched groups under the same total budget.
-The sample prepares a reversible source diff, runs checks on both trees and
-verifies exact rollback. Inspect **Campaigns** using the printed project and
+The sample uses [campaign finish](../../docs/campaign-handoff.md) to prepare
+private independent source repositories, run checks on both trees, verify exact
+rollback and save its refreshed local review. The `checked_handoff_workspace`
+receipt points to the contract, checks, review and forward/inverse patches.
+Inspect **Campaigns** using the printed project and
 campaign IDs. Add `--cleanup` to delete that sample project and its encrypted
 objects; its local synthetic source workspace remains for inspection.
 
@@ -35,7 +38,7 @@ uv run python examples/improvement-campaign/sample.py --local-target .
 
 Add `--outcomes` for ordinary agent preparation → native search → application checks → encrypted diff → later task outcomes. The later synthetic fixture is deliberately cheap but worse and must return `REVIEW_ROLLBACK`. Read [the outcome walkthrough](../../docs/campaign-outcomes.md) for trust, accounting and cleanup boundaries. No live application is deployed.
 
-The collector and worker code must both come from this source checkout and have migration `0020`. The script reads the owned local configuration privately, creates a synthetic project, leaves its receipts available in the dashboard and writes the independent classifier only under the target's ignored `.cutback/campaign-example/` directory. Add `--cleanup` to explicitly delete that project afterward. It never reads another application's source or examples.
+The collector and worker code must both come from this source checkout and run its current migrations through `0033`. The script reads the owned local configuration privately, creates a synthetic project, leaves its receipts available in the dashboard and writes the independent classifier only under the target's ignored `.cutback/campaign-example/` directory. Add `--cleanup` to explicitly delete that project afterward. It never reads another application's source or examples.
 
 The ordinary `--outcomes` agent path now prepares a v3 portfolio before instruction search; see the [step-by-step portfolio walkthrough](../automatic-portfolio/README.md). The guided demo's saved campaign below remains v2 for compatibility. Both use one cumulative parent ledger and untouched confirmation.
 
