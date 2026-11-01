@@ -5,6 +5,7 @@ from uuid import UUID
 
 from sqlalchemy import func, select
 
+from cutback.core.policy_execution import PolicyExecutionRef, uncached_shadow_reference
 from cutback.evals.datasets import digest
 from cutback.evals.source_policy_programs import SourcePolicyProgram
 from cutback.server.campaign_content import current_policy
@@ -174,6 +175,27 @@ def load_program(session, store, parent):
         raise ValueError("POLICY_PROGRAM_SOURCE_EXECUTION_REQUIRED")
     for reference in [execution.reference, *execution.candidates]:
         require_link(session, parent, reference.payload_id, reference.payload_sha256)
+    if specification.runtime_reference is not None:
+        from cutback.evals.policy_artifacts import decode_policy_payload
+        from cutback.server.policy_runtime_reference import require_reference
+
+        _, raw = _payload(
+            session,
+            store,
+            parent.project_id,
+            parent.policy_id,
+            execution.reference.payload_id,
+            policy,
+        )
+        original_policy = decode_policy_payload(raw, execution.reference, execution)
+        require_reference(
+            session,
+            parent.project_id,
+            environment,
+            execution.source,
+            original_policy,
+            specification.runtime_reference,
+        )
     return specification, policy, dataset, value
 
 
@@ -255,10 +277,17 @@ def authorize_program_run(session, store, run_id, *, synthetic_transport=False):
             child.source_policy_execution,
             specification.template.source_policy_execution,
         )
+        shadow = (
+            specification.version == "cutback.source-policy-program.v2" and link.phase == "training"
+        )
+        expected_reference = (
+            uncached_shadow_reference(original.reference) if shadow else original.reference
+        )
         if (
             execution is None
             or execution.source != original.source
-            or execution.reference != original.reference
+            or execution.version != original.version
+            or execution.reference != expected_reference
             or execution.transport != original.transport
             or child.dataset_hash != specification.template.dataset_hash
             or child.metric != specification.template.metric
@@ -283,7 +312,12 @@ def authorize_program_run(session, store, run_id, *, synthetic_transport=False):
                 reference.payload_sha256,
                 kinds={"reference", "static", "generated", "learned"},
             )
-            if owned.derivation.get("reference") != reference.model_dump(mode="json"):
+            expected = owned.derivation.get("reference")
+            if shadow:
+                expected = uncached_shadow_reference(
+                    PolicyExecutionRef.model_validate(expected)
+                ).model_dump(mode="json")
+            if expected != reference.model_dump(mode="json"):
                 raise ValueError("POLICY_PROGRAM_CHILD_POLICY_REFERENCE_CHANGED")
 
 
@@ -554,13 +588,27 @@ def source_proposal(session, store, parent):
         )
         plain = proposed.model_copy(update={"cache_execution": None})
         if (
-            plain.behavior_sha256 != fitted.behavior_sha256
+            (
+                proposed.behavior_sha256
+                if specification.version == "cutback.source-policy-program.v2"
+                else plain.behavior_sha256
+            )
+            != fitted.behavior_sha256
             or private_fit["policy_sha256"] != refreshed_fit["policy_sha256"]
             or private_fit["training_run_id"] != str(training_id)
         ):
             raise ValueError("POLICY_PROGRAM_CURRENT_NATIVE_FIT_CHANGED")
     strong = policy_confirmation_gate(report, plan)["passed"]
     return SourcePolicyProposal(
+        **(
+            {
+                "version": "cutback.source-policy-proposal.v2",
+                "original_cache_requested": original.reference.cache_requested,
+                "proposed_cache_requested": selected.cache_enabled,
+            }
+            if specification.version == "cutback.source-policy-program.v2"
+            else {}
+        ),
         program_id=parent.id,
         program_hash=parent.approval_sha256,
         run_id=run.id,

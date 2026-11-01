@@ -1,0 +1,102 @@
+{
+  "contract": "cutback.application-container-acceptance.v1",
+  "status": "LOCAL_COMPONENT_ACCEPTANCE_PASSED_HOSTED_PUBLICATION_PENDING",
+  "application_and_installed_test_source_commit": "a23416d8abadbe821a4db8d89417d23d57895615",
+  "wheel_sha256": "1c2453fc2826582e5116da1aedfa42eb7ee70aab541e2fe0177ec852e0634e52",
+  "image_id": "sha256:837ea286adf30211d45220b8a48034e0671817769bde9efdf6cce7712d853625",
+  "application_files": 483,
+  "python_files": 456,
+  "metadata_files": 5,
+  "installed": {
+    "default": {
+      "openai": "2.29.0",
+      "pydantic": "2.14.1",
+      "passed": 119,
+      "skipped": 3,
+      "seconds": 1988.74,
+      "log_sha256": "90ce3a0e05c594d9bc0b5cc5df61cbb84f09315af68a2bc568d61642909ad62f"
+    },
+    "sdk3": {
+      "openai": "3.35.1",
+      "pydantic": "2.14.1",
+      "passed": 119,
+      "skipped": 3,
+      "seconds": 1981.89,
+      "log_sha256": "f18b4b625cdb5e76b1eee5a2b2fe64f442bf86450c03e4b32fba03a0e5e2a17a"
+    }
+  },
+  "skips": {
+    "count_per_installed_selection": 3,
+    "scope": "Windows directory-symlink fixture privileges, not dependency or behavior bypasses",
+    "actual_followup_reasons_verified": true,
+    "discovery": "one fixture cannot create a directory symlink",
+    "source_and_destination_parent": "two materialization fixtures cannot create a directory symlink",
+    "nonroot_linux_guards": "source, map, workspace, discovery and handoff aliases refused with actual image; outside targets unchanged"
+  },
+  "container_contract": {
+    "schema": "cutback.application-check.v2",
+    "image_identity": "exact installed sha256 ID; no pull or build",
+    "daemon": "local Unix/named-pipe Linux daemon; builtin seccomp and resource support required",
+    "uid": 10001,
+    "network": "none",
+    "root_and_source": "read only",
+    "source": "private copy of tracked files only; no Git history, ignored files, home or Docker socket",
+    "application_environment": "env -i plus bounded reviewed fixture variables",
+    "capabilities": "all dropped; no new privileges; private IPC/cgroup/PID context",
+    "cpu_limit": 1,
+    "memory_default_mib": 512,
+    "extra_swap_mib": 0,
+    "pids_default": 64,
+    "tmp_default_mib": 64,
+    "output": "counted and discarded; Docker log driver none",
+    "independent_deadline": "GNU timeout PID 1, command deadline plus one second termination grace",
+    "host_owner_tree_killed_during_running_container": "passed in each installed SDK selection",
+    "detached_descendants_timeout_output_failure_cancellation": "passed with owned identity cleanup",
+    "actual_pid_and_tmp_limits": "passed; EAGAIN and ENOSPC exercised",
+    "trusted_components": "local daemon, reviewed image and host kernel; not a VM or independent attestation",
+    "host_crash_recovery": "stopped container/private temp files may remain; frozen SHA label identifies attempt; unknown reply never authorizes replay"
+  },
+  "qualified_runtime_images": {
+    "python": {
+      "image_id": "sha256:837ea286adf30211d45220b8a48034e0671817769bde9efdf6cce7712d853625",
+      "runtime": "/app/.venv/bin/python",
+      "version": "3.11.18"
+    },
+    "node": {
+      "image_id": "sha256:0e5f906573693feaa1e21057ebdcfdb5bd5021f050b2dc7c9deceb629c7da2a8",
+      "runtime": "/usr/local/bin/node",
+      "version": "22.23.3"
+    }
+  },
+  "handoffs": "native campaign, routing and source-policy; both trees, inverse rollback, frozen intent, current rights and lost-reply no replay",
+  "minimal_client": "matching core-plus-HTTPX wheel; SDK/server/crypto/test modules absent; isolate preparation performs no Docker access",
+  "browser": "generic authenticated PostgreSQL dashboard and mobile/axe included per installed selection; credentials remain memory only",
+  "v1_compatibility": {
+    "fixture": "tests/fixtures/application-check-v1-compatibility.json",
+    "source_wheel_sha256": "078902aae35069bb593eb35db64502647eef1d92cafd71923a014c87280ba70c",
+    "contract_hash": "e9dc94e6ede9432c0f088a1a68bfc7a22adaae5a10f32246e9216514e573f2c5",
+    "receipt_hash": "4943fe687bed4b05b8ac3e8a9102ecdf04e0fa3b36e35f9a1ed635056d6306a8",
+    "identities_preserved": true
+  },
+  "recovery": {
+    "migration": "0035",
+    "tables": 108,
+    "encrypted_objects": 3693,
+    "cache_objects": 20,
+    "plans": 46,
+    "native_profiles": 24,
+    "all_previous_feature_profile": true,
+    "row_counts_match": true,
+    "new_verification_audit_events": 1,
+    "receipt_sha256": "de616cb59882187895663c037b159bc17fc6aa2dfbfaf8cf768421a750709c83"
+  },
+  "paid_provider_calls": 0,
+  "production_changed": false,
+  "pypi_changed": false,
+  "customer_quality_verified": false,
+  "open_gates": [
+    "exact public source and hosted jobs",
+    "independent deployment and customer evidence",
+    "broader market baseline"
+  ]
+}

@@ -1112,6 +1112,9 @@ export function createSDK(request:Request) {return {
   read_v1_projects__project_id__traces__trace_record_id__spans__span_id__content_post: (args:{project_id:string;trace_record_id:string;span_id:string;body:components["schemas"]["ContentPurpose"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/traces/${encodeURIComponent(String(args.trace_record_id))}/spans/${encodeURIComponent(String(args.span_id))}/content`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  services_v1_projects__project_id__policy_runtime_services_post: (args:{project_id:string;body:components["schemas"]["PolicyRuntimeServiceQuery"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/policy-runtime/services`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   intake_v1_ingest_policy_runtime_post: (args:{body:components["schemas"]["PolicyRuntimeBatch"]}) => {
     const query=new URLSearchParams();
     return request(`/ingest/policy-runtime`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},

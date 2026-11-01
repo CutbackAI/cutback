@@ -3,8 +3,10 @@
 This source feature passed local component qualification and awaits public hosted
 acceptance. It is absent from PyPI `0.1.0.dev5`.
 Use [the progress record](progress.md) for installed-wheel, container and hosted
-acceptance. It does not yet enable a cached current reference in the automatic
-improvement program; that program continues to refuse it.
+acceptance. The qualified v1 improvement program continues to refuse a cached
+current reference. The separate [v2 path](source-policy-cached-current.md) is
+under qualification and uses these observations without treating them as
+inference approval, population coverage or production savings.
 
 A policy can declare exact caching while its application runs without the private
 cache scope file. Provider-call telemetry also misses cache hits because a hit
@@ -69,6 +71,9 @@ consumer and policy from clean Git source without importing the application or
 provider SDK. It derives the call site, commit, policy hash and workflow, requests
 only their retained metadata, and checks the source again before returning.
 It sends no inference, grants no execution approval and changes no source.
+`--service` is optional when exactly one matching retained service exists. The
+bounded discovery query never selects an ambiguous or truncated service list by
+recency. An explicit name remains available when several services share a source.
 
 `POST /v1/projects/{project_id}/policy-runtime/inspect` accepts the same explicit
 scope plus an aware start/end window of at most 30 days. It requires project read

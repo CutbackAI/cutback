@@ -202,11 +202,41 @@ after dispatch requires explicit operator review. The original source and refs
 remain unchanged. Synthetic evidence stays local review evidence. Cached choices
 require separate explicit private runtime configuration and qualified runtime
 checks; a configuration diff alone is not cache activation. Whole cost/hosting,
-production savings, cached current-reference cycles and common selection with
-other engines remain open. An uncached current router can be a new reference;
+production savings and common selection with other engines remain open.
+An uncached current router can be a new reference;
 preserve its actual per-input calls, full domain and required confirmation rather
 than substituting its historical native anchor. `source-policy archive` preserves only a terminal,
 fully accounted journal before a new revision; it transfers no approval.
+
+Container-check branch: when the owner has authorized a reviewed local Linux
+image, inspect installed `checks isolate --help` and read
+`docs/application-containers.md`. Bind its exact already installed image ID
+and runtime path with `--container-image` and `--container-python-path` on the
+first campaign/routing/source-policy `finish` preview. Keep those options on
+resume. Review the actual commands and consumer coverage, then reuse existing
+test authorization for `--execute-local`. Preparation grants no execution,
+image build/pull, network or deployment authority. Missing dependencies or
+unsupported writes/network stop this branch; choose a separately reviewed test
+arrangement instead of falling back to the host. Completion requires the exact
+v2 receipt, both source checks, inverse rollback and refreshed canonical rights.
+An uncertain dispatched check without a receipt requires operator review.
+
+For a current policy that already declares exact cache, first read installed
+`docs/source-policy-cached-current.md` and verify both installed preparation help
+and the collector's explicit v2 cached-current capability. This unreleased path
+requires uniform complete source-matched retained activity. Prefer automatic
+unique-service discovery; select `--runtime-service` explicitly when ambiguous.
+Preparation freezes the observed activation and exact window. Reuse that journal
+on an uncertain reply. Stop on mixed, missing, changed or stale evidence; the
+existing approval cannot acquire a newly refreshed observation window. Native
+training uses an explicit uncached execution of the same current policy;
+evaluation preserves configuration and activation. Active comparisons use
+isolated cold-cache replay, with production hit rate and savings unknown. A
+configured-but-inactive cache stays inactive. Finish with passing checks on both
+source trees and exact rollback. Report a required private scope revision or
+deactivation as an external runtime gate; the source patch grants no activation.
+Completion requires the saved program's actual terminal receipt and passed
+application checks, not just a selected candidate. Retain failed checks as blockers.
 
 # Reactive user evaluation
 

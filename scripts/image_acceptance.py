@@ -22,6 +22,7 @@ from uuid import uuid4
 import httpx
 import psycopg
 from backup_restore import backup, compose, restore
+from policy_cached_acceptance import SEED as POLICY_CACHED_SEED
 from policy_runtime_acceptance import SEED as POLICY_RUNTIME_SEED
 from psycopg import sql
 
@@ -400,6 +401,7 @@ def main(
     source_routing=False,
     routing_program=False,
     source_policy=False,
+    cached_current_policy=False,
     generated_scenarios=False,
     reactive_users=False,
 ):
@@ -593,6 +595,13 @@ print(json.dumps({"project_id":manifest["project_id"],
                 policy_activity_sample = json.loads(
                     inside(container, POLICY_RUNTIME_SEED, values).strip().splitlines()[-1]
                 )
+                cached_policy_sample = (
+                    json.loads(
+                        inside(container, POLICY_CACHED_SEED, values).strip().splitlines()[-1]
+                    )
+                    if cached_current_policy
+                    else None
+                )
                 routing_sample = (
                     seed_owned_routing_program(container, values) if routing_program else None
                 )
@@ -647,6 +656,27 @@ print(json.dumps({"project_id":manifest["project_id"],
                         key,
                         compose("pg_restore", "-U", "cutback", "-d", names[1], "--exit-on-error"),
                     )
+
+                def counts(name):
+                    with psycopg.connect(**{**kwargs, "dbname": name}) as conn:
+                        tables = [
+                            row[0]
+                            for row in conn.execute(
+                                "SELECT tablename FROM pg_tables "
+                                "WHERE schemaname='public' ORDER BY tablename"
+                            )
+                        ]
+                        return {
+                            table: conn.execute(
+                                sql.SQL("SELECT count(*) FROM {}").format(sql.Identifier(table))
+                            ).fetchone()[0]
+                            for table in tables
+                        }
+
+                # Compare the complete restored database before purpose-scoped
+                # verification reads legitimately append their own audit events.
+                before = counts(names[0])
+                assert before == counts(names[1])
                 recovery = (
                     """import json,os,shutil
 from pathlib import Path
@@ -1034,7 +1064,8 @@ with sessions() as session:
   from cutback.server.policy_program_db import (
    SourcePolicyProgramRecord,SourcePolicyProgramRun,SourcePolicyProgramSelection)
   from cutback.server.policy_program_service import load_program,source_proposal
-  programs=session.scalars(select(SourcePolicyProgramRecord)).all()
+  programs=session.scalars(select(SourcePolicyProgramRecord).where(
+   SourcePolicyProgramRecord.id==__import__("uuid").UUID(SOURCE_POLICY_PROGRAM_ID))).all()
   assert len(programs)==1
   program=programs[0]
   assert program.status=="COMPLETED" and program.approval_status=="consumed"
@@ -1054,10 +1085,24 @@ with sessions() as session:
   assert selection.strategy=="learned"
   proposal=source_proposal(session,new_only,program)
   assert proposal.full_task_cost_known is False and proposal.decision=="synthetic_local_review_only"
+ cached=CACHED_CURRENT_RECEIPT
+ if cached:
+  from cutback.server.policy_program_db import SourcePolicyProgramRecord
+  from cutback.server.policy_program_service import load_program
+  record=session.get(SourcePolicyProgramRecord,__import__("uuid").UUID(cached["program_id"]))
+  assert str(record.project_id)==cached["project_id"]
+  assert record.status=="READY_FOR_APPROVAL" and record.approval_status=="pending"
+  assert record.requests_used==record.known_cost_requests==0 and record.reserved_usd==0
+  assert record.approval_sha256==cached["program_hash"]
+  spec,_,_,_=load_program(session,new_only,record)
+  assert spec.version=="cutback.source-policy-program.v2"
+  assert spec.runtime_reference.summary.model_dump(mode="json")==cached["runtime_summary"]
+  assert spec.template.source_policy_execution.reference.cache_requested is True
 from fastapi.testclient import TestClient
 from cutback.server.api import create_app
 restored_app=create_app(database_url=url.render_as_string(hide_password=False),
  admin_token=os.environ["CUTBACK_ADMIN_TOKEN"],allow_insecure_http=True)
+restored_app.state.artifact_store=new_only
 with TestClient(restored_app) as client:
  headers={"Authorization":"Bearer "+os.environ["CUTBACK_ADMIN_TOKEN"]}
  dashboard=client.get("/v1/projects/"+SHARED_DASHBOARD_PROJECT+"/dashboards/"+SHARED_DASHBOARD_ID,headers=headers)
@@ -1078,6 +1123,26 @@ with TestClient(restored_app) as client:
  response=client.post("/v1/projects/"+activity["project_id"]+"/policy-runtime/inspect",
   headers=headers,json=activity["summary"]["scope"])
  assert response.status_code==200 and response.json()==activity["summary"]
+ if cached:
+  from cutback.core.request_profiles import fingerprint
+  path="/v1/projects/"+cached["project_id"]+"/source-policy-programs/"+cached["program_id"]
+  response=client.get(path,headers=headers)
+  assert response.status_code==200
+  current=response.json()
+  assert current["program_hash"]==cached["program_hash"] and current["requests"]==0
+  assert fingerprint(current["specification"])==cached["public_specification_sha256"]
+  response=client.post(path+"/content",headers=headers,json={"purpose":"owned-recovered-current-policy"})
+  assert response.status_code==200
+  assert response.json()["specification"]["runtime_reference"]["summary"]==cached["runtime_summary"]
+  from sqlalchemy import func
+  from cutback.server.db import AuditEvent
+  with sessions() as audit_session:
+   audit_count=audit_session.scalar(select(func.count()).select_from(AuditEvent).where(
+    AuditEvent.project_id==__import__("uuid").UUID(cached["project_id"]),
+    AuditEvent.action=="source_policy_program_content_read",
+    AuditEvent.details["program_id"].as_string()==cached["program_id"],
+    AuditEvent.details["purpose"].as_string()=="owned-recovered-current-policy"))
+   assert audit_count==1
 restored_app.state.engine.dispose()
 print(json.dumps({"restored_and_rekeyed_objects":len(rows)+len(caches)+profile_objects,"restored_and_rekeyed_cache_objects":len(caches),"restored_and_rekeyed_plans":len(plans),"restored_native_profile_objects":profile_objects,"native_profile_analysis_restored":True,"semantic_qualified_catalog_restored":True,"isolated_tool_receipts_restored":bool(TOOLS_EXPECTED),"paired_security_suite_restored":bool(SECURITY_EXPECTED),"runtime_guardrail_receipts_restored":bool(RUNTIME_GUARDS),"database_pointers_preserved":True,"shared_dashboard_pins_and_retained_evidence_restored":True}))
 engine.dispose()
@@ -1102,6 +1167,11 @@ engine.dispose()
                     .replace("REACTIVE_EXPECTED", repr(reactive_users))
                     .replace("SHARED_DASHBOARD_PROJECT", repr(manifest["project_id"]))
                     .replace("POLICY_ACTIVITY_RECEIPT", repr(policy_activity_sample))
+                    .replace("CACHED_CURRENT_RECEIPT", repr(cached_policy_sample))
+                    .replace(
+                        "SOURCE_POLICY_PROGRAM_ID",
+                        repr(policy_sample["program_id"] if policy_sample else None),
+                    )
                     .replace(
                         "SHARED_DASHBOARD_ID",
                         repr(manifest["shared_dashboard_sample"]["dashboard_id"]),
@@ -1113,24 +1183,12 @@ engine.dispose()
                 )
                 recovered = json.loads(inside(container, recovery, values).strip().splitlines()[-1])
 
-                def counts(name):
-                    with psycopg.connect(**{**kwargs, "dbname": name}) as conn:
-                        tables = [
-                            row[0]
-                            for row in conn.execute(
-                                "SELECT tablename FROM pg_tables "
-                                "WHERE schemaname='public' ORDER BY tablename"
-                            )
-                        ]
-                        return {
-                            table: conn.execute(
-                                sql.SQL("SELECT count(*) FROM {}").format(sql.Identifier(table))
-                            ).fetchone()[0]
-                            for table in tables
-                        }
-
-                before, after = counts(names[0]), counts(names[1])
-                assert before == after
+                # Rekeying preserves rows. The sole allowed new row is the
+                # exact purpose/program audit event verified inside the image.
+                expected_after = dict(before)
+                if cached_policy_sample:
+                    expected_after["audit_events"] += 1
+                assert counts(names[1]) == expected_after
                 with psycopg.connect(**{**kwargs, "dbname": names[1]}) as connection:
                     revision = connection.execute(
                         "SELECT version_num FROM alembic_version"
@@ -1256,6 +1314,10 @@ engine.dispose()
                     ),
                     "source_policy_program_envelope_selection_and_source_restored": source_policy,
                     "policy_runtime_native_cache_metadata_restored": policy_activity_sample,
+                    "cached_current_policy_preparation_and_retained_reference_restored": (
+                        cached_policy_sample
+                    ),
+                    "new_verification_audit_events": int(bool(cached_policy_sample)),
                     "joint_retrieval_confirmation_and_both_tree_checks": joint_model_retrieval,
                     "pending_workload_portfolio_and_source_window_restored": workload_portfolio,
                     "complete_workload_fixture_confirmation_restored": workload_portfolio_demo,
@@ -1264,7 +1326,7 @@ engine.dispose()
                     ),
                     "reviewed_generated_development_scenarios_restored": generated_scenarios,
                     "reactive_user_contracts_receipts_and_trajectories_restored": reactive_users,
-                    "restored_tables": len(after),
+                    "restored_tables": len(before),
                     "row_counts_match": True,
                     **recovered,
                     "production_changed": False,
@@ -1316,6 +1378,7 @@ if __name__ == "__main__":
     parser.add_argument("--source-routing", action="store_true")
     parser.add_argument("--routing-program", action="store_true")
     parser.add_argument("--source-policy", action="store_true")
+    parser.add_argument("--cached-current-policy", action="store_true")
     parser.add_argument("--generated-scenarios", action="store_true")
     parser.add_argument("--reactive-users", action="store_true")
     args = parser.parse_args()
@@ -1337,6 +1400,7 @@ if __name__ == "__main__":
         source_routing=args.source_routing,
         routing_program=args.routing_program,
         source_policy=args.source_policy,
+        cached_current_policy=args.cached_current_policy,
         generated_scenarios=args.generated_scenarios,
         reactive_users=args.reactive_users,
     )

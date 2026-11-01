@@ -11,8 +11,7 @@ from cutback.core.workspace import read_private, write_private
 from cutback.routing_changes import prepare_patch, review_change
 
 
-@pytest.fixture
-def journey(tmp_path, monkeypatch):
+def setup_journey(tmp_path, monkeypatch):
     root = application(tmp_path)
     (root / "check_application.py").write_text(
         "import json,os\nfrom pathlib import Path\n"
@@ -57,6 +56,11 @@ def journey(tmp_path, monkeypatch):
     monkeypatch.setattr("cutback.agent_routing_program.review", refreshed_review)
     monkeypatch.setenv("OPENAI_API_KEY", "owned-ambient-never-in-checks")
     return root, tmp_path / "private-review", program, revoked, fetched
+
+
+@pytest.fixture
+def journey(tmp_path, monkeypatch):
+    return setup_journey(tmp_path, monkeypatch)
 
 
 def invoke(journey, **changes):

@@ -16,6 +16,8 @@ from cutback.core.policy_activity import (
     PolicyRuntimeBatch,
     PolicyRuntimeEvent,
     PolicyRuntimeScope,
+    PolicyRuntimeServiceQuery,
+    PolicyRuntimeServices,
     PolicyRuntimeSummary,
 )
 from cutback.server.billing import meter_ingestion
@@ -155,6 +157,51 @@ def inspect_activity(session, project, body):
 
 
 def install_policy_activity(app, sessions, authorize, scope):
+    @app.post(
+        "/v1/projects/{project_id}/policy-runtime/services", response_model=PolicyRuntimeServices
+    )
+    def services(project_id: UUID, body: PolicyRuntimeServiceQuery, auth=Depends(authorize)):
+        scope(auth, project_id)
+        with sessions() as session:
+            environment = session.scalar(
+                select(Environment).where(
+                    Environment.project_id == project_id, Environment.name == body.environment
+                )
+            )
+            if environment is None:
+                raise HTTPException(404, "POLICY_ACTIVITY_ENVIRONMENT_NOT_FOUND")
+            epoch = datetime(1970, 1, 1, tzinfo=UTC)
+
+            def nanos(value):
+                delta = value - epoch
+                return (
+                    delta.days * 86400 + delta.seconds
+                ) * 1_000_000_000 + delta.microseconds * 1000
+
+            values = session.scalars(
+                select(PolicyActivityRecord.service_name)
+                .where(
+                    PolicyActivityRecord.project_id == project_id,
+                    PolicyActivityRecord.environment_id == environment.id,
+                    *(
+                        getattr(PolicyActivityRecord, name) == getattr(body, name)
+                        for name in ("workflow", "call_site_id", "source_commit", "policy_sha256")
+                    ),
+                    PolicyActivityRecord.started_ns >= nanos(body.window_start),
+                    PolicyActivityRecord.started_ns < nanos(body.window_end),
+                )
+                .distinct()
+                .order_by(PolicyActivityRecord.service_name)
+                .limit(21)
+            ).all()
+            return PolicyRuntimeServices(
+                project_id=project_id,
+                environment_id=environment.id,
+                scope=body,
+                services=list(values[:20]),
+                truncated=len(values) > 20,
+            )
+
     @app.post("/v1/ingest/policy-runtime")
     def intake(body: PolicyRuntimeBatch, auth=Depends(authorize)):
         scope(auth, body.project_id, ("ingest",))

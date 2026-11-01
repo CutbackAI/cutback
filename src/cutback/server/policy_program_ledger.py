@@ -55,7 +55,11 @@ def reserve_program_call(
         owner_usd = Decimal(str(owner["max_usd"]))
         owner_requests = owner["max_requests"]
         if (
-            envelope.get("contract") != "cutback.source-policy-program-budget.v1"
+            envelope.get("contract")
+            != {
+                "cutback.source-policy-program.v1": "cutback.source-policy-program-budget.v1",
+                "cutback.source-policy-program.v2": "cutback.source-policy-program-budget.v2",
+            }.get(parent.specification.get("version"))
             or envelope.get("eligible") is not True
             or not cap.is_finite()
             or not compiled.is_finite()

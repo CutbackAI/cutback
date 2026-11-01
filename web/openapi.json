@@ -17616,6 +17616,56 @@
         }
       }
     },
+    "/v1/projects/{project_id}/policy-runtime/services": {
+      "post": {
+        "summary": "Services",
+        "operationId": "services_v1_projects__project_id__policy_runtime_services_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyRuntimeServiceQuery"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyRuntimeServices"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/ingest/policy-runtime": {
       "post": {
         "summary": "Intake",
@@ -17684,7 +17734,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PolicyRuntimeSummary"
+                  "$ref": "#/components/schemas/PolicyRuntimeSummary-Output"
                 }
               }
             }
@@ -30588,6 +30638,17 @@
               }
             ],
             "title": "Cache Operation Upper Usd"
+          },
+          "cache_requested": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Requested"
           }
         },
         "additionalProperties": false,
@@ -30637,6 +30698,17 @@
               }
             ],
             "title": "Cache Operation Upper Usd"
+          },
+          "cache_requested": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Requested"
           }
         },
         "additionalProperties": false,
@@ -30883,6 +30955,37 @@
         ],
         "title": "PolicyRuntimeEvent"
       },
+      "PolicyRuntimeReference": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.source-policy-runtime-reference.v1",
+            "title": "Version",
+            "default": "cutback.source-policy-runtime-reference.v1"
+          },
+          "source_binding_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Source Binding Sha256"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/PolicyRuntimeSummary-Input"
+          },
+          "summary_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Summary Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_binding_sha256",
+          "summary",
+          "summary_sha256"
+        ],
+        "title": "PolicyRuntimeReference"
+      },
       "PolicyRuntimeScope": {
         "properties": {
           "environment": {
@@ -30940,7 +31043,329 @@
         ],
         "title": "PolicyRuntimeScope"
       },
-      "PolicyRuntimeSummary": {
+      "PolicyRuntimeServiceQuery": {
+        "properties": {
+          "environment": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Environment"
+          },
+          "workflow": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Workflow"
+          },
+          "call_site_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Call Site Id"
+          },
+          "source_commit": {
+            "type": "string",
+            "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$",
+            "title": "Source Commit"
+          },
+          "policy_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Policy Sha256"
+          },
+          "window_start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Window Start"
+          },
+          "window_end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Window End"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "environment",
+          "workflow",
+          "call_site_id",
+          "source_commit",
+          "policy_sha256",
+          "window_start",
+          "window_end"
+        ],
+        "title": "PolicyRuntimeServiceQuery"
+      },
+      "PolicyRuntimeServices": {
+        "properties": {
+          "profile": {
+            "type": "string",
+            "const": "cutback.source-policy-runtime-services.v1",
+            "title": "Profile",
+            "default": "cutback.source-policy-runtime-services.v1"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Environment Id"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/PolicyRuntimeServiceQuery"
+          },
+          "services": {
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Services"
+          },
+          "truncated": {
+            "type": "boolean",
+            "title": "Truncated"
+          },
+          "capture_coverage": {
+            "type": "string",
+            "const": "unknown",
+            "title": "Capture Coverage",
+            "default": "unknown"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "project_id",
+          "environment_id",
+          "scope",
+          "services",
+          "truncated"
+        ],
+        "title": "PolicyRuntimeServices"
+      },
+      "PolicyRuntimeSummary-Input": {
+        "properties": {
+          "profile": {
+            "type": "string",
+            "const": "cutback.source-policy-runtime-summary.v1",
+            "title": "Profile",
+            "default": "cutback.source-policy-runtime-summary.v1"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/PolicyRuntimeScope"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Environment Id"
+          },
+          "sample_limit": {
+            "type": "integer",
+            "const": 10000,
+            "title": "Sample Limit",
+            "default": 10000
+          },
+          "retained_operations": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Retained Operations"
+          },
+          "truncated": {
+            "type": "boolean",
+            "title": "Truncated"
+          },
+          "raw_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Raw Sha256"
+          },
+          "states": {
+            "additionalProperties": {
+              "type": "integer",
+              "maximum": 10000.0,
+              "minimum": 0.0
+            },
+            "propertyNames": {
+              "enum": [
+                "hit",
+                "native_miss",
+                "inactive",
+                "unknown"
+              ]
+            },
+            "type": "object",
+            "title": "States"
+          },
+          "completions": {
+            "additionalProperties": {
+              "type": "integer",
+              "maximum": 10000.0,
+              "minimum": 0.0
+            },
+            "propertyNames": {
+              "enum": [
+                "completed",
+                "failed",
+                "cancelled"
+              ]
+            },
+            "type": "object",
+            "title": "Completions"
+          },
+          "configured_operations": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Configured Operations"
+          },
+          "requested_cache_operations": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Requested Cache Operations"
+          },
+          "known_native_sdk_invocations": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Known Native Sdk Invocations"
+          },
+          "native_sdk_invocations": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Native Sdk Invocations"
+          },
+          "unknown_native_operations": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Unknown Native Operations"
+          },
+          "known_cache_operations": {
+            "type": "integer",
+            "maximum": 20000.0,
+            "minimum": 0.0,
+            "title": "Known Cache Operations"
+          },
+          "cache_operations": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 20000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Operations"
+          },
+          "unknown_cache_operations": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Unknown Cache Operations"
+          },
+          "cache_component_upper_usd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 2000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Component Upper Usd"
+          },
+          "cache_cost_basis_refs": {
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$"
+            },
+            "type": "array",
+            "maxItems": 10000,
+            "title": "Cache Cost Basis Refs"
+          },
+          "capture_coverage": {
+            "type": "string",
+            "const": "unknown",
+            "title": "Capture Coverage",
+            "default": "unknown"
+          },
+          "identity_basis": {
+            "type": "string",
+            "const": "client_reported_source_map",
+            "title": "Identity Basis",
+            "default": "client_reported_source_map"
+          },
+          "invoice_verified_cost_usd": {
+            "type": "null",
+            "title": "Invoice Verified Cost Usd"
+          },
+          "business_task_success": {
+            "type": "null",
+            "title": "Business Task Success"
+          },
+          "content_included": {
+            "type": "boolean",
+            "const": false,
+            "title": "Content Included",
+            "default": false
+          },
+          "execution_authorized": {
+            "type": "boolean",
+            "const": false,
+            "title": "Execution Authorized",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "scope",
+          "project_id",
+          "environment_id",
+          "retained_operations",
+          "truncated",
+          "raw_sha256",
+          "states",
+          "completions",
+          "configured_operations",
+          "requested_cache_operations",
+          "known_native_sdk_invocations",
+          "native_sdk_invocations",
+          "unknown_native_operations",
+          "known_cache_operations",
+          "cache_operations",
+          "unknown_cache_operations",
+          "cache_component_upper_usd",
+          "cache_cost_basis_refs"
+        ],
+        "title": "PolicyRuntimeSummary"
+      },
+      "PolicyRuntimeSummary-Output": {
         "properties": {
           "profile": {
             "type": "string",
@@ -36794,7 +37219,10 @@
         "properties": {
           "version": {
             "type": "string",
-            "const": "cutback.source-policy-execution.v1",
+            "enum": [
+              "cutback.source-policy-execution.v1",
+              "cutback.source-policy-execution.v2"
+            ],
             "title": "Version",
             "default": "cutback.source-policy-execution.v1"
           },
@@ -36852,7 +37280,10 @@
         "properties": {
           "version": {
             "type": "string",
-            "const": "cutback.source-policy-execution.v1",
+            "enum": [
+              "cutback.source-policy-execution.v1",
+              "cutback.source-policy-execution.v2"
+            ],
             "title": "Version",
             "default": "cutback.source-policy-execution.v1"
           },
@@ -37371,6 +37802,28 @@
             ],
             "title": "Max Fraction Of Opportunity",
             "default": "0.1"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "cutback.source-policy-program.v2"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
+          "runtime_reference": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PolicyRuntimeReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -37417,7 +37870,10 @@
         "properties": {
           "version": {
             "type": "string",
-            "const": "cutback.source-policy-proposal.v1",
+            "enum": [
+              "cutback.source-policy-proposal.v1",
+              "cutback.source-policy-proposal.v2"
+            ],
             "title": "Version",
             "default": "cutback.source-policy-proposal.v1"
           },
@@ -37484,6 +37940,28 @@
             "const": false,
             "title": "Full Task Cost Known",
             "default": false
+          },
+          "original_cache_requested": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Cache Requested"
+          },
+          "proposed_cache_requested": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Cache Requested"
           }
         },
         "additionalProperties": false,

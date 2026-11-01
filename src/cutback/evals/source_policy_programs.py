@@ -9,9 +9,11 @@ from decimal import ROUND_DOWN, Context, Decimal, localcontext
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import Field, StrictInt, field_validator, model_validator
+from pydantic import Field, StrictInt, field_validator, model_serializer, model_validator
 
 from cutback.core.models import Identifier, StrictModel
+from cutback.core.policy_runtime_reference import PolicyRuntimeReference
+from cutback.core.request_profiles import fingerprint
 from cutback.evals.campaigns import CampaignBudget, NativeGeneratorSpec
 from cutback.evals.experiments import ExperimentPlan, provider_models, upper_cost
 from cutback.evals.learned_routing import RoutingFitOptions
@@ -20,7 +22,9 @@ from cutback.pricing import Catalog
 
 
 class SourcePolicyProgram(StrictModel):
-    version: Literal["cutback.source-policy-program.v1"] = "cutback.source-policy-program.v1"
+    version: Literal["cutback.source-policy-program.v1", "cutback.source-policy-program.v2"] = (
+        "cutback.source-policy-program.v1"
+    )
     dataset_id: UUID
     baseline_snapshot_id: UUID
     environment: Identifier
@@ -33,6 +37,14 @@ class SourcePolicyProgram(StrictModel):
     )
     forecast_successful_tasks: Annotated[StrictInt, Field(ge=1, le=1000000000)] | None = None
     max_fraction_of_opportunity: Decimal = Field(default=Decimal("0.1"), gt=0, le=Decimal("0.25"))
+    runtime_reference: PolicyRuntimeReference | None = None
+
+    @model_serializer(mode="wrap")
+    def preserve_v1_wire(self, handler):
+        value = handler(self)
+        if self.runtime_reference is None:
+            value.pop("runtime_reference", None)
+        return value
 
     @field_validator(
         "conservative_savings_per_success_usd", "max_fraction_of_opportunity", mode="before"
@@ -54,11 +66,33 @@ class SourcePolicyProgram(StrictModel):
             or execution.phase != "evaluation"
             or plan.split != "validation"
             or plan.predecessor_run_id
-            or execution.reference.cache_enabled
             or self.generator is not None
             and self.generator.transport != execution.transport
         ):
             raise ValueError("POLICY_PROGRAM_DISTINCT_CURRENT_REFERENCE_TEMPLATE_REQUIRED")
+        if self.version == "cutback.source-policy-program.v1":
+            if (
+                self.runtime_reference is not None
+                or execution.version != "cutback.source-policy-execution.v1"
+                or execution.reference.cache_enabled
+            ):
+                raise ValueError("POLICY_PROGRAM_DISTINCT_CURRENT_REFERENCE_TEMPLATE_REQUIRED")
+        else:
+            runtime = self.runtime_reference
+            if (
+                runtime is None
+                or execution.version != "cutback.source-policy-execution.v2"
+                or execution.reference.cache_requested != runtime.cache_requested
+                or not runtime.cache_requested
+                and any(value.cache_enabled for value in execution.candidates)
+                or runtime.source_binding_sha256
+                != fingerprint(execution.source.model_dump(mode="json"))
+                or runtime.summary.scope.environment != self.environment
+                or runtime.summary.scope.policy_sha256 != execution.source.policy_sha256
+                or runtime.summary.scope.source_commit != execution.source.commit
+                or runtime.summary.scope.workflow != execution.source.workflow
+            ):
+                raise ValueError("POLICY_PROGRAM_CURRENT_RUNTIME_REFERENCE_REQUIRED")
         if self.generator is not None and (
             not plan.baseline.routes
             and self.generator.max_output_tokens > plan.baseline.max_output_tokens
@@ -158,8 +192,15 @@ def compile_policy_program(
     if any(descriptions[value.key] != value for value in [plan.baseline, *plan.candidates]):
         raise ValueError("POLICY_PROGRAM_FROZEN_DESCRIPTORS_CHANGED")
     original = policies[execution.reference.key]
-    if original.cache_execution is not None:
+    if (
+        specification.version == "cutback.source-policy-program.v1"
+        and original.cache_execution is not None
+    ):
         raise ValueError("POLICY_PROGRAM_CURRENT_UNCACHED_SOURCE_FRAME_REQUIRED")
+    if specification.version == "cutback.source-policy-program.v2":
+        if original.cache_execution is None or specification.runtime_reference is None:
+            raise ValueError("POLICY_PROGRAM_CURRENT_CACHED_SOURCE_FRAME_REQUIRED")
+        specification.runtime_reference.require_current(execution.source)
     if specification.generator is not None and (
         specification.generator.max_instruction_bytes > original.max_instruction_bytes
         or specification.generator.max_output_tokens > original.baseline.max_output_tokens
@@ -168,21 +209,22 @@ def compile_policy_program(
     counts, inputs = _dataset(specification, dataset, policies)
     costs = policy_upper_costs(execution, policies)
     baseline = costs[execution.reference.key]
+    native_baseline = max(upper_cost(model) for model in provider_models(original.strategy))
     if specification.generator is not None:
         from cutback.evals.policy_generation import seeds
 
-        for seed in seeds(policies).values():
+        for seed in seeds(policies, specification=specification).values():
             possible = seed.strategy.model_copy(
                 update={"max_output_tokens": specification.generator.max_output_tokens}
             )
-            if upper_cost(possible) > baseline:
+            if upper_cost(possible) > native_baseline:
                 raise ValueError("POLICY_PROGRAM_GENERATOR_NATIVE_UPPER_EXCEEDS_CURRENT_REFERENCE")
     multiplicities = Counter(inputs)
     hits = sum(number - 1 for number in multiplicities.values())
     eligible, omitted, cache_evidence = [], {}, {}
     for reference in references[1:]:
         policy = policies[reference.key]
-        if any(upper_cost(model) > baseline for model in provider_models(policy.strategy)):
+        if any(upper_cost(model) > native_baseline for model in provider_models(policy.strategy)):
             raise ValueError("POLICY_PROGRAM_NATIVE_TARGET_EXCEEDS_REFERENCE_BOUND")
         if reference.cache_enabled:
             cache_evidence[reference.key] = {
@@ -203,6 +245,17 @@ def compile_policy_program(
             continue
         eligible.append(reference.key)
     reasons = []
+    if (
+        specification.version == "cutback.source-policy-program.v2"
+        and execution.reference.cache_enabled
+    ):
+        test_inputs = [
+            item["case"]["input"] for item in dataset["items"] if item["split"] == "test"
+        ]
+        if not hits:
+            reasons.append("current_cache_replay_requires_repeated_validation_inputs")
+        if len(test_inputs) == len(set(test_inputs)):
+            reasons.append("current_cache_replay_requires_repeated_confirmation_inputs")
     if specification.generator is not None:
         from cutback.evals.policy_generation import input_upper_bytes
 
@@ -237,10 +290,12 @@ def compile_policy_program(
         # changes after approval, including the full untouched confirmation.
         for count in range(len(eligible), 0, -1):
             selected = eligible[:count]
+            cached_current = specification.version == "cutback.source-policy-program.v2"
             generator = specification.generator
             generated = generator.rounds * generator.variants_per_round if generator else 0
             native_controls = sum(
-                not policies[key].strategy.routes and not policies[key].cache_execution
+                not policies[key].strategy.routes
+                and (cached_current or not policies[key].cache_execution)
                 for key in selected
             )
             training_controls = min(4, native_controls + generated)
@@ -249,8 +304,14 @@ def compile_policy_program(
                 policies[key].cache_execution.operation_cost_upper_usd
                 for key in selected
                 if policies[key].cache_execution is not None
+                and next(value for value in references if value.key == key).cache_enabled
             ]
-            routed_count = 1 + bool(cache_bounds) if fit_enabled else 0
+            if (
+                specification.version == "cutback.source-policy-program.v2"
+                and execution.reference.cache_enabled
+            ):
+                cache_bounds.append(original.cache_execution.operation_cost_upper_usd)
+            routed_count = (1 if cached_current else 1 + bool(cache_bounds)) if fit_enabled else 0
             cache_upper = max(cache_bounds, default=Decimal(0)) * 2
             next_phases = {
                 "static_validation": counts["validation"]
@@ -263,7 +324,9 @@ def compile_policy_program(
                 * baseline
                 if generator
                 else Decimal(0),
-                "training_if_search_fails": counts["train"] * (1 + training_controls) * baseline
+                "training_if_search_fails": counts["train"]
+                * (1 + training_controls)
+                * native_baseline
                 if fit_enabled
                 else Decimal(0),
                 "routed_validation_if_search_fails": counts["validation"]
@@ -295,7 +358,7 @@ def compile_policy_program(
                 break
         if not chosen and not reasons:
             reasons.append("complete_program_exceeds_opportunity_or_request_cap")
-        return {
+        result = {
             "contract": "cutback.source-policy-program-budget.v1",
             "eligible": bool(chosen),
             "independent_labels_declared": independent_labels is True,
@@ -331,6 +394,21 @@ def compile_policy_program(
             "production_changed": False,
             "reasons": reasons,
         }
+        if specification.version == "cutback.source-policy-program.v2":
+            runtime = specification.runtime_reference
+            if runtime is None:
+                raise ValueError("POLICY_PROGRAM_CURRENT_RUNTIME_REFERENCE_REQUIRED")
+            result.update(
+                contract="cutback.source-policy-program-budget.v2",
+                reference_runtime_cache_requested=execution.reference.cache_requested,
+                reference_runtime_evidence_sha256=runtime.summary_sha256,
+                training_reference_kind="uncached_shadow_of_current_source",
+                runtime_identity_basis="client_reported_source_map",
+                reference_execution_scope="isolated_cold_cache_replay"
+                if execution.reference.cache_enabled
+                else "uncached_source_policy_replay",
+            )
+        return result
 
 
 def policy_confirmation_gate(report, plan: ExperimentPlan, *, sample_only=False):

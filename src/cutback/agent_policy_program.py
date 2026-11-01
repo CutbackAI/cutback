@@ -64,6 +64,8 @@ def prepare(
     cache_contract=None,
     workload_environment="staging",
     data_environment="staging",
+    runtime_service=None,
+    runtime_window_minutes=10,
 ):
     """Read the fixed source, upload explicitly authorized policies, freeze a preview.
 
@@ -72,7 +74,11 @@ def prepare(
     """
     from cutback.core.exact_cache import ExactCacheExecution
     from cutback.core.improvement_policy import SourceImprovementPolicy
-    from cutback.core.policy_execution import SourcePolicyExecutionSpec
+    from cutback.core.policy_execution import (
+        PolicyExecutionRef,
+        SourcePolicyExecutionSpec,
+        uncached_shadow_reference,
+    )
     from cutback.evals.campaigns import CampaignBudget, NativeGeneratorSpec
     from cutback.evals.experiments import ExperimentPlan, ModelSpec, provider_models, upper_cost
     from cutback.evals.learned_routing import RoutingFitOptions
@@ -91,11 +97,67 @@ def prepare(
             baseline_snapshot_id = str(UUID(str(baseline_snapshot_id)))
         TypeAdapter(Identifier).validate_python(purpose)
         original, binding = inspect_configuration(root, producer_file)
-        if original.cache_execution is not None:
-            raise ValueError("POLICY_PROGRAM_CURRENT_UNCACHED_REFERENCE_REQUIRED")
         ready = control("GET", "/v1/health/ready")
         if ready.get("source_policy_program_contract") != "cutback.source-policy-program.v1":
             raise ValueError("POLICY_PROGRAM_COLLECTOR_UPGRADE_REQUIRED")
+        runtime = None
+        if original.cache_execution is not None:
+            from cutback.agent_policy_activity import inspect_current
+            from cutback.core.policy_activity import PolicyRuntimeSummary
+            from cutback.core.policy_runtime_reference import (
+                PolicyRuntimeReference,
+                freeze_reference,
+            )
+
+            if (
+                ready.get("source_policy_cached_current_program_contract")
+                != "cutback.source-policy-program.v2"
+            ):
+                raise ValueError("POLICY_PROGRAM_CACHED_CURRENT_COLLECTOR_UPGRADE_REQUIRED")
+            if type(runtime_window_minutes) is not int or not 1 <= runtime_window_minutes <= 30:
+                raise ValueError("POLICY_PROGRAM_RUNTIME_WINDOW_ONE_TO_THIRTY_MINUTES_REQUIRED")
+            TypeAdapter(Identifier).validate_python(data_environment)
+            if runtime_service is not None:
+                TypeAdapter(Identifier).validate_python(runtime_service)
+            if path.exists():
+                previous = current(root, control)
+                runtime = PolicyRuntimeReference.model_validate(
+                    previous.get("intent", {}).get("runtime_reference")
+                ).require_current(binding)
+                scope = runtime.summary.scope
+                if (
+                    scope.environment != data_environment
+                    or runtime_service is not None
+                    and runtime_service != scope.service_name
+                    or previous["intent"].get("runtime_window_minutes") != runtime_window_minutes
+                ):
+                    raise ValueError("POLICY_PROGRAM_PREPARATION_INTENT_CHANGED")
+                runtime.require_retained(
+                    PolicyRuntimeSummary.model_validate(
+                        control(
+                            "POST",
+                            f"/v1/projects/{project_id}/policy-runtime/inspect",
+                            scope.model_dump(mode="json"),
+                        )
+                    )
+                )
+            else:
+                observation = inspect_current(
+                    root,
+                    control,
+                    project_id,
+                    producer_file=producer_file,
+                    service_name=runtime_service,
+                    environment=data_environment,
+                    window_minutes=runtime_window_minutes,
+                )
+                runtime = freeze_reference(
+                    binding, PolicyRuntimeSummary.model_validate(observation["summary"])
+                )
+            if str(runtime.summary.project_id) != project_id:
+                raise ValueError("POLICY_PROGRAM_RUNTIME_PROJECT_CHANGED")
+            if inspect_configuration(root, producer_file) != (original, binding):
+                raise ValueError("POLICY_PROGRAM_SOURCE_CHANGED_DURING_RUNTIME_INSPECTION")
         if (
             binding.async_consumer
             and ready.get("source_policy_async_contract") != "cutback.source-policy-async.v1"
@@ -187,6 +249,12 @@ def prepare(
             if cache_contract is not None
             else None
         )
+        if runtime is not None and cache is not None:
+            if cache != original.cache_execution:
+                raise ValueError("POLICY_PROGRAM_CURRENT_CACHE_CONTRACT_MUST_BE_PRESERVED")
+            # Native controls already inherit this exact configuration. Do not
+            # upload a duplicate policy or interpret configuration as activation.
+            cache = None
         if binding.async_consumer and cache is not None:
             raise ValueError("POLICY_SOURCE_ASYNC_CACHE_RUNTIME_UNQUALIFIED")
         workload = None
@@ -309,6 +377,12 @@ def prepare(
             "forecast_successful_tasks": forecast_successful_tasks,
             "transport": transport,
         }
+        if runtime is not None:
+            intent.update(
+                version="cutback.source-policy-program.v2",
+                runtime_reference=runtime.model_dump(mode="json"),
+                runtime_window_minutes=runtime_window_minutes,
+            )
         if path.exists():
             saved = current(root, control)
             if saved.get("intent") != intent:
@@ -338,6 +412,8 @@ def prepare(
             saved["preparation_cache_control_decision"] = cache_decision
             write_private(path, saved)
         references = []
+        if runtime is not None:
+            runtime.require_current(binding)
         for key, policy in policies.items():
             references.append(
                 control(
@@ -353,8 +429,26 @@ def prepare(
                     },
                 )
             )
+        if runtime is not None:
+            references = [PolicyExecutionRef.model_validate(value) for value in references]
+            references = [
+                (
+                    value.model_copy(update={"cache_requested": True})
+                    if runtime.cache_requested
+                    else uncached_shadow_reference(value)
+                )
+                if value.cache_enabled
+                else value
+                for value in references
+            ]
         execution = SourcePolicyExecutionSpec(
-            source=binding, reference=references[0], candidates=references[1:], transport=transport
+            version="cutback.source-policy-execution.v2"
+            if runtime is not None
+            else "cutback.source-policy-execution.v1",
+            source=binding,
+            reference=references[0],
+            candidates=references[1:],
+            transport=transport,
         )
         from cutback.evals.policy_models import policy_descriptors
 
@@ -395,6 +489,14 @@ def prepare(
             "generator": generator.model_dump(mode="json") if generator else None,
             "fit": fit.model_dump(mode="json") if fit else None,
         }
+        if runtime is not None:
+            runtime.require_current(binding)
+            if inspect_configuration(root, producer_file) != (original, binding):
+                raise ValueError("POLICY_PROGRAM_SOURCE_CHANGED_DURING_PREPARATION")
+            request.update(
+                version="cutback.source-policy-program.v2",
+                runtime_reference=runtime.model_dump(mode="json"),
+            )
         row = control("POST", f"/v1/projects/{project_id}/source-policy-programs", request)
         saved.update(program_id=row["id"], program_hash=row["program_hash"])
         write_private(path, saved)
@@ -563,13 +665,25 @@ def proposal(root, control, *, purpose):
         )
         if value.binding.model_dump(mode="json") != saved["source"]:
             raise ValueError("POLICY_PROGRAM_CONFIRMED_SOURCE_CHANGED")
+        cached = saved["intent"].get("version") == "cutback.source-policy-program.v2"
+        if cached:
+            from cutback.core.policy_runtime_reference import PolicyRuntimeReference
+
+            runtime = PolicyRuntimeReference.model_validate(saved["intent"]["runtime_reference"])
+            if (
+                value.version != "cutback.source-policy-proposal.v2"
+                or value.original_cache_requested != runtime.cache_requested
+            ):
+                raise ValueError("POLICY_PROGRAM_CONFIRMED_RUNTIME_REFERENCE_CHANGED")
+        elif value.version != "cutback.source-policy-proposal.v1":
+            raise ValueError("POLICY_PROGRAM_CONFIRMED_RUNTIME_REFERENCE_CHANGED")
         artifact = prepare_patch(root, value)
         write_private(directory / "policy-program-proposal.json", artifact)
         return artifact
 
 
 def review(root, control, *, purpose, contract, receipt, proposed_root, coverage, branch=None):
-    from cutback.application_checks import ApplicationCheckContract
+    from cutback.application_checks import validate_contract
     from cutback.policy_changes import review_change
 
     artifact = proposal(root, control, purpose=purpose)
@@ -589,9 +703,7 @@ def review(root, control, *, purpose, contract, receipt, proposed_root, coverage
                 "review_sha256": result["review_sha256"],
                 "base": str(root),
                 "proposed": str(Path(proposed_root).resolve()),
-                "contract": ApplicationCheckContract.model_validate(contract).model_dump(
-                    mode="json"
-                ),
+                "contract": validate_contract(contract).model_dump(mode="json"),
                 # verify() already validated this receipt. Its hash binds the
                 # original JSON strings, including the timestamp's UTC spelling.
                 "receipt": receipt,

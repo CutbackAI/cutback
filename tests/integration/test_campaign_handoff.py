@@ -18,7 +18,7 @@ pytestmark = pytest.mark.postgres
 
 @pytest.mark.parametrize("revoke_after_checks", [False, True])
 def test_native_campaign_cli_finish_refreshes_rights_without_repeating_native_spend(
-    api, tenant, tmp_path, monkeypatch, postgres_url, revoke_after_checks
+    api, tenant, tmp_path, monkeypatch, postgres_url, revoke_after_checks, container=None
 ):
     fresh = support_agent.fresh_application
 
@@ -74,6 +74,13 @@ def test_native_campaign_cli_finish_refreshes_rights_without_repeating_native_sp
         "--commands",
         str(commands),
     ]
+    if container is not None:
+        arguments += [
+            "--container-image",
+            container.image_id,
+            "--container-python-path",
+            container.python_path,
+        ]
     preview = runner.invoke(app, arguments)
     assert preview.exit_code == 0, preview.output
     value = json.loads(preview.stdout)
@@ -108,6 +115,10 @@ def test_native_campaign_cli_finish_refreshes_rights_without_repeating_native_sp
         assert runner.invoke(app, execute).exit_code == 0
     assert physical_checks == [True]
     assert read_private(destination / "checks.json")["all_passed"]
+    if container is not None:
+        assert read_private(destination / "checks.json")["isolation"] == (
+            "local_linux_container_network_none"
+        )
     assert sum(len(group) for group in calls) == native_count
     assert snapshot(root) == original
     assert (

@@ -8,7 +8,15 @@ from pathlib import Path
 from typing import Literal
 from uuid import UUID
 
-from pydantic import ConfigDict, Field, TypeAdapter, field_validator, model_validator
+from pydantic import (
+    ConfigDict,
+    Field,
+    StrictBool,
+    TypeAdapter,
+    field_validator,
+    model_serializer,
+    model_validator,
+)
 
 from cutback.core.improvement_policy import SourceImprovementPolicy
 from cutback.core.models import Identifier, StrictModel
@@ -20,7 +28,9 @@ from cutback.source_policy import parse_policy
 
 class SourcePolicyProposal(StrictModel):
     model_config = ConfigDict(extra="forbid", allow_inf_nan=False, hide_input_in_errors=True)
-    version: Literal["cutback.source-policy-proposal.v1"] = "cutback.source-policy-proposal.v1"
+    version: Literal["cutback.source-policy-proposal.v1", "cutback.source-policy-proposal.v2"] = (
+        "cutback.source-policy-proposal.v1"
+    )
     program_id: UUID
     program_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
     run_id: UUID
@@ -36,6 +46,39 @@ class SourcePolicyProposal(StrictModel):
     optimization_known_modeled_usd: Decimal = Field(ge=0, le=10000, decimal_places=12)
     production_approval_required: Literal[True] = True
     full_task_cost_known: Literal[False] = False
+    original_cache_requested: StrictBool | None = None
+    proposed_cache_requested: StrictBool | None = None
+
+    @model_serializer(mode="wrap")
+    def preserve_legacy_wire(self, handler):
+        value = handler(self)
+        if self.original_cache_requested is None:
+            value.pop("original_cache_requested", None)
+        if self.proposed_cache_requested is None:
+            value.pop("proposed_cache_requested", None)
+        return value
+
+    @property
+    def cache_runtime_required(self):
+        return (
+            self.original_cache_requested or self.proposed_cache_requested
+            if self.version == "cutback.source-policy-proposal.v2"
+            else self.proposed.cache_execution is not None
+        )
+
+    def cache_review_fields(self):
+        if self.version == "cutback.source-policy-proposal.v1":
+            return {}
+        return {
+            "observed_current_cache_requested": self.original_cache_requested,
+            "proposed_cache_requested": self.proposed_cache_requested,
+            "cache_configuration_present": self.proposed.cache_execution is not None,
+            "cache_scope_revision_required": self.proposed_cache_requested,
+            "cache_runtime_deactivation_required": bool(
+                self.original_cache_requested and not self.proposed_cache_requested
+            ),
+            "runtime_activation_change_authorized": False,
+        }
 
     @field_validator("optimization_known_modeled_usd", mode="before")
     @classmethod
@@ -48,7 +91,22 @@ class SourcePolicyProposal(StrictModel):
     def source_frame(self):
         before, after = self.original, self.proposed
         if (
-            not self.program_id.int
+            self.version == "cutback.source-policy-proposal.v1"
+            and (
+                self.original_cache_requested is not None
+                or self.proposed_cache_requested is not None
+            )
+            or self.version == "cutback.source-policy-proposal.v2"
+            and (
+                self.original_cache_requested is None
+                or self.proposed_cache_requested is None
+                or before.cache_execution is None
+                or self.proposed_cache_requested
+                and after.cache_execution is None
+                or not self.original_cache_requested
+                and self.proposed_cache_requested
+            )
+            or not self.program_id.int
             or not self.run_id.int
             or before.policy_sha256 != self.binding.policy_sha256
             or before.workflow != self.binding.workflow
@@ -93,7 +151,9 @@ def prepare_patch(root: Path, proposal: SourcePolicyProposal):
         )
 
     return {
-        "version": "cutback.source-policy-change.v1",
+        "version": "cutback.source-policy-change.v2"
+        if proposal.version == "cutback.source-policy-proposal.v2"
+        else "cutback.source-policy-change.v1",
         "proposal": proposal.model_dump(mode="json"),
         "diff": diff(
             before, after, "a/" + binding.configuration_file, "b/" + binding.configuration_file
@@ -104,7 +164,8 @@ def prepare_patch(root: Path, proposal: SourcePolicyProposal):
         "proposed_sha256": hashlib.sha256(after).hexdigest(),
         "applied": False,
         "production_deployed": False,
-        "cache_runtime_required": proposal.proposed.cache_execution is not None,
+        "cache_runtime_required": proposal.cache_runtime_required,
+        **proposal.cache_review_fields(),
         "cache_enabled_by_patch": False,
         "economics_scope": (
             "native_and_declared_cache_components_fit_hosting_and_full_task_cost_unknown"
@@ -123,12 +184,12 @@ def review_change(
     branch=None,
     create_branch=True,
 ):
-    from cutback.application_checks import ApplicationCheckContract, git, verify
+    from cutback.application_checks import git, validate_contract, verify
 
     proposal = SourcePolicyProposal.model_validate(artifact["proposal"])
     if artifact != prepare_patch(base, proposal):
         raise ValueError("POLICY_SOURCE_REVIEW_ARTIFACT_CHANGED")
-    contract = ApplicationCheckContract.model_validate(contract)
+    contract = validate_contract(contract)
     checked = verify(contract, receipt, base, proposed)
     binding = proposal.binding
     changed = {
@@ -194,9 +255,11 @@ def review_change(
                 "0" * len(contract.proposed.commit),
             )
     result = {
-        "version": "cutback.source-policy-review.v1",
+        "version": "cutback.source-policy-review.v2"
+        if proposal.version == "cutback.source-policy-proposal.v2"
+        else "cutback.source-policy-review.v1",
         "status": "CACHE_RUNTIME_CONFIGURATION_REQUIRED"
-        if proposal.proposed.cache_execution is not None
+        if proposal.cache_runtime_required
         else "READY_FOR_PR_REVIEW"
         if proposal.decision == "heldout_review_required"
         else "READY_FOR_LOCAL_REVIEW",
@@ -214,7 +277,8 @@ def review_change(
         "coverage_trust": "owner_declared_not_all_consumers_discovered",
         "check_authenticity": checked["authenticity"],
         "local_review_ref": ref,
-        "cache_runtime_required": proposal.proposed.cache_execution is not None,
+        "cache_runtime_required": proposal.cache_runtime_required,
+        **proposal.cache_review_fields(),
         "cache_runtime_verified": False,
         "full_task_cost_known": False,
         "remote_published": False,

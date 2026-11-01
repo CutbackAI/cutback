@@ -82,11 +82,24 @@ class PolicyGenerationPlan(StrictModel):
         return self
 
 
-def seeds(policies):
+def seeds(policies, *, specification=None):
+    cached_current = (
+        specification is not None and specification.version == "cutback.source-policy-program.v2"
+    )
+    original = (
+        policies[specification.template.source_policy_execution.reference.key]
+        if cached_current
+        else None
+    )
     return {
         key: value
         for key, value in policies.items()
-        if not value.strategy.routes and value.cache_execution is None
+        if not value.strategy.routes
+        and (
+            value.cache_execution is None
+            if not cached_current
+            else original is not None and value.cache_execution == original.cache_execution
+        )
     }
 
 
@@ -132,7 +145,7 @@ def _document(specification, policies, training, feedback, previous):
                 "instruction": value.strategy.instruction,
                 "max_output_tokens": value.strategy.max_output_tokens,
             }
-            for key, value in seeds(policies).items()
+            for key, value in seeds(policies, specification=specification).items()
         ],
         "training": training,
         "aggregate_validation_feedback": [value.model_dump(mode="json") for value in feedback],
@@ -153,7 +166,7 @@ def _check_previous(specification, policies, previous):
     original = policies[specification.template.source_policy_execution.reference.key]
     allowed = [
         value.strategy.model_dump(mode="json", exclude={"key", "instruction", "max_output_tokens"})
-        for value in seeds(policies).values()
+        for value in seeds(policies, specification=specification).values()
     ]
     for value in previous:
         if (
@@ -163,7 +176,12 @@ def _check_previous(specification, policies, previous):
             or value.max_input_bytes != original.max_input_bytes
             or value.max_instruction_bytes != original.max_instruction_bytes
             or value.runtime_cache_activation != original.runtime_cache_activation
-            or value.cache_execution is not None
+            or value.cache_execution
+            != (
+                original.cache_execution
+                if specification.version == "cutback.source-policy-program.v2"
+                else None
+            )
             or value.strategy.routes
             or value.strategy.model_dump(
                 mode="json", exclude={"key", "instruction", "max_output_tokens"}
@@ -290,7 +308,7 @@ def decode_policy_proposals(text, specification, policies, round_index, *, previ
         raise ValueError("POLICY_GENERATION_BOUNDED_RESPONSE_SCHEMA_REQUIRED") from None
     if len(values.proposals) > generator.variants_per_round:
         raise ValueError("POLICY_GENERATION_VARIANT_COUNT_EXCEEDS_ENVELOPE")
-    approved = seeds(policies)
+    approved = seeds(policies, specification=specification)
     seen = {value.behavior_sha256 for value in [*policies.values(), *previous]}
     result = {}
     for index, proposed in enumerate(values.proposals):

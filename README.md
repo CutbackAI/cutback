@@ -101,6 +101,7 @@ for the exact tested source and publication state.
 | Reduce context without losing essential facts | [Context-compression application](https://github.com/CutbackAI/cutback/blob/main/examples/context-compression/README.md) |
 | Test caching or learned routing | [Native exact cache](https://github.com/CutbackAI/cutback/blob/main/docs/native-response-cache.md), [routing program](https://github.com/CutbackAI/cutback/blob/main/examples/routing-program/README.md) |
 | Check whether a security rule blocks legitimate work | [Paired security and utility sample](https://github.com/CutbackAI/cutback/blob/main/examples/paired-security/README.md) |
+| Check a proposed source change in a local container | [Container check contract, under qualification](https://github.com/CutbackAI/cutback/blob/main/docs/application-containers.md) |
 | Track incidents and later change outcomes | [Monitoring](https://github.com/CutbackAI/cutback/blob/main/docs/online-monitoring.md), [finite outcome observation](https://github.com/CutbackAI/cutback/blob/main/docs/automatic-outcome-observation.md) |
 
 [All examples](https://github.com/CutbackAI/cutback/blob/main/examples/README.md) include native sync/async/streams, FastAPI, Django, Lambda, Node, batch execution, simulation and isolated tools. Each guide states its version, execution requirements and limits.

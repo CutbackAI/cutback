@@ -13,10 +13,13 @@ from openai.types.responses import Response
 from cutback.instrumentation import workflow
 from cutback.source_policy import load_policy
 
+native_calls = []
+
 
 def reply(request):
     assert str(request.url) == "https://api.openai.com/v1/responses"
     body = json.loads(request.content)
+    native_calls.append(1)
     label = "Urgent" if "Priority: urgent." in body["input"] else "Normal"
     return httpx.Response(
         200,
@@ -26,8 +29,8 @@ def reply(request):
             "created_at": 1,
             "model": body["model"],
             "status": "completed",
-            "parallel_tool_calls": True,
-            "tool_choice": "auto",
+            "parallel_tool_calls": False,
+            "tool_choice": "none",
             "tools": [],
             "output": [
                 {
@@ -70,8 +73,9 @@ async def async_run(texts, policy):
 def main():
     root = Path(__file__).resolve().parent
     policy = load_policy(root / "policy.json")
-    if policy.cache_execution is not None:
-        raise ValueError("SYNTHETIC_OBSERVATION_UNCACHED_POLICY_REQUIRED")
+    if policy.cache_execution is not None and inspect.iscoroutinefunction(classify):
+        raise ValueError("POLICY_SOURCE_ASYNC_CACHE_RUNTIME_UNQUALIFIED")
+    native_calls.clear()
     cases = [json.loads(line) for line in (root / "tickets.jsonl").read_text("utf-8").splitlines()]
     texts = [case["input"] for case in cases[:5]] + [cases[0]["input"]] * 2
     if inspect.iscoroutinefunction(classify):
@@ -84,7 +88,12 @@ def main():
         json.dumps(
             {
                 "synthetic_only": True,
-                "native_sdk_calls": len(texts),
+                "native_sdk_calls": len(native_calls),
+                **(
+                    {"logical_operations": len(texts), "cache_configured": True}
+                    if policy.cache_execution is not None
+                    else {}
+                ),
                 "paid_provider_calls": 0,
                 "real_model_quality_verified": False,
                 "production_hit_rate": None,

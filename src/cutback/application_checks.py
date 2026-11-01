@@ -1,7 +1,8 @@
 """Explicit local checks of two frozen Git trees. Never imported by scanner/server.
 
-This is a bounded process runner, not an OS sandbox. Run only reviewed commands in
-independent workspaces. Receipts attest local execution, not customer task quality.
+V1 uses bounded host processes without an OS sandbox. Explicit v2 contracts
+delegate to the separate container runner. Receipts describe local execution,
+not independent attestation or customer task quality.
 """
 
 import hashlib
@@ -69,8 +70,8 @@ class SourceTree(StrictModel):
         return self
 
 
-class ApplicationCheckContract(StrictModel):
-    schema_version: Literal["cutback.application-check.v1"] = "cutback.application-check.v1"
+class ApplicationCheckFields(StrictModel):
+    schema_version: str
     base: SourceTree
     proposed: SourceTree
     commands: list[ApplicationCommand] = Field(min_length=1, max_length=20)
@@ -80,6 +81,10 @@ class ApplicationCheckContract(StrictModel):
         if len({c.key for c in self.commands}) != len(self.commands):
             raise ValueError("APPLICATION_CHECK_COMMAND_KEYS_MUST_BE_UNIQUE")
         return self
+
+
+class ApplicationCheckContract(ApplicationCheckFields):
+    schema_version: Literal["cutback.application-check.v1"] = "cutback.application-check.v1"
 
 
 class ApplicationCheckResult(StrictModel):
@@ -101,8 +106,8 @@ class ApplicationCheckResult(StrictModel):
         return self
 
 
-class ApplicationCheckReceipt(StrictModel):
-    schema_version: Literal["cutback.application-check-receipt.v1"]
+class ApplicationCheckReceiptFields(StrictModel):
+    schema_version: str
     contract_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
     base_tree_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
     proposed_tree_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
@@ -111,9 +116,14 @@ class ApplicationCheckReceipt(StrictModel):
     all_passed: StrictBool
     trust: Literal["externally_executed_local_checks"]
     source_scope: Literal["tracked_git_files_only"]
-    isolation: Literal["minimal_environment_no_os_sandbox"]
+    isolation: str
     customer_quality: Literal["not_established"]
     receipt_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+
+
+class ApplicationCheckReceipt(ApplicationCheckReceiptFields):
+    schema_version: Literal["cutback.application-check-receipt.v1"]
+    isolation: Literal["minimal_environment_no_os_sandbox"]
 
 
 def git(root, *arguments):
@@ -471,11 +481,37 @@ def execute_command(root, command):
     }
 
 
+def validate_contract(value):
+    if isinstance(value, ApplicationCheckFields):
+        value = value.model_dump(mode="json")
+    if isinstance(value, dict) and value.get("schema_version") == "cutback.application-check.v2":
+        from cutback.application_container import ContainerCheckContract
+
+        return ContainerCheckContract.model_validate(value)
+    return ApplicationCheckContract.model_validate(value)
+
+
+def validate_receipt(value):
+    if (
+        isinstance(value, dict)
+        and value.get("schema_version") == "cutback.application-check-receipt.v2"
+    ):
+        from cutback.application_container import ContainerCheckReceipt
+
+        return ContainerCheckReceipt.model_validate(value)
+    return ApplicationCheckReceipt.model_validate(value)
+
+
 def run_checks(
-    contract: ApplicationCheckContract, base: Path, proposed: Path, *, execute_local=False
+    contract: ApplicationCheckFields, base: Path, proposed: Path, *, execute_local=False
 ):
     if not execute_local:
         raise ValueError("APPLICATION_CHECK_EXPLICIT_LOCAL_EXECUTION_REQUIRED")
+    contract = validate_contract(contract)
+    if contract.schema_version == "cutback.application-check.v2":
+        from cutback.application_container import run_isolated_checks
+
+        return run_isolated_checks(contract, base, proposed)
     if (
         base.resolve() == proposed.resolve()
         or base.resolve().is_relative_to(proposed.resolve())
@@ -522,7 +558,20 @@ def run_checks(
 
 
 def verify(contract, receipt, base, proposed):
-    ApplicationCheckReceipt.model_validate(receipt)
+    contract = validate_contract(contract)
+    validate_receipt(receipt)
+    isolated = contract.schema_version == "cutback.application-check.v2"
+    if (
+        receipt["schema_version"]
+        != (
+            "cutback.application-check-receipt.v2"
+            if isolated
+            else "cutback.application-check-receipt.v1"
+        )
+        or isolated
+        and receipt.get("container") != contract.container.model_dump(mode="json")
+    ):
+        raise ValueError("APPLICATION_CHECK_RECEIPT_OR_SOURCE_MISMATCH")
     value = {k: v for k, v in receipt.items() if k != "receipt_hash"}
     if (
         fingerprint(value) != receipt.get("receipt_hash")

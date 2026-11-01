@@ -17,12 +17,13 @@ from pydantic import TypeAdapter
 
 from cutback.application_checks import (
     ApplicationCheckContract,
-    ApplicationCheckReceipt,
     ApplicationCommand,
     git,
     run_checks,
     snapshot,
     source_root,
+    validate_contract,
+    validate_receipt,
     verify,
 )
 from cutback.core.models import Identifier
@@ -90,7 +91,7 @@ def retained_receipt(destination, contract, base, proposed):
     if not path.is_file():
         raise ValueError("APPLICATION_HANDOFF_CHECK_REPLY_UNCERTAIN_NO_AUTOMATIC_REPLAY")
     receipt = read_private(path)
-    ApplicationCheckReceipt.model_validate(receipt)
+    validate_receipt(receipt)
     if (
         fingerprint({key: value for key, value in receipt.items() if key != "receipt_hash"})
         != receipt["receipt_hash"]
@@ -134,6 +135,7 @@ def finish(
     commands=None,
     execute_local=False,
     branch=None,
+    container=None,
 ):
     from cutback.agent import workspace
     from cutback.application_check_discovery import discover
@@ -141,6 +143,10 @@ def finish(
 
     if type(execute_local) is not bool:
         raise ValueError("APPLICATION_HANDOFF_EXPLICIT_LOCAL_EXECUTION_REQUIRED")
+    if container is not None:
+        from cutback.application_container import ApplicationContainer
+
+        container = ApplicationContainer.model_validate(container).model_dump(mode="json")
     # Validate the output boundary before requesting encrypted source content.
     root = source_root(root)
     destination = Path(os.path.abspath(destination))
@@ -178,6 +184,8 @@ def finish(
         else "discover_existing_full_suite",
         "branch": branch,
     }
+    if container is not None:
+        identity["container"] = container
     with workspace_lock(directory):
         if journal.exists():
             state = read_private(journal)
@@ -260,6 +268,10 @@ def finish(
                 contract = ApplicationCheckContract(
                     base=snapshot(base), proposed=snapshot(proposed), commands=declared
                 )
+            if container is not None:
+                from cutback.application_container import isolate
+
+                contract = isolate(contract, container)
             engine.write(destination / "proposal.json", artifact)
             engine.write(destination / "contract.json", contract.model_dump(mode="json"))
             state.update(
@@ -267,9 +279,7 @@ def finish(
             )
             engine.write(journal, state)
         base, proposed = checked_paths(state, root, destination, expected, replacements)
-        contract = ApplicationCheckContract.model_validate(
-            read_private(destination / "contract.json")
-        )
+        contract = validate_contract(read_private(destination / "contract.json"))
         if fingerprint(contract.model_dump(mode="json")) != state.get("contract_hash"):
             raise ValueError("APPLICATION_HANDOFF_CHECK_CONTRACT_CHANGED")
         if coverage is not None:

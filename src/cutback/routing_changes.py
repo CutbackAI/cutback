@@ -208,12 +208,12 @@ def review_change(
     artifact, contract, receipt, base: Path, proposed: Path, coverage, *, branch=None
 ):
     """Verify both actual Git trees and recorded checks; create only an optional local ref."""
-    from cutback.application_checks import ApplicationCheckContract, git, verify
+    from cutback.application_checks import git, validate_contract, verify
 
     proposal = RoutingSourceProposal.model_validate(artifact["proposal"])
     if artifact != prepare_patch(base, proposal):
         raise ValueError("ROUTING_SOURCE_REVIEW_ARTIFACT_CHANGED")
-    contract = ApplicationCheckContract.model_validate(contract)
+    contract = validate_contract(contract)
     checked = verify(contract, receipt, base, proposed)
     binding = proposal.binding
     changed = {

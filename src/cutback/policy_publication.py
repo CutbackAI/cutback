@@ -1,6 +1,6 @@
 """One-file Git publication projection of a freshly verified source-policy review."""
 
-from cutback.application_checks import ApplicationCheckContract
+from cutback.application_checks import validate_contract
 from cutback.core.request_profiles import fingerprint
 from cutback.policy_changes import SourcePolicyProposal, review_change
 from cutback.review_publication import _prepare_single_source
@@ -20,7 +20,7 @@ def prepare_publication(
     base_branch,
     head_branch,
 ):
-    spec = ApplicationCheckContract.model_validate(contract)
+    spec = validate_contract(contract)
     bound = SourcePolicyProposal.model_validate(artifact["proposal"])
     current = review_change(
         artifact, spec, receipt, base, proposed, coverage, branch=branch, create_branch=False
@@ -31,7 +31,7 @@ def prepare_publication(
         current["status"] != "READY_FOR_PR_REVIEW"
         or current["evidence_scope"] != "heldout_review_required"
         or current["cache_runtime_required"] is not False
-        or bound.proposed.cache_execution is not None
+        or bound.cache_runtime_required is not False
         or current["remote_published"] is not False
         or current["production_deployed"] is not False
     ):

@@ -163,17 +163,53 @@ class PolicyRuntimeScope(StrictModel):
 
     @model_validator(mode="after")
     def bounded_window(self):
-        if not timedelta(0) < self.window_end - self.window_start <= timedelta(days=30):
-            raise ValueError("POLICY_ACTIVITY_WINDOW_MUST_BE_POSITIVE_AND_AT_MOST_30_DAYS")
-        if self.call_site_id == "unattributed":
-            raise ValueError("POLICY_ACTIVITY_EXACT_CALL_SITE_REQUIRED")
+        _bounded_scope(self.call_site_id, self.window_start, self.window_end)
+        return self
+
+
+def _bounded_scope(call_site_id, start, end):
+    if not timedelta(0) < end - start <= timedelta(days=30):
+        raise ValueError("POLICY_ACTIVITY_WINDOW_MUST_BE_POSITIVE_AND_AT_MOST_30_DAYS")
+    if call_site_id == "unattributed":
+        raise ValueError("POLICY_ACTIVITY_EXACT_CALL_SITE_REQUIRED")
+    if not datetime(1970, 1, 1, tzinfo=UTC) <= start < end < datetime(2262, 1, 1, tzinfo=UTC):
+        raise ValueError("POLICY_ACTIVITY_WINDOW_OUTSIDE_DATABASE_NANOSECOND_RANGE")
+
+
+class PolicyRuntimeServiceQuery(StrictModel):
+    environment: Identifier
+    workflow: Identifier
+    call_site_id: Identifier
+    source_commit: str = Field(pattern=r"^(?:[a-f0-9]{40}|[a-f0-9]{64})$")
+    policy_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    window_start: AwareDatetime
+    window_end: AwareDatetime
+
+    @model_validator(mode="after")
+    def bounded_window(self):
+        _bounded_scope(self.call_site_id, self.window_start, self.window_end)
+        return self
+
+
+class PolicyRuntimeServices(StrictModel):
+    profile: Literal["cutback.source-policy-runtime-services.v1"] = (
+        "cutback.source-policy-runtime-services.v1"
+    )
+    project_id: UUID
+    environment_id: UUID
+    scope: PolicyRuntimeServiceQuery
+    services: list[Identifier] = Field(max_length=20)
+    truncated: StrictBool
+    capture_coverage: Literal["unknown"] = "unknown"
+
+    @model_validator(mode="after")
+    def unique_scoped_services(self):
         if (
-            not datetime(1970, 1, 1, tzinfo=UTC)
-            <= self.window_start
-            < self.window_end
-            < datetime(2262, 1, 1, tzinfo=UTC)
+            not self.project_id.int
+            or not self.environment_id.int
+            or len(set(self.services)) != len(self.services)
         ):
-            raise ValueError("POLICY_ACTIVITY_WINDOW_OUTSIDE_DATABASE_NANOSECOND_RANGE")
+            raise ValueError("POLICY_ACTIVITY_UNIQUE_SCOPED_SERVICES_REQUIRED")
         return self
 
 

@@ -1,0 +1,256 @@
+{
+  "contract": "cutback.observability-hosted-acceptance.v1",
+  "status": "PUBLIC_SOURCE_MERGED",
+  "pull_request": "https://github.com/CutbackAI/cutback/pull/81",
+  "reviewed_head": "41c123618304f27d1b17c970db6324848c0eb4a9",
+  "merge_commit": "1ed8f4396a8976b4716fd97c7289dae09d51cc00",
+  "source_tree": "113d635992544099b6d9356f0851114d59a08cb2",
+  "all_required_workflow_jobs": [
+    "audit",
+    "cloud-import-producers",
+    "codeql (javascript-typescript)",
+    "codeql (python)",
+    "infrastructure",
+    "isolated-tools",
+    "legacy-sdk (3.11.18)",
+    "legacy-sdk (3.13.18)",
+    "openai3-sdk (3.11.18)",
+    "openai3-sdk (3.11.18, core)",
+    "openai3-sdk (3.11.18, systems)",
+    "openai3-sdk (3.11.18, workflows)",
+    "openai3-sdk (3.13.18)",
+    "openai3-sdk (3.13.18, core)",
+    "openai3-sdk (3.13.18, systems)",
+    "openai3-sdk (3.13.18, workflows)",
+    "verify (3.11.18)",
+    "verify (3.13.18)"
+  ],
+  "runs": [
+    {
+      "run_id": 41312071885,
+      "jobs": [
+        {
+          "name": "infrastructure",
+          "id": 124864343352,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 7,
+              "skipped": 0,
+              "seconds": 1.97
+            }
+          ]
+        },
+        {
+          "name": "legacy-sdk (3.11.18)",
+          "id": 124864343467,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 0.66
+            }
+          ]
+        },
+        {
+          "name": "isolated-tools",
+          "id": 124864343491,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 13,
+              "skipped": 0,
+              "seconds": 98.76
+            }
+          ]
+        },
+        {
+          "name": "verify (3.11.18)",
+          "id": 124864343494,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 2,
+              "skipped": 0,
+              "seconds": 0.07
+            },
+            {
+              "passed": 1,
+              "skipped": 0,
+              "seconds": 10.35
+            },
+            {
+              "passed": 2851,
+              "skipped": 41,
+              "seconds": 6165.44
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.13.18, workflows)",
+          "id": 124864343504,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 511,
+              "skipped": 17,
+              "seconds": 1492.47
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.13.18, systems)",
+          "id": 124864343525,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 427,
+              "skipped": 5,
+              "seconds": 992.23
+            }
+          ]
+        },
+        {
+          "name": "cloud-import-producers",
+          "id": 124864343539,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 10.49
+            }
+          ]
+        },
+        {
+          "name": "legacy-sdk (3.13.18)",
+          "id": 124864343545,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 0.88
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.11.18, core)",
+          "id": 124864343551,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1830,
+              "skipped": 5,
+              "seconds": 181.21
+            }
+          ]
+        },
+        {
+          "name": "verify (3.13.18)",
+          "id": 124864343566,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 2,
+              "skipped": 0,
+              "seconds": 0.03
+            },
+            {
+              "passed": 1,
+              "skipped": 0,
+              "seconds": 13.69
+            },
+            {
+              "passed": 2850,
+              "skipped": 42,
+              "seconds": 3502.38
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.11.18, systems)",
+          "id": 124864343569,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 427,
+              "skipped": 5,
+              "seconds": 1358.78
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.13.18, core)",
+          "id": 124864343582,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1831,
+              "skipped": 4,
+              "seconds": 160.51
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.11.18, workflows)",
+          "id": 124864343586,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 511,
+              "skipped": 17,
+              "seconds": 1496.59
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.13.18)",
+          "id": 124870412256,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "openai3-sdk (3.11.18)",
+          "id": 124870412319,
+          "conclusion": "success",
+          "tests": []
+        }
+      ]
+    },
+    {
+      "run_id": 41312072013,
+      "jobs": [
+        {
+          "name": "codeql (python)",
+          "id": 124864343852,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "audit",
+          "id": 124864343984,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "codeql (javascript-typescript)",
+          "id": 124864343991,
+          "conclusion": "success",
+          "tests": []
+        }
+      ]
+    }
+  ],
+  "identical_private_public_archives": {
+    "cutback-0.1.0.dev5-py3-none-any.whl": "7e8a641e2c9f80261c0b0a64a580bce10541e6add7f71259401e38fd668961ee",
+    "cutback-0.1.0.dev5.tar.gz": "c37d6501666dfe974635e9cba5abb7eb069a0d7ed1a7596b2496d70f36da221c"
+  },
+  "scope": "source observation/workload, compatible-data discovery, checked publisher, cloud text evaluation imports, shared dashboards and content-free policy runtime activity",
+  "later_cached_current_and_container_handoff_qualification": "separate; not part of these hosted jobs",
+  "test_selections_overlap": "do not add matrix/shard results as distinct test cases",
+  "paid_provider_calls": 0,
+  "production_changed": false,
+  "pypi_changed": false
+}

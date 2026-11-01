@@ -3,8 +3,9 @@
 This source feature is being qualified. PyPI `0.1.0.dev5` does not contain it.
 For applications already declaring exact cache, inspect their actual retained
 [policy activity](policy-runtime-activity.md) before choosing an improvement
-reference. Configured cache is not proof it ran. Automatic cached-current
-reference evaluation remains an explicit open gate.
+reference. Configured cache is not proof it ran. The separate
+[v2 cached-current path](source-policy-cached-current.md) is under qualification;
+its installed-wheel, image and public gates remain open.
 It supports the supplied fixed, stateless sync or async OpenAI Responses consumer with a
 plain text input and exact-label evaluation. See [current acceptance](progress.md)
 before treating a source checkout, wheel or container as a tested release.
@@ -317,7 +318,7 @@ separate binding and API; policy attribution cannot become a literal edit span.
 
 ## Current boundaries
 
-The initial/current reference must be uncached. A previously changed native
+The v1 initial/current reference must be uncached. A previously changed native
 instruction/model or source-bound input-size router can be the next reference.
 The comparison executes that current router's actual native leaf for every
 input. It does not substitute the policy's historical native anchor. Its plain
@@ -335,8 +336,9 @@ preserves its journal. Prepare and approve a new program; earlier approvals and
 test results never authorize the next revision. Source edits alone do not
 establish a deployed release or production outcomes.
 
-An already cached current reference remains unqualified for another common-program
-cycle. Retained production windows are not yet the cache eligibility source.
+An already cached current reference requires the separate unreleased v2
+source/observation contract above. Its qualification remains open; neither v1
+nor a metadata inspection silently adopts that execution contract.
 Retrieval, compression, local model training, semantic cache, structured/agent
 episodes and specialty/platform adapters keep separate execution contracts.
 This program does not establish unified cross-engine selection for those paths.

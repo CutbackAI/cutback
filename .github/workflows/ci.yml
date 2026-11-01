@@ -31,7 +31,7 @@ jobs:
       - run: uv run pip-audit --requirement examples/cloud-evaluation-imports/producer-requirements.txt --no-deps --disable-pip --strict
   infrastructure:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
@@ -60,7 +60,14 @@ jobs:
       - name: Build non-root collector and complete synthetic demo image
         run: docker build --tag cutback-ci-acceptance:${{ github.sha }} --file infra/compose/Dockerfile .
       - name: Verify image demo, encrypted plan recovery and tenant isolation
-        run: uv run python scripts/image_acceptance.py --image cutback-ci-acceptance:${{ github.sha }} --isolated-tools --joint-model-context --learned-routing --generated-scenarios --reactive-users --routing-program --source-policy
+        run: uv run python scripts/image_acceptance.py --image cutback-ci-acceptance:${{ github.sha }} --isolated-tools --joint-model-context --learned-routing --generated-scenarios --reactive-users --routing-program --source-policy --cached-current-policy
+      - name: Prepare pinned Node image for application check containment
+        run: docker pull node@sha256:0e5f906573693feaa1e21057ebdcfdb5bd5021f050b2dc7c9deceb629c7da2a8
+      - name: Qualify actual Python and Node container checks and refreshed handoff rights
+        run: |
+          export CUTBACK_TEST_APPLICATION_CHECK_IMAGE_ID="$(docker image inspect --format '{{.Id}}' cutback-ci-acceptance:${{ github.sha }})"
+          export CUTBACK_TEST_APPLICATION_CHECK_NODE_IMAGE_ID="$(docker image inspect --format '{{.Id}}' node@sha256:0e5f906573693feaa1e21057ebdcfdb5bd5021f050b2dc7c9deceb629c7da2a8)"
+          uv run python scripts/check.py tests/unit/test_application_container.py tests/unit/test_application_container_crash.py tests/unit/test_application_container_controls.py tests/integration/test_application_container_handoff.py -q
       - name: Remove this job's owned image-acceptance database
         if: always()
         run: docker compose -f infra/compose/docker-compose.yml down --volumes --remove-orphans
@@ -83,7 +90,9 @@ jobs:
       - run: /tmp/cutback-legacy/bin/python -m pytest tests/unit/test_legacy_sdk.py tests/unit/test_scanner.py tests/unit/test_scanner_extended.py tests/unit/test_scanner_lazy.py -q
   openai3-sdk:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # Retain every native/program journey, including cached-current search and
+    # real browser/minimal-client shards. Their full checks must finish normally.
+    timeout-minutes: 75
     strategy:
       fail-fast: false
       matrix:
@@ -176,6 +185,21 @@ jobs:
           tests/unit/test_policy_activity.py
           tests/unit/test_policy_activity_observer.py
           tests/unit/test_policy_activity_discovery.py
+          tests/unit/test_policy_activity_service_discovery.py
+          tests/unit/test_policy_runtime_reference.py
+          tests/unit/test_policy_execution_v2.py
+          tests/unit/test_policy_v1_compatibility.py
+          tests/unit/test_source_policy_cached_budget.py
+          tests/unit/test_source_policy_cached_generation.py
+          tests/unit/test_source_policy_cached_sample.py
+          tests/unit/test_policy_program_cached_prepare.py
+          tests/unit/test_policy_cached_handoff.py
+          tests/integration/test_policy_activity_services.py
+          tests/integration/test_policy_runtime_reference_scope.py
+          tests/integration/test_source_policy_cached_api.py
+          tests/integration/test_source_policy_cached_dispatch.py
+          tests/integration/test_policy_cached_recovery_seed.py
+          tests/integration/test_source_policy_cached_workflow.py
           tests/integration/test_policy_activity_scope.py
           tests/integration/test_policy_activity_migrations.py
           tests/integration/test_policy_activity_runtime.py
@@ -216,6 +240,8 @@ jobs:
           tests/integration/test_agent_case_retention.py
           tests/integration/test_campaign_operator.py tests/integration/test_campaign_operator_local.py
           tests/integration/test_source_policy_program_remote_minimal.py
+          tests/integration/test_source_policy_cached_remote_minimal.py
+          tests/integration/test_source_policy_cached_agent.py
           tests/integration/test_agent_campaign.py
           tests/integration/test_review_publication_remote_minimal.py
           tests/integration/test_policy_publication_remote_minimal.py
@@ -289,7 +315,8 @@ jobs:
         run: test "$SDK3_SHARDS_RESULT" = success
   verify:
     runs-on: ubuntu-latest
-    # Keep the full regression and allow the added real PG/browser scopes to finish.
+    # Retain the complete regression: the qualified prior cohort took 90 minutes;
+    # shared dashboards, runtime activity and cached-current journeys add real PG/SDK work.
     timeout-minutes: 135
     strategy:
       fail-fast: false

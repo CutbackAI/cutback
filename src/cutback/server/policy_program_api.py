@@ -3,15 +3,17 @@
 import re
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from typing import Literal
 from uuid import UUID, uuid4
 
 from fastapi import Depends, HTTPException, Query
-from pydantic import UUID4, Field, JsonValue, field_validator
+from pydantic import UUID4, Field, JsonValue, field_validator, model_serializer, model_validator
 from sqlalchemy import func, select
 
 from cutback.core.improvement_policy import SourceImprovementPolicy
 from cutback.core.input_routing import SOURCE_DATASET_CASE_BOUND, SOURCE_DATASET_CONTENT_BOUND
 from cutback.core.models import Identifier, StrictModel
+from cutback.core.policy_runtime_reference import PolicyRuntimeReference
 from cutback.evals.campaigns import CampaignBudget, NativeGeneratorSpec
 from cutback.evals.datasets import digest
 from cutback.evals.learned_routing import RoutingFitOptions
@@ -51,6 +53,22 @@ class SourcePolicyProgramDraft(StrictModel):
     )
     forecast_successful_tasks: int | None = Field(default=None, strict=True, ge=1, le=1000000000)
     max_fraction_of_opportunity: Decimal = Field(default=Decimal("0.1"), gt=0, le=Decimal("0.25"))
+    version: Literal["cutback.source-policy-program.v2"] | None = None
+    runtime_reference: PolicyRuntimeReference | None = None
+
+    @model_serializer(mode="wrap")
+    def preserve_v1_request_identity(self, handler):
+        value = handler(self)
+        for key in ("version", "runtime_reference"):
+            if getattr(self, key) is None:
+                value.pop(key, None)
+        return value
+
+    @model_validator(mode="after")
+    def runtime_version_pair(self):
+        if (self.version is None) != (self.runtime_reference is None):
+            raise ValueError("POLICY_PROGRAM_DISTINCT_RUNTIME_REFERENCE_VERSION_REQUIRED")
+        return self
 
     @field_validator(
         "conservative_savings_per_success_usd", "max_fraction_of_opportunity", mode="before"
@@ -233,6 +251,18 @@ def install_source_policy_programs(app, sessions, authorize, scope):
                 from cutback.evals.policy_artifacts import decode_policy_bundle
 
                 policies = decode_policy_bundle(payloads, plan.source_policy_execution)
+                if specification.runtime_reference is not None:
+                    from cutback.server.policy_runtime_reference import require_reference
+
+                    execution = plan.source_policy_execution
+                    require_reference(
+                        session,
+                        project_id,
+                        environment,
+                        execution.source,
+                        policies[execution.reference.key],
+                        specification.runtime_reference,
+                    )
                 loaded, _ = load_dataset(
                     session,
                     dataset,
@@ -255,6 +285,8 @@ def install_source_policy_programs(app, sessions, authorize, scope):
                     datetime.fromisoformat(loaded["expires_at"]),
                     datetime.fromisoformat(template.specification["expires_at"]),
                 )
+                if specification.runtime_reference is not None:
+                    expiry = min(expiry, specification.runtime_reference.expires_at)
                 identifier = uuid4()
                 clean, blob = policy_content(
                     {

@@ -1,0 +1,109 @@
+{
+  "contract": "cutback.cached-current-acceptance.v1",
+  "status": "LOCAL_COMPONENT_ACCEPTANCE_PASSED_HOSTED_PUBLICATION_PENDING",
+  "application_source_commit": "78051de8ce17188893dc7aa0afa4fc111ae2c895",
+  "recovery_and_extra_test_source_commit": "e903fe3d05eb14b926b7f582ce62dbecc32093a6",
+  "installed": {
+    "default": {
+      "passed": 388,
+      "skipped": 0,
+      "seconds": 5389.09,
+      "log_sha256": "f6fa67a8a9b1d1cd14eba3fef514c5a15c25657ba1eac088343dfe2be1719a36",
+      "openai": "2.29.0",
+      "pydantic": "2.14.1"
+    },
+    "sdk3": {
+      "passed": 388,
+      "skipped": 0,
+      "seconds": 5361.29,
+      "log_sha256": "ae5b775589719b505410208b23ce1008355b203f0ea58633c39c7dbcf2af001e",
+      "openai": "3.35.1",
+      "pydantic": "2.14.1"
+    }
+  },
+  "separate_installed_reference_loss_and_release_controls": {
+    "default": {
+      "passed": 3,
+      "skipped": 0,
+      "seconds": 14.85,
+      "log_sha256": "e16ad97f45aecee005c1743e01f54864933347ff66fc179d14b4090682d68afa"
+    },
+    "sdk3": {
+      "passed": 3,
+      "skipped": 0,
+      "seconds": 14.93,
+      "log_sha256": "a806f285bed45f20809b504e66cef754d75c0a545ee2edc6259273262d38317e"
+    }
+  },
+  "wheel_sha256": "078902aae35069bb593eb35db64502647eef1d92cafd71923a014c87280ba70c",
+  "image_id": "sha256:ff41a43fa3443e03db1926d1e1b24858aa06db1092d11dac23e0d930e407db5d",
+  "application_files": 482,
+  "python_files": 455,
+  "metadata_files": 5,
+  "runtime_bridge": "whole wheel identical; original image and environments retained",
+  "source_automatic_cases": {
+    "active_instruction_search": {
+      "passed": 1,
+      "seconds": 187.88
+    },
+    "other_active_and_inactive_direct_instruction_and_routing": {
+      "passed": 5,
+      "seconds": 1027.76
+    },
+    "direct_candidate_contradicted_by_independent_application_check": "required failed proposed check, no review",
+    "routing": "both trees and exact rollback checked",
+    "scope": "additional overlapping source evidence, not summed with installed cohorts"
+  },
+  "recovery": {
+    "migration": "0035",
+    "tables": 108,
+    "all_previous_feature_profile": {
+      "restored_encrypted_objects": 3693,
+      "cache_objects": 20,
+      "plans": 46,
+      "native_profiles": 24,
+      "all_prior_feature_receipts_restored": true,
+      "receipt_sha256": "a214db7b3dd7bc1d56892634a747568110bf178c19ec0f4ed6ab8b5ce06edef1"
+    },
+    "focused_profile": {
+      "restored_encrypted_objects": 1624,
+      "expansion_flags": false
+    },
+    "new_reference": {
+      "logical_operations": 4,
+      "actual_native_sdk_invocations": 2,
+      "cache_operations": 6,
+      "cache_component_upper_usd": "6E-9",
+      "optimizer_calls_during_preparation": 0,
+      "public_hash_private_purpose_read_and_raw_reference_verified_after_rekey": true
+    },
+    "all_table_counts_compared_before_verification": true,
+    "exact_new_verification_audit_events": 1,
+    "all_other_table_counts_unchanged": true
+  },
+  "minimal_remote": "matching core-plus-HTTPX wheel, SDK/server/crypto/test dependencies absent",
+  "browser": "authenticated cached-current active/inactive and legacy programs; mobile, axe, approval/cancellation, no persisted credentials",
+  "linux_path_guards": {
+    "publication": "passed",
+    "observation": "passed",
+    "handoff": "passed"
+  },
+  "evidence_semantics": {
+    "activation": "source-matched, complete uniform retained client-reported metadata",
+    "comparison": "isolated cold cache on frozen corpus, not a warm production cache",
+    "training": "uncached native shadow; original source policy preserved",
+    "unknown_bill": "hold retained, no automatic replay",
+    "capture_coverage": "unknown",
+    "invoice_verified_cost_usd": null,
+    "production_savings_usd": null,
+    "customer_quality_verified": false
+  },
+  "paid_provider_calls": 0,
+  "production_changed": false,
+  "pypi_changed": false,
+  "open_gates": [
+    "exact public source and hosted jobs",
+    "independent customer and task economics evidence",
+    "broader competitive baseline requirements"
+  ]
+}

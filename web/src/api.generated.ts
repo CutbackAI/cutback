@@ -4607,6 +4607,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/policy-runtime/services": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Services */
+        post: operations["services_v1_projects__project_id__policy_runtime_services_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/ingest/policy-runtime": {
         parameters: {
             query?: never;
@@ -9750,6 +9767,8 @@ export interface components {
             cache_enabled: boolean;
             /** Cache Operation Upper Usd */
             cache_operation_upper_usd?: number | string | null;
+            /** Cache Requested */
+            cache_requested?: boolean | null;
         };
         /** PolicyExecutionRef */
         "PolicyExecutionRef-Output": {
@@ -9771,6 +9790,8 @@ export interface components {
             cache_enabled: boolean;
             /** Cache Operation Upper Usd */
             cache_operation_upper_usd?: string | null;
+            /** Cache Requested */
+            cache_requested?: boolean | null;
         };
         /** PolicyRuntimeBatch */
         PolicyRuntimeBatch: {
@@ -9848,6 +9869,20 @@ export interface components {
             /** Business Task Success */
             business_task_success?: null;
         };
+        /** PolicyRuntimeReference */
+        PolicyRuntimeReference: {
+            /**
+             * Version
+             * @default cutback.source-policy-runtime-reference.v1
+             * @constant
+             */
+            version: "cutback.source-policy-runtime-reference.v1";
+            /** Source Binding Sha256 */
+            source_binding_sha256: string;
+            summary: components["schemas"]["PolicyRuntimeSummary-Input"];
+            /** Summary Sha256 */
+            summary_sha256: string;
+        };
         /** PolicyRuntimeScope */
         PolicyRuntimeScope: {
             /** Environment */
@@ -9873,8 +9908,149 @@ export interface components {
              */
             window_end: string;
         };
+        /** PolicyRuntimeServiceQuery */
+        PolicyRuntimeServiceQuery: {
+            /** Environment */
+            environment: string;
+            /** Workflow */
+            workflow: string;
+            /** Call Site Id */
+            call_site_id: string;
+            /** Source Commit */
+            source_commit: string;
+            /** Policy Sha256 */
+            policy_sha256: string;
+            /**
+             * Window Start
+             * Format: date-time
+             */
+            window_start: string;
+            /**
+             * Window End
+             * Format: date-time
+             */
+            window_end: string;
+        };
+        /** PolicyRuntimeServices */
+        PolicyRuntimeServices: {
+            /**
+             * Profile
+             * @default cutback.source-policy-runtime-services.v1
+             * @constant
+             */
+            profile: "cutback.source-policy-runtime-services.v1";
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            scope: components["schemas"]["PolicyRuntimeServiceQuery"];
+            /** Services */
+            services: string[];
+            /** Truncated */
+            truncated: boolean;
+            /**
+             * Capture Coverage
+             * @default unknown
+             * @constant
+             */
+            capture_coverage: "unknown";
+        };
         /** PolicyRuntimeSummary */
-        PolicyRuntimeSummary: {
+        "PolicyRuntimeSummary-Input": {
+            /**
+             * Profile
+             * @default cutback.source-policy-runtime-summary.v1
+             * @constant
+             */
+            profile: "cutback.source-policy-runtime-summary.v1";
+            scope: components["schemas"]["PolicyRuntimeScope"];
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            /**
+             * Sample Limit
+             * @default 10000
+             * @constant
+             */
+            sample_limit: 10000;
+            /** Retained Operations */
+            retained_operations: number;
+            /** Truncated */
+            truncated: boolean;
+            /** Raw Sha256 */
+            raw_sha256: string;
+            /** States */
+            states: {
+                [key: string]: number;
+            };
+            /** Completions */
+            completions: {
+                [key: string]: number;
+            };
+            /** Configured Operations */
+            configured_operations: number;
+            /** Requested Cache Operations */
+            requested_cache_operations: number;
+            /** Known Native Sdk Invocations */
+            known_native_sdk_invocations: number;
+            /** Native Sdk Invocations */
+            native_sdk_invocations: number | null;
+            /** Unknown Native Operations */
+            unknown_native_operations: number;
+            /** Known Cache Operations */
+            known_cache_operations: number;
+            /** Cache Operations */
+            cache_operations: number | null;
+            /** Unknown Cache Operations */
+            unknown_cache_operations: number;
+            /** Cache Component Upper Usd */
+            cache_component_upper_usd: number | string | null;
+            /** Cache Cost Basis Refs */
+            cache_cost_basis_refs: string[];
+            /**
+             * Capture Coverage
+             * @default unknown
+             * @constant
+             */
+            capture_coverage: "unknown";
+            /**
+             * Identity Basis
+             * @default client_reported_source_map
+             * @constant
+             */
+            identity_basis: "client_reported_source_map";
+            /** Invoice Verified Cost Usd */
+            invoice_verified_cost_usd?: null;
+            /** Business Task Success */
+            business_task_success?: null;
+            /**
+             * Content Included
+             * @default false
+             * @constant
+             */
+            content_included: false;
+            /**
+             * Execution Authorized
+             * @default false
+             * @constant
+             */
+            execution_authorized: false;
+        };
+        /** PolicyRuntimeSummary */
+        "PolicyRuntimeSummary-Output": {
             /**
              * Profile
              * @default cutback.source-policy-runtime-summary.v1
@@ -12446,9 +12622,9 @@ export interface components {
             /**
              * Version
              * @default cutback.source-policy-execution.v1
-             * @constant
+             * @enum {string}
              */
-            version: "cutback.source-policy-execution.v1";
+            version: "cutback.source-policy-execution.v1" | "cutback.source-policy-execution.v2";
             /**
              * Phase
              * @default evaluation
@@ -12476,9 +12652,9 @@ export interface components {
             /**
              * Version
              * @default cutback.source-policy-execution.v1
-             * @constant
+             * @enum {string}
              */
-            version: "cutback.source-policy-execution.v1";
+            version: "cutback.source-policy-execution.v1" | "cutback.source-policy-execution.v2";
             /**
              * Phase
              * @default evaluation
@@ -12725,6 +12901,9 @@ export interface components {
              * @default 0.1
              */
             max_fraction_of_opportunity: number | string;
+            /** Version */
+            version?: "cutback.source-policy-program.v2" | null;
+            runtime_reference?: components["schemas"]["PolicyRuntimeReference"] | null;
         };
         /** SourcePolicyProgramPage */
         SourcePolicyProgramPage: {
@@ -12738,9 +12917,9 @@ export interface components {
             /**
              * Version
              * @default cutback.source-policy-proposal.v1
-             * @constant
+             * @enum {string}
              */
-            version: "cutback.source-policy-proposal.v1";
+            version: "cutback.source-policy-proposal.v1" | "cutback.source-policy-proposal.v2";
             /**
              * Program Id
              * Format: uuid
@@ -12781,6 +12960,10 @@ export interface components {
              * @constant
              */
             full_task_cost_known: false;
+            /** Original Cache Requested */
+            original_cache_requested?: boolean | null;
+            /** Proposed Cache Requested */
+            proposed_cache_requested?: boolean | null;
         };
         /** Span */
         Span: {
@@ -24716,6 +24899,41 @@ export interface operations {
             };
         };
     };
+    services_v1_projects__project_id__policy_runtime_services_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyRuntimeServiceQuery"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyRuntimeServices"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     intake_v1_ingest_policy_runtime_post: {
         parameters: {
             query?: never;
@@ -24770,7 +24988,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PolicyRuntimeSummary"];
+                    "application/json": components["schemas"]["PolicyRuntimeSummary-Output"];
                 };
             };
             /** @description Validation Error */

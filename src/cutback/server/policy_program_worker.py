@@ -8,7 +8,11 @@ from uuid import UUID, uuid5
 
 from sqlalchemy import func, or_, select
 
-from cutback.core.policy_execution import PolicyExecutionRef, SourcePolicyExecutionSpec
+from cutback.core.policy_execution import (
+    PolicyExecutionRef,
+    SourcePolicyExecutionSpec,
+    uncached_shadow_reference,
+)
 from cutback.evals.campaigns import proposal_model
 from cutback.evals.datasets import digest
 from cutback.evals.experiments import Budget, ExperimentPlan, plan_summary, upper_cost
@@ -124,6 +128,12 @@ def load_policies(session, store, parent, specification, references, *, training
         phase="training" if training else "evaluation",
         max_cases=min(original.max_cases, 256) if training else original.max_cases,
     )
+    shadow = training and specification.version == "cutback.source-policy-program.v2"
+    if shadow:
+        raw["reference"] = uncached_shadow_reference(original.reference).model_dump(mode="json")
+        raw["candidates"] = [
+            uncached_shadow_reference(value).model_dump(mode="json") for value in references
+        ]
     execution = SourcePolicyExecutionSpec.model_validate(raw)
     for reference in [execution.reference, *execution.candidates]:
         link = require_link(
@@ -133,7 +143,12 @@ def load_policies(session, store, parent, specification, references, *, training
             reference.payload_sha256,
             kinds={"reference", "static", "generated", "learned"},
         )
-        if link.derivation.get("reference") != reference.model_dump(mode="json"):
+        expected = link.derivation.get("reference")
+        if shadow:
+            expected = uncached_shadow_reference(
+                PolicyExecutionRef.model_validate(expected)
+            ).model_dump(mode="json")
+        if expected != reference.model_dump(mode="json"):
             raise ValueError("POLICY_PROGRAM_FROZEN_POLICY_DERIVATION_CHANGED")
     payloads = execution_payloads(session, store, parent.project_id, execution, parent.dataset_id)
     return execution, decode_policy_bundle(payloads, execution)
@@ -286,6 +301,12 @@ def save_policy(
         identifier,
         refs,
     )
+    if specification.version == "cutback.source-policy-program.v2" and reference.cache_enabled:
+        reference = (
+            reference.model_copy(update={"cache_requested": True})
+            if specification.template.source_policy_execution.reference.cache_requested
+            else uncached_shadow_reference(reference)
+        )
     sample = session.get(PayloadSample, identifier)
     link_payload(
         session,
@@ -529,6 +550,13 @@ def queue_training(session, store, parent, specification, dataset, policy, refs)
     feedback = {value.candidate_key: value for value in feedback_history(session, store, parent)}
     approved = {value.key for value in selected_static(specification, parent.economic_envelope)}
     choices = []
+    original_reference = specification.template.source_policy_execution.reference
+    shadow_training = specification.version == "cutback.source-policy-program.v2"
+    original_plain = (
+        policies[original_reference.key]
+        .model_copy(update={"cache_execution": None})
+        .behavior_sha256
+    )
     for reference in references:
         candidate = policies[reference.key]
         observed = feedback.get(reference.key)
@@ -537,13 +565,22 @@ def queue_training(session, store, parent, specification, dataset, policy, refs)
             and not reference.key.startswith("policy-generated-")
             or candidate.strategy.routes
             or candidate.cache_execution is not None
+            and not shadow_training
+            or candidate.model_copy(update={"cache_execution": None}).behavior_sha256
+            == original_plain
             or observed is None
             or observed.known_cost_subtotal_usd is None
             or observed.requests is None
         ):
             continue
         choices.append(
-            (observed.known_cost_subtotal_usd / observed.requests, reference.key, reference)
+            (
+                upper_cost(candidate.strategy)
+                if shadow_training
+                else observed.known_cost_subtotal_usd / observed.requests,
+                reference.key,
+                reference,
+            )
         )
     selected = [value[2] for value in sorted(choices, key=lambda value: (value[0], value[1]))[:4]]
     if not selected:
@@ -591,14 +628,15 @@ def fit_and_validate(session, store, parent, specification, child, dataset, poli
     parent.fit_id = fit.id
     _, previous = all_policies(session, store, parent, specification, kinds={"static", "generated"})
     seen = {value.behavior_sha256 for value in previous.values()}
-    candidates = {"policy-fit-native": fitted}
+    current_cache = specification.version == "cutback.source-policy-program.v2"
+    candidates = {"policy-fit-current-cache" if current_cache else "policy-fit-native": fitted}
     selected = {value.key for value in selected_static(specification, parent.economic_envelope)}
     cached = [
         value
         for key, value in previous.items()
         if key in selected and value.cache_execution is not None
     ]
-    if cached:
+    if cached and not current_cache:
         cache = min(
             cached,
             key=lambda value: (value.cache_execution.operation_cost_upper_usd, value.policy_sha256),

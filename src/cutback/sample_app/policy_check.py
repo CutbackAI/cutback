@@ -1,6 +1,7 @@
 """Exercise the actual policy consumer and native response types without provider I/O."""
 
 import json
+import os
 from pathlib import Path
 
 import httpx
@@ -12,6 +13,9 @@ from cutback.source_policy import load_policy
 
 
 def main():
+    # This command checks native behavior offline. Private cache activation is
+    # checked separately; an ambient runtime scope must not cause collector I/O.
+    os.environ.pop("CUTBACK_NATIVE_CACHE_SCOPE_FILE", None)
     policy = load_policy(Path(__file__).with_name("policy.json"))
     calls = []
 

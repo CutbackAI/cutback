@@ -42,6 +42,7 @@ def finish(
     commands=None,
     execute_local=False,
     branch=None,
+    container=None,
     sample_only=False,
 ):
     from cutback.agent_campaign import current, proposal, review
@@ -106,6 +107,7 @@ def finish(
             commands=commands,
             execute_local=execute_local,
             branch=branch,
+            container=container,
         )
     except ValueError as exc:
         code = str(exc)

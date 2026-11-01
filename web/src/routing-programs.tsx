@@ -85,9 +85,18 @@ export function RoutingPrograms({
     (row) =>
       row.approval_status === "pending" &&
       (sourcePolicy
-        ? row.specification?.source_policy_execution?.source
+        ? row.specification?.source_policy_execution?.source &&
+          row.specification?.source_policy_execution?.version !==
+            "cutback.source-policy-execution.v2"
         : row.specification?.routing_execution?.source),
   );
+  const runtime = sourcePolicy
+    ? (detail?.specification as Data | undefined)?.runtime_reference
+    : null;
+  const currentRuntime =
+    runtime?.version === "cutback.source-policy-runtime-reference-public.v1"
+      ? runtime
+      : null;
 
   useEffect(() => {
     const version = ++generation.current;
@@ -270,6 +279,15 @@ export function RoutingPrograms({
       {admin && (
         <details>
           <summary>Prepare a {name} program</summary>
+          {sourcePolicy && (
+            <p className="hint">
+              For an application with cache already configured, run{" "}
+              <code>cutback source-policy prepare</code> in its committed
+              source. The agent freezes source-matched activity and the observed
+              activation before preparing the program. Inspect and approve that
+              program here.
+            </p>
+          )}
           {!available.length && (
             <p>
               Prepare a source-bound template with{" "}
@@ -465,6 +483,40 @@ export function RoutingPrograms({
             <dt>Deadline</dt>
             <dd>{detail.deadline_at || "Starts at approval"}</dd>
           </dl>
+          {currentRuntime && (
+            <section aria-label="Observed current cache reference">
+              <h5>Current application cache</h5>
+              <p>
+                {currentRuntime.cache_requested === true
+                  ? "Active in the retained operations"
+                  : "Configured but inactive in the retained operations"}
+                . Capture coverage is unknown; these are client-reported source
+                identities.
+              </p>
+              <dl>
+                <dt>Observed environment and service</dt>
+                <dd>
+                  {currentRuntime.environment} / {currentRuntime.service_name}
+                </dd>
+                <dt>Retained logical operations</dt>
+                <dd>{currentRuntime.retained_operations}</dd>
+                <dt>Observation freshness ends</dt>
+                <dd>{currentRuntime.expires_at}</dd>
+                <dt>Comparison</dt>
+                <dd>
+                  {currentRuntime.cache_requested === true
+                    ? "Isolated cold-cache replay; production hit rate and savings unknown"
+                    : "Uncached replay; configuration does not activate cache"}
+                </dd>
+              </dl>
+              <p>
+                Conditional training calls the native models without cache. The
+                full current configuration stays bound to the evaluation and
+                source review. Changed or expired retained observations stop
+                dispatch.
+              </p>
+            </section>
+          )}
           {typeof detail.summary.decision === "string" && (
             <p>
               Decision: {String(detail.summary.decision).replaceAll("_", " ")}

@@ -105,3 +105,31 @@ if __name__ == "__main__":
         "Independent source-policy application",
     )
     return root
+
+
+def cached_application(path):
+    root = application(path)
+    value = SourceImprovementPolicy.model_validate_json((root / "policy.json").read_bytes())
+    from cutback.core.exact_cache import ExactCacheExecution
+
+    value.cache_execution = ExactCacheExecution(
+        freshness_ref="owned-fixture",
+        ttl_seconds=60,
+        content_retention_authorized=True,
+        immutable_or_safely_invalidated=True,
+        operation_cost_upper_usd="0.000001",
+        operation_cost_basis_ref="owned-fixture",
+    )
+    (root / "policy.json").write_bytes(value.configuration_bytes())
+    git(root, "add", "policy.json")
+    git(
+        root,
+        "-c",
+        "user.name=Synthetic",
+        "-c",
+        "user.email=synthetic@example.invalid",
+        "commit",
+        "-m",
+        "Independent cached-current source",
+    )
+    return root, value

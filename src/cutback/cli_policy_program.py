@@ -26,12 +26,39 @@ def register_policy_program(app, output, fail):
                 code = str(error)
                 upgrade = code in {
                     "POLICY_ACTIVITY_MATCHING_COLLECTOR_REQUIRED",
+                    "POLICY_ACTIVITY_SERVICE_DISCOVERY_UPGRADE_REQUIRED",
                     "POLICY_PROGRAM_COLLECTOR_UPGRADE_REQUIRED",
+                    "POLICY_PROGRAM_CACHED_CURRENT_COLLECTOR_UPGRADE_REQUIRED",
                     "POLICY_PROGRAM_ASYNC_COLLECTOR_UPGRADE_REQUIRED",
                     "POLICY_PROGRAM_CURRENT_ROUTER_COLLECTOR_UPGRADE_REQUIRED",
                     "COLLECTOR_SOURCE_WORKLOAD_ASSESSMENT_UPGRADE_REQUIRED",
                 }
                 data_action = {
+                    "POLICY_RUNTIME_REFERENCE_COMPLETE_UNIFORM_RETAINED_ACTIVITY_REQUIRED": (
+                        "Run source-policy inspect-activity for the current source. Preparation "
+                        "requires complete retained operations with one observed activation; "
+                        "empty, mixed, failed or truncated activity cannot select a reference."
+                    ),
+                    "POLICY_RUNTIME_REFERENCE_RAW_ACTIVITY_CHANGED_OR_EXPIRED": (
+                        "Inspect the saved program. Its frozen activity changed or expired. "
+                        "Cancel and archive only once it is terminal and all bills are known; "
+                        "a new preview requires fresh source-matched activity and approval."
+                    ),
+                    "POLICY_RUNTIME_REFERENCE_CURRENT_SOURCE_AND_FRESH_WINDOW_REQUIRED": (
+                        "Inspect the saved program and its observation freshness. A stale "
+                        "window cannot be refreshed inside an existing approval. Cancel and "
+                        "archive only after terminal known accounting, then prepare anew."
+                    ),
+                    "POLICY_PROGRAM_CURRENT_CACHE_CONTRACT_MUST_BE_PRESERVED": (
+                        "The current cache configuration is preserved for this comparison. "
+                        "Omit --exact-cache-contract or supply its identical contract; "
+                        "runtime activation remains separate from source configuration."
+                    ),
+                    "POLICY_ACTIVITY_SELECT_EXPLICIT_SERVICE_OR_COLLECT_CURRENT_SOURCE_METADATA": (
+                        "Inspect opted-in activity for the current committed source. If several "
+                        "services match, select --service for inspection or --runtime-service "
+                        "for preparation. A service is never selected by recency."
+                    ),
                     "POLICY_DATA_SELECT_EXPLICIT_DATASET_OR_IMPORT_INDEPENDENT_LABELS": (
                         "Run source-policy discover for compatible metadata. Import rights-cleared "
                         "independently labeled cases or pass --dataset UUID; ambiguous versions "
@@ -65,7 +92,7 @@ def register_policy_program(app, output, fail):
     @guarded
     def inspect_activity(
         producer: Annotated[str, typer.Option("--producer")],
-        service: Annotated[str, typer.Option("--service")],
+        service: Annotated[str | None, typer.Option("--service")] = None,
         target: Path = Path("."),
         environment: str = "staging",
         window_minutes: int = 60,
@@ -169,6 +196,8 @@ def register_policy_program(app, output, fail):
         exact_cache_contract: Path | None = None,
         workload_environment: str = "staging",
         data_environment: str = "staging",
+        runtime_service: str | None = None,
+        runtime_window_minutes: int = 10,
         local: bool = False,
         endpoint: str | None = None,
         project: str | None = None,
@@ -202,6 +231,8 @@ def register_policy_program(app, output, fail):
                 cache_contract=read(exact_cache_contract) if exact_cache_contract else None,
                 workload_environment=workload_environment,
                 data_environment=data_environment,
+                runtime_service=runtime_service,
+                runtime_window_minutes=runtime_window_minutes,
             )
         )
 
@@ -288,6 +319,9 @@ def register_policy_program(app, output, fail):
         command_file: Annotated[Path | None, typer.Option("--commands")] = None,
         execute_local: bool = False,
         branch: str = "cutback/source-policy-review",
+        container_image: str | None = None,
+        container_python_path: str = "/usr/local/bin/python",
+        container_node_path: str = "/usr/local/bin/node",
     ):
         """Prepare private source trees, verify inverse rollback, and explicitly run checks."""
         from cutback.agent_control import connect
@@ -304,6 +338,13 @@ def register_policy_program(app, output, fail):
             commands=read(command_file) if command_file else None,
             execute_local=execute_local,
             branch=branch,
+            container={
+                "image_id": container_image,
+                "python_path": container_python_path,
+                "node_path": container_node_path,
+            }
+            if container_image
+            else None,
         )
         output(result)
         if result["status"] == "CHECKS_FAILED":
@@ -348,13 +389,18 @@ def register_policy_program(app, output, fail):
 
     @group.command("sample")
     @guarded
-    def sample(destination: Path, async_consumer: Annotated[bool, typer.Option("--async")] = False):
+    def sample(
+        destination: Path,
+        async_consumer: Annotated[bool, typer.Option("--async")] = False,
+        cached_current: bool = False,
+    ):
         """Copy an independent synthetic policy consumer and offline checks into a new directory."""
         from cutback.sample_app.policy_fixture import fixture
 
         if destination.exists() or destination.is_symlink():
             raise ValueError("POLICY_SAMPLE_DESTINATION_MUST_BE_NEW")
+        files = fixture(async_consumer=async_consumer, cached_current=cached_current)
         destination.mkdir(parents=True)
-        for name, value in fixture(async_consumer=async_consumer).items():
+        for name, value in files.items():
             (destination / name).write_text(value, encoding="utf-8", newline="")
         output({"status": "SYNTHETIC_SAMPLE_READY", "provider_calls": 0})
