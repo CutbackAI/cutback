@@ -125,14 +125,15 @@ def run_sample(
     ticket_router=False,
 ):
     from cutback.agent import analyze, load_session, prepare, selected_profile
-    from cutback.agent_campaign import advance, proposal, review, status
+    from cutback.agent_campaign import advance, proposal, status
     from cutback.agent_campaign import prepare as prepare_campaign
+    from cutback.agent_campaign_handoff import finish
     from cutback.agent_control import Control
     from cutback.agent_publication import publish_review
-    from cutback.application_check_discovery import discover
-    from cutback.application_checks import ApplicationCheckContract, git, run_checks
+    from cutback.application_checks import ApplicationCheckContract, git
     from cutback.campaign_operator import CampaignOperator
     from cutback.campaign_outcomes import record_outcomes
+    from cutback.core.workspace import read_private
     from cutback.demo_campaigns import synthetic_executor
 
     if ticket_router and modern_model:
@@ -256,45 +257,34 @@ def run_sample(
         artifact = proposal(
             application, control, purpose="owned-synthetic-review", sample_only=True
         )
-        roots = [private_directory(owned, name) for name in ("base", "proposed")]
-        for tree in roots:
-            shutil.copytree(
-                application,
-                tree,
-                dirs_exist_ok=True,
-                ignore=shutil.ignore_patterns(".cutback", "__pycache__"),
-            )
-        patch = owned / "evaluated-change.diff"
-        patch.write_text(artifact["diff"], encoding="utf-8", newline="\n")
-        git(roots[1], "apply", str(patch))
-        git(roots[1], "add", "app.py")
-        git(
-            roots[1],
-            "-c",
-            "user.name=Synthetic",
-            "-c",
-            "user.email=synthetic@example.invalid",
-            "commit",
-            "-m",
-            "Evaluated synthetic change",
-        )
-        discovered = discover(*roots)
-        contract = ApplicationCheckContract.model_validate(discovered["contract"])
-        receipt = run_checks(contract, *roots, execute_local=True)
-        checked = review(
+        destination = owned / "checked-handoff"
+        preview = finish(
             application,
             control,
+            destination=destination,
             purpose="owned-application-check-review",
-            contract=contract,
-            receipt=receipt,
-            base=roots[0],
-            proposed=roots[1],
-            coverage={
-                w: [c.key for c in contract.commands] for w in artifact["affected_workflows"]
-            },
             branch="cutback/owned-outcome-review",
             sample_only=True,
         )
+        completed = finish(
+            application,
+            control,
+            coverage={
+                workflow: preview["command_keys"] for workflow in preview["affected_workflows"]
+            },
+            execute_local=True,
+            destination=destination,
+            purpose="owned-application-check-review",
+            branch="cutback/owned-outcome-review",
+            sample_only=True,
+        )
+        if completed["status"] != "REVIEWED":
+            raise ValueError("OWNED_CAMPAIGN_APPLICATION_CHECK_FAILED")
+        contract = ApplicationCheckContract.model_validate(
+            read_private(destination / "contract.json")
+        )
+        discovered = read_private(destination / "discovery.json")
+        checked = read_private(destination / "review.json")
         publication_preview = publish_review(
             application,
             control,
@@ -417,6 +407,7 @@ def run_sample(
             "paid_provider_calls": 0,
             "baseline_model": "gpt-6-luna" if modern_model else "gpt-4.1",
             "review": checked,
+            "checked_handoff_workspace": str(destination),
             "publication_preview": publication_preview,
             "outcome_review": observed,
             **({"automatic_observation": watched} if watched else {}),

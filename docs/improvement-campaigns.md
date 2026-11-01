@@ -107,6 +107,12 @@ The proposer sees authorized training examples, prior generated configurations a
 
 ## Prepare the exact change and application checks
 
+For automatic private source preparation, check discovery, actual rollback and
+the checked local review, use [campaign finish](campaign-handoff.md). It previews
+first and runs checks only with explicit local execution and declared coverage
+for every affected workflow. The lower-level commands below remain available
+for independently managed workspaces.
+
 ```sh
 cutback campaign proposal --purpose-reference actual-change-review
 ```

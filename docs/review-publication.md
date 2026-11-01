@@ -19,6 +19,9 @@ not a live repository. The sample makes no GitHub request and needs no GitHub ke
 ## Prepare the review
 
 Complete [campaign confirmation and application review](improvement-campaigns.md).
+The automatic [campaign handoff](campaign-handoff.md) can prepare both private
+source repositories, execute authorized checks and save the exact review inputs
+for publication. Existing separately managed workspaces remain supported.
 The proposed checkout must contain exactly one unsigned commit directly above
 the checked base commit. That base must already exist at the named GitHub base
 branch. The one changed file, its executable mode and both source trees must

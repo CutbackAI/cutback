@@ -1,7 +1,6 @@
 """Independent observed-workload campaign, with closed native SDK transports only."""
 
 import json
-import shutil
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from unittest.mock import patch
@@ -13,10 +12,11 @@ def seed_workload_campaign(app, control, project_id, writer, workspace):
 
     from cutback.agent import load_session, selected_profile
     from cutback.agent_campaign import advance, prepare, proposal, status
+    from cutback.agent_campaign_handoff import finish
     from cutback.agent_control import Control
-    from cutback.application_check_discovery import discover
-    from cutback.application_checks import ApplicationCheckContract, git, run_checks, verify
+    from cutback.application_checks import ApplicationCheckContract, verify
     from cutback.campaign_operator import CampaignOperator
+    from cutback.core.workspace import read_private
     from cutback.demo_workload_portfolio import seed_workload_portfolio
     from cutback.evals.executors import OpenAIExecutor
     from cutback.sample_app.workload_reuse import fixture_response
@@ -183,30 +183,31 @@ def seed_workload_campaign(app, control, project_id, writer, workspace):
     else:
         raise ValueError("SYNTHETIC_WORKLOAD_CANNOT_AUTHORIZE_REAL_RELEASE")
     artifact = proposal(root, adapter, purpose="owned-fixture-change-review", sample_only=True)
-    proposed = root.parent / (root.name + "-campaign-proposed")
-    shutil.copytree(root, proposed, ignore=shutil.ignore_patterns(".cutback", "__pycache__"))
-    change = root.parent / (root.name + "-campaign.patch")
-    change.write_text(artifact["diff"], encoding="utf-8", newline="")
-    git(proposed, "apply", str(change))
-    git(proposed, "add", ".")
-    git(
-        proposed,
-        "-c",
-        "user.name=Synthetic Cutback Sample",
-        "-c",
-        "user.email=synthetic@example.invalid",
-        "commit",
-        "-m",
-        "Review workload campaign",
+    destination = root.parent / (root.name + "-campaign-review")
+    preview = finish(
+        root,
+        adapter,
+        destination=destination,
+        purpose="owned-fixture-campaign-handoff",
+        branch="cutback/workload-campaign-review",
+        sample_only=True,
     )
-    checks = ApplicationCheckContract.model_validate(discover(root, proposed)["contract"])
-    receipt = run_checks(checks, root, proposed, execute_local=True)
-    verified = verify(checks, receipt, root, proposed)
-    if not receipt["all_passed"]:
+    handoff = finish(
+        root,
+        adapter,
+        coverage={workflow: preview["command_keys"] for workflow in preview["affected_workflows"]},
+        execute_local=True,
+        destination=destination,
+        purpose="owned-fixture-campaign-handoff",
+        branch="cutback/workload-campaign-review",
+        sample_only=True,
+    )
+    if handoff["status"] != "REVIEWED":
         raise ValueError("SYNTHETIC_WORKLOAD_CAMPAIGN_APPLICATION_CHECK_FAILED")
-    change.write_text(artifact["rollback_diff"], encoding="utf-8", newline="")
-    git(proposed, "apply", str(change))
-    if (root / "app.py").read_bytes() != original or (proposed / "app.py").read_bytes() != original:
+    checks = ApplicationCheckContract.model_validate(read_private(destination / "contract.json"))
+    receipt = read_private(destination / "checks.json")
+    verified = verify(checks, receipt, Path(handoff["base_root"]), Path(handoff["proposed_root"]))
+    if (root / "app.py").read_bytes() != original or not handoff["byte_exact_rollback_checked"]:
         raise ValueError("SYNTHETIC_WORKLOAD_CAMPAIGN_ROLLBACK_MISMATCH")
     return {
         **basis,
@@ -218,6 +219,8 @@ def seed_workload_campaign(app, control, project_id, writer, workspace):
         "native_calls": len(calls),
         "source_diff": artifact,
         "application_checks": {"receipt": receipt, "verified": verified},
+        "checked_handoff_workspace": str(destination),
+        "application_review": read_private(destination / "review.json"),
         "rollback_verified": True,
         "paid_provider_calls": 0,
         "runtime_cache_activated": False,
