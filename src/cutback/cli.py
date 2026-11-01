@@ -19,6 +19,7 @@ from cutback.cli_criteria import register_criteria
 from cutback.cli_episodes import register_episodes
 from cutback.cli_guardrails import register_guardrails
 from cutback.cli_native_profiles import register_native_profiles
+from cutback.cli_policy_program import register_policy_program
 from cutback.cli_qualification import register_qualification
 from cutback.cli_retrieval import register_retrieval
 from cutback.cli_routing import register_routing
@@ -120,6 +121,7 @@ def demo(
     semantic_rubrics: bool = False,
     learned_routing: bool = False,
     source_routing: bool = False,
+    source_policy: bool = False,
     generated_scenarios: bool = False,
     reactive_users: bool = False,
     agent_retrieval: bool = False,
@@ -146,6 +148,7 @@ def demo(
             semantic_rubrics=semantic_rubrics,
             learned_routing=learned_routing,
             source_routing=source_routing,
+            source_policy=source_policy,
             generated_scenarios=generated_scenarios,
             reactive_users=reactive_users,
             agent_retrieval=agent_retrieval,
@@ -556,6 +559,7 @@ def create_key(
 register(app, output, request, fail)
 
 register_agent(app, output, fail)
+register_policy_program(app, output, fail)
 register_checks(app, output, fail)
 register_qualification(app, output, fail)
 register_episodes(app, output, fail)

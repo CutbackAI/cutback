@@ -98,7 +98,13 @@ def explain_source(state):
     profiles = state.get("profiles", [])
     unresolved = state.get("unresolved", [])
     options = state.get("preparation_options", [])
-    if options:
+    policies = state.get("policy_producers", [])
+    if policies:
+        note = (
+            "A fixed source-policy consumer is qualified. Prepare its whole-budget program "
+            "using permitted frozen data and a measured task-cost snapshot."
+        )
+    elif options:
         note = "Some workflows have inspected adapters. Unresolved calls stay outside them."
     elif unresolved:
         note = "Detected calls still need request-contract inspection before automatic replay."
@@ -122,6 +128,7 @@ def explain_source(state):
         "phase": state["phase"],
         "qualified_request_profiles": len(profiles),
         "qualified_preparation_choices": len(options),
+        "qualified_source_policy_producers": len(policies),
         "unresolved_request_profiles": len(unresolved),
         "issues": issues,
         "omitted_issues": max(0, len(unresolved) - len(issues)),

@@ -1,0 +1,83 @@
+"""Common-policy parent accounting shares the canonical project-locked transaction."""
+
+from datetime import UTC, datetime
+from decimal import Decimal, InvalidOperation
+
+from sqlalchemy import select
+
+from cutback.server.campaign_db import CampaignRun
+from cutback.server.policy_program_service import PHASE_STATUS, program_for_run
+from cutback.server.principals import principal_role
+
+
+def reserve_program_call(
+    session, run, environment, plan_sha256, purpose, amount, *, operation=None
+):
+    parent, link = program_for_run(session, run)
+    if parent is None:
+        if operation == "source-policy-generation-v1":
+            raise ValueError("POLICY_GENERATION_REQUIRES_APPROVED_PARENT")
+        return
+    if session.scalar(select(CampaignRun.id).where(CampaignRun.run_id == run.id)):
+        raise ValueError("EXECUTION_MULTIPLE_PARENT_OWNERS_NOT_QUALIFIED")
+    now = datetime.now(UTC)
+    if (
+        parent.approval_status != "consumed"
+        or parent.status != PHASE_STATUS[link.phase]
+        or parent.expires_at <= now
+        or parent.deadline_at is None
+        or parent.deadline_at <= now
+        or principal_role(session, run.project_id, parent.approved_by or "")
+        not in {"admin", "project_admin"}
+    ):
+        raise ValueError("POLICY_PROGRAM_CANCELLED_EXPIRED_OR_AUTHORITY_REVOKED")
+    if link.environment_id != environment or link.plan_sha256 != plan_sha256:
+        raise ValueError("POLICY_PROGRAM_CALL_FROZEN_SCOPE_CHANGED")
+    optimization = link.phase in {"training", "generation"}
+    expected_operation = (
+        "source-policy-training-v1"
+        if link.phase == "training"
+        else "source-policy-generation-v1"
+        if link.phase == "generation"
+        else None
+    )
+    if (
+        purpose != ("optimization" if optimization else "evaluation")
+        or operation != expected_operation
+    ):
+        raise ValueError("POLICY_PROGRAM_REQUEST_PHASE_MISMATCH")
+    envelope = parent.economic_envelope
+    try:
+        cap = Decimal(str(envelope["effective_max_usd"]))
+        compiled = Decimal(str(envelope["worst_case_native_and_cache_usd"]))
+        requests = envelope["max_requests"]
+        owner = parent.specification["budget"]
+        owner_usd = Decimal(str(owner["max_usd"]))
+        owner_requests = owner["max_requests"]
+        if (
+            envelope.get("contract") != "cutback.source-policy-program-budget.v1"
+            or envelope.get("eligible") is not True
+            or not cap.is_finite()
+            or not compiled.is_finite()
+            or not owner_usd.is_finite()
+            or not 0 < compiled <= cap <= owner_usd <= 10000
+            or type(requests) is not int
+            or type(owner_requests) is not int
+            or not 1 <= requests <= owner_requests <= 10000
+        ):
+            raise ValueError("POLICY_PROGRAM_ECONOMIC_ENVELOPE_NOT_ELIGIBLE")
+    except (KeyError, TypeError, InvalidOperation):
+        raise ValueError("POLICY_PROGRAM_ECONOMIC_ENVELOPE_NOT_ELIGIBLE") from None
+    if parent.requests_used >= requests or parent.reserved_usd + amount > compiled:
+        raise ValueError("POLICY_PROGRAM_BUDGET_EXHAUSTED")
+    parent.requests_used += 1
+    parent.reserved_usd += amount
+
+
+def record_program_cost(session, run, spent):
+    # Unknown-to-known only, including a late billed reply after cancellation.
+    # Updating accounting never queues work or changes the parent's status.
+    parent, _ = program_for_run(session, run)
+    if parent is not None:
+        parent.spent_usd += spent
+        parent.known_cost_requests += 1

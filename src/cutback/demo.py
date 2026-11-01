@@ -112,6 +112,7 @@ def seed_support_desk(
     semantic_rubrics=False,
     learned_routing=False,
     source_routing=False,
+    source_policy=False,
     generated_scenarios=False,
     reactive_users=False,
     agent_retrieval=False,
@@ -485,6 +486,13 @@ def seed_support_desk(
                 workload_sample = seed_workload_portfolio(
                     app, control, project["id"], workspace, ingest
                 )
+            policy_sample = None
+            if source_policy:
+                from cutback.demo_policy_program import run_sample as run_policy_sample
+
+                policy_sample = run_policy_sample(
+                    app, control, endpoint, admin, project["id"], ingest, workspace
+                )
             manifest = {
                 "available": True,
                 "title": "Support-desk triage",
@@ -501,6 +509,7 @@ def seed_support_desk(
                 "sample_source": "cutback/sample_app/app.py",
                 "source_diff": patch,
                 "paid_provider_calls": 0,
+                **({"source_policy_sample": policy_sample} if policy_sample else {}),
                 **(
                     {
                         "workload_portfolio_sample": {
@@ -683,6 +692,7 @@ def launch_demo(
     semantic_rubrics=False,
     learned_routing=False,
     source_routing=False,
+    source_policy=False,
     generated_scenarios=False,
     reactive_users=False,
     agent_retrieval=False,
@@ -832,6 +842,7 @@ def launch_demo(
                 semantic_rubrics=semantic_rubrics,
                 learned_routing=learned_routing,
                 source_routing=source_routing,
+                source_policy=source_policy,
                 generated_scenarios=generated_scenarios,
                 reactive_users=reactive_users,
                 agent_retrieval=agent_retrieval,

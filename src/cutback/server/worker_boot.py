@@ -94,6 +94,11 @@ def worker_cycle(sessions, store, *, maintenance_due=True, encrypted_expiry_due=
         from cutback.server.routing_program_retention import expire_programs
 
         attempt("routing_program_expiry", lambda: expire_programs(sessions))
+        from cutback.server.policy_program_retention import (
+            expire_programs as expire_policy_programs,
+        )
+
+        attempt("source_policy_program_expiry", lambda: expire_policy_programs(sessions))
         attempt(
             "maintenance",
             lambda: maintain_all(
@@ -118,6 +123,8 @@ def worker_cycle(sessions, store, *, maintenance_due=True, encrypted_expiry_due=
         from cutback.server.campaign_worker import advance_one
         from cutback.server.continuous import queue_schedules
         from cutback.server.criteria_worker import run_criteria_one
+        from cutback.server.policy_generation_worker import run_generation_one
+        from cutback.server.policy_program_worker import advance_one as advance_policy_program
         from cutback.server.proposal_worker import run_proposal_one
         from cutback.server.routing_program_worker import advance_one as advance_routing_program
         from cutback.server.scenario_worker import run_scenario_one
@@ -128,6 +135,14 @@ def worker_cycle(sessions, store, *, maintenance_due=True, encrypted_expiry_due=
             lambda: advance_routing_program(sessions, store, execution_enabled=True),
         )
         attempt("proposals", lambda: run_proposal_one(sessions, store, execution_enabled=True))
+        attempt(
+            "source_policy_programs",
+            lambda: advance_policy_program(sessions, store, execution_enabled=True),
+        )
+        attempt(
+            "source_policy_generation",
+            lambda: run_generation_one(sessions, store, execution_enabled=True),
+        )
         attempt(
             "criteria_generation", lambda: run_criteria_one(sessions, store, execution_enabled=True)
         )

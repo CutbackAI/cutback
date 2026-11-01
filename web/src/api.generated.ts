@@ -455,6 +455,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/datasets/{dataset_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Dataset Detail */
+        get: operations["dataset_detail_v1_projects__project_id__datasets__dataset_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/experiments/draft": {
         parameters: {
             query?: never;
@@ -1321,6 +1338,126 @@ export interface paths {
         put?: never;
         /** Confirmation Draft */
         post: operations["confirmation_draft_v1_projects__project_id__routing_fits__fit_id__confirmation_drafts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/source-policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import Policy */
+        post: operations["import_policy_v1_projects__project_id__source_policies_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/source-policy-programs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listing */
+        get: operations["listing_v1_projects__project_id__source_policy_programs_get"];
+        put?: never;
+        /** Prepare */
+        post: operations["prepare_v1_projects__project_id__source_policy_programs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/source-policy-programs/{program_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Detail */
+        get: operations["detail_v1_projects__project_id__source_policy_programs__program_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/source-policy-programs/{program_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve */
+        post: operations["approve_v1_projects__project_id__source_policy_programs__program_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/source-policy-programs/{program_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel */
+        post: operations["cancel_v1_projects__project_id__source_policy_programs__program_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/source-policy-programs/{program_id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Content */
+        post: operations["content_v1_projects__project_id__source_policy_programs__program_id__content_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/source-policy-programs/{program_id}/source-proposal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Proposal */
+        post: operations["proposal_v1_projects__project_id__source_policy_programs__program_id__source_proposal_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6414,7 +6551,7 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13" | "deterministic-v14" | "deterministic-v15" | "deterministic-v16" | "deterministic-v17" | "deterministic-v18";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13" | "deterministic-v14" | "deterministic-v15" | "deterministic-v16" | "deterministic-v17" | "deterministic-v18" | "deterministic-v19";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec-Input"] | null;
             /** Retrieval Execution */
             retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Input"] | components["schemas"]["JointModelRetrievalExecutionSpec-Input"] | null;
@@ -6430,6 +6567,7 @@ export interface components {
             routing_execution?: components["schemas"]["RoutingTrainingExecution"] | components["schemas"]["LearnedRoutingBinding"] | null;
             native_fixture?: components["schemas"]["NativeFixtureExecution"] | null;
             workload_portfolio?: components["schemas"]["WorkloadPortfolioBinding-Input"] | null;
+            source_policy_execution?: components["schemas"]["SourcePolicyExecutionSpec-Input"] | null;
         };
         /** ExperimentPlan */
         "ExperimentPlan-Output": {
@@ -6519,7 +6657,7 @@ export interface components {
              * @default deterministic-v3
              * @enum {string}
              */
-            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13" | "deterministic-v14" | "deterministic-v15" | "deterministic-v16" | "deterministic-v17" | "deterministic-v18";
+            evaluator_version: "deterministic-v3" | "deterministic-v4" | "deterministic-v5" | "deterministic-v6" | "deterministic-v7" | "deterministic-v8" | "deterministic-v9" | "deterministic-v10" | "deterministic-v11" | "deterministic-v12" | "deterministic-v13" | "deterministic-v14" | "deterministic-v15" | "deterministic-v16" | "deterministic-v17" | "deterministic-v18" | "deterministic-v19";
             episode_execution?: components["schemas"]["EpisodeExecutionSpec-Output"] | null;
             /** Retrieval Execution */
             retrieval_execution?: components["schemas"]["RetrievalExecutionSpec-Output"] | components["schemas"]["JointModelRetrievalExecutionSpec-Output"] | null;
@@ -6535,6 +6673,7 @@ export interface components {
             routing_execution?: components["schemas"]["RoutingTrainingExecution"] | components["schemas"]["LearnedRoutingBinding"] | null;
             native_fixture?: components["schemas"]["NativeFixtureExecution"] | null;
             workload_portfolio?: components["schemas"]["WorkloadPortfolioBinding-Output"] | null;
+            source_policy_execution?: components["schemas"]["SourcePolicyExecutionSpec-Output"] | null;
         };
         /** FieldTransition */
         FieldTransition: {
@@ -9307,6 +9446,92 @@ export interface components {
             dataset_id: string;
             specification: components["schemas"]["ExperimentPlan-Input"];
         };
+        /** PolicyExecutionRef */
+        "PolicyExecutionRef-Input": {
+            /** Key */
+            key: string;
+            /**
+             * Payload Id
+             * Format: uuid
+             */
+            payload_id: string;
+            /** Payload Sha256 */
+            payload_sha256: string;
+            /** Policy Sha256 */
+            policy_sha256: string;
+            /**
+             * Cache Enabled
+             * @default false
+             */
+            cache_enabled: boolean;
+            /** Cache Operation Upper Usd */
+            cache_operation_upper_usd?: number | string | null;
+        };
+        /** PolicyExecutionRef */
+        "PolicyExecutionRef-Output": {
+            /** Key */
+            key: string;
+            /**
+             * Payload Id
+             * Format: uuid
+             */
+            payload_id: string;
+            /** Payload Sha256 */
+            payload_sha256: string;
+            /** Policy Sha256 */
+            policy_sha256: string;
+            /**
+             * Cache Enabled
+             * @default false
+             */
+            cache_enabled: boolean;
+            /** Cache Operation Upper Usd */
+            cache_operation_upper_usd?: string | null;
+        };
+        /** PolicySourceBinding */
+        PolicySourceBinding: {
+            /**
+             * Version
+             * @default cutback.policy-source.v1
+             * @constant
+             */
+            version: "cutback.policy-source.v1";
+            /** Producer File */
+            producer_file: string;
+            /** Producer Sha256 */
+            producer_sha256: string;
+            /** Configuration File */
+            configuration_file: string;
+            /** Configuration Sha256 */
+            configuration_sha256: string;
+            /** Policy Sha256 */
+            policy_sha256: string;
+            /** Source Tree Hash */
+            source_tree_hash: string;
+            /** Commit */
+            commit: string;
+            /**
+             * Program Sha256
+             * @default dfca1fba8c897e60ae2eac6c447631fd19488c41c4cbe76ff201723764c7ffe2
+             */
+            program_sha256: string;
+            /** Workflow */
+            workflow: string;
+            /** Max Input Bytes */
+            max_input_bytes: number;
+            /**
+             * Provider
+             * @default openai
+             * @constant
+             */
+            provider: "openai";
+            /**
+             * Surface
+             * @default responses.create
+             * @constant
+             */
+            surface: "responses.create";
+        };
         /** ProjectInput */
         ProjectInput: {
             /** Slug */
@@ -11674,6 +11899,401 @@ export interface components {
             /** Profile Sha256 */
             profile_sha256: string;
         };
+        /** SourceImprovementPolicy */
+        "SourceImprovementPolicy-Input": {
+            /**
+             * Version
+             * @default cutback.source-improvement-policy.v1
+             * @constant
+             */
+            version: "cutback.source-improvement-policy.v1";
+            /** Workflow */
+            workflow: string;
+            /** Max Input Bytes */
+            max_input_bytes: number;
+            /**
+             * Max Instruction Bytes
+             * @default 16000
+             */
+            max_instruction_bytes: number;
+            baseline: components["schemas"]["ModelSpec-Input"];
+            strategy: components["schemas"]["ModelSpec-Input"];
+            cache_execution?: components["schemas"]["ExactCacheExecution-Input"] | null;
+            /**
+             * Runtime Cache Activation
+             * @default explicit_private_scope_file_only
+             * @constant
+             */
+            runtime_cache_activation: "explicit_private_scope_file_only";
+        };
+        /** SourceImprovementPolicy */
+        "SourceImprovementPolicy-Output": {
+            /**
+             * Version
+             * @default cutback.source-improvement-policy.v1
+             * @constant
+             */
+            version: "cutback.source-improvement-policy.v1";
+            /** Workflow */
+            workflow: string;
+            /** Max Input Bytes */
+            max_input_bytes: number;
+            /**
+             * Max Instruction Bytes
+             * @default 16000
+             */
+            max_instruction_bytes: number;
+            baseline: components["schemas"]["ModelSpec-Output"];
+            strategy: components["schemas"]["ModelSpec-Output"];
+            cache_execution?: components["schemas"]["ExactCacheExecution-Output"] | null;
+            /**
+             * Runtime Cache Activation
+             * @default explicit_private_scope_file_only
+             * @constant
+             */
+            runtime_cache_activation: "explicit_private_scope_file_only";
+        };
+        /** SourcePolicyExecutionSpec */
+        "SourcePolicyExecutionSpec-Input": {
+            /**
+             * Version
+             * @default cutback.source-policy-execution.v1
+             * @constant
+             */
+            version: "cutback.source-policy-execution.v1";
+            /**
+             * Phase
+             * @default evaluation
+             * @enum {string}
+             */
+            phase: "evaluation" | "training";
+            /**
+             * Transport
+             * @default native_provider
+             * @enum {string}
+             */
+            transport: "native_provider" | "scripted_test_only";
+            source: components["schemas"]["PolicySourceBinding"];
+            reference: components["schemas"]["PolicyExecutionRef-Input"];
+            /** Candidates */
+            candidates: components["schemas"]["PolicyExecutionRef-Input"][];
+            /**
+             * Max Cases
+             * @default 1024
+             */
+            max_cases: number;
+        };
+        /** SourcePolicyExecutionSpec */
+        "SourcePolicyExecutionSpec-Output": {
+            /**
+             * Version
+             * @default cutback.source-policy-execution.v1
+             * @constant
+             */
+            version: "cutback.source-policy-execution.v1";
+            /**
+             * Phase
+             * @default evaluation
+             * @enum {string}
+             */
+            phase: "evaluation" | "training";
+            /**
+             * Transport
+             * @default native_provider
+             * @enum {string}
+             */
+            transport: "native_provider" | "scripted_test_only";
+            source: components["schemas"]["PolicySourceBinding"];
+            reference: components["schemas"]["PolicyExecutionRef-Output"];
+            /** Candidates */
+            candidates: components["schemas"]["PolicyExecutionRef-Output"][];
+            /**
+             * Max Cases
+             * @default 1024
+             */
+            max_cases: number;
+        };
+        /** SourcePolicyImport */
+        SourcePolicyImport: {
+            /** Purpose */
+            purpose: string;
+            /**
+             * Request Id
+             * Format: uuid4
+             */
+            request_id: string;
+            /**
+             * Dataset Id
+             * Format: uuid
+             */
+            dataset_id: string;
+            source: components["schemas"]["PolicySourceBinding"];
+            /** Key */
+            key: string;
+            policy: components["schemas"]["SourceImprovementPolicy-Input"];
+        };
+        /** SourcePolicyProgramApproval */
+        SourcePolicyProgramApproval: {
+            /** Program Hash */
+            program_hash: string;
+            /** Approval Ref */
+            approval_ref: string;
+        };
+        /** SourcePolicyProgramBrief */
+        SourcePolicyProgramBrief: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            /**
+             * Template Plan Id
+             * Format: uuid
+             */
+            template_plan_id: string;
+            /**
+             * Dataset Id
+             * Format: uuid
+             */
+            dataset_id: string;
+            /** Program Hash */
+            program_hash: string;
+            /** Status */
+            status: string;
+            /** Approval Status */
+            approval_status: string;
+            /** Specification */
+            specification: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Economic Envelope */
+            economic_envelope: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Requests */
+            requests: number;
+            /** Current Round */
+            current_round: number;
+            /** Known Cost Requests */
+            known_cost_requests: number;
+            /** Reserved Usd */
+            reserved_usd: string;
+            /** Known Spend Subtotal Usd */
+            known_spend_subtotal_usd: string;
+            /** Billing Complete */
+            billing_complete: boolean;
+            /** Summary */
+            summary: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Deadline At */
+            deadline_at: string | null;
+            /**
+             * Deployment Authorized
+             * @default false
+             */
+            deployment_authorized: boolean;
+        };
+        /** SourcePolicyProgramCancel */
+        SourcePolicyProgramCancel: Record<string, never>;
+        /** SourcePolicyProgramContent */
+        SourcePolicyProgramContent: {
+            /**
+             * Program Id
+             * Format: uuid
+             */
+            program_id: string;
+            /** Program Hash */
+            program_hash: string;
+            /** Specification */
+            specification: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Policies */
+            policies: {
+                [key: string]: components["schemas"]["SourceImprovementPolicy-Output"];
+            };
+            /**
+             * Deployment Authorized
+             * @default false
+             */
+            deployment_authorized: boolean;
+        };
+        /** SourcePolicyProgramDetail */
+        SourcePolicyProgramDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            /**
+             * Template Plan Id
+             * Format: uuid
+             */
+            template_plan_id: string;
+            /**
+             * Dataset Id
+             * Format: uuid
+             */
+            dataset_id: string;
+            /** Program Hash */
+            program_hash: string;
+            /** Status */
+            status: string;
+            /** Approval Status */
+            approval_status: string;
+            /** Specification */
+            specification: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Economic Envelope */
+            economic_envelope: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Requests */
+            requests: number;
+            /** Current Round */
+            current_round: number;
+            /** Known Cost Requests */
+            known_cost_requests: number;
+            /** Reserved Usd */
+            reserved_usd: string;
+            /** Known Spend Subtotal Usd */
+            known_spend_subtotal_usd: string;
+            /** Billing Complete */
+            billing_complete: boolean;
+            /** Summary */
+            summary: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Deadline At */
+            deadline_at: string | null;
+            /**
+             * Deployment Authorized
+             * @default false
+             */
+            deployment_authorized: boolean;
+            /** Runs */
+            runs: {
+                [key: string]: components["schemas"]["JsonValue"];
+            }[];
+        };
+        /** SourcePolicyProgramDraft */
+        SourcePolicyProgramDraft: {
+            /**
+             * Request Id
+             * Format: uuid4
+             */
+            request_id: string;
+            /**
+             * Template Plan Id
+             * Format: uuid
+             */
+            template_plan_id: string;
+            /**
+             * Baseline Snapshot Id
+             * Format: uuid
+             */
+            baseline_snapshot_id: string;
+            fit?: components["schemas"]["RoutingFitOptions"] | null;
+            generator?: components["schemas"]["NativeGeneratorSpec"] | null;
+            budget: components["schemas"]["CampaignBudget"];
+            /** Conservative Savings Per Success Usd */
+            conservative_savings_per_success_usd?: number | string | null;
+            /** Forecast Successful Tasks */
+            forecast_successful_tasks?: number | null;
+            /**
+             * Max Fraction Of Opportunity
+             * @default 0.1
+             */
+            max_fraction_of_opportunity: number | string;
+        };
+        /** SourcePolicyProgramPage */
+        SourcePolicyProgramPage: {
+            /** Items */
+            items: components["schemas"]["SourcePolicyProgramBrief"][];
+            /** Next After */
+            next_after: string | null;
+        };
+        /** SourcePolicyProposal */
+        SourcePolicyProposal: {
+            /**
+             * Version
+             * @default cutback.source-policy-proposal.v1
+             * @constant
+             */
+            version: "cutback.source-policy-proposal.v1";
+            /**
+             * Program Id
+             * Format: uuid
+             */
+            program_id: string;
+            /** Program Hash */
+            program_hash: string;
+            /**
+             * Run Id
+             * Format: uuid
+             */
+            run_id: string;
+            /** Plan Hash */
+            plan_hash: string;
+            /** Dataset Hash */
+            dataset_hash: string;
+            /** Selection Hash */
+            selection_hash: string;
+            binding: components["schemas"]["PolicySourceBinding"];
+            original: components["schemas"]["SourceImprovementPolicy-Output"];
+            proposed: components["schemas"]["SourceImprovementPolicy-Output"];
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "synthetic_local_review_only" | "sample_review_required" | "heldout_review_required";
+            /** Optimization Known Modeled Usd */
+            optimization_known_modeled_usd: string;
+            /**
+             * Production Approval Required
+             * @default true
+             * @constant
+             */
+            production_approval_required: true;
+            /**
+             * Full Task Cost Known
+             * @default false
+             * @constant
+             */
+            full_task_cost_known: false;
+        };
         /** Span */
         Span: {
             /** Traceid */
@@ -14040,6 +14660,38 @@ export interface operations {
             };
         };
     };
+    dataset_detail_v1_projects__project_id__datasets__dataset_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     create_draft_v1_projects__project_id__experiments_draft_post: {
         parameters: {
             query?: never;
@@ -15883,6 +16535,286 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_policy_v1_projects__project_id__source_policies_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SourcePolicyImport"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyExecutionRef-Output"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listing_v1_projects__project_id__source_policy_programs_get: {
+        parameters: {
+            query?: {
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourcePolicyProgramPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    prepare_v1_projects__project_id__source_policy_programs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SourcePolicyProgramDraft"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourcePolicyProgramBrief"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    detail_v1_projects__project_id__source_policy_programs__program_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                program_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourcePolicyProgramDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_v1_projects__project_id__source_policy_programs__program_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                program_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SourcePolicyProgramApproval"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourcePolicyProgramBrief"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_v1_projects__project_id__source_policy_programs__program_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                program_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SourcePolicyProgramCancel"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourcePolicyProgramBrief"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    content_v1_projects__project_id__source_policy_programs__program_id__content_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                program_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentPurpose"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourcePolicyProgramContent"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    proposal_v1_projects__project_id__source_policy_programs__program_id__source_proposal_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                program_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentPurpose"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourcePolicyProposal"];
                 };
             };
             /** @description Validation Error */

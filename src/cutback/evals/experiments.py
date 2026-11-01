@@ -1,6 +1,7 @@
 """Paired, frozen experiments with pre-call budget reservation and no implicit inference."""
 
 import json
+import math
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -25,6 +26,7 @@ from cutback.core.models import Identifier, StrictModel
 from cutback.core.native_fixture import NativeFixtureExecution
 from cutback.core.native_models import NativeModelContract, validate_luna_text_contract
 from cutback.core.observation import observation_scope
+from cutback.core.policy_execution import SourcePolicyExecutionSpec
 from cutback.core.request_profiles import RequestContract, SourceBinding
 from cutback.core.security_suites import SecurityEvaluationSpec
 from cutback.core.workload_portfolio import WorkloadPortfolioBinding
@@ -372,6 +374,7 @@ class ExperimentPlan(StrictModel):
         "deterministic-v16",
         "deterministic-v17",
         "deterministic-v18",
+        "deterministic-v19",
     ] = "deterministic-v3"
     episode_execution: EpisodeExecutionSpec | None = None
     retrieval_execution: RetrievalExecutionSpec | JointModelRetrievalExecutionSpec | None = None
@@ -385,6 +388,7 @@ class ExperimentPlan(StrictModel):
     routing_execution: RoutingTrainingExecution | LearnedRoutingBinding | None = None
     native_fixture: NativeFixtureExecution | None = None
     workload_portfolio: "WorkloadPortfolioBinding | None" = None
+    source_policy_execution: SourcePolicyExecutionSpec | None = None
 
     @model_serializer(mode="wrap")
     def preserve_existing_plan_hashes(self, handler):
@@ -407,10 +411,14 @@ class ExperimentPlan(StrictModel):
             result.pop("native_fixture", None)
         if self.workload_portfolio is None:
             result.pop("workload_portfolio", None)
+        if self.source_policy_execution is None:
+            result.pop("source_policy_execution", None)
         return result
 
     @model_validator(mode="after")
     def eligibility(self):
+        if self.source_policy_execution is not None:
+            self.source_policy_execution.validate_plan(self)
         if self.workload_portfolio is not None:
             self.workload_portfolio.validate_plan(self)
         cached = [model for model in self.candidates if model.exact_cache is not None]
@@ -519,7 +527,9 @@ class ExperimentPlan(StrictModel):
                     != source_routing.max_input_bytes
                 ):
                     raise ValueError("ROUTING_SOURCE_POLICY_MUST_PRESERVE_APPLICATION_INPUT_BOUND")
-        elif self.split == "train":
+        elif self.split == "train" and not (
+            self.source_policy_execution and self.source_policy_execution.phase == "training"
+        ):
             raise ValueError("TRAIN_EXECUTION_REQUIRES_EXPLICIT_ROUTING_TRAINING_CONTRACT")
         if self.criteria_binding and self.evaluator_version == "deterministic-v14":
             if (
@@ -785,7 +795,9 @@ class ExperimentPlan(StrictModel):
         elif (
             self.evaluator_version
             != (
-                "deterministic-v12"
+                "deterministic-v19"
+                if self.source_policy_execution
+                else "deterministic-v12"
                 if isinstance(self.compression_execution, JointModelContextExecutionSpec)
                 else "deterministic-v7"
                 if self.compression_execution
@@ -1000,6 +1012,25 @@ def _plan_summary(plan: ExperimentPlan, dataset: dict) -> dict:
     ):
         raise ValueError("EPISODE_DATASET_REQUIRES_EXPLICIT_EPISODE_MODE")
     n = sum(item["split"] == plan.split for item in dataset["items"])
+    if plan.source_policy_execution is not None:
+        bound = plan.source_policy_execution.source.max_input_bytes
+        for item in dataset["items"]:
+            if item["split"] != plan.split:
+                continue
+            text, gold = item.get("case", {}).get("input"), item.get("case", {}).get("gold")
+            if (
+                type(text) is not str
+                or len(text) > bound
+                or type(gold) is not str
+                or not gold
+                or len(gold) > 1024
+            ):
+                raise ValueError("POLICY_EXECUTION_BOUNDED_LABELED_TEXT_CASES_REQUIRED")
+            try:
+                if len(text.encode("utf-8")) > bound or len(gold.encode("utf-8")) > 1024:
+                    raise ValueError
+            except (UnicodeError, ValueError):
+                raise ValueError("POLICY_EXECUTION_CASE_OUTSIDE_APPROVED_SOURCE_BOUND") from None
     if (
         plan.routing_execution
         and plan.routing_execution.source
@@ -1046,6 +1077,17 @@ def _plan_summary(plan: ExperimentPlan, dataset: dict) -> dict:
         from cutback.evals.episode_runner import episode_forecast
 
         requests, cost = episode_forecast(plan, dataset)
+    if plan.source_policy_execution is not None:
+        execution = plan.source_policy_execution
+        if n > execution.max_cases:
+            raise ValueError("POLICY_EXECUTION_CASE_BOUND_EXCEEDED_NO_SAMPLE_REDUCTION")
+        cache_costs = [
+            value.cache_cost_upper_per_case_usd
+            for value in [execution.reference, *execution.candidates]
+        ]
+        if any(value is None for value in cache_costs):
+            raise ValueError("POLICY_EXECUTION_CACHE_OPERATION_COST_UNKNOWN")
+        cost += n * sum((value for value in cache_costs if value is not None), Decimal(0))
     summary = {
         "pilot_validation_samples": len(pilot),
         "pilot_requests_upper": pilot_requests,
@@ -1069,6 +1111,18 @@ def _plan_summary(plan: ExperimentPlan, dataset: dict) -> dict:
         summary["retrieval"] = plan.retrieval_execution.public_summary()
     if plan.native_fixture is not None:
         summary["native_fixture"] = plan.native_fixture.public_summary()
+    if plan.source_policy_execution is not None:
+        execution = plan.source_policy_execution
+        summary["source_policy_execution"] = {
+            **execution.public_summary(),
+            "logical_requests_upper": requests,
+            "native_sdk_calls_upper": requests,
+            "cache_operations_upper": n
+            * sum(
+                value.maximum_cache_operations_per_case
+                for value in [execution.reference, *execution.candidates]
+            ),
+        }
     if plan.compression_execution:
         summary["compression"] = plan.compression_execution.public_summary()
     references = [
@@ -1117,6 +1171,8 @@ class BudgetLedger:
         reserve_call: Callable | None = None,
         record_call: Callable | None = None,
         prepare_input: Callable | None = None,
+        resolve_target: Callable | None = None,
+        execution_deadline: float | None = None,
     ):
         if reserve is not None and reserve_call is not None:
             raise ValueError("CHOOSE_ONE_ATOMIC_RESERVATION_INTERFACE")
@@ -1136,10 +1192,22 @@ class BudgetLedger:
         self.reserve_call = reserve_call
         self.record_call = record_call
         self.prepare_input = prepare_input
+        self.resolve_target = resolve_target
+        if execution_deadline is not None and (
+            type(execution_deadline) not in {int, float} or not math.isfinite(execution_deadline)
+        ):
+            raise ValueError("FINITE_LOCAL_EXECUTION_DEADLINE_REQUIRED")
+        self.execution_deadline = execution_deadline
         self.price_sha256 = price_sha256 or Catalog().sha256
 
     def remaining_seconds(self):
-        return self.budget.max_wall_seconds - (time.monotonic() - self.started)
+        now = time.monotonic()
+        remaining = self.budget.max_wall_seconds - (now - self.started)
+        return (
+            min(remaining, self.execution_deadline - now)
+            if self.execution_deadline is not None
+            else remaining
+        )
 
     @property
     def billing_complete(self):
@@ -1172,7 +1240,13 @@ class BudgetLedger:
             text = self.prepare_input(model, text)
         # UTF-8 bytes plus generous message framing bounds supported text input tokens.
         # No tool schemas, images, arbitrary endpoints or hidden retries are accepted.
-        target = route_target(model, text) if model.provider == "router" else model
+        target = (
+            self.resolve_target(model, text)
+            if self.resolve_target is not None
+            else route_target(model, text)
+            if model.provider == "router"
+            else model
+        )
         if target.exact_cache is not None and not getattr(executor, "exact_cache_ready", False):
             raise ValueError("EXACT_CACHE_REQUIRES_CURRENT_AUTHORIZED_EXECUTION_BACKEND")
         if target.agent_turn is not None:
@@ -1187,9 +1261,9 @@ class BudgetLedger:
         options = json.dumps(target.request_contract.options) if target.request_contract else ""
         if len((target.instruction + payload + options).encode()) + 4096 > target.max_input_tokens:
             raise ValueError("INPUT_EXCEEDS_PREAPPROVED_TOKEN_BOUND")
-        if model.provider == "router":
+        if model.provider == "router" and self.resolve_target is None:
             route_target(model, text)
-        bound = upper_cost(model)
+        bound = upper_cost(target if self.resolve_target is not None else model)
         if (
             self.requests >= self.budget.max_requests
             or self.remaining_seconds() <= 0
@@ -1219,7 +1293,9 @@ class BudgetLedger:
             raise ValueError("BUDGET_WALL_EXPIRED_BEFORE_REQUEST")
         try:
             with observation_scope(traffic_kind):
-                result = executor.execute(model, text, min(30, remaining))
+                result = executor.execute(
+                    target if self.resolve_target is not None else model, text, min(30, remaining)
+                )
         except Exception:
             self._record(call_id, None, "uncertain")
             raise
@@ -1273,7 +1349,46 @@ def run(
     episode_lifecycle=None,
     check_authority=None,
     environment_factory=None,
+    source_policy_payloads=None,
+    execution_deadline=None,
 ) -> dict:
+    policy_resolver = None
+    policy_references = {}
+    if plan.source_policy_execution is not None:
+        # The server establishes current content authority before supplying these
+        # encrypted payload bodies. A plan's metadata alone can never dispatch.
+        if (
+            source_policy_payloads is None
+            or not callable(check_authority)
+            or not callable(reserve_call)
+            or not callable(record_call)
+            or not callable(record_case)
+            or reserve is not None
+        ):
+            raise ValueError("SOURCE_POLICY_SCOPED_EXECUTION_ADAPTER_REQUIRED")
+        from cutback.evals.policy_artifacts import decode_policy_bundle
+        from cutback.evals.policy_models import policy_descriptors, resolve_policy_target
+
+        execution = plan.source_policy_execution
+        if execution.transport == "scripted_test_only":
+            if getattr(executor, "synthetic_transport", False) is not True:
+                raise ValueError("SCRIPTED_POLICY_REQUIRES_EXPLICIT_SYNTHETIC_EXECUTOR")
+            representative = False
+        check_authority()
+        policies = decode_policy_bundle(source_policy_payloads, execution)
+        descriptions = policy_descriptors(execution, policies)
+        if any(descriptions.get(model.key) != model for model in [plan.baseline, *plan.candidates]):
+            raise ValueError("POLICY_MODELS_COMPARISON_DESCRIPTOR_CHANGED")
+        policy_references = {
+            value.key: value for value in [execution.reference, *execution.candidates]
+        }
+
+        def policy_resolver(model, text):
+            check_authority()
+            return resolve_policy_target(execution, policies, model, text)
+
+    elif source_policy_payloads is not None:
+        raise ValueError("SOURCE_POLICY_PAYLOADS_REQUIRE_DISTINCT_EXECUTION_PLAN")
     summary = plan_summary(plan, dataset)
     if plan.native_fixture is not None:
         if getattr(executor, "synthetic_transport", False) is not True:
@@ -1309,6 +1424,8 @@ def run(
         plan.price_sha256,
         reserve_call=reserve_call,
         record_call=record_call,
+        resolve_target=policy_resolver,
+        execution_deadline=execution_deadline,
     )
     processor: CompressionProcessor | RetrievalProcessor | None = None
     if plan.compression_execution:
@@ -1415,10 +1532,15 @@ def run(
                             case["input"],
                             traffic_kind="optimization"
                             if isinstance(plan.routing_execution, RoutingTrainingExecution)
+                            or plan.source_policy_execution is not None
+                            and plan.source_policy_execution.phase == "training"
                             else "evaluation",
                         )
                         answers.append(result.output if result.complete else None)
-                        if model.exact_cache is not None:
+                        if model.exact_cache is not None or (
+                            model.key in policy_references
+                            and policy_references[model.key].cache_enabled
+                        ):
                             cache_observations.append(result.cache_observation)
                         if plan.retain_case_outputs and record_case:
                             record_case(
@@ -1467,6 +1589,10 @@ def run(
                                 routed_counts.get(result.actual_model, 0) + 1
                             )
                     except (TimeoutError, ConnectionError):
+                        if plan.source_policy_execution is not None:
+                            raise ValueError(
+                                "POLICY_NATIVE_CALL_UNCERTAIN_NO_FURTHER_REQUESTS"
+                            ) from None
                         if isinstance(plan.compression_execution, JointModelContextExecutionSpec):
                             raise ValueError(
                                 "JOINT_NATIVE_CALL_UNCERTAIN_NO_FURTHER_REQUESTS"
@@ -1586,7 +1712,9 @@ def run(
                     else "provider_usage_with_pinned_public_rate",
                 }
             )
-            if model.exact_cache is not None:
+            if model.exact_cache is not None or (
+                model.key in policy_references and policy_references[model.key].cache_enabled
+            ):
                 model_results[-1]["exact_cache"] = summarize_cache(
                     cache_observations, len(cases) * plan.repeats
                 )
@@ -1702,6 +1830,8 @@ def run(
         recommendations: list[dict] = (
             []
             if isinstance(plan.routing_execution, RoutingTrainingExecution)
+            or plan.source_policy_execution is not None
+            and plan.source_policy_execution.phase == "training"
             else rank_results(plan, model_results, representative)
         )
         for recommendation in recommendations:
@@ -1759,6 +1889,13 @@ def run(
                 "heldout_quality_claim": False if plan.split == "train" else None,
                 "routing_hosting_cost_usd": None,
                 "automatic_application_change": False,
+            }
+        if plan.source_policy_execution is not None:
+            report["source_policy_execution"] = {
+                **plan.source_policy_execution.public_summary(),
+                "heldout_quality_claim": False if plan.split != "test" else None,
+                "routing_compute_cost_usd": None,
+                "application_hosting_cost_usd": None,
             }
         if plan.native_fixture is not None:
             report["native_fixture"] = plan.native_fixture.public_summary()

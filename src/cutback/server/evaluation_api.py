@@ -882,6 +882,30 @@ def install_evaluation(app, sessions, authorize, scope):
                 )
             ]
 
+    @app.get("/v1/projects/{project_id}/datasets/{dataset_id}")
+    def dataset_detail(project_id: UUID, dataset_id: UUID, auth=Depends(authorize)):
+        scope(auth, project_id)
+        with sessions() as session:
+            row = session.get(DatasetRecord, dataset_id)
+            if not row or row.project_id != project_id:
+                raise HTTPException(404, "DATASET_NOT_FOUND")
+            counts = session.execute(
+                select(DatasetItem.split, func.count())
+                .where(
+                    DatasetItem.dataset_id == row.id,
+                )
+                .group_by(DatasetItem.split)
+            ).all()
+            return {
+                "id": str(row.id),
+                "hash": row.immutable_hash,
+                "workflow": row.workflow_id,
+                "provenance": row.provenance,
+                "split_counts": dict(counts),
+                "created_at": row.created_at.isoformat(),
+                "raw_payloads_included": False,
+            }
+
     @app.post("/v1/projects/{project_id}/experiments/draft", status_code=201)
     def create_draft(project_id: UUID, body: DraftInput, auth=Depends(authorize)):
         from cutback.evals.planning import draft_plan
@@ -1073,6 +1097,8 @@ def install_evaluation(app, sessions, authorize, scope):
 
     @app.post("/v1/projects/{project_id}/experiments/plans", status_code=201)
     def create_plan(project_id: UUID, body: PlanInput, auth=Depends(authorize)):
+        if body.specification.source_policy_execution is not None:
+            scope(auth, project_id, ("admin",))
         if body.specification.routing_execution is not None:
             scope(auth, project_id, ("admin",))
             if (
@@ -1109,6 +1135,13 @@ def install_evaluation(app, sessions, authorize, scope):
             dataset = session.get(DatasetRecord, body.dataset_id)
             if not dataset or dataset.project_id != project_id:
                 raise HTTPException(404, "DATASET_NOT_FOUND")
+            if body.specification.source_policy_execution is not None:
+                from cutback.server.policy_service import validate_binding as validate_policy
+
+                try:
+                    validate_policy(session, store, project_id, body.specification, dataset.id)
+                except ValueError:
+                    raise HTTPException(409, "EXACT_CURRENT_SOURCE_POLICIES_REQUIRED") from None
             if body.specification.native_fixture is not None:
                 from cutback.server.native_fixture import require_fixture_inputs
 
@@ -1179,7 +1212,8 @@ def install_evaluation(app, sessions, authorize, scope):
             try:
                 manifest = dataset_manifest(session, dataset)
                 if (
-                    body.specification.routing_execution
+                    body.specification.source_policy_execution is not None
+                    or body.specification.routing_execution
                     and body.specification.routing_execution.source
                 ):
                     from cutback.core.input_routing import (
@@ -1437,6 +1471,9 @@ def install_evaluation(app, sessions, authorize, scope):
                 from cutback.server.criteria_service import validate_binding as validate_criteria
 
                 validate_criteria(session, require_store(app), project_id, frozen)
+                from cutback.server.policy_service import validate_binding as validate_policy
+
+                validate_policy(session, require_store(app), project_id, frozen, plan.dataset_id)
                 from cutback.server.workload_portfolio import validate_binding as validate_workload
 
                 validate_workload(session, project_id, frozen)
@@ -1710,6 +1747,12 @@ def install_evaluation(app, sessions, authorize, scope):
     from cutback.server.routing_api import install_routing
 
     install_routing(app, sessions, authorize, scope, create_plan)
+    from cutback.server.policy_api import install_source_policies
+
+    install_source_policies(app, sessions, authorize, scope)
+    from cutback.server.policy_program_api import install_source_policy_programs
+
+    install_source_policy_programs(app, sessions, authorize, scope)
     from cutback.server.routing_program_api import install_routing_programs
 
     install_routing_programs(app, sessions, authorize, scope)

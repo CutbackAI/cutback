@@ -85,9 +85,21 @@ def authorized_experiment_cache(
     job_id,
     authorize,
     inputs,
+    source_policy_payloads=None,
 ):
     """An isolated cache per approved run; the ordinary ledger reserves every call."""
     cached = [model for model in plan.candidates if model.exact_cache is not None]
+    if plan.source_policy_execution is not None:
+        from cutback.evals.policy_artifacts import decode_policy_bundle
+        from cutback.evals.policy_models import policy_leaf_models
+
+        policies = decode_policy_bundle(source_policy_payloads, plan.source_policy_execution)
+        cached = [
+            model
+            for models in policy_leaf_models(plan.source_policy_execution, policies).values()
+            for model in models
+            if model.exact_cache is not None
+        ]
     if not cached:
         yield
         return

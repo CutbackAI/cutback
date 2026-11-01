@@ -11,13 +11,19 @@ import {
   money,
 } from "./ui";
 
-type Brief = components["schemas"]["RoutingProgramBrief"];
-type Detail = components["schemas"]["RoutingProgramDetail"];
+type Brief =
+  | components["schemas"]["RoutingProgramBrief"]
+  | components["schemas"]["SourcePolicyProgramBrief"];
+type Detail =
+  | components["schemas"]["RoutingProgramDetail"]
+  | components["schemas"]["SourcePolicyProgramDetail"];
 type Snapshot = components["schemas"]["TaskSnapshotBrief"];
 const active = new Set([
   "READY_FOR_APPROVAL",
   "QUEUED",
   "WAITING_STATIC",
+  "WAITING_GENERATION",
+  "WAITING_GENERATED",
   "WAITING_TRAINING",
   "WAITING_ROUTED",
   "WAITING_CONFIRMATION",
@@ -26,6 +32,8 @@ const labels: Record<string, string> = {
   READY_FOR_APPROVAL: "Review the whole budget",
   QUEUED: "Approved; waiting for worker",
   WAITING_STATIC: "Comparing simple native alternatives",
+  WAITING_GENERATION: "Generating bounded instruction alternatives",
+  WAITING_GENERATED: "Validating generated alternatives",
   WAITING_TRAINING: "Training after simple alternatives failed",
   WAITING_ROUTED: "Validating the fitted router",
   WAITING_CONFIRMATION: "Confirming one choice on untouched cases",
@@ -41,12 +49,19 @@ export function RoutingPrograms({
   base,
   admin,
   templates,
+  family = "routing",
 }: {
   api: API;
   base: string;
   admin: boolean;
   templates: Data[];
+  family?: "routing" | "source-policy";
 }) {
+  const sourcePolicy = family === "source-policy";
+  const collection = sourcePolicy
+    ? "/source-policy-programs"
+    : "/routing/programs";
+  const name = sourcePolicy ? "source policy" : "routing";
   const [rows, setRows] = useState<Brief[]>([]),
     [cursor, setCursor] = useState<string | null>(null);
   const [detail, setDetail] = useState<Detail | null>(null);
@@ -69,7 +84,9 @@ export function RoutingPrograms({
   const available = templates.filter(
     (row) =>
       row.approval_status === "pending" &&
-      row.specification?.routing_execution?.source,
+      (sourcePolicy
+        ? row.specification?.source_policy_execution?.source
+        : row.specification?.routing_execution?.source),
   );
 
   useEffect(() => {
@@ -85,7 +102,7 @@ export function RoutingPrograms({
     setBusy(false);
     prepared.current = null;
     Promise.all([
-      api(base + "/routing/programs?limit=20"),
+      api(base + collection + "?limit=20"),
       api(base + "/environments"),
     ])
       .then(([page, envs]) => {
@@ -103,7 +120,7 @@ export function RoutingPrograms({
       generation.current++;
       selection.current++;
     };
-  }, [api, base, admin]);
+  }, [api, base, admin, collection]);
   useEffect(() => {
     const version = ++envGeneration.current;
     setSnapshots([]);
@@ -134,7 +151,7 @@ export function RoutingPrograms({
     setError("");
     setBusy(true);
     try {
-      const next = await api(base + `/routing/programs/${id}`);
+      const next = await api(base + `${collection}/${id}`);
       if (version === selection.current && project === generation.current)
         setDetail(next);
     } catch (e) {
@@ -153,7 +170,7 @@ export function RoutingPrograms({
       const page = await api(
         base +
           (kind === "programs"
-            ? `/routing/programs?limit=20&after=${cursor}`
+            ? `${collection}?limit=20&after=${cursor}`
             : `/task-cost-snapshots?environment_id=${environment}&limit=20&after=${snapshotCursor}`),
       );
       if (
@@ -185,7 +202,7 @@ export function RoutingPrograms({
     try {
       const value = await json(
         api,
-        base + `/routing/programs/${detail.id}/content`,
+        base + `${collection}/${detail.id}/content`,
         { purpose },
       );
       if (
@@ -211,12 +228,12 @@ export function RoutingPrograms({
     try {
       await json(
         api,
-        base + `/routing/programs/${id}/${action}`,
+        base + `${collection}/${id}/${action}`,
         action === "approve"
           ? { program_hash: detail.program_hash, approval_ref: reference }
           : {},
       );
-      const next = await api(base + `/routing/programs/${id}`);
+      const next = await api(base + `${collection}/${id}`);
       if (version === selection.current && project === generation.current) {
         setDetail(next);
         setRows((old) => old.map((row) => (row.id === id ? next : row)));
@@ -234,12 +251,15 @@ export function RoutingPrograms({
   }
 
   return (
-    <section aria-label="Automatic routing programs">
+    <section aria-label={`Automatic ${name} programs`}>
       <h3>One budget, from simple alternatives to confirmation</h3>
       <p>
-        Try cheaper native models first. If none passes, use the reserved
-        training and fitting path, then validate a router. Confirm one frozen
-        choice on untouched cases. Failed trials remain in the total.
+        {sourcePolicy
+          ? "Compare native models, instructions and authorized exact cache. "
+          : "Try cheaper native models first. "}
+        If none passes, use the reserved training and fitting path, then
+        validate a router. Confirm one frozen choice on untouched cases. Failed
+        trials remain in the total.
       </p>
       <p className="hint">
         A worker must be running. This evaluates proposed changes; it does not
@@ -249,12 +269,17 @@ export function RoutingPrograms({
       {error && <p role="alert">{error}</p>}
       {admin && (
         <details>
-          <summary>Prepare a routing program</summary>
+          <summary>Prepare a {name} program</summary>
           {!available.length && (
             <p>
-              Prepare a source-bound training template below, or with{" "}
-              <code>cutback workflow prepare --learned-routing</code>. Leave
-              that template unapproved; approve the whole program here instead.
+              Prepare a source-bound template with{" "}
+              <code>
+                {sourcePolicy
+                  ? "cutback source-policy prepare --help"
+                  : "cutback workflow prepare --learned-routing"}
+              </code>
+              . Leave that template unapproved; approve the whole program here
+              instead.
             </p>
           )}
           <label className="field">
@@ -271,9 +296,9 @@ export function RoutingPrograms({
             </select>
           </label>
           <Form
-            title="Freeze routing program"
+            title={`Freeze ${name} program`}
             disabled={busy || !available.length || !snapshots.length}
-            submit="Prepare whole routing budget"
+            submit={`Prepare whole ${name} budget`}
             onSubmit={async (data) => {
               const version = generation.current;
               const body = {
@@ -294,7 +319,7 @@ export function RoutingPrograms({
               const key = JSON.stringify(body);
               if (prepared.current?.key !== key)
                 prepared.current = { key, id: crypto.randomUUID() };
-              const value = await json(api, base + "/routing/programs", {
+              const value = await json(api, base + collection, {
                 ...body,
                 request_id: prepared.current.id,
               });
@@ -307,7 +332,11 @@ export function RoutingPrograms({
             }}
           >
             <Select
-              label="Source-bound training template"
+              label={
+                sourcePolicy
+                  ? "Source-bound comparison template"
+                  : "Source-bound training template"
+              }
               name="template_plan_id"
               required
             >
@@ -381,12 +410,12 @@ export function RoutingPrograms({
         </details>
       )}
       <h4>Programs</h4>
-      {!rows.length && <p>No routing programs in this project yet.</p>}
+      {!rows.length && <p>No {name} programs in this project yet.</p>}
       <ul>
         {rows.map((row) => (
           <li key={row.id}>
             <button disabled={busy} onClick={() => select(row.id)}>
-              Inspect routing program {row.id}
+              Inspect {name} program {row.id}
             </button>{" "}
             — {labels[row.status] || row.status}
           </li>
@@ -394,30 +423,42 @@ export function RoutingPrograms({
       </ul>
       {cursor && (
         <button disabled={busy} onClick={() => more("programs")}>
-          Load more routing programs
+          Load more {name} programs
         </button>
       )}
       {detail && (
-        <section aria-label="Selected routing program">
-          <h4>Routing program {detail.id}</h4>
+        <section aria-label={`Selected ${name} program`}>
+          <h4>
+            {sourcePolicy ? "Source policy" : "Routing"} program {detail.id}
+          </h4>
           <p role="status">{labels[detail.status] || detail.status}</p>
           <button disabled={busy} onClick={() => select(detail.id)}>
-            Refresh routing program
+            Refresh {name} program
           </button>
           <dl>
-            <dt>Native requests reserved</dt>
+            <dt>
+              {sourcePolicy
+                ? "Budgeted execution operations"
+                : "Native requests reserved"}
+            </dt>
             <dd>
               {detail.requests} /{" "}
               {String(detail.economic_envelope.max_requests || "Not eligible")}
             </dd>
-            <dt>Reserved native cost</dt>
+            <dt>Reserved native and declared cache cost</dt>
             <dd>{money(detail.reserved_usd)}</dd>
-            <dt>Known native spend subtotal</dt>
+            <dt>
+              {sourcePolicy
+                ? "Modeled provider cost and declared cache upper bounds"
+                : "Known native spend subtotal"}
+            </dt>
             <dd>
               {money(detail.known_spend_subtotal_usd)} —{" "}
               {detail.billing_complete
                 ? "all requests have known cost"
                 : "billing incomplete"}
+              {sourcePolicy &&
+                "; cache operation amounts are declared upper bounds, not verified invoices"}
             </dd>
             <dt>Fit compute and router hosting cost</dt>
             <dd>Unknown</dd>
@@ -436,35 +477,50 @@ export function RoutingPrograms({
             {detail.runs.map((row: Data) => (
               <li key={row.id}>
                 {String(row.phase).replaceAll("_", " ")}: {row.status};{" "}
-                {row.requests} native requests; known subtotal{" "}
+                {row.requests}{" "}
+                {sourcePolicy
+                  ? "execution operations; modeled subtotal"
+                  : "native requests; known subtotal"}{" "}
                 {money(row.known_spend_subtotal_usd)}
               </li>
             ))}
           </ol>
           <details>
             <summary>Frozen native effort and opportunity bounds</summary>
-            <pre tabIndex={0} aria-label="Frozen routing budget details">
+            <pre tabIndex={0} aria-label={`Frozen ${name} budget details`}>
               {JSON.stringify(detail.economic_envelope, null, 2)}
             </pre>
           </details>
           {admin && (
             <>
               <Field
-                label="Routing program content purpose"
+                label={`${sourcePolicy ? "Source policy" : "Routing"} program content purpose`}
                 name="routing_program_purpose"
                 value={purpose}
                 onChange={(e) => setPurpose(e.target.value)}
               />
               <button disabled={busy || !purpose} onClick={readPrivate}>
-                Read private routing program
+                Read private {name} program
               </button>
               {privateContent && (
                 <details open>
                   <summary>
-                    Exact private routing instructions and requirements
+                    Exact private {name} instructions and requirements
                   </summary>
-                  <pre tabIndex={0} aria-label="Private routing specification">
-                    {JSON.stringify(privateContent.specification, null, 2)}
+                  <pre
+                    tabIndex={0}
+                    aria-label={`Private ${name} specification`}
+                  >
+                    {JSON.stringify(
+                      sourcePolicy
+                        ? {
+                            specification: privateContent.specification,
+                            policies: privateContent.policies,
+                          }
+                        : privateContent.specification,
+                      null,
+                      2,
+                    )}
                   </pre>
                 </details>
               )}
@@ -474,7 +530,7 @@ export function RoutingPrograms({
                     Exact program hash: <code>{detail.program_hash}</code>
                   </p>
                   <Field
-                    label="Routing program approval reference"
+                    label={`${sourcePolicy ? "Source policy" : "Routing"} program approval reference`}
                     name="routing_program_approval_reference"
                     value={reference}
                     onChange={(e) => setReference(e.target.value)}
@@ -497,13 +553,13 @@ export function RoutingPrograms({
                     }
                     onClick={() => act("approve")}
                   >
-                    Approve whole routing program
+                    Approve whole {name} program
                   </button>
                 </>
               )}
               {active.has(detail.status) && (
                 <button disabled={busy} onClick={() => act("cancel")}>
-                  Cancel routing program
+                  Cancel {name} program
                 </button>
               )}
               {detail.status === "COMPLETED" &&
@@ -511,8 +567,9 @@ export function RoutingPrograms({
                   <p>
                     Ask your application agent to run{" "}
                     <code>
-                      cutback routing program proposal --purpose-reference
-                      PURPOSE --output PRIVATE.json
+                      {sourcePolicy
+                        ? "cutback source-policy finish --workspace PRIVATE_DIRECTORY --purpose-reference PURPOSE"
+                        : "cutback routing program proposal --purpose-reference PURPOSE --output PRIVATE.json"}
                     </code>{" "}
                     from the saved job, then verify the exact diff and
                     application checks before review.

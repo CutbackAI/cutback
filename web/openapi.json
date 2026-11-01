@@ -1661,6 +1661,54 @@
         }
       }
     },
+    "/v1/projects/{project_id}/datasets/{dataset_id}": {
+      "get": {
+        "summary": "Dataset Detail",
+        "operationId": "dataset_detail_v1_projects__project_id__datasets__dataset_id__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{project_id}/experiments/draft": {
       "post": {
         "summary": "Create Draft",
@@ -4555,6 +4603,463 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/source-policies": {
+      "post": {
+        "summary": "Import Policy",
+        "operationId": "import_policy_v1_projects__project_id__source_policies_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourcePolicyImport"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyExecutionRef-Output"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/source-policy-programs": {
+      "post": {
+        "summary": "Prepare",
+        "operationId": "prepare_v1_projects__project_id__source_policy_programs_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourcePolicyProgramDraft"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourcePolicyProgramBrief"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Listing",
+        "operationId": "listing_v1_projects__project_id__source_policy_programs_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourcePolicyProgramPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/source-policy-programs/{program_id}": {
+      "get": {
+        "summary": "Detail",
+        "operationId": "detail_v1_projects__project_id__source_policy_programs__program_id__get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "program_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Program Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourcePolicyProgramDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/source-policy-programs/{program_id}/approve": {
+      "post": {
+        "summary": "Approve",
+        "operationId": "approve_v1_projects__project_id__source_policy_programs__program_id__approve_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "program_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Program Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourcePolicyProgramApproval"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourcePolicyProgramBrief"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/source-policy-programs/{program_id}/cancel": {
+      "post": {
+        "summary": "Cancel",
+        "operationId": "cancel_v1_projects__project_id__source_policy_programs__program_id__cancel_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "program_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Program Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourcePolicyProgramCancel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourcePolicyProgramBrief"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/source-policy-programs/{program_id}/content": {
+      "post": {
+        "summary": "Content",
+        "operationId": "content_v1_projects__project_id__source_policy_programs__program_id__content_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "program_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Program Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentPurpose"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourcePolicyProgramContent"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{project_id}/source-policy-programs/{program_id}/source-proposal": {
+      "post": {
+        "summary": "Proposal",
+        "operationId": "proposal_v1_projects__project_id__source_policy_programs__program_id__source_proposal_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "program_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Program Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentPurpose"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourcePolicyProposal"
+                }
               }
             }
           },
@@ -21901,7 +22406,8 @@
               "deterministic-v15",
               "deterministic-v16",
               "deterministic-v17",
-              "deterministic-v18"
+              "deterministic-v18",
+              "deterministic-v19"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -22020,6 +22526,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/WorkloadPortfolioBinding-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_policy_execution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourcePolicyExecutionSpec-Input"
               },
               {
                 "type": "null"
@@ -22260,7 +22776,8 @@
               "deterministic-v15",
               "deterministic-v16",
               "deterministic-v17",
-              "deterministic-v18"
+              "deterministic-v18",
+              "deterministic-v19"
             ],
             "title": "Evaluator Version",
             "default": "deterministic-v3"
@@ -22379,6 +22896,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/WorkloadPortfolioBinding-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_policy_execution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourcePolicyExecutionSpec-Output"
               },
               {
                 "type": "null"
@@ -29028,6 +29555,201 @@
         ],
         "title": "PlanInput"
       },
+      "PolicyExecutionRef-Input": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Key"
+          },
+          "payload_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Payload Id"
+          },
+          "payload_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Payload Sha256"
+          },
+          "policy_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Policy Sha256"
+          },
+          "cache_enabled": {
+            "type": "boolean",
+            "title": "Cache Enabled",
+            "default": false
+          },
+          "cache_operation_upper_usd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Operation Upper Usd"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "payload_id",
+          "payload_sha256",
+          "policy_sha256"
+        ],
+        "title": "PolicyExecutionRef"
+      },
+      "PolicyExecutionRef-Output": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Key"
+          },
+          "payload_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Payload Id"
+          },
+          "payload_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Payload Sha256"
+          },
+          "policy_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Policy Sha256"
+          },
+          "cache_enabled": {
+            "type": "boolean",
+            "title": "Cache Enabled",
+            "default": false
+          },
+          "cache_operation_upper_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cache Operation Upper Usd"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "payload_id",
+          "payload_sha256",
+          "policy_sha256"
+        ],
+        "title": "PolicyExecutionRef"
+      },
+      "PolicySourceBinding": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.policy-source.v1",
+            "title": "Version",
+            "default": "cutback.policy-source.v1"
+          },
+          "producer_file": {
+            "type": "string",
+            "maxLength": 240,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_./-]+$",
+            "title": "Producer File"
+          },
+          "producer_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Producer Sha256"
+          },
+          "configuration_file": {
+            "type": "string",
+            "maxLength": 240,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_./-]+$",
+            "title": "Configuration File"
+          },
+          "configuration_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Configuration Sha256"
+          },
+          "policy_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Policy Sha256"
+          },
+          "source_tree_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Source Tree Hash"
+          },
+          "commit": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{40,64}$",
+            "title": "Commit"
+          },
+          "program_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Program Sha256",
+            "default": "dfca1fba8c897e60ae2eac6c447631fd19488c41c4cbe76ff201723764c7ffe2"
+          },
+          "workflow": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Workflow"
+          },
+          "max_input_bytes": {
+            "type": "integer",
+            "maximum": 95904.0,
+            "minimum": 1.0,
+            "title": "Max Input Bytes"
+          },
+          "provider": {
+            "type": "string",
+            "const": "openai",
+            "title": "Provider",
+            "default": "openai"
+          },
+          "surface": {
+            "type": "string",
+            "const": "responses.create",
+            "title": "Surface",
+            "default": "responses.create"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "producer_file",
+          "producer_sha256",
+          "configuration_file",
+          "configuration_sha256",
+          "policy_sha256",
+          "source_tree_hash",
+          "commit",
+          "workflow",
+          "max_input_bytes"
+        ],
+        "title": "PolicySourceBinding"
+      },
       "ProjectInput": {
         "properties": {
           "slug": {
@@ -34427,6 +35149,837 @@
           "profile_sha256"
         ],
         "title": "SourceBinding"
+      },
+      "SourceImprovementPolicy-Input": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.source-improvement-policy.v1",
+            "title": "Version",
+            "default": "cutback.source-improvement-policy.v1"
+          },
+          "workflow": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Workflow"
+          },
+          "max_input_bytes": {
+            "type": "integer",
+            "maximum": 95904.0,
+            "minimum": 1.0,
+            "title": "Max Input Bytes"
+          },
+          "max_instruction_bytes": {
+            "type": "integer",
+            "maximum": 16000.0,
+            "minimum": 1.0,
+            "title": "Max Instruction Bytes",
+            "default": 16000
+          },
+          "baseline": {
+            "$ref": "#/components/schemas/ModelSpec-Input"
+          },
+          "strategy": {
+            "$ref": "#/components/schemas/ModelSpec-Input"
+          },
+          "cache_execution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExactCacheExecution-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "runtime_cache_activation": {
+            "type": "string",
+            "const": "explicit_private_scope_file_only",
+            "title": "Runtime Cache Activation",
+            "default": "explicit_private_scope_file_only"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "workflow",
+          "max_input_bytes",
+          "baseline",
+          "strategy"
+        ],
+        "title": "SourceImprovementPolicy"
+      },
+      "SourceImprovementPolicy-Output": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.source-improvement-policy.v1",
+            "title": "Version",
+            "default": "cutback.source-improvement-policy.v1"
+          },
+          "workflow": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Workflow"
+          },
+          "max_input_bytes": {
+            "type": "integer",
+            "maximum": 95904.0,
+            "minimum": 1.0,
+            "title": "Max Input Bytes"
+          },
+          "max_instruction_bytes": {
+            "type": "integer",
+            "maximum": 16000.0,
+            "minimum": 1.0,
+            "title": "Max Instruction Bytes",
+            "default": 16000
+          },
+          "baseline": {
+            "$ref": "#/components/schemas/ModelSpec-Output"
+          },
+          "strategy": {
+            "$ref": "#/components/schemas/ModelSpec-Output"
+          },
+          "cache_execution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExactCacheExecution-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "runtime_cache_activation": {
+            "type": "string",
+            "const": "explicit_private_scope_file_only",
+            "title": "Runtime Cache Activation",
+            "default": "explicit_private_scope_file_only"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "workflow",
+          "max_input_bytes",
+          "baseline",
+          "strategy"
+        ],
+        "title": "SourceImprovementPolicy"
+      },
+      "SourcePolicyExecutionSpec-Input": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.source-policy-execution.v1",
+            "title": "Version",
+            "default": "cutback.source-policy-execution.v1"
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "evaluation",
+              "training"
+            ],
+            "title": "Phase",
+            "default": "evaluation"
+          },
+          "transport": {
+            "type": "string",
+            "enum": [
+              "native_provider",
+              "scripted_test_only"
+            ],
+            "title": "Transport",
+            "default": "native_provider"
+          },
+          "source": {
+            "$ref": "#/components/schemas/PolicySourceBinding"
+          },
+          "reference": {
+            "$ref": "#/components/schemas/PolicyExecutionRef-Input"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyExecutionRef-Input"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "minItems": 1,
+            "title": "Candidates"
+          },
+          "max_cases": {
+            "type": "integer",
+            "maximum": 1024.0,
+            "minimum": 1.0,
+            "title": "Max Cases",
+            "default": 1024
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "reference",
+          "candidates"
+        ],
+        "title": "SourcePolicyExecutionSpec"
+      },
+      "SourcePolicyExecutionSpec-Output": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.source-policy-execution.v1",
+            "title": "Version",
+            "default": "cutback.source-policy-execution.v1"
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "evaluation",
+              "training"
+            ],
+            "title": "Phase",
+            "default": "evaluation"
+          },
+          "transport": {
+            "type": "string",
+            "enum": [
+              "native_provider",
+              "scripted_test_only"
+            ],
+            "title": "Transport",
+            "default": "native_provider"
+          },
+          "source": {
+            "$ref": "#/components/schemas/PolicySourceBinding"
+          },
+          "reference": {
+            "$ref": "#/components/schemas/PolicyExecutionRef-Output"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyExecutionRef-Output"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "minItems": 1,
+            "title": "Candidates"
+          },
+          "max_cases": {
+            "type": "integer",
+            "maximum": 1024.0,
+            "minimum": 1.0,
+            "title": "Max Cases",
+            "default": 1024
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "reference",
+          "candidates"
+        ],
+        "title": "SourcePolicyExecutionSpec"
+      },
+      "SourcePolicyImport": {
+        "properties": {
+          "purpose": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Purpose"
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid4",
+            "title": "Request Id"
+          },
+          "dataset_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Dataset Id"
+          },
+          "source": {
+            "$ref": "#/components/schemas/PolicySourceBinding"
+          },
+          "key": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Key"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/SourceImprovementPolicy-Input"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "purpose",
+          "request_id",
+          "dataset_id",
+          "source",
+          "key",
+          "policy"
+        ],
+        "title": "SourcePolicyImport"
+      },
+      "SourcePolicyProgramApproval": {
+        "properties": {
+          "program_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Program Hash"
+          },
+          "approval_ref": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Approval Ref"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "program_hash",
+          "approval_ref"
+        ],
+        "title": "SourcePolicyProgramApproval"
+      },
+      "SourcePolicyProgramBrief": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Environment Id"
+          },
+          "template_plan_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Template Plan Id"
+          },
+          "dataset_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Dataset Id"
+          },
+          "program_hash": {
+            "type": "string",
+            "title": "Program Hash"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "approval_status": {
+            "type": "string",
+            "title": "Approval Status"
+          },
+          "specification": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Specification"
+          },
+          "economic_envelope": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Economic Envelope"
+          },
+          "requests": {
+            "type": "integer",
+            "title": "Requests"
+          },
+          "current_round": {
+            "type": "integer",
+            "title": "Current Round"
+          },
+          "known_cost_requests": {
+            "type": "integer",
+            "title": "Known Cost Requests"
+          },
+          "reserved_usd": {
+            "type": "string",
+            "title": "Reserved Usd"
+          },
+          "known_spend_subtotal_usd": {
+            "type": "string",
+            "title": "Known Spend Subtotal Usd"
+          },
+          "billing_complete": {
+            "type": "boolean",
+            "title": "Billing Complete"
+          },
+          "summary": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Summary"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "deadline_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline At"
+          },
+          "deployment_authorized": {
+            "type": "boolean",
+            "title": "Deployment Authorized",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "environment_id",
+          "template_plan_id",
+          "dataset_id",
+          "program_hash",
+          "status",
+          "approval_status",
+          "specification",
+          "economic_envelope",
+          "requests",
+          "current_round",
+          "known_cost_requests",
+          "reserved_usd",
+          "known_spend_subtotal_usd",
+          "billing_complete",
+          "summary",
+          "created_at",
+          "expires_at",
+          "deadline_at"
+        ],
+        "title": "SourcePolicyProgramBrief"
+      },
+      "SourcePolicyProgramCancel": {
+        "properties": {},
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SourcePolicyProgramCancel"
+      },
+      "SourcePolicyProgramContent": {
+        "properties": {
+          "program_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Program Id"
+          },
+          "program_hash": {
+            "type": "string",
+            "title": "Program Hash"
+          },
+          "specification": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Specification"
+          },
+          "policies": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SourceImprovementPolicy-Output"
+            },
+            "type": "object",
+            "title": "Policies"
+          },
+          "deployment_authorized": {
+            "type": "boolean",
+            "title": "Deployment Authorized",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "program_id",
+          "program_hash",
+          "specification",
+          "policies"
+        ],
+        "title": "SourcePolicyProgramContent"
+      },
+      "SourcePolicyProgramDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "environment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Environment Id"
+          },
+          "template_plan_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Template Plan Id"
+          },
+          "dataset_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Dataset Id"
+          },
+          "program_hash": {
+            "type": "string",
+            "title": "Program Hash"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "approval_status": {
+            "type": "string",
+            "title": "Approval Status"
+          },
+          "specification": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Specification"
+          },
+          "economic_envelope": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Economic Envelope"
+          },
+          "requests": {
+            "type": "integer",
+            "title": "Requests"
+          },
+          "current_round": {
+            "type": "integer",
+            "title": "Current Round"
+          },
+          "known_cost_requests": {
+            "type": "integer",
+            "title": "Known Cost Requests"
+          },
+          "reserved_usd": {
+            "type": "string",
+            "title": "Reserved Usd"
+          },
+          "known_spend_subtotal_usd": {
+            "type": "string",
+            "title": "Known Spend Subtotal Usd"
+          },
+          "billing_complete": {
+            "type": "boolean",
+            "title": "Billing Complete"
+          },
+          "summary": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Summary"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "deadline_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline At"
+          },
+          "deployment_authorized": {
+            "type": "boolean",
+            "title": "Deployment Authorized",
+            "default": false
+          },
+          "runs": {
+            "items": {
+              "additionalProperties": {
+                "$ref": "#/components/schemas/JsonValue"
+              },
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Runs"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "environment_id",
+          "template_plan_id",
+          "dataset_id",
+          "program_hash",
+          "status",
+          "approval_status",
+          "specification",
+          "economic_envelope",
+          "requests",
+          "current_round",
+          "known_cost_requests",
+          "reserved_usd",
+          "known_spend_subtotal_usd",
+          "billing_complete",
+          "summary",
+          "created_at",
+          "expires_at",
+          "deadline_at",
+          "runs"
+        ],
+        "title": "SourcePolicyProgramDetail"
+      },
+      "SourcePolicyProgramDraft": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid4",
+            "title": "Request Id"
+          },
+          "template_plan_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Template Plan Id"
+          },
+          "baseline_snapshot_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Baseline Snapshot Id"
+          },
+          "fit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RoutingFitOptions"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "generator": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NativeGeneratorSpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "budget": {
+            "$ref": "#/components/schemas/CampaignBudget"
+          },
+          "conservative_savings_per_success_usd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conservative Savings Per Success Usd"
+          },
+          "forecast_successful_tasks": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000000000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forecast Successful Tasks"
+          },
+          "max_fraction_of_opportunity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 0.25,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Max Fraction Of Opportunity",
+            "default": "0.1"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "template_plan_id",
+          "baseline_snapshot_id",
+          "budget"
+        ],
+        "title": "SourcePolicyProgramDraft"
+      },
+      "SourcePolicyProgramPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SourcePolicyProgramBrief"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_after"
+        ],
+        "title": "SourcePolicyProgramPage"
+      },
+      "SourcePolicyProposal": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.source-policy-proposal.v1",
+            "title": "Version",
+            "default": "cutback.source-policy-proposal.v1"
+          },
+          "program_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Program Id"
+          },
+          "program_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Program Hash"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Run Id"
+          },
+          "plan_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Plan Hash"
+          },
+          "dataset_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Dataset Hash"
+          },
+          "selection_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Selection Hash"
+          },
+          "binding": {
+            "$ref": "#/components/schemas/PolicySourceBinding"
+          },
+          "original": {
+            "$ref": "#/components/schemas/SourceImprovementPolicy-Output"
+          },
+          "proposed": {
+            "$ref": "#/components/schemas/SourceImprovementPolicy-Output"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "synthetic_local_review_only",
+              "sample_review_required",
+              "heldout_review_required"
+            ],
+            "title": "Decision"
+          },
+          "optimization_known_modeled_usd": {
+            "type": "string",
+            "title": "Optimization Known Modeled Usd"
+          },
+          "production_approval_required": {
+            "type": "boolean",
+            "const": true,
+            "title": "Production Approval Required",
+            "default": true
+          },
+          "full_task_cost_known": {
+            "type": "boolean",
+            "const": false,
+            "title": "Full Task Cost Known",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "program_id",
+          "program_hash",
+          "run_id",
+          "plan_hash",
+          "dataset_hash",
+          "selection_hash",
+          "binding",
+          "original",
+          "proposed",
+          "decision",
+          "optimization_known_modeled_usd"
+        ],
+        "title": "SourcePolicyProposal"
       },
       "Span": {
         "properties": {
