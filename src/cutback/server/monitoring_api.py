@@ -102,6 +102,9 @@ def install_monitoring(app, sessions, authorize, scope):
     from cutback.server.dashboard_api import install_dashboards
 
     install_dashboards(app, sessions, authorize, scope)
+    from cutback.server.comment_api import install_comments
+
+    install_comments(app, sessions, authorize, scope)
 
     @app.post("/v1/projects/{project_id}/online-rules", status_code=201)
     def create_online(project_id: UUID, body: OnlineRuleInput, auth=Depends(authorize)):

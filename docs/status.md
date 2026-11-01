@@ -2,13 +2,48 @@
 
 Updated 1 November 2026. Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business.
 
+[Encrypted incident comments](incident-comments.md) passed local component
+qualification: fresh installed SDK and independent HTTP-only client selections,
+authenticated browser/mobile/axe, resumable sample and complete new-image
+database/encrypted-object recovery. The [receipt](evidence/incident-comments-acceptance.json)
+preserves earlier failures and the separate corrected selections; exact-head
+hosted acceptance remains pending. Comments use current project rights, separately approved encrypted
+storage, purpose-scoped reads, immutable revisions and explicit erasure. This
+does not add arbitrary attachments, external mentions, enterprise provisioning
+or a verified customer outcome. PyPI dev5 remains unchanged.
+
+The [synchronous SDK hook profile](sdk-performance.md) passed its declared local
+synthetic five-millisecond median target for OpenAI Responses/Chat and Anthropic
+Messages, both with healthy and failed collector transports, in both pinned
+OpenAI SDK envelopes. Raw timing noise and actual runtime identity are retained.
+This does not measure async/stream/cold-start/memory or live-provider performance.
+Exact-head hosted acceptance remains pending; PyPI dev5 is unchanged.
+
+The source-only [routing draft publisher](routing-programs.md#preview-and-publish-a-checked-routing-draft)
+passed local component qualification. It connects checked routing-program reviews to explicit
+single-file draft publication with current authority and uncertain-write
+reconciliation. It discloses instruction-text upload and refuses synthetic gates;
+installed/HTTP-only rights checks, source/ref/lost-reply cases, authenticated
+browser checks and complete image recovery passed with the failures and
+corrections retained in [progress](progress.md). Exact-head hosted acceptance
+remains pending. PyPI dev5 is unchanged.
+
+The new [simultaneous service qualification](load-qualification.md#simultaneous-synthetic-service-qualification)
+passed local component qualification: 27 fault/regression checks per installed
+SDK plus a complete ten-minute profile per SDK. Actual collector/gateway HTTP,
+native workers, online quality and PostgreSQL ran with closed provider fixtures
+and owned disposable data. All canonical charges and cleanup reconciled. The
+runs shared this host/database concurrently; intended deployment capacity and
+live provider behavior remain unverified. Public hosted gates remain pending.
+
 The opt-in [local-container application checks](application-containers.md)
 passed **119 tests per installed SDK**, with three Windows symlink-privilege
 fixture skips covered by the actual non-root Linux path guards. The deadline
 build passed full encrypted database recovery and real host-crash/process,
 environment/network/source and resource-limit checks. It binds a reviewed local
-image to read-only tracked source and the existing automatic handoff. Exact
-public source and hosted gates remain separate; this is absent from PyPI dev5.
+image to read-only tracked source and the existing automatic handoff. It merged
+in [PR 82](https://github.com/CutbackAI/cutback/pull/82) after all 18 reviewed-head
+jobs passed; this is absent from PyPI dev5.
 
 [Policy activity inspection](policy-runtime-activity.md) now distinguishes actual
 cache hits, misses, configured-but-inactive cache and uncertain failures. Both
@@ -25,8 +60,9 @@ Linux source/path guards. It binds observed activation and uses uncached native
 training while preserving the complete source configuration. Source tests have
 passed for automatic instruction search, exact retry identities and checked
 handoff boundaries. Its matching SDK-free client and authenticated browser,
-mobile and axe checks are included. Exact public source and hosted CI gates
-remain pending; this is not a released capability or a completed platform.
+mobile and axe checks are included. It merged in
+[PR 82](https://github.com/CutbackAI/cutback/pull/82) after all 18 reviewed-head
+jobs passed. It is absent from PyPI dev5 and does not complete the platform.
 
 The new [common source-policy program](source-policy-programs.md) passed local,
 container and all 17 hosted gates and merged in [PR 79](https://github.com/CutbackAI/cutback/pull/79).

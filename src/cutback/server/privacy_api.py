@@ -15,6 +15,7 @@ from cutback.server.campaign_db import (
     CampaignRun,
     CampaignSelection,
 )
+from cutback.server.comment_db import IncidentComment, IncidentCommentVersion
 from cutback.server.criteria_db import CriteriaExperimentUse, CriteriaVersionRecord
 from cutback.server.db import (
     AccessKey,
@@ -183,6 +184,8 @@ def install_privacy(app, sessions, authorize, scope):
                     AlertWindow,
                     Incident,
                     IncidentEvent,
+                    IncidentComment,
+                    IncidentCommentVersion,
                     SavedView,
                     ExecutionTrace,
                     ExecutionSpan,

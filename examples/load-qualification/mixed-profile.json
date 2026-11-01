@@ -1,0 +1,11 @@
+{
+  "contract": "cutback.owned-mixed-capacity.v1",
+  "duration_seconds": 600,
+  "max_operations_per_actor": 5000,
+  "batch_size": 10,
+  "interval_seconds": 2.0,
+  "minimum_samples": 20,
+  "http_p95_ms_ceiling": 60000.0,
+  "experiment_p95_ms_ceiling": 180000.0,
+  "drain_seconds": 180
+}

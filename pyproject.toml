@@ -144,6 +144,9 @@ include = [
   '/scripts/backup_restore.py','/scripts/scanner_benchmark.py','/scripts/check_release_artifacts.py',
   '/scripts/policy_runtime_acceptance.py',
   '/scripts/policy_cached_acceptance.py',
+  '/scripts/mixed_capacity_acceptance.py',
+  '/scripts/instrumentation_profile.py','/docs/sdk-performance.md',
+  '/docs/incident-comments.md',
 ]
 
 [tool.pytest.ini_options]
@@ -191,6 +194,7 @@ select = ["E", "F", "I", "UP", "B"]
 "src/cutback/server/prompt_playground.py" = ["B008"]
 "src/cutback/server/prompt_observations.py" = ["B008"]
 "src/cutback/server/monitoring_api.py" = ["B008"]
+"src/cutback/server/comment_api.py" = ["B008"]
 "src/cutback/server/dashboard_api.py" = ["B008"]
 "src/cutback/server/policy_activity_api.py" = ["B008"]
 "src/cutback/server/notification_api.py" = ["B008"]

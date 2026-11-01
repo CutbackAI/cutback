@@ -154,8 +154,68 @@ cutback routing program review CONTRACT.json RECEIPT.json PROPOSED_ROOT \
 
 This refreshes collector authority, verifies the exact two trees and receipts,
 rejects unrelated changes and may create a local review ref. It does not create
-a remote PR, merge, change traffic or deploy. The campaign PR publisher is not
-implicitly reused for a different routing review contract.
+a remote PR, merge, change traffic or deploy. A separate explicit publisher for
+this routing review contract has local component qualification below.
+
+## Preview and publish a checked routing draft
+
+The source-only `routing program publish` extension **passed local component qualification**
+and absent from PyPI dev5. It supports the native single-control or fitted
+byte-route policy produced by this program. The routing JSON is the actual
+application policy and includes its instruction text. Publication uploads that
+complete checked file, Git author/committer/message and one commit to the named
+repository. Review that disclosure before granting upload authority.
+
+The [acceptance receipt](evidence/routing-publication-acceptance.json) records
+native static/learned paths, both installed SDK envelopes, the independent
+HTTP-only client, current scope/revocation, lost-reply reconciliation, authenticated
+browser checks and full encrypted recovery. Initial fixture/browser-setup failures
+and one unresolved first recovery failure are retained separately. Exact-head
+hosted acceptance remains required before public release; no real customer
+publication or model-quality claim follows from these synthetic checks.
+
+After `routing program finish` has checked both trees and refreshed the local
+review, preview the exact destination and hashes:
+
+```sh
+cutback routing program publish --target . \
+  --repository YOUR_OWNER/YOUR_REPOSITORY --base-branch main \
+  --head-branch cutback/checked-routing \
+  --purpose-reference YOUR_REVIEW_REFERENCE
+```
+
+Preview refreshes current collector authority and verifies the original and
+proposed source, retained application receipts, declared consumer coverage and
+any declared local review ref. It makes no GitHub request and needs no GitHub token.
+It never recreates a removed or moved local review ref. A retained JSON file
+alone does not authorize publication. Older checked handoffs can refresh their
+review by repeating the same `finish --execute-local` invocation; valid known
+checks are reused, while an uncertain dispatch without a receipt is not replayed.
+
+Only after approving upload to that exact repository, supply a repository-scoped
+credential in process memory as `CUTBACK_GITHUB_TOKEN` and repeat the same
+command with `--publish`. This creates a **draft** PR without running Git hooks,
+pushing ancestors, force-updating refs, merging or deploying. The checked base
+must already be the named remote base head, and the proposed commit must have
+that exact base as its only parent. Remote base/head/PR movement is refused.
+Current content, principal, vendor, fit, selection and confirmation authority is
+refreshed on every invocation before GitHub access. Already uploaded bytes
+cannot be recalled by later revocation.
+
+The private `.cutback/agent/routing-program-publication.json` freezes the
+destination and content-addressed intent before any mutation. Lost replies are
+reconciled by reading the exact expected object or draft; an absent uncertain
+write is not resent automatically. Repeating the same command neither creates
+another draft nor renews inference authority. Preserve the journal and inspect
+the remote state before resolving an uncertain outcome. It stores no token,
+instruction text, evaluation content or application check output.
+
+Synthetic and sample-only reviews are refused before GitHub access. The
+independent example therefore cannot demonstrate a real held-out quality gate
+or publish a draft by relabeling its synthetic success. Publication does not
+establish exhaustive consumer coverage, independent CI authenticity, full-task
+economics, deployment authority or customer savings. Re-run the application's
+own CI at the current PR head and perform the normal human review.
 
 ## Accounting and safety
 

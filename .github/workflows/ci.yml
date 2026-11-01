@@ -10,6 +10,77 @@ concurrency:
 permissions:
   contents: read
 jobs:
+  mixed-services:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        sdk: [default, sdk3]
+    services:
+      postgres:
+        image: postgres:17-alpine@sha256:eee6c6e1b0894fa4fe0075eb054af9fd1cf39a35321c2d4110626cfe506411fb
+        env:
+          POSTGRES_USER: cutback
+          POSTGRES_PASSWORD: synthetic-ci-only
+          POSTGRES_DB: cutback_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U cutback -d cutback_test"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      CUTBACK_TEST_DATABASE_URL: postgresql+psycopg://cutback:synthetic-ci-only@127.0.0.1:5432/cutback_test
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
+        with:
+          version: '0.13.6'
+          python-version: '3.11.18'
+          enable-cache: false
+      - if: matrix.sdk == 'default'
+        run: uv sync --locked --all-extras --dev
+      - if: matrix.sdk == 'sdk3'
+        run: uv sync --project infra/sdk-compat/openai3 --locked --python 3.11.18
+      - name: Exercise success, outage, insufficient samples, operation caps and process-tree timeout
+        env:
+          SDK_MODE: ${{ matrix.sdk }}
+        run: |
+          if [ "$SDK_MODE" = sdk3 ]; then
+            uv run --project infra/sdk-compat/openai3 --locked python scripts/check.py tests/unit/test_mixed_capacity_supervisor.py tests/integration/test_mixed_database_ownership.py tests/end_to_end/test_mixed_capacity.py -k 'not explicit_sustained' -q
+          else
+            uv run --locked python scripts/check.py tests/unit/test_mixed_capacity_supervisor.py tests/integration/test_mixed_database_ownership.py tests/end_to_end/test_mixed_capacity.py -k 'not explicit_sustained' -q
+          fi
+      - name: Measure native hooks, collector outage and private metadata boundaries
+        env:
+          SDK_MODE: ${{ matrix.sdk }}
+        run: |
+          if [ "$SDK_MODE" = sdk3 ]; then
+            uv run --project infra/sdk-compat/openai3 --locked python scripts/check.py tests/unit/test_instrumentation_profile.py -q
+            uv run --project infra/sdk-compat/openai3 --locked python scripts/instrumentation_profile.py --profile examples/load-qualification/native-hook-profile.json --receipt .cutback/qualification/native-hook.json
+          else
+            uv run --locked python scripts/check.py tests/unit/test_instrumentation_profile.py -q
+            uv run --locked python scripts/instrumentation_profile.py --profile examples/load-qualification/native-hook-profile.json --receipt .cutback/qualification/native-hook.json
+          fi
+      - name: Qualify the declared ten-minute simultaneous synthetic service envelope
+        env:
+          SDK_MODE: ${{ matrix.sdk }}
+        run: |
+          if [ "$SDK_MODE" = sdk3 ]; then
+            uv run --project infra/sdk-compat/openai3 --locked python scripts/mixed_capacity_acceptance.py --profile examples/load-qualification/mixed-profile.json --receipt .cutback/qualification/mixed-capacity.json
+          else
+            uv run --locked python scripts/mixed_capacity_acceptance.py --profile examples/load-qualification/mixed-profile.json --receipt .cutback/qualification/mixed-capacity.json
+          fi
+      - name: Retain synthetic acceptance and incomplete receipts
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: mixed-services-${{ matrix.sdk }}
+          path: |
+            .cutback/qualification/mixed-capacity.json
+            .cutback/qualification/mixed-capacity.json.intent.json
+            .cutback/qualification/native-hook.json
+          if-no-files-found: error
+          retention-days: 7
   cloud-import-producers:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -68,6 +139,7 @@ jobs:
           export CUTBACK_TEST_APPLICATION_CHECK_IMAGE_ID="$(docker image inspect --format '{{.Id}}' cutback-ci-acceptance:${{ github.sha }})"
           export CUTBACK_TEST_APPLICATION_CHECK_NODE_IMAGE_ID="$(docker image inspect --format '{{.Id}}' node@sha256:0e5f906573693feaa1e21057ebdcfdb5bd5021f050b2dc7c9deceb629c7da2a8)"
           uv run python scripts/check.py tests/unit/test_application_container.py tests/unit/test_application_container_crash.py tests/unit/test_application_container_controls.py tests/integration/test_application_container_handoff.py -q
+          uv run python scripts/check.py tests/unit/test_routing_publication.py -k v2_container -q
       - name: Remove this job's owned image-acceptance database
         if: always()
         run: docker compose -f infra/compose/docker-compose.yml down --volumes --remove-orphans
@@ -182,6 +254,9 @@ jobs:
           tests/unit/test_importers.py
           tests/integration/test_cloud_import_scope.py
           tests/integration/test_shared_dashboards.py
+          tests/integration/test_incident_comments.py
+          tests/unit/test_image_execution_pipe.py
+          tests/integration/test_incident_comments_remote_minimal.py
           tests/unit/test_policy_activity.py
           tests/unit/test_policy_activity_observer.py
           tests/unit/test_policy_activity_discovery.py
@@ -207,6 +282,7 @@ jobs:
           tests/integration/test_cloud_import_remote_minimal.py
           tests/end_to_end/test_cloud_import_dashboard.py
           tests/end_to_end/test_shared_dashboard.py
+          tests/end_to_end/test_incident_comments_dashboard.py
           tests/integration/test_policy_data_discovery_scope.py
           tests/unit/test_policy_publication.py
           tests/unit/test_review_publication.py
@@ -245,6 +321,7 @@ jobs:
           tests/integration/test_agent_campaign.py
           tests/integration/test_review_publication_remote_minimal.py
           tests/integration/test_policy_publication_remote_minimal.py
+          tests/integration/test_routing_publication_remote_minimal.py
           tests/end_to_end/test_campaign_outcome_pipeline.py
           tests/integration/test_workflow_stage_operator.py
           tests/integration/test_campaign_preparation_basis.py

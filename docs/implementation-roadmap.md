@@ -52,7 +52,7 @@ Add explicit local application-check contracts: exact command/working directory,
 
 ## Release 4 — production quality and incident workflow
 
-Implementation: the metadata/incident foundation and authorized content-quality extension are publicly merged. They include pinned native judging through the pre-call ledger, separate internal/external score provenance, encrypted opt-in judge responses and bounded observed cohort comparisons. See [monitoring](online-monitoring.md), [content quality and limits](online-quality.md) and [acceptance/publication evidence](progress.md). Cohorts remain descriptive; semantic drift, statistical significance, causation and population coverage are not inferred.
+Implementation: the metadata/incident foundation and authorized content-quality extension are publicly merged. They include pinned native judging through the pre-call ledger, separate internal/external score provenance, encrypted opt-in judge responses and bounded observed cohort comparisons. Shared dashboard panels and ownership are separately qualified. [Encrypted incident comments](incident-comments.md) now have local installed/client/browser/recovery acceptance, with immutable revisions and purpose-scoped reads; exact-head hosted acceptance remains pending. See [monitoring](online-monitoring.md), [content quality and limits](online-quality.md) and [acceptance/publication evidence](progress.md). Cohorts remain descriptive; semantic drift, statistical significance, causation and population coverage are not inferred.
 
 **Baseline:** O04–O10, R07, C10. **User outcome:** find a quality regression, triage it, and make it a regression case.
 
@@ -125,7 +125,7 @@ Add task outcome and change-observation records joining application release, ver
 
 ## Release 7 — broad platform and launch qualification
 
-Implementation: the owned-loopback ingestion/query load profile, raw-sample receipts and scoped bulk storage paths are publicly merged; [qualification and limits](load-qualification.md), [executed evidence](progress.md). Worker/online-evaluator/gateway capacity, gateway policy/reliability, specialties, clean-host operational modes and observed user/comparative acceptance remain incomplete. Separate SDK compatibility qualification preserves application dependency pins; it does not establish universal gateway/model compatibility.
+Implementation: the owned-loopback phased ingestion/query profile, raw-sample receipts and scoped bulk storage paths are publicly merged. A separate simultaneous ten-actor ingest/query/native-worker/online-quality/gateway harness passed local installed fault checks and two complete ten-minute SDK profiles; its public hosted gates remain separate. See [qualification and limits](load-qualification.md) and [executed evidence](progress.md). Intended deployment/live-provider capacity, broader gateway policy/reliability, specialties, clean-host operational modes and observed user/comparative acceptance remain incomplete. Separate SDK compatibility qualification preserves application dependency pins; it does not establish universal gateway/model compatibility.
 
 **Baseline:** remaining F/G/R/X rows and all core end-to-end journeys. **User outcome:** a new team can adopt, operate and recover the product independently.
 

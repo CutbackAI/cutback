@@ -2805,6 +2805,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/incidents/{incident_id}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Comments */
+        get: operations["list_comments_v1_projects__project_id__incidents__incident_id__comments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/incidents/{incident_id}/comments/policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Comment Policies */
+        get: operations["comment_policies_v1_projects__project_id__incidents__incident_id__comments_policies_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/incidents/{incident_id}/comments/{comment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Write Comment */
+        put: operations["write_comment_v1_projects__project_id__incidents__incident_id__comments__comment_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/incidents/{incident_id}/comments/{comment_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Versions */
+        get: operations["versions_v1_projects__project_id__incidents__incident_id__comments__comment_id__versions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/incidents/{incident_id}/comments/{comment_id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Read Content */
+        post: operations["read_content_v1_projects__project_id__incidents__incident_id__comments__comment_id__content_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/incidents/{incident_id}/comments/{comment_id}/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Delete Comment */
+        post: operations["delete_comment_v1_projects__project_id__incidents__incident_id__comments__comment_id__delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/online-rules": {
         parameters: {
             query?: never;
@@ -5666,6 +5768,50 @@ export interface components {
              * Format: uuid
              */
             request_id: string;
+        };
+        /** CommentContent */
+        CommentContent: {
+            /**
+             * Comment Id
+             * Format: uuid
+             */
+            comment_id: string;
+            /** Revision */
+            revision: number;
+            /** Text */
+            text: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Evidence
+             * @default human_comment_not_application_truth
+             */
+            evidence: string;
+        };
+        /** CommentDelete */
+        CommentDelete: {
+            /** Expected Revision */
+            expected_revision: number;
+        };
+        /** CommentWrite */
+        CommentWrite: {
+            /**
+             * Version Id
+             * Format: uuid
+             */
+            version_id: string;
+            /** Expected Revision */
+            expected_revision: number;
+            /**
+             * Policy Id
+             * Format: uuid
+             */
+            policy_id: string;
+            /** Text */
+            text: string;
         };
         /** CompressionConfigurationBinding */
         CompressionConfigurationBinding: {
@@ -20752,6 +20898,219 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DashboardEvidencePage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_comments_v1_projects__project_id__incidents__incident_id__comments_get: {
+        parameters: {
+            query?: {
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    comment_policies_v1_projects__project_id__incidents__incident_id__comments_policies_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    write_comment_v1_projects__project_id__incidents__incident_id__comments__comment_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                incident_id: string;
+                comment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    versions_v1_projects__project_id__incidents__incident_id__comments__comment_id__versions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                incident_id: string;
+                comment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_content_v1_projects__project_id__incidents__incident_id__comments__comment_id__content_post: {
+        parameters: {
+            query?: {
+                revision?: number | null;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                incident_id: string;
+                comment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentPurpose"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommentContent"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_comment_v1_projects__project_id__incidents__incident_id__comments__comment_id__delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                incident_id: string;
+                comment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentDelete"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
