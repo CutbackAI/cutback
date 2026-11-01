@@ -1636,6 +1636,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/native-request-profiles/analyses/{analysis_id}/source-policy-cache-trial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Assess Policy */
+        post: operations["assess_policy_v1_projects__project_id__native_request_profiles_analyses__analysis_id__source_policy_cache_trial_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/campaign-templates": {
         parameters: {
             query?: never;
@@ -7487,7 +7504,7 @@ export interface components {
              * Profile
              * @enum {string}
              */
-            profile: "cutback-jsonl.v1" | "openinference-otlp-json.v1" | "promptfoo-0.125.1-results.v3";
+            profile: "cutback-jsonl.v1" | "openinference-otlp-json.v1" | "promptfoo-0.125.1-results.v3" | "bedrock-automated-model-jsonl.v1" | "azure-ai-evaluation-1.18.10-results.v1" | "vertexai-1.153.1-metrics-jsonl.v1";
             /** Source Text */
             source_text: string;
             /** Source Sha256 */
@@ -9446,6 +9463,13 @@ export interface components {
             dataset_id: string;
             specification: components["schemas"]["ExperimentPlan-Input"];
         };
+        /** PolicyCacheWorkloadInput */
+        PolicyCacheWorkloadInput: {
+            source_binding: components["schemas"]["PolicyWorkloadBinding"];
+            /** Baseline Model */
+            baseline_model: string;
+            cache_execution: components["schemas"]["ExactCacheExecution-Input"];
+        };
         /** PolicyExecutionRef */
         "PolicyExecutionRef-Input": {
             /** Key */
@@ -9531,6 +9555,21 @@ export interface components {
              * @constant
              */
             surface: "responses.create";
+        };
+        /**
+         * PolicyWorkloadBinding
+         * @description Client-reported policy attribution, distinct from a native literal edit span.
+         */
+        PolicyWorkloadBinding: {
+            /**
+             * Version
+             * @default cutback.policy-workload-source.v1
+             * @constant
+             */
+            version: "cutback.policy-workload-source.v1";
+            source: components["schemas"]["PolicySourceBinding"];
+            /** Call Site Id */
+            call_site_id: string;
         };
         /** ProjectInput */
         ProjectInput: {
@@ -17219,6 +17258,42 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["CacheWorkloadInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CacheWorkloadAssessment"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    assess_policy_v1_projects__project_id__native_request_profiles_analyses__analysis_id__source_policy_cache_trial_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                analysis_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyCacheWorkloadInput"];
             };
         };
         responses: {

@@ -11,6 +11,23 @@ Status: unreleased source checkout. These endpoints and the **Review** dashboard
 | `cutback-jsonl.v1` | Native strict `Case` rows; input, optional declared gold/reference/group/stratum | Gold is a source-declared expectation until independently reviewed |
 | `openinference-otlp-json.v1` | OTLP JSON, at most 200 spans; `input.value`/`output.value` string attributes; hashed session group | Historical output is a reference. No inferred gold, native replay support, spend or universal Phoenix compatibility |
 | `promptfoo-0.125.1-results.v3` | Actual version-3 results envelope; `testCase.vars.input`, string `response.output`, one optional literal `equals` expectation | Source success/score/failure kind are externally asserted; scripts, prompts/config, reasons, grader execution and costs are discarded |
+| `bedrock-automated-model-jsonl.v1` | Documented automated text-model JSONL; explicit prompt, optional unreviewed reference and one historical model response | Raw numeric/boolean/null metrics; model identifier and arbitrary metric names stay in encrypted content. Human/RAG formats require another adapter |
+| `azure-ai-evaluation-1.18.10-results.v1` | Actual pinned classical SDK `rows` export; explicit query/response/ground truth and optional text context | Scalar source metrics, separate boolean/missing/error/skipped states, no inferred scale. Native grader output-item envelopes require another adapter |
+| `vertexai-1.153.1-metrics-jsonl.v1` | Actual pinned `EvalResult` pointwise table exported as records JSONL; prompt/response/reference and optional context | Original `metric/score` values, including null; pairwise/conversation/multimodal exports are outside this profile |
+
+The [cloud export walkthrough](../examples/cloud-evaluation-imports/README.md)
+documents exact producers, limits, independent fixtures and the optional locked
+producer environment. It does not configure a cloud account or invoke a model.
+Arbitrary metric names and source model identifiers stay in authorized encrypted
+preview content, outside dataset provenance metadata. Raw assertions remain
+external; neither their scores nor a supplied reference establishes independent
+labels. No normalization across provider-specific scales is inferred. An explicit
+source error or skip suppresses a stale usable score; null remains missing.
+Ordinary cloud dataset metadata contains at most 25 safe assertion examples,
+with the complete projected assertion count and explicit truncation/scope flags.
+The authorized full projection remains encrypted in the import preview. These
+examples cannot reconstruct unretained quantiles, task denominators or population
+coverage. Existing legacy assertion metadata is unchanged.
 
 Adapters report row-level fixed rejection codes without echoing source field names or examples. Preview metadata includes the first 25 row fingerprints and first 100 rejection diagnostics; totals remain explicit. Structured numbers that cannot survive conversion exactly are rejected rather than silently changed. The [actual pinned producer example](../examples/review-workflow/README.md) documents regeneration and explicit compatibility limits.
 

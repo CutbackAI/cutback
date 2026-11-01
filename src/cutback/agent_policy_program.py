@@ -46,8 +46,8 @@ def prepare(
     control,
     project_id,
     *,
-    dataset_id,
-    baseline_snapshot_id,
+    dataset_id=None,
+    baseline_snapshot_id=None,
     producer_file,
     purpose,
     max_usd,
@@ -62,6 +62,8 @@ def prepare(
     generate=True,
     fixture_transport=False,
     cache_contract=None,
+    workload_environment="staging",
+    data_environment="staging",
 ):
     """Read the fixed source, upload explicitly authorized policies, freeze a preview.
 
@@ -80,8 +82,13 @@ def prepare(
 
     root, directory, path = _location(root)
     with workspace_lock(directory):
-        project_id, dataset_id = str(UUID(str(project_id))), str(UUID(str(dataset_id)))
-        baseline_snapshot_id = str(UUID(str(baseline_snapshot_id)))
+        if type(fixture_transport) is not bool:
+            raise ValueError("POLICY_EXPLICIT_TRANSPORT_BOOLEAN_REQUIRED")
+        project_id = str(UUID(str(project_id)))
+        if dataset_id is not None:
+            dataset_id = str(UUID(str(dataset_id)))
+        if baseline_snapshot_id is not None:
+            baseline_snapshot_id = str(UUID(str(baseline_snapshot_id)))
         TypeAdapter(Identifier).validate_python(purpose)
         original, binding = inspect_configuration(root, producer_file)
         if original.cache_execution is not None:
@@ -100,9 +107,60 @@ def prepare(
             != "cutback.source-policy-current-router.v1"
         ):
             raise ValueError("POLICY_PROGRAM_CURRENT_ROUTER_COLLECTOR_UPGRADE_REQUIRED")
+        selection = None
+        automatic_dataset = dataset_id is None
+        if dataset_id is None or baseline_snapshot_id is None:
+            TypeAdapter(Identifier).validate_python(data_environment)
+            if path.exists():
+                previous = current(root, control)
+                previous_selection = previous.get("preparation_data_selection")
+                if previous_selection is not None and not isinstance(previous_selection, dict):
+                    raise ValueError("POLICY_DATA_SAVED_SELECTION_INVALID")
+                if previous_selection and previous_selection.get("environment") != data_environment:
+                    raise ValueError("POLICY_DATA_SAVED_ENVIRONMENT_CHANGED")
+                dataset_id = dataset_id or previous["intent"]["dataset_id"]
+                baseline_snapshot_id = (
+                    baseline_snapshot_id or previous["intent"]["baseline_snapshot_id"]
+                )
+            else:
+                from cutback.agent_policy_data import discover, verify_baseline
+
+                selection = discover(
+                    root,
+                    control,
+                    project_id,
+                    producer_file=producer_file,
+                    environment=data_environment,
+                    fixture=fixture_transport,
+                )
+                if dataset_id is None:
+                    dataset_id = selection["selected_dataset_id"]
+                    if dataset_id is None:
+                        raise ValueError(
+                            "POLICY_DATA_SELECT_EXPLICIT_DATASET_OR_IMPORT_INDEPENDENT_LABELS"
+                        )
+                if baseline_snapshot_id is None:
+                    baseline_snapshot_id = selection["selected_baseline_snapshot_id"]
+                    if baseline_snapshot_id is None:
+                        raise ValueError(
+                            "POLICY_DATA_SELECT_EXPLICIT_BASELINE_OR_FREEZE_COMPLETE_TASK_COSTS"
+                        )
+                    verify_baseline(control, project_id, baseline_snapshot_id, selection)
+                if inspect_configuration(root, producer_file) != (original, binding):
+                    raise ValueError("POLICY_DATA_SOURCE_CHANGED_DURING_DISCOVERY")
+        dataset_id = str(UUID(str(dataset_id)))
+        baseline_snapshot_id = str(UUID(str(baseline_snapshot_id)))
         dataset = control("GET", f"/v1/projects/{project_id}/datasets/{dataset_id}")
         if dataset.get("id") != dataset_id or dataset.get("workflow") != original.workflow:
             raise ValueError("POLICY_PROGRAM_DATASET_SOURCE_WORKFLOW_CHANGED")
+        if selection is not None and automatic_dataset:
+            selected = next(row for row in selection["datasets"] if row["id"] == dataset_id)
+            if (
+                dataset.get("hash") != selected["hash"]
+                or dataset.get("provenance", {}).get("environment") != data_environment
+                or dataset.get("provenance", {}).get("independent_labels") is not True
+            ):
+                raise ValueError("POLICY_DATA_SELECTED_DATASET_CHANGED")
         if (
             fixture_transport
             and dataset.get("provenance", {}).get("source_type") != "synthetic_fixture"
@@ -131,6 +189,48 @@ def prepare(
         )
         if binding.async_consumer and cache is not None:
             raise ValueError("POLICY_SOURCE_ASYNC_CACHE_RUNTIME_UNQUALIFIED")
+        workload = None
+        cache_decision = None
+        if cache is not None:
+            from cutback.agent_policy_workload import collect
+
+            TypeAdapter(Identifier).validate_python(workload_environment)
+            if original.strategy.routes:
+                workload = {
+                    "decision": "abstain",
+                    "reasons": ["POLICY_WORKLOAD_MULTI_MODEL_PROFILE_UNQUALIFIED"],
+                    "provider_calls": 0,
+                    "encrypted_storage_reads": 0,
+                    "paid_calls_authorized": False,
+                    "source_change_authorized": False,
+                    "production_hit_rate": None,
+                    "realized_savings_usd": None,
+                }
+            else:
+                workload = collect(
+                    root,
+                    control,
+                    project_id,
+                    producer_file=producer_file,
+                    cache_execution=cache.model_dump(mode="json"),
+                    environment=workload_environment,
+                )
+            if inspect_configuration(root, producer_file) != (original, binding):
+                raise ValueError("POLICY_WORKLOAD_SOURCE_CHANGED_DURING_ASSESSMENT")
+            allowed = fixture_transport or workload["decision"] == "prepare_separate_cache_trial"
+            cache_decision = {
+                "included_in_preview": allowed,
+                "basis": "frozen_synthetic_validation_inputs_only"
+                if fixture_transport
+                else "retained_source_matched_workload_supports_separate_trial"
+                if allowed
+                else "observed_workload_does_not_qualify_cache_control",
+                "requested_cache_execution_sha256": fingerprint(cache.model_dump(mode="json")),
+                "production_hit_rate": None,
+                "paid_calls_authorized": False,
+            }
+            if not allowed:
+                cache = None
         native_limit = limit - int(cache is not None)
         # A router descriptor's default model/output fields are not a native
         # request. Generate controls from an actual current native leaf.
@@ -228,6 +328,15 @@ def prepare(
                 "policy_ids": {key: str(uuid4()) for key in policies},
             }
             write_private(path, saved)
+        if selection is not None:
+            saved["preparation_data_selection"] = selection
+            write_private(path, saved)
+        if workload is not None:
+            # The actual included controls determine the canonical program hash.
+            # Workload metadata never becomes approval or confirmation evidence.
+            saved["preparation_workload_assessment"] = workload
+            saved["preparation_cache_control_decision"] = cache_decision
+            write_private(path, saved)
         references = []
         for key, policy in policies.items():
             references.append(
@@ -289,7 +398,20 @@ def prepare(
         row = control("POST", f"/v1/projects/{project_id}/source-policy-programs", request)
         saved.update(program_id=row["id"], program_hash=row["program_hash"])
         write_private(path, saved)
-        return row
+        return {
+            **row,
+            **(
+                {"local_preparation_data_selection": saved["preparation_data_selection"]}
+                if saved.get("preparation_data_selection") is not None
+                else {}
+            ),
+            **({"local_preparation_workload_assessment": workload} if workload is not None else {}),
+            **(
+                {"local_cache_control_decision": cache_decision}
+                if cache_decision is not None
+                else {}
+            ),
+        }
 
 
 def status(root, control):
@@ -447,14 +569,34 @@ def proposal(root, control, *, purpose):
 
 
 def review(root, control, *, purpose, contract, receipt, proposed_root, coverage, branch=None):
+    from cutback.application_checks import ApplicationCheckContract
     from cutback.policy_changes import review_change
 
     artifact = proposal(root, control, purpose=purpose)
     root, directory, _ = _location(root)
     with workspace_lock(directory):
-        current(root, control)
+        saved = current(root, control)
         result = review_change(
             artifact, contract, receipt, root, proposed_root, coverage, branch=branch
         )
         write_private(directory / "policy-program-review.json", result)
+        write_private(
+            directory / "policy-program-review-inputs.json",
+            {
+                "version": "cutback.source-policy-review-inputs.v1",
+                "program_id": saved["program_id"],
+                "program_hash": saved["program_hash"],
+                "review_sha256": result["review_sha256"],
+                "base": str(root),
+                "proposed": str(Path(proposed_root).resolve()),
+                "contract": ApplicationCheckContract.model_validate(contract).model_dump(
+                    mode="json"
+                ),
+                # verify() already validated this receipt. Its hash binds the
+                # original JSON strings, including the timestamp's UTC spelling.
+                "receipt": receipt,
+                "coverage": coverage,
+                "branch": branch,
+            },
+        )
         return result

@@ -5745,6 +5745,66 @@
         }
       }
     },
+    "/v1/projects/{project_id}/native-request-profiles/analyses/{analysis_id}/source-policy-cache-trial": {
+      "post": {
+        "summary": "Assess Policy",
+        "operationId": "assess_policy_v1_projects__project_id__native_request_profiles_analyses__analysis_id__source_policy_cache_trial_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Analysis Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyCacheWorkloadInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CacheWorkloadAssessment"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/projects/{project_id}/campaign-templates": {
       "get": {
         "summary": "Templates",
@@ -24773,7 +24833,10 @@
             "enum": [
               "cutback-jsonl.v1",
               "openinference-otlp-json.v1",
-              "promptfoo-0.125.1-results.v3"
+              "promptfoo-0.125.1-results.v3",
+              "bedrock-automated-model-jsonl.v1",
+              "azure-ai-evaluation-1.18.10-results.v1",
+              "vertexai-1.153.1-metrics-jsonl.v1"
             ],
             "title": "Profile"
           },
@@ -29555,6 +29618,29 @@
         ],
         "title": "PlanInput"
       },
+      "PolicyCacheWorkloadInput": {
+        "properties": {
+          "source_binding": {
+            "$ref": "#/components/schemas/PolicyWorkloadBinding"
+          },
+          "baseline_model": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Baseline Model"
+          },
+          "cache_execution": {
+            "$ref": "#/components/schemas/ExactCacheExecution-Input"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_binding",
+          "baseline_model",
+          "cache_execution"
+        ],
+        "title": "PolicyCacheWorkloadInput"
+      },
       "PolicyExecutionRef-Input": {
         "properties": {
           "key": {
@@ -29749,6 +29835,32 @@
           "max_input_bytes"
         ],
         "title": "PolicySourceBinding"
+      },
+      "PolicyWorkloadBinding": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "const": "cutback.policy-workload-source.v1",
+            "title": "Version",
+            "default": "cutback.policy-workload-source.v1"
+          },
+          "source": {
+            "$ref": "#/components/schemas/PolicySourceBinding"
+          },
+          "call_site_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_.:/-]{1,200}$",
+            "title": "Call Site Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "call_site_id"
+        ],
+        "title": "PolicyWorkloadBinding",
+        "description": "Client-reported policy attribution, distinct from a native literal edit span."
       },
       "ProjectInput": {
         "properties": {

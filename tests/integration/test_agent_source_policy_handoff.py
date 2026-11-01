@@ -13,6 +13,7 @@ import cutback
 from cutback.agent_control import Control
 from cutback.agent_policy_handoff import finish
 from cutback.agent_policy_program import advance, prepare
+from cutback.agent_policy_publication import publish_review
 from cutback.application_checks import snapshot
 from cutback.core.workspace import read_private
 from cutback.policy_source import inspect_configuration
@@ -163,6 +164,31 @@ def test_http_agent_prepares_one_budget_and_checks_exact_policy_and_rollback_wit
                 )["status"]
                 == "REVIEWED"
             )
+            with pytest.raises(ValueError, match="POLICY_HELDOUT_REVIEW_REQUIRED"):
+                publish_review(
+                    root,
+                    control,
+                    purpose="owned-synthetic-publication-refusal",
+                    repository="example-owner/policy-app",
+                    base_branch="main",
+                    head_branch="cutback/checked-policy",
+                    publish=True,
+                    api=lambda *args: pytest.fail("SYNTHETIC_GATE_MUST_NOT_CONTACT_GITHUB"),
+                )
+            if not current_routed and not async_consumer:
+                with api[2].state.sessions.begin() as session:
+                    session.get(CapturePolicyRecord, UUID(policy_id)).enabled = False
+                with pytest.raises(ValueError, match="CURRENT_CONFIRMED_SOURCE"):
+                    publish_review(
+                        root,
+                        control,
+                        purpose="owned-revoked-publication-refusal",
+                        repository="example-owner/policy-app",
+                        base_branch="main",
+                        head_branch="cutback/checked-policy",
+                        publish=True,
+                        api=lambda *args: pytest.fail("REVOKED_REVIEW_MUST_NOT_CONTACT_GITHUB"),
+                    )
         assert snapshot(root) == before and len(calls) == native_count
     finally:
         executor.close()

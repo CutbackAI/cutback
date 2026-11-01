@@ -1,0 +1,39 @@
+{
+  "contract": "cutback.source-policy-publication-acceptance.v1",
+  "date": "2026-11-01",
+  "status": "local_component_qualification_complete_publication_gates_separate",
+  "wheel_sha256": "ce7b966e8572360234716fd6aebfdc437f2e6b93a529f987643f59457cb7d50f",
+  "image_id": "sha256:0afb1f320ae979d015cc8fcba02bc305dd38b8e1777a5bd345c1fae50c95c98a",
+  "identical_application_files": 469,
+  "installed_sdk_tests": {
+    "2.29.0": {
+      "passed": 51,
+      "seconds": 2001.89,
+      "log_sha256": "83414685acb35fe83e52e7fa0ce3758b669e95c8ac1bdb39010dad08f16bc538"
+    },
+    "3.35.1": {
+      "passed": 51,
+      "seconds": 1980.3,
+      "log_sha256": "f8a3dcc1a177b667d8ee4bb6d77cef6d5f746ede409c887a3284991d5d2a2376"
+    }
+  },
+  "http_only_client_without_sdk_server_or_crypto_verified": true,
+  "current_collector_rights_rechecked_before_github": true,
+  "preview_mutates_local_review_ref": false,
+  "exact_wire_receipts_preserved": true,
+  "synthetic_and_cached_runtime_reviews_refused": true,
+  "source_and_workspace_aliases_refused_before_io": true,
+  "both_trees_coverage_and_rollback_required": true,
+  "interrupted_publication_reconciled_without_ref_overwrite": true,
+  "recovery": {
+    "migration": "0034",
+    "tables": 107,
+    "encrypted_objects": 3527,
+    "uid": 10001
+  },
+  "real_customer_publication_verified": false,
+  "real_model_quality_verified": false,
+  "production_deployed": false,
+  "paid_provider_calls": 0,
+  "new_pypi_release": false
+}

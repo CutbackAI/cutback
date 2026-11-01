@@ -1,50 +1,268 @@
 # Implementation progress
 
-The common-program foundation merged in [PR 79](https://github.com/CutbackAI/cutback/pull/79)
-as `ec3c2e73af3def811942211d12a6d61798621458` after all **17 exact-head hosted
-jobs** passed for `2be013a687213e142a2aae31bc1961d0e4886150`. Python 3.11 passed
-**2634 / 40 skips in 4754.61 seconds**; Python 3.13 passed **2633 / 41 skips in
-3869.80 seconds**, alongside separate legacy/native SDK matrices, infrastructure,
-isolated tools, audits and CodeQL. Private/public wheel and source archives were
-byte-identical and passed the publication boundary. This closes that bounded
-foundation's hosted gate; the following router/async follow-up keeps its own
-publication and exact-head checks. PyPI dev5 is unchanged.
+1 November 2026 cloud text-evaluation imports: **local component gates passed;
+publication and exact-head hosted gates remain separate**. Both fresh installed
+SDK environments passed **63 tests**, in **64.56 / 64.94 seconds**, after the
+Windows line-ending and adversarial decimal-exponent fixes described below.
+The selection includes actual locked local producer reproduction, legacy/new
+importers, real PostgreSQL migrations/scope/revocation/lineage/reviews/privacy,
+the SDK-free HTTP-only client, and **five authenticated browser journeys** with
+mobile/axe and empty credential storage. No tests were skipped in these runs.
 
-1 November 2026 current-reference routing and async source follow-up, **locally
-accepted; exact public-head hosted gates pending**. Current uncached input-size
-routers are compared against their actual per-input native leaves. Native
-controls, train-only generation/fitting and one untouched confirmation retain
-their shared whole-search envelope. Historical anchors do not substitute for
-current observations. The independent dashboard sample explains its four stages,
-failed controls, recorded program and unknown compute/hosting costs.
+The matching read-only non-root image passed all four offline fixture previews
+with networking disabled, plus the complete **107-table / 3527-object** recovery
+drill and source-policy sample with automatic data selection, both-tree checks,
+exact rollback, 80 native async cases, seven observation calls and map refresh.
+The recovery archive covers the existing independent sample; new cloud import
+transactions were separately exercised on real PostgreSQL, rather than being
+claimed as additional restored objects. Source/workspace/map symlink boundaries
+were refused before I/O. The two-tenant 2000-event accept/deduplication smoke took
+**1.984 seconds**, not a production SLA. Exact tested source, wheel, image and
+log hashes are in the [cloud import receipt](evidence/cloud-text-import-acceptance.json).
+No cloud evaluation service, paid model call, new PyPI release or production
+deployment occurred. Broader formats and real cloud-account acceptance stay open.
 
-The exact async wheel is
-`20d4d069034354b8b7fcb48ca95d372815b5f501a0e9577028d375da060f103d`.
-Fresh installed SDK **2.29.0 / 3.35.1**, Pydantic **2.14.1**, each passed **196
-tests**, in **2301.19 / 2343.95 seconds**, with matching independent core-plus-HTTPX
-clients and authenticated browser/mobile/accessibility journeys. The earlier
-current-router wheel separately passed **175 / 175** in **2086.08 / 2080.60
-seconds**. Scope fixes after the initial duplicate-test-basename collection
-failure changed tests/CI/documentation only; the async wheel remained byte-identical.
-Ruff/format, mypy (**438 modules**), generated OpenAPI/types and React build pass.
+### Cloud import qualification history
 
-The owned async image
-`sha256:85d46c162a783fa23ed82a920d56846d4c516e646a7880d4fec63448e0e696d6`
-matches all **465 application files / 438 Python files** in that wheel. Full
-encrypted backup, key rotation and restore preserved **107 tables / 3527 objects**,
-including source programs, both application trees, inverse rollback, scoped
-receipts and prior native/routing/retrieval/security workflows. The new async
-consumer ran **80 synthetic cases** as non-root with networking disabled and a
-read-only filesystem; source identity stayed unchanged. Separate Linux symlink
-guards passed. The two-tenant 2000-event accept/deduplicate smoke took **2.375
-seconds**, which is not a production SLA.
+The initial source implementation and subsequent fixes are retained below; their
+then-pending gates were completed by the component acceptance above.
+Three additive offline projections feed the existing encrypted preview/review and
+unreviewed dataset flow. Arbitrary metric names and a supplied source model
+identifier remain authorized encrypted content, outside ordinary metadata.
+Original decimal scores, booleans, nulls and explicit evaluator error/skip states
+stay distinct; source scores never become independent labels or normalized task
+success. Azure 1.18.10 actually ran a pure local callable; Vertex 1.153.1 actually
+exported synthetic `EvalResult` tables with pandas 2.3.3, including null. The AWS
+fixture is an independent synthetic documented-wire example, not a live job.
+The separate producer lock contains transitive hashes; its current-platform audit
+found **zero known vulnerabilities in 82 packages**. No cloud evaluation service
+was invoked. Exact source/producers/fixture identities are in the
+[inspection receipt](evidence/cloud-evaluation-producer-inspection.json).
 
-Async cache, current cached references, arbitrary wrappers/tools/streams and
-cross-engine selection with retrieval/compression/local models remain unqualified.
-Synthetic outcomes do not establish real model quality, customer savings or full
-task costs. No paid inference, production deployment or PyPI upload occurred;
-published dev5 is unchanged. Final private/public archive equality, publication
-boundary and hosted acceptance are recorded by their own subsequent gates.
+Initial new unit/legacy importer/real PostgreSQL import selection passed **31 in
+10.28 seconds**. The new three-profile scope/provenance/revocation selection plus
+unit guards passed **19 in 7.95 seconds**. The actual locked producer reproduction,
+new/old units and PostgreSQL selection passed **35 in 18.49 seconds**. The
+authenticated browser selection passed **one pytest / five Playwright journeys
+in 20.41 seconds**, including original Promptfoo, three cloud formats, nulls,
+boolean values, purpose-only content, literal HTML text, mobile layout, axe and
+empty credential storage. Generated OpenAPI/client/types, React, Ruff and mypy
+(444 modules) pass. After the fixture-tool refactor, SDK3's actual-producer,
+new/old unit and PostgreSQL selection passed **35 in 18.66 seconds**. The source
+CLI also previewed the actual Azure export from a core-plus-HTTPX interpreter
+without vendor/server/crypto dependencies; that is source compatibility evidence,
+not an installed-wheel gate. Fresh installed SDK2/SDK3/minimal-client/image and exact-head hosted gates
+remain pending; these source checks do not establish completed publication.
+Final metadata review bounded cloud dataset provenance to **25** safe assertion
+examples, with the full projected count and explicit truncation/scope flags.
+The full authorized projection stays encrypted; legacy assertion metadata is
+unchanged. The new resource-bound unit and actual 64-metric PostgreSQL case,
+together with new/old import regressions, passed **35 in 10.92 seconds**.
+
+The first installed-package producer check exposed a Windows line-ending bug:
+the fixture exporter wrote CRLF while the canonical Git archive contains LF.
+Both SDK selections stopped after **28 passed / one failed**, before their
+PostgreSQL/browser gates. The exporter now writes explicit UTF-8/LF for its
+owned Azure fixture and receipt. Those failed runs are retained; earlier source
+passes do not substitute for the pending canonical-source rerun.
+The canonical-source rerun passed **57 tests** in each fresh installed SDK
+environment (**92.85 / 92.47 seconds**), including actual producers, real
+PostgreSQL scope/lineage/review/privacy and five authenticated browser journeys.
+All four offline profiles/fixtures passed inside the same read-only non-root
+container with networking disabled. A subsequent adversarial-number review
+found a decimal-context overflow for an oversized exponent; the new bound uses
+context-free absolute comparison and malformed decimal exponents get a fixed
+file diagnostic. That fix has its own new unit/PostgreSQL and installed gates;
+the 57-test results do not qualify these later application bytes.
+The added extreme-number regressions and new/old importer/PostgreSQL selection
+passed **41 in 10.28 seconds**. The previous image completed its **107-table /
+3527-object** recovery drill, with current source-policy data selection, both
+checked trees, exact rollback, 80 native async cases, seven observation calls and
+source-map refresh. The changed numeric parser is being packaged separately;
+the prior image is not presented as that new image's acceptance.
+
+## Latest local automation acceptance
+
+Current source-router references and the supplied async consumer merged normally
+in [PR 80](https://github.com/CutbackAI/cutback/pull/80), after **all 17 required
+exact-head hosted jobs passed** on `cfae91bab532078df36eb92cbadd04c4e5ec2b22`.
+The full Python 3.11 selection passed **2672 / 40 skipped in 5372.46 seconds**;
+Python 3.13 passed **2671 / 41 skipped in 3220.72 seconds**. Separate SDK3 core,
+workflow and system shards, both protected aggregate checks, legacy SDK checks,
+isolated tools, infrastructure, dependency audit and both CodeQL jobs passed.
+The two private/public archives were byte-identical. The normal squash is
+`3273a11149adaf1331b3ce2a0a0d8a785574e179`, whose tree exactly matches the tested
+source. This does not qualify cached current references or update PyPI dev5.
+
+The source-policy observation, automatic cache-workload guidance, checked draft
+publisher and compatible-data discovery have completed their local component
+gates. Their public source publication and exact-head hosted checks remain
+separate; PyPI dev5 is unchanged.
+
+The discovery wheel's two fresh pinned SDK installations each passed **90 tests**,
+in **1278.86 / 1280.71 seconds**, including the independent core-plus-HTTPX client,
+real PostgreSQL permissions/revocation, saved-intent recovery, whole-budget native
+comparisons and authenticated sample/browser/mobile/accessibility checks. Its
+read-only non-root image passed the complete **107-table / 3527-object** recovery
+drill, the same automatic selection and both-tree/inverse-rollback sample, 80
+native async cases, seven external observation calls and source-map refresh.
+Its two-tenant 2000-event acceptance/deduplication smoke took **1.985 seconds**,
+not a production SLA. Source/map/private-workspace alias checks passed before
+collector or GitHub I/O. The exact wheel/image identities and log hashes are in
+the [data-discovery receipt](evidence/source-policy-data-acceptance.json).
+
+The publisher's fresh SDK2/SDK3 installations each passed **51 tests**, in
+**2001.89 / 1980.30 seconds**, including real PostgreSQL/current authority and the
+independent HTTP-only client. Its full recovery image and Linux path guards also
+passed. See the [publisher receipt](evidence/source-policy-publication-acceptance.json)
+and [observation/workload receipt](evidence/source-policy-observation-acceptance.json).
+Neither metadata selection nor a retained local review grants inference, upload,
+merge or deployment authority. Actual labels, complete costs, workload coverage,
+current rights and the exact approval remain required. Customer quality, causal
+savings and production reliability are not established by these synthetic tests.
+
+## Earlier qualification checkpoints
+
+1 November 2026 source-policy data discovery, **under qualification**. Preparation
+can omit dataset/baseline IDs when bounded collector metadata identifies one
+compatible independently labeled dataset and one complete declared task-cost
+snapshot for the source workflow and selected environment. It never chooses by
+recency or from incomplete pagination. It refreshes the frozen report's released
+hash and actual workflow/service/release identities before policy upload. Saved
+IDs survive retries and later versions; discovery remains outside approval
+evidence, reads no encrypted cases and cannot establish source-aligned baseline,
+independent quality, population coverage or realized savings. The independent
+sample and HTTP-only client now exercise this selection. The first new unit run
+stopped at **10 passed / one failed in 37.95 seconds** because its closed metadata
+test transport indexed a second listing as a nonexistent next page; its per-call
+fixture was corrected. The next selection passed **35 in 121.96 seconds**.
+Fresh installed/minimal-client, actual PostgreSQL/scope, sample and image gates
+remain pending; subsequent CLI/guard changes require the final selection again.
+The actual PostgreSQL selection then passed **three in 205.02 seconds**: unique
+automatic preview/resume, revoked content authority refusal and the full independent
+sample through native comparison, one confirmation, both checked trees and inverse
+rollback. No provider charge or approval was bypassed. Fresh final wheel/image
+qualification is still required.
+
+The checked publisher's exact frozen wheel is
+`ce7b966e8572360234716fd6aebfdc437f2e6b93a529f987643f59457cb7d50f`.
+Its non-root image `0afb1f320ae979d015cc8fcba02bc305dd38b8e1777a5bd345c1fae50c95c98a`
+passed the complete **107-table / 3527-object** database/security/source recovery
+drill, including 80 native async cases and seven independent observation calls.
+The 2000-event two-tenant accept/deduplicate smoke took **2.0 seconds**, not an SLA.
+Separate network-disabled read-only Linux checks refused both source-root and
+private-workspace symlinks before collector/GitHub I/O, preserving application
+and outside-target bytes. Both fresh installed publisher selections passed
+**51 tests**, in **2001.89 / 1980.30 seconds**, including the actual PostgreSQL
+handoff and independent HTTP-only client. Exact identities and log hashes are in
+the [versioned publisher receipt](evidence/source-policy-publication-acceptance.json).
+This closes its local component gates; public exact-head hosted acceptance is
+still separate. No real customer application was published by these closed tests.
+
+Latest completed local observation/workload acceptance is recorded in the
+[versioned receipt](evidence/source-policy-observation-acceptance.json). The
+observation wheel's two recorded selections each report **319 passed**. Their
+retained full logs have identical bytes and duration; that recording does not
+establish independent SDK origins. Separate serial processes explicitly asserted
+the actual installed SDK and Cutback module paths, then passed **11 /
+11** further native/real-PostgreSQL cases in **31.02 / 27.12 seconds**. Their single
+warning concerned pytest assertion rewriting after the deliberate SDK preload.
+The automatic-guidance wheel's fresh SDK2/SDK3 selections each passed **117**, in
+**987.11 / 984.24 seconds**, including the independent HTTP-only automatic cache
+path, native trials and authenticated sample/browser journey. Both complete
+non-root images passed the **107-table / 3527-object** recovery drill; the latter
+two-tenant 2000-event accept/deduplicate smoke took **2.031 seconds**, not an SLA.
+These are local component acceptances; their publication/hosted gates remain separate.
+
+The common-policy foundation merged in [PR 79](https://github.com/CutbackAI/cutback/pull/79)
+as `ec3c2e73af3def811942211d12a6d61798621458` after all **17 exact-head jobs**
+passed. Full Python 3.11 acceptance was **2634 passed / 40 skipped**; Python 3.13
+was **2633 passed / 41 skipped**. The router/async follow-up is [draft PR 80](https://github.com/CutbackAI/cutback/pull/80),
+exact head `cfae91bab532078df36eb92cbadd04c4e5ec2b22`, with **196 / 196** installed
+acceptance and byte-identical private/public archives; its hosted gates are
+pending. PyPI dev5 remains unchanged. Earlier entries below retain the state at
+their respective qualification checkpoints.
+
+1 November 2026 checked source-policy draft publisher, **under qualification**.
+The source-policy CLI can preview a freshly reverified held-out review and, only
+with an explicit publication flag and separate repository credential, create a
+draft using the existing bounded content-addressed Git publisher. Policy reviews
+retain their own identity and contract. The changed policy file's instruction
+text is explicitly identified as publication content; metadata journals contain
+hashes/receipts, not that text or credentials. Both checked trees, current
+collector rights and the known producer's declared check coverage are required.
+Synthetic/sample-only and unqualified cached-runtime reviews are refused before
+GitHub access. No merge or deployment is authorized. Native app/Git-object,
+PostgreSQL/minimal-client, installed and hosted qualification are pending.
+The first new publication unit stopped in **28.33 seconds** because the closed
+GitHub test transport returned another synthetic repository's URL; the existing
+repository-binding guard correctly refused it. The synthetic transport now derives
+its URL from its exact repository intent. No external GitHub request occurred.
+The next real PostgreSQL/handoff selection stopped in **284.81 seconds**: review
+input persistence normalized an already hashed timestamp from `+00:00` to `Z`,
+so subsequent receipt verification correctly refused it. Persistence now keeps
+the exact validated wire values; a dedicated hash-preservation regression and
+the complete handoff selection must pass again. The preceding publication/unit
+selection passed **37 in 507.78 seconds** but did not cover that writer path.
+The corrected real PostgreSQL/native/check/source/publication-refusal selection
+passed **five in 1197.04 seconds**. The dedicated exact-wire regression passed
+**one in 37.74 seconds**; malformed local review guards passed **three in 2.62
+seconds**; non-mutating missing-ref preview passed **one in 39.40 seconds**.
+SDK3's preceding publication/CLI selection passed **39 in 451.75 seconds**.
+Fresh installed/minimal-client and image qualification for the publisher remains
+pending. Preview cannot recreate a removed local review ref.
+
+1 November 2026 automatic source-workload guidance, **under qualification**.
+Supplying a cache contract during source-policy preparation now automatically
+assesses bounded current source-matched retained metadata in the explicitly
+selected workload environment. Ordinary provider previews omit an unqualified
+cache control and price the remaining native controls. Explicit synthetic
+fixtures may retain a frozen-case cache trial with its narrower basis recorded.
+Current workload assessments and omission reasons remain metadata, outside the
+approval/confirmation evidence; the actual control set still determines the
+canonical budget and program hash. No cache is activated and unknown production
+hit rate/savings remain unknown. Existing frozen-intent and source-change guards
+apply on preparation retries. Source SDK2 checks passed **27 in 175.61 seconds**,
+then all six inclusion/omission/explicit-transport guards passed in **30.13
+seconds**. Source SDK3 passed **30 in 233.78 seconds**, including those guards,
+native cache selection and the real observed-source PostgreSQL/process journey.
+An earlier advisory-only revision passed **26 in 180.41 seconds** and is not
+relabeled as final omission evidence. Ruff/format and mypy (**440 modules**) pass.
+Fresh installed/minimal-client, container and hosted qualification are pending.
+
+1 November 2026 source-policy observation/workload bridge, **under qualification**.
+The offline scanner recognizes the supplied sync/async native wrappers without
+reading configuration or importing optional runtimes; static models and costs
+remain unknown. Instrumentation refuses to insert a bootstrap into the fixed
+consumer and proposes an actual external startup. The independent copied sample
+includes a seven-call closed-transport observation entry point. A distinct
+content-free policy attribution contract and admin-only assessment endpoint join
+existing retained request-profile metadata. They preserve native literal-source
+bindings and reuse current rights, expiry, census, coverage and Decimal economics
+checks. The HTTP-only `source-policy assess-workload` command grants no inference,
+edit or cache activation authority. Async/multi-model profile assessment remains
+explicitly unqualified. Source SDK3 checks passed **49 in 98.66 seconds**, including
+real PostgreSQL/current rights/census/RBAC and independent sync/async startup
+processes. SDK2 passed the preceding **48 in 100 seconds**, then **32 in 28.06
+seconds** including source-map refresh and existing attribution/CLI regressions.
+The first selection stopped at **23 passed / one failed in 64.43 seconds** because
+the new test expected conflict rather than forbidden for a revoked capture policy;
+the existing rights refusal was preserved and the test corrected. Generated
+OpenAPI/types, React production build, Ruff/format and mypy (**440 modules**) pass.
+Fresh installed distributions, the minimal HTTP-only command, browser/image and
+public hosted gates are pending; no release completion is claimed here.
+
+Prior current-router local acceptance completed: fresh installed SDK2 and SDK3
+selections each passed **175 tests**, in **2086.08 / 2080.60 seconds**. The owned
+non-root image completed the full database/security/native/runtime recovery
+journey: **107 tables / 3527 objects**, with source-tree/inverse-patch recovery.
+Its two-tenant 2000-event acceptance/deduplication smoke took **2.234 seconds**,
+which is not a production SLA. The async image also passed the full recovery
+journey, including an **80-case** real native async consumer smoke under a
+read-only, network-disabled, non-root container. Its 2000-event smoke took
+**2.375 seconds**, also not an SLA. The corrected 196-test async installed SDK
+matrix and exact public-head hosted acceptance remain pending at this checkpoint.
+PyPI dev5 is unchanged. No paid inference or production deployment occurred.
 
 1 November 2026 async source consumer, **under qualification**. The supplied
 awaited producer has its own complete AST identity within the existing source

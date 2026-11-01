@@ -1,0 +1,32 @@
+{
+  "contract": "cutback.cloud-import-producer-inspection.v1",
+  "date": "2026-11-01",
+  "status": "actual_local_producer_fixtures_and_local_adapter_acceptance_complete_publication_separate",
+  "azure_sdk": "1.18.10",
+  "vertexai_sdk": "1.153.1",
+  "pandas": "2.3.3",
+  "azure_sdk_wheel_sha256": "29bcbb3c0325428ef319effb6adf10f5fb198f0071f60d5d8a0a4ab260caec33",
+  "vertexai_sdk_wheel_sha256": "033fa1595a7e8ed1d97066e261e630f38fbc60e10c98c6487cf228fe9c7ec151",
+  "fixtures": {
+    "azure-ai-evaluation-1.18.10-results.json": "0080e72599c6c28f1844e793ccd5830c68f0cfb55363cc996264119519106f50",
+    "vertexai-1.153.1-metrics.jsonl": "7a67e66efc8f77138b4ee75e748a6478c7964ce96d1a1bb508e7dedfb3c50a27",
+    "vertexai-1.153.1-missing.jsonl": "4d55dc37e24fdd891530fdb04b9fdbeb5a0c001542f6849b06481b52d0224204"
+  },
+  "azure_producer": "actual SDK evaluate with a local synthetic callable; no project or grader",
+  "google_producer": "actual SDK EvalResult and pandas records JSONL export; no evaluation service",
+  "provider_calls": 0,
+  "real_model_quality_verified": false,
+  "sources": [
+    "https://learn.microsoft.com/en-us/azure/foundry-classic/how-to/develop/evaluate-sdk",
+    "https://docs.cloud.google.com/python/docs/reference/vertexai/latest/vertexai.evaluation.EvalResult",
+    "https://docs.aws.amazon.com/bedrock/latest/userguide/model-evaluation-report-s3.html"
+  ],
+  "bedrock_fixture_basis": "independent synthetic documented wire; no live cloud job or SDK-generated cloud output",
+  "canonical_reproduction_verified": true,
+  "external_connection_attempts": 0,
+  "locked_producer_dependency_audit": {
+    "audited_packages": 82,
+    "known_vulnerabilities": 0,
+    "scope": "resolved current platform producer lock; separate from Cutback runtime"
+  }
+}

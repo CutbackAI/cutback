@@ -2,21 +2,45 @@
 
 Updated 1 November 2026. Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business.
 
-The new [common source-policy program](source-policy-programs.md) passed local
-installed and container qualification. It compares simple native controls, bounded instruction
+The new [common source-policy program](source-policy-programs.md) passed local,
+container and all 17 hosted gates and merged in [PR 79](https://github.com/CutbackAI/cutback/pull/79).
+It compares simple native controls, bounded instruction
 variants, optional root exact cache and conditional learned routing under one
 search/confirmation budget, then prepares checked source copies and inverse
 rollback. Both pinned SDK installations passed 158 tests, including its CLI,
 client without SDK/server dependencies, checked handoff and authenticated dashboard.
-The foundation merged in PR 79 after all 17 exact-head hosted gates passed; it
-is not in PyPI dev5. A follow-up for current uncached routed references and the
-supplied async native consumer passed local installed/container qualification:
-both pinned SDKs passed 196 tests. Its public hosted/publication gates remain pending;
-cached current references and common selection with retrieval/compression/local models
+This work is not in PyPI dev5. Current routed references and async consumers
+passed 196 tests in each pinned SDK installation and all 17 exact-head hosted
+gates, then merged normally in [PR 80](https://github.com/CutbackAI/cutback/pull/80).
+Cached current references and common selection with retrieval/compression/local models
 remain unfinished. [Progress](progress.md)
 records exact tests, failures and remaining gates.
 
+A further source follow-up passed local observation/workload acceptance and adds
+independent sync/async
+observation startup, source-map refresh and automatic source-matched cache-workload
+assessment during preparation. A real-provider preview omits an unqualified cache
+control; synthetic trials retain their explicitly narrower basis. This neither
+enables cache in an application nor establishes production hit rate or savings.
+Its public hosted acceptance remains separate. Checked source-policy draft PR
+publication passed 51 tests on each pinned SDK installation, its HTTP-only client
+and container recovery. Automatic compatible-data discovery passed 90 tests in
+each fresh SDK installation, the independent HTTP-only client and authenticated
+sample/browser journey, plus the full recovery image. Their publication and
+hosted acceptance are still separate; [progress](progress.md) records exact identities.
+Discovery can replace manual ID copying only for a unique bounded compatible
+choice. It cannot invent labels, costs or permission to run an experiment.
+
 ## Which installation to use
+
+Cloud text-evaluation file imports passed local component qualification;
+their public source and exact-head hosted gates remain separate. They connect
+documented AWS and actual pinned Azure/Vertex export projections to encrypted
+preview, purpose-scoped original metric reads and unreviewed datasets. Raw
+numeric/boolean/missing/error/skipped states retain their own meaning and scale.
+This does not add live cloud provider instrumentation or qualify all cloud
+formats. See the [independent walkthrough](../examples/cloud-evaluation-imports/README.md)
+and current tests in progress.
 
 | Installation | Available scope |
 |---|---|

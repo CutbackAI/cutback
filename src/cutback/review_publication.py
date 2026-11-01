@@ -72,6 +72,21 @@ def prepare_publication(review, artifact, base, proposed, *, repository, base_br
         or review.get("diff_sha256") != artifact.get("diff_sha256")
     ):
         raise ValueError("REVIEW_PUBLICATION_CURRENT_APPLICATION_REVIEW_REQUIRED")
+    return _prepare_single_source(
+        review,
+        artifact,
+        base,
+        proposed,
+        repository=repository,
+        base_branch=base_branch,
+        head_branch=head_branch,
+    )
+
+
+def _prepare_single_source(
+    review, artifact, base, proposed, *, repository, base_branch, head_branch
+):
+    """Project a domain-verified review into one checked Git change; upload no ancestors."""
     if not isinstance(repository, str) or not REPOSITORY.fullmatch(repository):
         raise ValueError("REVIEW_PUBLICATION_REPOSITORY_INVALID")
     base_branch, head_branch = _branch(base, base_branch), _branch(proposed, head_branch)

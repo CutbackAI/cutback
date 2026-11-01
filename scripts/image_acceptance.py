@@ -50,6 +50,7 @@ def qualify_async_policy_runtime(image):
     code = """import json,os,runpy,sys,tempfile
 from pathlib import Path
 from cutback.application_checks import git
+from cutback.core.instrumentation_plan import refresh_source_map
 from cutback.policy_source import inspect_configuration
 from cutback.sample_app.policy_fixture import fixture
 assert os.getuid()==10001
@@ -65,12 +66,15 @@ with tempfile.TemporaryDirectory(prefix="owned-async-policy-") as name:
  assert before.async_consumer
  sys.path.insert(0,str(root))
  runpy.run_path(str(root/"check_application.py"),run_name="__main__")
+ assert refresh_source_map(root)["source_commit"]==before.commit
+ runpy.run_path(str(root/"observe_application.py"),run_name="__main__")
  _,after=inspect_configuration(root,"app.py")
  assert before==after
  cases=len((root/"tickets.jsonl").read_text("utf-8").splitlines())
 print(json.dumps({"contract":"cutback.source-policy-async.v1","uid":10001,
  "native_response_checks_passed":True,"sample_cases":cases,
- "source_unchanged":True,"paid_provider_calls":0,"network":"none"}))
+ "source_unchanged":True,"paid_provider_calls":0,"network":"none",
+ "external_observation_native_calls":7,"clean_source_map_refresh":True}))
 """
     output = checked(
         [

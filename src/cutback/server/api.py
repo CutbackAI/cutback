@@ -272,6 +272,7 @@ def create_app(
             "native_fixture_contract": NATIVE_FIXTURE_CONTRACT,
             "exact_cache_contract": EXACT_CACHE_CONTRACT,
             "cache_workload_assessment_contract": CACHE_WORKLOAD_CONTRACT,
+            "source_policy_workload_contract": "cutback.policy-workload-assessment.v1",
             "workload_portfolio_contract": WORKLOAD_PORTFOLIO_CONTRACT,
             "workload_campaign_contract": WORKLOAD_CAMPAIGN_VERSION,
             "routing_program_contract": "cutback.routing-improvement-program.v1",

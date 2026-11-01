@@ -18,6 +18,16 @@ or provider credential is needed. It exercises every supplied case, caller-owned
 retries, response types, the exact selected request, and rejection beyond the
 fixed input byte bound.
 
+`observe_application.py` is a separate process entry point for seven synthetic
+native calls, including repeated inputs. It prints observation/flush health when
+you explicitly configure a collector and review the external bootstrap. It
+captures metadata by default. Keep the fixed consumer unchanged; inserting
+observation into `app.py` invalidates its full-program contract. The guide also
+explains the read-only `source-policy assess-workload` command for separately
+authorized encrypted request-profile evidence. A recommendation cannot activate
+cache, grant spend or claim production savings. Async/multi-model native profile
+assessment remains unqualified.
+
 For the async consumer:
 
 ```sh
@@ -48,3 +58,13 @@ savings and deployment permission are not established.
 [The step-by-step guide](../../docs/source-policy-programs.md) explains permitted
 real data, approval, recovery, review, cache runtime requirements and current
 unsupported application contracts. Published PyPI dev5 lacks this source feature.
+## Automatic data selection
+
+With a matching collector and current scoped credential, run
+`cutback source-policy discover --target . --producer app.py` to inspect bounded
+compatible dataset and task-cost metadata. Preparation can omit `--dataset` and
+`--baseline-snapshot` when there is exactly one compatible choice in the selected
+environment. It refreshes the selected report and retains those IDs on retries.
+Ambiguous versions, unknown costs and incomplete listings require an explicit
+choice or the missing evidence. No examples are decrypted and no experiment is
+approved by discovery. See the [whole-budget walkthrough](../../docs/source-policy-programs.md).

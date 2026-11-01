@@ -45,6 +45,10 @@ SURFACES = {
     "openai": ("responses.create", "chat.completions.create"),
     "anthropic": ("messages.create",),
 }
+POLICY_SURFACES = {
+    "cutback.source_policy.responses_create",
+    "cutback.source_policy.responses_create_async",
+}
 
 
 def digest(value: str) -> str:
@@ -543,6 +547,9 @@ def scan(root: str | Path, *, languages: list[str] | None = None) -> dict[str, A
             if target and not target.startswith("client:"):
                 graph.setdefault(target, set()).add(caller)
             provider, surface = None, None
+            policy_call = target in POLICY_SURFACES
+            if policy_call:
+                provider, surface = "openai", "responses.create"
             if target:
                 for candidate, methods in SURFACES.items():
                     for method in methods:
@@ -570,9 +577,16 @@ def scan(root: str | Path, *, languages: list[str] | None = None) -> dict[str, A
                         )
                 continue
             kwargs = {kw.arg: kw.value for kw in node.keywords}
+            if policy_call:
+                # Recognize our native adapter without reading its configuration,
+                # importing runtime/evaluation modules or guessing a routed model.
+                text = node.args[1] if len(node.args) > 1 else kwargs.get("text")
+                kwargs = {"input": text} if text is not None else {}
             model_node = kwargs.get("model")
             model, model_kind = model_value(module, model_node, scope)
             unresolved = ([] if model else ["model_runtime_unresolved"]) + sorted(heuristics)
+            if policy_call:
+                unresolved.append("source_policy_configuration_unread")
             model_ref = {
                 "kind": model_kind,
                 "symbol": model_node.id if isinstance(model_node, ast.Name) else None,
@@ -665,7 +679,8 @@ def scan(root: str | Path, *, languages: list[str] | None = None) -> dict[str, A
                     "workflow_attribution": "heuristic",
                     "confidence": "medium" if heuristics else "high",
                     "unresolved": unresolved,
-                    "evidence": [f"{module.path}:{node.lineno}", "python_ast"],
+                    "evidence": [f"{module.path}:{node.lineno}", "python_ast"]
+                    + (["cutback_policy_native_wrapper"] if policy_call else []),
                     "price": catalog.rate_info(provider, model),
                     "upstream_callers": [],
                     "entry_points": [],
@@ -687,6 +702,16 @@ def scan(root: str | Path, *, languages: list[str] | None = None) -> dict[str, A
         site["upstream_callers"] = sorted(visited) if config.follow_local_call_graph else []
         for qualified in sorted(visited | {site["workflow_hint"]}):
             for module in modules.values():
+                if qualified == module.name and "cutback_policy_native_wrapper" in site["evidence"]:
+                    site["entry_points"].append(
+                        {
+                            "symbol": "<module>",
+                            "file": module.path,
+                            "line": 1,
+                            "kind": "process_module",
+                            "confidence": "heuristic",
+                        }
+                    )
                 prefix = module.name + "."
                 if not qualified.startswith(prefix):
                     continue

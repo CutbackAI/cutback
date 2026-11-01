@@ -96,6 +96,14 @@ def test_common_program_selects_exact_cache_with_known_costs_and_keeps_runtime_a
             },
         )
         assert row["status"] == "READY_FOR_APPROVAL", row["economic_envelope"]
+        guidance = row["local_preparation_workload_assessment"]
+        assert guidance["decision"] == "abstain"
+        assert guidance["reasons"] == ["NO_RETAINED_ELIGIBLE_REQUEST_PROFILE_ANALYSIS"]
+        assert guidance["provider_calls"] == guidance["encrypted_storage_reads"] == 0
+        assert guidance["production_hit_rate"] is None
+        journal = read_private(root / ".cutback/agent/policy-program.json")
+        assert journal["preparation_workload_assessment"] == guidance
+        assert "preparation_workload_assessment" not in journal["intent"]
         assert row["economic_envelope"]["selected_control_keys"] == ["source-exact-cache"]
         advance(root, control, program_hash=row["program_hash"], approval_ref="owned-cache-budget")
         path = base + "/source-policy-programs/" + row["id"]

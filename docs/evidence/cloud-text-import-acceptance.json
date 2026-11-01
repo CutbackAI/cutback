@@ -1,0 +1,57 @@
+{
+  "contract": "cutback.cloud-text-import-acceptance.v1",
+  "date": "2026-11-01",
+  "status": "local_component_qualification_complete_publication_gates_separate",
+  "tested_source_head": "c9f883832943571a926b711e0d94287094a2d5ab",
+  "wheel_sha256": "3a3b8141a3a40107e1086172a841bd878632d110c6ddf3937291f874143777b3",
+  "image_id": "sha256:0ee5dd52f4f196a42fb77bb7c03e8735ec052cc5609f8dfee4349b844373892a",
+  "identical_application_files": 471,
+  "installed_sdk_tests": {
+    "2.29.0": {
+      "passed": 63,
+      "seconds": 64.56,
+      "log_sha256": "9e96f44da92d080faaefd7a77932f6b86ee450aa674578d669f4e2645f41ef24"
+    },
+    "3.35.1": {
+      "passed": 63,
+      "seconds": 64.94,
+      "log_sha256": "dd4cec48c417a0b4de522cd33589379f4a85fb69436fb29a51d62af0a77ff3e3"
+    }
+  },
+  "profiles": [
+    "bedrock-automated-model-jsonl.v1",
+    "azure-ai-evaluation-1.18.10-results.v1",
+    "vertexai-1.153.1-metrics-jsonl.v1",
+    "vertexai-1.153.1-metrics-jsonl.v1"
+  ],
+  "offline_container_cases": 4,
+  "core_http_only_install_without_native_cloud_server_crypto_or_test_dependencies": true,
+  "actual_pinned_local_sdk_producer_reproduction": true,
+  "producer_network_credentials_isolated": true,
+  "cloud_evaluation_service_invoked": false,
+  "bedrock_live_job_verified": false,
+  "authenticated_browser_journeys": 5,
+  "mobile_and_axe_verified": true,
+  "raw_numeric_boolean_missing_error_skipped_states_preserved": true,
+  "extreme_exponents_and_low_decimal_context_fail_closed": true,
+  "source_names_only_in_purpose_scoped_encrypted_content": true,
+  "dataset_metadata_assertion_examples_max": 25,
+  "truncation_and_scope_explicit": true,
+  "full_projected_assertions_retained_encrypted": true,
+  "legacy_import_review_lineage_and_privacy_regressions_verified": true,
+  "tenant_and_current_content_revocation_verified": true,
+  "independent_labels_verified": false,
+  "population_coverage": "unknown",
+  "recovery": {
+    "migration": "0034",
+    "tables": 107,
+    "encrypted_objects": 3527,
+    "database_pointers_preserved": true,
+    "row_counts_match": true,
+    "scope": "existing full sample archive; cloud import transactions separately exercised on real PostgreSQL"
+  },
+  "two_tenant_2000_event_accept_deduplicate_seconds": 1.984,
+  "production_sla": false,
+  "paid_provider_calls": 0,
+  "new_pypi_release": false
+}

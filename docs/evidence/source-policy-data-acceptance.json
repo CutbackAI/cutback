@@ -1,0 +1,46 @@
+{
+  "contract": "cutback.source-policy-data-acceptance.v1",
+  "date": "2026-11-01",
+  "status": "local_component_qualification_complete_publication_gates_separate",
+  "wheel_sha256": "445fbb906e20a2a722b78397c7bb8ae4ccf449997bc35acd677c4a2a8b782846",
+  "image_id": "sha256:b14fdc20a8ff3cd27388027da969bb967961c2d5346bd7a617ee4341fe272bce",
+  "identical_application_files": 470,
+  "installed_sdk_tests": {
+    "2.29.0": {
+      "passed": 90,
+      "seconds": 1278.86,
+      "log_sha256": "c25a25fa1928b8741dd28fd21d1c68f1dd034dc332ec6c5b0795de90f351e740"
+    },
+    "3.35.1": {
+      "passed": 90,
+      "seconds": 1280.71,
+      "log_sha256": "1d1ca880e4fa858b561ceb00c7d57eb2e172bd070b28db4813ccd9f2bcdbae33"
+    }
+  },
+  "http_only_client_without_sdk_server_or_crypto_verified": true,
+  "authenticated_sample_browser_mobile_and_accessibility_verified": true,
+  "source_workflow_environment_and_declared_complete_cost_checks": true,
+  "missing_labels_unknown_costs_ambiguity_and_truncation_refuse_automatic_selection": true,
+  "selected_frozen_report_hash_and_actual_workflow_service_release_rechecked": true,
+  "saved_ids_retained_across_retries_and_new_versions": true,
+  "current_content_rights_still_required_before_program_execution": true,
+  "discovery_encrypted_content_reads": 0,
+  "discovery_provider_calls": 0,
+  "discovery_grants_approval_or_source_change_authority": false,
+  "source_aligned_baseline_verified": false,
+  "independent_quality_verified": false,
+  "population_coverage": "unknown",
+  "production_savings_usd": null,
+  "recovery": {
+    "migration": "0034",
+    "tables": 107,
+    "encrypted_objects": 3527,
+    "uid": 10001,
+    "source_policy_native_calls": 320,
+    "automatic_data_selection_verified": true
+  },
+  "two_tenant_2000_event_accept_deduplicate_seconds": 1.985,
+  "production_sla": false,
+  "paid_provider_calls": 0,
+  "new_pypi_release": false
+}

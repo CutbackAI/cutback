@@ -441,6 +441,16 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
                     "producer_binding": producer.model_dump(mode="json"),
                 }
             )
+        # The policy's declared workflow can differ from the scanner's hashed
+        # process-entry identity. Preserve that producer's real upstream startup
+        # hints even when the owner selected the declared policy workflow.
+        for producer in policy_producers:
+            for site in inventory["call_sites"]:
+                if site["source_file"] == producer["source"]["producer_file"]:
+                    for entry in site["entry_points"] or [
+                        {"file": site["source_file"], "symbol": site["source_symbol"]}
+                    ]:
+                        entrypoints[entry["file"]] = entry
         for fixture in fixtures:
             path = root / fixture["path"]
             fixture["identity"] = {"size": path.stat().st_size, "mtime_ns": path.stat().st_mtime_ns}
@@ -560,8 +570,23 @@ def prepare_instrumentation(root, directory, state):
                     "lifecycle": proposal["lifecycle"],
                 }
             )
-        except (ValueError, OSError, SyntaxError):
-            changes.append({"source_file": entry["file"], "status": "INSPECT_EXISTING_STARTUP"})
+        except (ValueError, OSError, SyntaxError) as error:
+            if (
+                type(error) is ValueError
+                and str(error) == "SOURCE_POLICY_EXTERNAL_STARTUP_REQUIRED"
+            ):
+                changes.append(
+                    {
+                        "source_file": entry["file"],
+                        "status": "EXTERNAL_PROCESS_STARTUP_REQUIRED",
+                        "next_action": (
+                            "Initialize observation in the actual process startup "
+                            "outside the fixed source-policy consumer."
+                        ),
+                    }
+                )
+            else:
+                changes.append({"source_file": entry["file"], "status": "INSPECT_EXISTING_STARTUP"})
     state["instrumentation"] = {
         "proposals": changes,
         "entrypoint_file_limit": 30,

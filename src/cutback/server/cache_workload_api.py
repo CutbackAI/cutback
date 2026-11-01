@@ -5,7 +5,11 @@ from uuid import UUID
 
 from fastapi import Depends, HTTPException
 
-from cutback.core.cache_workload import CACHE_WORKLOAD_CONTRACT, CacheWorkloadAssessment
+from cutback.core.cache_workload import (
+    CACHE_WORKLOAD_CONTRACT,
+    CacheWorkloadAssessment,
+    PolicyWorkloadBinding,
+)
 from cutback.core.exact_cache import ExactCacheExecution
 from cutback.core.models import Identifier, LLMEvent, StrictModel
 from cutback.core.request_profiles import SourceBinding
@@ -18,6 +22,12 @@ from cutback.server.native_profile_service import authority
 
 class CacheWorkloadInput(StrictModel):
     source_binding: SourceBinding
+    baseline_model: Identifier
+    cache_execution: ExactCacheExecution
+
+
+class PolicyCacheWorkloadInput(StrictModel):
+    source_binding: PolicyWorkloadBinding
     baseline_model: Identifier
     cache_execution: ExactCacheExecution
 
@@ -144,11 +154,7 @@ def assess_cache_workload(session, analysis, body):
 def install_cache_workload(app, sessions, authorize, scope):
     authorized = Depends(authorize)
 
-    @app.post(
-        "/v1/projects/{project_id}/native-request-profiles/analyses/{analysis_id}/cache-trial",
-        response_model=CacheWorkloadAssessment,
-    )
-    def assess(project_id: UUID, analysis_id: UUID, body: CacheWorkloadInput, auth=authorized):
+    def scoped_assessment(project_id, analysis_id, body, auth):
         scope(auth, project_id, ("admin",))
         with sessions.begin() as session:
             row = session.get(NativeProfileAnalysis, analysis_id)
@@ -172,3 +178,20 @@ def install_cache_workload(app, sessions, authorize, scope):
                 return receipt
             except (ValueError, DecimalException):
                 raise HTTPException(409, "CURRENT_SOURCE_WORKLOAD_EVIDENCE_REQUIRED") from None
+
+    @app.post(
+        "/v1/projects/{project_id}/native-request-profiles/analyses/{analysis_id}/cache-trial",
+        response_model=CacheWorkloadAssessment,
+    )
+    def assess(project_id: UUID, analysis_id: UUID, body: CacheWorkloadInput, auth=authorized):
+        return scoped_assessment(project_id, analysis_id, body, auth)
+
+    @app.post(
+        "/v1/projects/{project_id}/native-request-profiles/analyses/"
+        "{analysis_id}/source-policy-cache-trial",
+        response_model=CacheWorkloadAssessment,
+    )
+    def assess_policy(
+        project_id: UUID, analysis_id: UUID, body: PolicyCacheWorkloadInput, auth=authorized
+    ):
+        return scoped_assessment(project_id, analysis_id, body, auth)

@@ -820,6 +820,10 @@ table {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.import-examples dd {
+  margin-inline-start: 0;
+  overflow-wrap: anywhere;
+}
 .review-text {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
