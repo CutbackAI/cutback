@@ -33,6 +33,8 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
             "from cutback.retrieval_source import inspect_producer; "
             "from cutback.agent_cache_workload import source_input; "
             "from cutback.workflow_operator import run_workflow; "
+            "from cutback.agent_publication import publish_review; "
+            "from cutback.review_publication import prepare_publication; "
             f"import cutback; assert cutback.__version__=={version!r}; "
             "from cutback.gateway.client import operation_headers; from uuid import UUID; "
             "from cutback.core.retrieval import "
@@ -43,6 +45,7 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
             "assert len(result.passages)==1; "
             "assert UUID(operation_headers()['X-Cutback-Operation-ID']).int != 0; "
             'assert importlib.util.find_spec("openai") is None; '
+            'assert importlib.util.find_spec("httpx") is None; '
             'assert importlib.util.find_spec("fastapi") is None; print(Catalog().snapshot_id)',
         ],
         capture_output=True,
@@ -179,6 +182,15 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
     )
     visible_stage_help = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", stage_help.stdout)
     assert "--local-worker" in visible_stage_help and "--max-wait-seconds" in visible_stage_help
+    publication_help = subprocess.run(
+        [str(executable), "-m", "cutback.cli", "campaign", "publish", "--help"],
+        capture_output=True,
+        text=True,
+        cwd=consumer,
+        check=True,
+    )
+    visible_publication_help = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", publication_help.stdout)
+    assert "--repository" in visible_publication_help and "--publish" in visible_publication_help
     subprocess.run(
         [str(executable), "-m", "cutback.cli", "sample", str(Path(temporary) / "support-desk")],
         check=True,

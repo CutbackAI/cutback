@@ -195,6 +195,7 @@ def test_agent_campaign_proposes_confirmed_literal_edit_without_modifying_applic
             == artifact["diff_sha256"]
         )
         assert len(requests) == calls
+        import shutil
         import subprocess
 
         from cutback.agent_campaign import review
@@ -204,10 +205,13 @@ def test_agent_campaign_proposes_confirmed_literal_edit_without_modifying_applic
         roots = []
         for name in ("base", "proposed"):
             tree = tmp_path / name
-            tree.mkdir()
-            (tree / "app.py").write_bytes(original)
-            for args in (("init",), ("add", "app.py")):
-                subprocess.run(["git", "-C", str(tree), *args], check=True, capture_output=True)
+            if name == "base":
+                tree.mkdir()
+                (tree / "app.py").write_bytes(original)
+                for args in (("init",), ("config", "core.autocrlf", "false"), ("add", "app.py")):
+                    subprocess.run(["git", "-C", str(tree), *args], check=True, capture_output=True)
+            else:
+                shutil.copytree(roots[0], tree)
             if name == "proposed":
                 applied = subprocess.run(
                     ["git", "-C", str(tree), "apply", "-"],
@@ -269,6 +273,60 @@ def test_agent_campaign_proposes_confirmed_literal_edit_without_modifying_applic
         )
         assert reviewed["status"] == "READY_FOR_PR_REVIEW"
         assert reviewed["evidence_scope"] == "sample_only" and not reviewed["remote_published"]
+        assert len(requests) == calls and (root / "app.py").read_bytes() == original
+        from support_review_publication import OwnedGitHub, api_for
+
+        from cutback.agent_publication import publish_review
+        from cutback.core.workspace import read_private
+        from cutback.review_publication import prepare_publication
+
+        publication_options = {
+            "purpose": "application-pr-review",
+            "repository": "example-owner/task-app",
+            "base_branch": "main",
+            "head_branch": "cutback/owned-classifier-review",
+        }
+        # Default is a local preview: no GitHub credential or transport required.
+        monkeypatch.delenv("CUTBACK_GITHUB_TOKEN", raising=False)
+        preview = publish_review(root, control, **publication_options)
+        assert preview["status"] == "PREVIEW_ONLY_EXPLICIT_PUBLICATION_REQUIRED"
+        assert not preview["remote_published"] and preview["provider_calls"] == 0
+        prepared_publication = prepare_publication(
+            reviewed,
+            artifact,
+            *roots,
+            **{key: value for key, value in publication_options.items() if key != "purpose"},
+        )
+        remote = OwnedGitHub(prepared_publication, lose="/pulls")
+        github = api_for(remote)
+        try:
+            with pytest.raises(ValueError, match="REMOTE_OUTCOME_UNCERTAIN"):
+                publish_review(root, control, **publication_options, publish=True, api=github)
+            pending_publication = read_private(root / ".cutback/agent/campaign-publication.json")
+            assert pending_publication["dispatched"][-1] == "pull_request"
+            assert "result" not in pending_publication and len(remote.pulls) == 1
+            published = publish_review(
+                root, control, **publication_options, publish=True, api=github
+            )
+            repeated = publish_review(
+                root, control, **publication_options, publish=True, api=github
+            )
+            assert published == repeated and published["draft"]
+            assert published["proposed_commit"] == check_contract.proposed.commit
+            assert len(remote.posts) == 5 and len(remote.pulls) == 1
+            # A source change cannot reuse the completed review for another upload.
+            checked_bytes = (roots[1] / "app.py").read_bytes()
+            (roots[1] / "app.py").write_bytes(b"# owned subsequent unreviewed change\n")
+            before_remote = len(remote.requests)
+            with pytest.raises(ValueError, match="APPLICATION_CHECK"):
+                publish_review(root, control, **publication_options, publish=True, api=github)
+            assert len(remote.requests) == before_remote
+            (roots[1] / "app.py").write_bytes(checked_bytes)
+        finally:
+            github.close()
+        publication_journal = read_private(root / ".cutback/agent/campaign-publication.json")
+        assert publication_journal["result"] == published
+        assert "synthetic-github-test-token" not in json.dumps(publication_journal)
         assert len(requests) == calls and (root / "app.py").read_bytes() == original
         from support_campaign_outcomes import assert_campaign_outcome_link
 

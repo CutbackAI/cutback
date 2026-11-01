@@ -101,6 +101,7 @@ include = [
   "/docs/episode-semantic-judging.md",
   "/docs/task-economics.md",
   "/docs/improvement-campaigns.md",
+  "/docs/review-publication.md",
   "/docs/campaign-outcomes.md",
   "/docs/automatic-outcome-observation.md",
   "/docs/load-qualification.md",

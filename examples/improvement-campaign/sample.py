@@ -159,6 +159,7 @@ def main():
                                 "application_check_native_calls": result[
                                     "application_check_native_calls"
                                 ],
+                                "pull_request_preview": result["publication_preview"],
                             }
                             if args.outcomes
                             else {}

@@ -1,5 +1,91 @@
 # Implementation progress
 
+31 October 2026 final agent handoff qualification. The exact draft-publication
+wheel `bf3fa5100cea87d64c59e3562c7a14907be2861be7dc1ed3fe4d0840912659f8`
+passed **67 installed checks / one unavailable Windows symlink-privilege skip**
+on each native SDK: SDK2 **1,040.57 seconds**, SDK3 **1,039.99 seconds**. These
+include actual PostgreSQL campaign confirmation, saved-journal recovery after a
+lost PR reply, stale-source refusal, both-tree checks, independent outcome/ticket
+samples and authenticated browser/accessibility checks. Separate installed
+HTTP-only client journeys passed **one in 118.10 seconds** on SDK2 and **one in
+125.61 seconds** on SDK3. Core-only imports/CLI help pass without HTTPX or server/
+provider SDKs. The exact non-root image
+`sha256:cfdacc3e2292de58b526442476850736379c0738842c7738d122856babed346e`
+matches all **416** application files and passes full recovery: **100 schema-0032
+table counts**, **2,654** rekeyed objects, **24** profiles, **17** cache objects and
+**35** plans. The separate two-tenant **2,000** events / **2,000** duplicate replay
+profile took **3.000 seconds**, not a production SLA. Test/CI-only follow-ups
+preserve every runtime/frontend/dependency/README/Docker input and wheel byte;
+their source archives and hosted gates have separate identities.
+
+The prior stage-runner hosted Python 3.13 full run retained **one failure / 2,401
+passes / 41 skips in 2,349.36 seconds**. Its remote-client fixture dereferenced
+Linux's virtualenv Python symlink and launched the bare interpreter without
+Cutback installed. The same actual HTTP/PostgreSQL/native-worker case reproduced
+that missing-module failure on isolated Linux/Python 3.13 in **9.13 seconds**;
+preserving the venv launch path passed in **9.24 seconds**. Both remote-client
+fixtures now check the installed package origin and use isolated Python mode,
+explicit environments and content-free JSON-protocol failure diagnostics. A real
+nested-venv subprocess regression protects the prefix. The unchanged stage
+runtime passed **44 installed controls in 33.60 seconds** on SDK2 and **44 in
+33.68 seconds** on SDK3; these overlap earlier scopes and are not added to them.
+The superseded unfinished Python 3.11 job is not counted as a pass. Corrected
+hosted verification remains mandatory; no failed gate was waived. These are
+synthetic engineering results, not completion of the market baseline or customer
+acceptance. No paid inference, production deployment or PyPI upload occurred.
+
+31 October 2026 exact campaign draft-PR publication, **implementation and
+qualification**. `campaign publish` refreshes confirmed collector evidence and
+both checked application trees. Its default preview makes no GitHub/model call;
+explicit publication uses a repository-scoped in-memory token and transfers one
+checked unsigned commit above the current remote base through GitHub's Git-object
+API. It never pushes local ancestors, updates a different ref, edits a PR,
+merges or deploys. The private journal precedes every mutation; a lost reply reads
+the expected object/ref/PR, and an unobserved mutation stops instead of replaying.
+The independent outcome sample now includes that preview. A mode-only extra tree
+change, mismatched checkout/Git bytes, changed current source, foreign or closed
+PR, moved base/head and unsafe response all prevent acceptance. Local application
+Git reads disable replacement refs as well as hooks/fsmonitor and lazy fetching.
+
+The first single SDK3 publication trial correctly refused a fixture whose Windows
+checkout bytes differed from its Git blob: **one setup error in 23.03 seconds**.
+That fixture now preserves matching LF bytes; the next exact-object trial passed
+**one in 12.56 seconds**. An earlier broad trial was interrupted after identifying
+the same setup problem and has no acceptance result. The subsequent initial
+publication/campaign scopes passed **34 in 432.18 seconds** on SDK2 and **34 in
+430.83 seconds** on SDK3. Additional mode/EOL/journal/response controls passed
+**five in 124.47 seconds** on SDK3. These checkpoints precede the final saved-journal
+lost-PR-response journey, Git-replacement regression and independent sample preview;
+their full frozen/installed/image/public/hosted acceptance is still required.
+No real GitHub publication was performed by these closed synthetic transports.
+This does not close unified cross-engine search or the remaining market baseline.
+No paid inference, production deployment or PyPI upload occurred.
+
+A fresh core-plus-HTTPX CLI installation (Pydantic **2.14.2**, HTTPX **0.28.1**)
+then passed the actual HTTP/PostgreSQL/confirmed native campaign preview in
+**136.39 seconds**. The child has no provider SDK, server, database driver,
+cryptography, jsonschema, identity/storage/commercial SDK or pytest. It uses a
+project/environment-scoped key only in memory/environment, verifies the same
+review and source commits, refuses explicit publication without a GitHub token,
+and refuses a viewer reusing the administrator's content review. It executes no
+application/model call and persists no credential; the parent native request
+count is unchanged. The new SDK3 systems jobs prepare this independent wheel
+installation as well as both full hosted verification jobs. This is an added
+client-dependency/authority gate, not a live GitHub publication or customer claim.
+
+The preceding stage runner's replacement wheel
+`385cf17bd3176a2042166fa2eabb0d1eeaacaec3062928c0468a1b60cfda0727`
+passed **77 installed controls in 293.45 seconds** on SDK2 and **77 in 300.48
+seconds** on SDK3, including real PostgreSQL/native peer races and the independent
+HTTP-only subprocess. Its exact non-root image
+`sha256:af91c5383fe115ec0badb9928a72f528326de6c2c09fc30670cb8a46093c8fff`
+restored all **100 schema-0032 table counts**, **2,654** rekeyed encrypted objects,
+**24** profiles, **17** cache objects and **35** plans. Two synthetic tenants
+accepted **2,000** events and deduplicated **2,000** replays in **2.078 seconds**;
+this is not a production SLA. Core-only and archive/publication identity checks
+pass. [PR 75](https://github.com/CutbackAI/cutback/pull/75) retains the exact-head
+hosted acceptance gate; these results do not claim the whole product is complete.
+
 31 October 2026 source workflow stage runner, **implementation and qualification**.
 `workflow run` waits for one already approved native/cache/context/retrieval or
 routing stage. Its explicit local mode invokes the canonical worker once;

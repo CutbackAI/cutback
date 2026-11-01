@@ -251,5 +251,17 @@ def review(
     with workspace_lock(directory):
         saved = current(root, control)
         saved["application_review"] = result
+        # Private continuation inputs: no token, command output or evaluation body.
+        saved["application_review_inputs"] = {
+            "contract": contract.model_dump(mode="json")
+            if hasattr(contract, "model_dump")
+            else contract,
+            "receipt": receipt,
+            "coverage": coverage,
+            "base": str(base.resolve(strict=True)),
+            "proposed": str(proposed.resolve(strict=True)),
+            "branch": branch,
+            "sample_only": sample_only,
+        }
         write_private(directory / "campaign.json", saved)
     return result
