@@ -266,7 +266,8 @@ jobs:
   openai3-sdk-required:
     name: openai3-sdk (${{ matrix.python }})
     needs: [openai3-sdk]
-    if: always()
+    # Still report failed shards, but let obsolete workflow runs be canceled.
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 2
     strategy:

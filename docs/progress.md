@@ -91,6 +91,11 @@ an option count/index. The complete generic dashboard harness passed **one
 pytest in 54.50 seconds** with the cloud import journeys included. Application
 wheel bytes are unchanged; the public hosted cohort is rerun on the corrected
 test head instead of accepting the superseded cohort.
+The SDK compatibility aggregate now uses GitHub's cancellation-aware condition
+while retaining the same protected check names, matrix, dependencies and
+fail-closed shard result check. Its actual Bash check rejects failed, canceled,
+skipped and missing shard results. An obsolete aggregate's `always()` condition
+therefore no longer keeps a canceled cohort alive.
 
 Current source-router references and the supplied async consumer merged normally
 in [PR 80](https://github.com/CutbackAI/cutback/pull/80), after **all 17 required
