@@ -289,7 +289,8 @@ jobs:
         run: test "$SDK3_SHARDS_RESULT" = success
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 105
+    # Keep the full regression and allow the added real PG/browser scopes to finish.
+    timeout-minutes: 135
     strategy:
       fail-fast: false
       matrix:
