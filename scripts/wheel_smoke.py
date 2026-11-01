@@ -34,6 +34,8 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
             "from cutback.agent_cache_workload import source_input; "
             "from cutback.workflow_operator import run_workflow; "
             "from cutback.agent_routing_program import run as run_routing_program; "
+            "from cutback.agent_routing_handoff import finish as finish_routing_program; "
+            "from cutback.application_workspaces import materialize; "
             "from cutback.agent_publication import publish_review; "
             "from cutback.review_publication import prepare_publication; "
             f"import cutback; assert cutback.__version__=={version!r}; "
@@ -201,6 +203,15 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
     )
     visible_program_help = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", program_help.stdout)
     assert "--local-worker" in visible_program_help and "--max-wait-seconds" in visible_program_help
+    finish_help = subprocess.run(
+        [str(executable), "-m", "cutback.cli", "routing", "program", "finish", "--help"],
+        capture_output=True,
+        text=True,
+        cwd=consumer,
+        check=True,
+    )
+    visible_finish_help = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", finish_help.stdout)
+    assert "--workspace" in visible_finish_help and "--execute-local" in visible_finish_help
     subprocess.run(
         [str(executable), "-m", "cutback.cli", "sample", str(Path(temporary) / "support-desk")],
         check=True,

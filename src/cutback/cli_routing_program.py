@@ -193,3 +193,34 @@ def register_routing_program(group, output, fail):
         )
         write_private_output(destination, result)
         output({"status": "LOCAL_REVIEW_READY", "deployment_authorized": False})
+
+    @commands.command("finish")
+    @guarded
+    def finish(
+        private_workspace: Annotated[Path, typer.Option("--workspace")],
+        purpose: Annotated[str, typer.Option("--purpose-reference")],
+        target: Path = Path("."),
+        coverage: Annotated[Path | None, typer.Option("--coverage")] = None,
+        command_file: Annotated[Path | None, typer.Option("--commands")] = None,
+        execute_local: bool = False,
+        branch: str | None = "cutback/routing-program-review",
+    ):
+        """Prepare both private source trees; explicitly run checks and refresh local review."""
+        from cutback.agent_control import connect
+        from cutback.agent_routing_handoff import finish as action
+        from cutback.cli_checks import read
+
+        control, _ = connect(target)
+        result = action(
+            target,
+            control,
+            destination=private_workspace,
+            purpose=purpose,
+            coverage=read(coverage) if coverage is not None else None,
+            commands=read(command_file) if command_file is not None else None,
+            execute_local=execute_local,
+            branch=branch,
+        )
+        output(result)
+        if result["status"] == "CHECKS_FAILED":
+            raise typer.Exit(1)

@@ -119,7 +119,7 @@ def test_installed_http_only_program_agent_has_no_provider_or_server_dependencie
             "review",
             str(workspace / "contract.json"),
             str(workspace / "checks.json"),
-            str(workspace / "proposed-application"),
+            receipt["proposed_application"],
             "--coverage",
             str(workspace / "coverage.json"),
             "--purpose-reference",
@@ -128,6 +128,15 @@ def test_installed_http_only_program_agent_has_no_provider_or_server_dependencie
             str(tmp_path / "remote-review.json"),
         )
         assert response.returncode == 0 and reviewed["status"] == "LOCAL_REVIEW_READY"
+        response, finished = invoke(
+            "finish",
+            "--workspace",
+            receipt["checked_handoff_workspace"],
+            "--purpose-reference",
+            "owned-minimal-completed-handoff",
+            "--execute-local",
+        )
+        assert response.returncode == 0 and finished["status"] == "REVIEWED"
         for path in (root / ".cutback/agent").glob("*.json"):
             assert token not in path.read_text("utf-8")
         env["CUTBACK_CONTROL_TOKEN"] = tenant[2]["Authorization"][7:]

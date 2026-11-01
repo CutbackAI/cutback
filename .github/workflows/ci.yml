@@ -201,6 +201,7 @@ jobs:
           tests/integration/test_routing_program_retention.py
           tests/integration/test_routing_program_workflow.py
           tests/integration/test_agent_routing_program.py
+          tests/integration/test_routing_program_handoff.py
           tests/integration/test_routing_program_remote_minimal.py
           tests/end_to_end/test_routing_program_sample.py
           tests/end_to_end/test_source_routing_sample.py

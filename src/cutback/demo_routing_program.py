@@ -1,9 +1,13 @@
 """Independent source application through one approved budget and exact checked rollback."""
 
-import shutil
 from uuid import uuid4
 
-from cutback.core.workspace import private_directory, write_private
+from cutback.core.workspace import (
+    private_directory,
+    read_private,
+    write_private,
+    write_private_text_output,
+)
 
 
 def run_sample(
@@ -20,10 +24,10 @@ def run_sample(
 ):
     from cutback.agent import analyze, prepare
     from cutback.agent_control import Control
-    from cutback.agent_routing_program import advance, current, proposal, review, status
+    from cutback.agent_routing_handoff import finish
+    from cutback.agent_routing_program import advance, current, status
     from cutback.agent_routing_program import prepare as prepare_program
-    from cutback.application_checks import ApplicationCommand, git, run_checks
-    from cutback.application_checks import prepare as check_contract
+    from cutback.application_checks import git
     from cutback.demo_campaign_outcomes import frozen_tasks
     from cutback.demo_routing import synthetic_executor
     from cutback.routing_program_operator import RoutingProgramOperator
@@ -117,48 +121,40 @@ def run_sample(
             or completed["summary"].get("code") != "confirmation_completed"
         ):
             raise ValueError("ROUTING_PROGRAM_SAMPLE_DID_NOT_CONFIRM")
-        artifact = proposal(root, channel, purpose="owned-routing-program-proposal")
-        proposed = owned / "proposed-application"
-        shutil.copytree(root, proposed, ignore=shutil.ignore_patterns(".cutback", "__pycache__"))
-        patch, rollback = owned / "change.patch", owned / "rollback.patch"
-        patch.write_text(artifact["diff"], encoding="utf-8", newline="")
-        rollback.write_text(artifact["rollback_diff"], encoding="utf-8", newline="")
-        git(proposed, "apply", "--check", str(patch))
-        git(proposed, "apply", str(patch))
-        git(proposed, "add", "routing.json")
-        git(proposed, "commit", "-m", "Review independent confirmed routing program")
-        contract = check_contract(
-            root,
-            proposed,
-            [ApplicationCommand(key="native-application", arguments=["check_application.py"])],
-        )
-        checked = run_checks(contract, root, proposed, execute_local=True)
-        reviewed = review(
+        handoff = owned / "checked-handoff"
+        preview = finish(
             root,
             channel,
+            destination=handoff,
             purpose="owned-current-routing-program-review",
-            contract=contract,
-            receipt=checked,
-            proposed_root=proposed,
-            coverage={"ticket-priority": ["native-application"]},
             branch="cutback/routing-program-review",
         )
-        git(proposed, "apply", "--check", str(rollback))
-        git(proposed, "apply", str(rollback))
-        if (proposed / "routing.json").read_bytes() != (root / "routing.json").read_bytes():
-            raise ValueError("ROUTING_PROGRAM_SAMPLE_ROLLBACK_BYTES_CHANGED")
-        git(proposed, "apply", str(patch))
+        coverage = {"ticket-priority": preview["command_keys"]}
+        reviewed = finish(
+            root,
+            channel,
+            destination=handoff,
+            purpose="owned-current-routing-program-review",
+            coverage=coverage,
+            execute_local=True,
+            branch="cutback/routing-program-review",
+        )
+        if reviewed["status"] != "REVIEWED":
+            raise ValueError("ROUTING_PROGRAM_SAMPLE_APPLICATION_CHECKS_DID_NOT_PASS")
         receipt.update(
-            both_application_trees_checked=True,
-            byte_exact_rollback_checked=True,
+            both_application_trees_checked=reviewed["both_application_trees_checked"],
+            byte_exact_rollback_checked=reviewed["byte_exact_rollback_checked"],
             local_review_ref=reviewed["local_review_ref"],
+            checked_handoff_workspace=str(handoff),
+            base_application=reviewed["base_root"],
+            proposed_application=reviewed["proposed_root"],
             source_change_applied=False,
         )
-        write_private(owned / "proposal.json", artifact)
-        write_private(owned / "checks.json", checked)
-        write_private(owned / "contract.json", contract.model_dump(mode="json"))
-        write_private(owned / "coverage.json", {"ticket-priority": ["native-application"]})
-        write_private(owned / "review.json", reviewed)
+        for name in ("proposal.json", "checks.json", "contract.json", "review.json"):
+            write_private(owned / name, read_private(handoff / name))
+        for name in ("change.patch", "rollback.patch"):
+            write_private_text_output(owned / name, (handoff / name).read_text(encoding="utf-8"))
+        write_private(owned / "coverage.json", coverage)
         write_private(owned / "receipt.json", receipt)
         return receipt
     finally:

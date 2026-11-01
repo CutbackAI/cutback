@@ -35,7 +35,7 @@ provider key and uses actual SDK parsing over closed synthetic transports.
 3. Prepare the whole program:
 
    ```sh
-   cutback routing program prepare . --baseline-snapshot SNAPSHOT_UUID \
+   cutback routing program prepare --target . --baseline-snapshot SNAPSHOT_UUID \
      --max-usd TOTAL_CEILING --max-requests TOTAL_REQUESTS \
      --max-wall-seconds TOTAL_SECONDS \
      --savings-per-success CONSERVATIVE_USD --forecast-successful-tasks VOLUME
@@ -49,7 +49,7 @@ provider key and uses actual SDK parsing over closed synthetic transports.
    hash, then approve once. Equivalently, after reviewing its private plan:
 
    ```sh
-   cutback routing program continue . --program-hash EXACT_HASH \
+   cutback routing program continue --target . --program-hash EXACT_HASH \
      --approval-reference OWNER_REFERENCE
    ```
 
@@ -58,10 +58,10 @@ provider key and uses actual SDK parsing over closed synthetic transports.
 5. Run or observe the same approved program:
 
    ```sh
-   cutback routing program run .
+   cutback routing program run --target .
    # Explicit owned local worker, using separately configured worker credentials:
-   cutback routing program run . --local-worker
-   cutback routing program status .
+   cutback routing program run --target . --local-worker
+   cutback routing program status --target .
    ```
 
    Remote mode needs Cutback plus HTTPX, not provider/server/database dependencies.
@@ -78,10 +78,61 @@ template after this program takes ownership of the saved agent journey.
 
 ## Check and review the change
 
-After successful untouched confirmation:
+After successful untouched confirmation, prepare the private handoff:
 
 ```sh
-cutback routing program proposal . --purpose-reference REVIEW_REF \
+cutback routing program finish --target . --workspace ../private-routing-review \
+  --purpose-reference REVIEW_REF
+```
+
+This refreshes collector authority and creates independent base/proposed Git
+workspaces, preserving the exact source commit and raw bytes. It exports only
+tracked ordinary files and the base commit/tree; ignored data, repository config,
+hooks and ancestor objects are not copied. Known tracked credential filenames
+cause refusal rather than silently dropping part of the checked source tree.
+This filename check is not a general secret scanner.
+
+The default preview executes no application checks. It discovers supported
+existing checks, writes `contract.json` and `discovery.json`, and checks the actual
+inverse/forward patch in the private proposed copy. Review those commands and
+their bounds. Alternatively pass `--commands COMMANDS.json` on both invocations
+to use an explicit [application-check contract](application-checks.md).
+
+Create `CONSUMERS.json` mapping each owner-declared policy consumer to the
+returned command keys. This is an explicit coverage assertion, not automatic
+proof that every consumer is exercised. Then resume the same workspace:
+
+```sh
+cutback routing program finish --target . --workspace ../private-routing-review \
+  --purpose-reference REVIEW_REF --coverage CONSUMERS.json --execute-local
+```
+
+The runner uses the current Python/Node runtime, a minimal fixture environment
+and explicit process/time/output bounds. Review the code before execution and
+make its dependencies available in that environment without changing application
+pins. It does not install packages or provide an OS sandbox. Provider/control
+credentials are not inherited by checks.
+
+Both frozen trees must pass. The command then refreshes current collector
+confirmation/content authority again and prepares a checked local review ref in
+the **private proposed repository**. The original source, index and refs remain
+unchanged. The result returns both workspace paths; inspect `checks.json`,
+`review.json`, `change.patch` and `rollback.patch` in the private handoff folder.
+It creates no remote PR and never merges, changes traffic or deploys.
+
+The ignored per-program journal binds the destination, exact source/proposal,
+commands and review branch. Coverage freezes before checks. Interrupted copying
+can use at most three fresh nonbillable attempts while preserving earlier files.
+A dispatched check with no durable receipt stops for reconciliation; it is never
+automatically rerun. A known complete receipt resumes without another check
+execution. Failed checks cannot become a review. Current authority still applies
+when reusing a receipt. This extension is under qualification and absent from
+published PyPI dev5.
+
+For separately managed workspaces, the lower-level commands remain available:
+
+```sh
+cutback routing program proposal --target . --purpose-reference REVIEW_REF \
   --output PRIVATE_CHANGE.json
 ```
 

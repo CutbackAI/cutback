@@ -1,5 +1,45 @@
 # Implementation progress
 
+31 October 2026 integrated checked routing handoff, **source acceptance;
+installed/archive/image/final hosted gates pending**. `routing program finish`
+now prepares two private independent repositories, preserving the exact base
+commit and raw source bytes without copying ignored files, repository config,
+hooks or ancestor objects. It previews existing check commands, verifies the
+actual inverse/forward patch, freezes owner-declared consumer coverage and runs
+checks only with explicit local execution. Known receipts reconcile lost replies;
+unknown dispatched checks stop without replay. Current collector authority is
+refreshed after checks before a local review ref is created. Original source,
+index and refs stay unchanged. It does not install dependencies or supply an OS
+sandbox, remote PR, deployment, independent coverage or customer-quality proof.
+
+The combined source selection passed **31 / two Windows directory-symlink
+fixture skips in 676.61 seconds** on SDK2 and **31 / two in 669.30 seconds** on
+SDK3, including native/real PostgreSQL confirmation, post-check rights revocation,
+the three independent sample scenarios, actual source export/check/rollback and
+local-review recovery. Earlier focused source scopes passed **14 in 192.98
+seconds**, **two real PostgreSQL/native journeys in 147.85 seconds**, and the
+interrupted private-rollback case **one in 21.27 seconds**. These scopes overlap
+and are not summed. Further tracked-credential, retained-receipt and review-ref
+guards were added after that collection and require the final frozen rerun.
+Ruff/format and mypy **404** source files pass.
+
+Snapshot/export reads also enforce the physical byte limit when a tracked file
+grows after its size check. The growing-file and tracked-credential refusal
+selection passed **two in 19.11 seconds**; the complete installed rerun remains
+required and is not implied by this focused result.
+
+The independent sample now uses the public handoff implementation; it no longer
+assembles its own copy/commit/check pipeline. Its receipt returns base/proposed
+paths and retains inspectable contracts, checks, diffs and review files. The
+remote minimal-client gate exercises reuse with SDK/server dependencies absent.
+Core-only imports/help, release payloads and packaged agent guidance are updated.
+The guide also corrects program commands to use `--target` rather than an
+unsupported positional path. Migration `0033`, native execution contracts and
+the frontend/API remain unchanged by this client-only extension. The combined
+budget-to-review change remains under qualification in PR 77; all 17 checks must
+pass on its final integrated head. PyPI dev5 is unchanged; no paid inference or
+production deployment occurred. Broader cross-engine/platform work remains open.
+
 31 October 2026 routing-program **local final acceptance passed; protected
 hosted/publication gates pending**. The complete expiry-fairness installed
 selection passed **61 in 744.26 seconds** on OpenAI **2.29.0** and **61 in 742.02

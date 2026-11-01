@@ -10,7 +10,7 @@ Updated 31 October 2026. Cutback is a pre-alpha product with tested, bounded wor
 | Current GitHub source | The additional workflows below. Use the source instructions in the [README](../README.md), matching collector/agent versions and the committed lockfiles. |
 | Local qualification artifacts | Development wheels/images identified by their exact hashes in [progress](progress.md). They are not additional public PyPI releases. |
 
-Source merges do not update PyPI. The stage runner and checked campaign draft-PR publisher are accepted in [PR 76](https://github.com/CutbackAI/cutback/pull/76), after all 17 exact-head hosted gates passed. The new [whole routing program](routing-programs.md) is implemented and under final qualification; its publication gates remain open.
+Source merges do not update PyPI. The stage runner and checked campaign draft-PR publisher are accepted in [PR 76](https://github.com/CutbackAI/cutback/pull/76), after all 17 exact-head hosted gates passed. The new [whole routing program](routing-programs.md), including private workspace preparation, existing checks and refreshed local review through `routing program finish`, is implemented and under final qualification in PR 77; its publication gates remain open.
 
 ## Working source journeys
 

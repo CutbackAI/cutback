@@ -27,16 +27,19 @@ Inspect each returned workspace under ignored `.cutback/routing-program-example/
 | Artifact | Meaning |
 |---|---|
 | `application/` | Independent original committed application and ignored agent journal |
-| `proposed-application/` | Exact candidate configuration and local review ref, for passing scenarios |
+| `checked-handoff/attempt-*/base/`, `proposed/` | Exact independent source copies; the receipt returns their paths |
 | `proposal.json`, `change.patch`, `rollback.patch` | Current confirmed source diff and reversal |
 | `checks.json`, `review.json` | Actual native consumer checks on both trees and declared coverage |
 | `receipt.json` | Native request counts, known subtotal, chosen phases and unknown full-task costs |
 
-Both passing scenarios execute the application's real SDK consumer with closed
-test transports and verify byte-exact rollback. The script preserves the original
-application and creates a proposed checkout; it never changes application traffic
-or publishes a remote branch. The unknown-billing scenario produces no source
-proposal and retains the full uncertain reservation.
+Both passing scenarios use the public `routing program finish` implementation:
+preview, existing-check discovery, declared coverage, actual consumer checks on
+both trees, current authority refresh and a local review ref. They verify the
+actual inverse/forward patch and byte-exact rollback. Git config/hooks, ignored
+data and ancestor history are not copied. The original application remains
+unchanged. The unknown-billing scenario produces no proposal and retains the full
+uncertain reservation. Native consumer replies remain closed synthetic transports;
+no remote branch or application traffic is changed.
 
 Open the returned dashboard URL and select **Routing** to inspect the parent,
 children and shared cost counters. Browser credentials remain in memory. Pass
