@@ -51,6 +51,7 @@ def lock_preparation_identity(session, kind, identity):
         "criteria-draft",
         "experiment-plan",
         "learned-routing-fit",
+        "routing-program",
         "scenario-draft",
         "scenario-import",
         "source-scan",

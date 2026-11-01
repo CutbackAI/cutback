@@ -1710,4 +1710,7 @@ def install_evaluation(app, sessions, authorize, scope):
     from cutback.server.routing_api import install_routing
 
     install_routing(app, sessions, authorize, scope, create_plan)
+    from cutback.server.routing_program_api import install_routing_programs
+
+    install_routing_programs(app, sessions, authorize, scope)
     return import_dataset

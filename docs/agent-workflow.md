@@ -40,6 +40,15 @@ reconcile with the collector operator; do not mint replacement IDs, erase the
 journal or repeatedly upload the same content to bypass that stop.
 This extension is under qualification and is absent from published dev5.
 
+For a qualified source-routing application with an observed complete task-cost
+snapshot and owner opportunity/budget declarations, use the working-source
+[whole routing program](routing-programs.md) after preparing its unapproved
+training template. It tries simple native alternatives before spending on
+training, then automatically continues to one untouched confirmation under the
+same approved envelope. The [independent sample](../examples/routing-program/README.md)
+includes skipped training, conditional fitting, unknown billing and checked
+rollback. This remains a separate qualified engine, not universal strategy selection.
+
 The source-only `workflow prepare --automatic` selects the qualified preparation
 adapter for one workflow: native model/output-cap search, joint model/context
 search, retrieval search, or source-bound learned routing. It freezes that choice before collector

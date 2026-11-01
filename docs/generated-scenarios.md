@@ -1,6 +1,6 @@
 # Reviewed development scenarios
 
-This source increment is under qualification. It adds one approved native scenario-generation call, synthetic personas, owner-declared coverage goals, private review, and import into a development-only validation dataset. The independent sample uses mock HTTP transport through the actual supported SDK; it makes no paid provider request.
+This bounded source increment is accepted in [PR 57](https://github.com/CutbackAI/cutback/pull/57), with exact artifact/hosted evidence in [progress](progress.md). It is absent from published PyPI dev5. It adds one approved native scenario-generation call, synthetic personas, owner-declared coverage goals, private review, and import into a development-only validation dataset. The independent sample uses mock HTTP transport through the actual supported SDK; it makes no paid provider request.
 
 Run the independent local example from the repository checkout with Docker available:
 

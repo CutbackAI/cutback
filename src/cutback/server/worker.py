@@ -238,6 +238,19 @@ def run_one(
                 job.status = record.status = "FAILED"
                 record.results = {"code": "CAMPAIGN_AUTHORITY_OR_TRANSPORT_INVALID"}
                 return {"status": "FAILED", "provider_calls": 0}
+            from cutback.server.routing_program_service import authorize_program_run
+
+            try:
+                authorize_program_run(
+                    session,
+                    store,
+                    record.id,
+                    synthetic_transport=getattr(executor, "synthetic_transport", False),
+                )
+            except ValueError:
+                job.status = record.status = "FAILED"
+                record.results = {"code": "ROUTING_PROGRAM_AUTHORITY_OR_TRANSPORT_INVALID"}
+                return {"status": "FAILED", "provider_calls": 0}
             if owned_executor:
                 if (
                     plan.episode_execution
@@ -414,6 +427,12 @@ def run_one(
 
                 require_current_import(session, store, session.get(DatasetRecord, dataset_id))
                 authorize_campaign_run(
+                    session,
+                    store,
+                    run_id,
+                    synthetic_transport=getattr(executor, "synthetic_transport", False),
+                )
+                authorize_program_run(
                     session,
                     store,
                     run_id,

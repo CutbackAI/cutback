@@ -85,6 +85,11 @@ from cutback.server.review_db import (
     ReviewResolution,
     ReviewVote,
 )
+from cutback.server.routing_program_db import (
+    RoutingProgramRecord,
+    RoutingProgramRun,
+    RoutingProgramSelection,
+)
 from cutback.server.scenario_db import ScenarioDatasetImport, ScenarioVersionRecord
 from cutback.server.semantic_cache_db import (
     SemanticCacheMember,
@@ -120,6 +125,9 @@ def install_privacy(app, sessions, authorize, scope):
         def records():
             with sessions() as session:
                 for cls in (
+                    RoutingProgramRecord,
+                    RoutingProgramRun,
+                    RoutingProgramSelection,
                     ScenarioDatasetImport,
                     ScenarioVersionRecord,
                     CriteriaExperimentUse,
@@ -362,6 +370,9 @@ def install_privacy(app, sessions, authorize, scope):
                 .values(state="REVOKED", active_qualification_id=None, active_approval_hash=None)
             )
             for cls in (
+                RoutingProgramSelection,
+                RoutingProgramRun,
+                RoutingProgramRecord,
                 ScenarioDatasetImport,
                 ScenarioVersionRecord,
                 CriteriaExperimentUse,

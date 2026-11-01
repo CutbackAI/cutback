@@ -6,8 +6,9 @@ unknown; configuration cannot reconstruct them. Response identity is metadata,
 not invoice verification. The receipt retains the approved price reference and
 known modeled cost separately.
 
-This source implementation is under qualification. It is not included in the
-already published development package until a separately approved release.
+This bounded source implementation is accepted in [PR 58](https://github.com/CutbackAI/cutback/pull/58).
+Exact artifact/hosted gates and limits are in [progress](progress.md). It is not
+included in published PyPI dev5; a source merge does not publish a package.
 
 Reactive simulation runs a separately approved user model after the original
 scripted user turns. The model receives the persona and the conversation actually

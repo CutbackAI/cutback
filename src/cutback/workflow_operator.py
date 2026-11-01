@@ -79,6 +79,8 @@ def run_workflow(
     if type(local_worker) is not bool:
         raise ValueError("WORKFLOW_OPERATOR_LOCAL_WORKER_FLAG_REQUIRED")
     initial = load_session(root)
+    if initial.get("routing_program"):
+        raise ValueError("ROUTING_PROGRAM_OWNS_TEMPLATE_USE_ROUTING_PROGRAM_RUN")
     expected = identity(initial)
     if initial.get("endpoint") != control.endpoint:
         raise ValueError("COLLECTOR_DESTINATION_MISMATCH")

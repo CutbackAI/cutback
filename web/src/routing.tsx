@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { RoutingPrograms } from "./routing-programs";
 import {
   type API,
   type Data,
@@ -255,18 +256,24 @@ export function LearnedRouting({
     <section aria-label="Learned input-size routing">
       <h2>Learn input-size routing</h2>
       <p>
-        Compare native models on training cases, fit a bounded policy, then
-        validate it and confirm once on untouched groups. Training fit is not
-        independent quality evidence. Fitting makes no provider request; each
-        comparison has its own reviewed budget.
+        Compare simple native alternatives under one program budget, and train
+        an input-size router only if those alternatives fail. Separate stage
+        controls remain below. Training fit is not independent quality evidence;
+        fitting makes no provider request.
       </p>
       <p className="hint">
-        Input size is a declared feature, not a claim of task difficulty. The
-        policy falls back to the baseline for longer inputs within its approved
-        input bound. Router hosting and fitting costs stay unknown unless
-        separately measured. Application integration requires its own review.
+        Input size is a declared feature, not a claim of task difficulty.
+        Proposed policies preserve the application's approved input bound.
+        Router hosting and fitting costs stay unknown unless separately
+        measured. Application integration requires source checks and review.
       </p>
       {error && <p role="alert">{error}</p>}
+      <RoutingPrograms
+        api={request}
+        base={base}
+        admin={admin}
+        templates={training}
+      />
       {admin && (
         <details>
           <summary>1. Prepare a training comparison</summary>

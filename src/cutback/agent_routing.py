@@ -334,6 +334,8 @@ def advance(root, control, *, plan_hash=None, approval_ref=None):
     root, directory = workspace(root)
     with workspace_lock(directory):
         state = load_session(root)
+        if state.get("routing_program"):
+            raise ValueError("ROUTING_PROGRAM_OWNS_TEMPLATE_USE_ROUTING_PROGRAM_CONTINUE")
         if state["endpoint"] != control.endpoint:
             raise ValueError("COLLECTOR_DESTINATION_MISMATCH")
         base = f"/v1/projects/{state['project_id']}"

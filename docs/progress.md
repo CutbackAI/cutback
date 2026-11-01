@@ -1,5 +1,114 @@
 # Implementation progress
 
+31 October 2026 routing-program final follow-up. The dashboard-copy installed
+wheel passed **52 in 577.70 seconds** on SDK2 and **52 in 577.72 seconds** on
+SDK3, including real PostgreSQL, the independent HTTP-only client and
+authenticated desktop/mobile/accessibility coverage. The new failed-confirmation
+scope passed **seven in 208.57 seconds** after correcting its error-envelope
+assertion; both a simple-model winner and a learned router refuse a proposal
+after a failed untouched confirmation, without another native run.
+
+The subsequent expiry-fairness wheel is
+`ec6deb3d75bdf9d9092359d6b5807d9bb87be7eba768c51d25a46252e197319a`.
+Its exact non-root image
+`sha256:0360b42e2c2d82bf54749b26d7177e16bef66df74e3e1b4e7d039fd01f2c288a`
+matches all **428** application files and passes the complete **103-table /
+3,120-object** restore/rekey and parent/selection/source checks again. Its
+two-tenant **2,000 / 2,000** ingest/replay profile took **2.281 seconds**, not an
+SLA. Both final installed native regression scopes are running against that
+frozen artifact. README/status-only changes make first use and version boundaries
+clearer; they require regenerated publication metadata and archive validation.
+All current-head hosted gates remain mandatory before merge. No production,
+paid inference or new PyPI publication occurred.
+
+31 October 2026 routing-program packaging and isolation follow-up, **final
+publication still pending**. The first frozen installed regression scope passed
+**93 in 1,075.21 seconds** on SDK2 and **93 in 1,075.27 seconds** on SDK3.
+The separate frozen unit scopes passed **1,532 / 27 skips in 857.11 seconds**
+and **1,549 / 10 in 857.02 seconds**. They overlap earlier checks and are not
+summed. The subsequent dashboard-copy wheel
+`3df44d3dfcc962e12dd40051929b6ac8be157f72090d1f9b7593c7eddc691c1e`
+passes fresh core-only installation and source/check discovery. Its production
+frontend rebuild reproduces the committed assets; fresh SDK2/SDK3 environments
+and the read-only network-disabled image match all **428** application files.
+
+That exact image, `sha256:8a9237986f6a750c1d857063fe182c62219273904a85ab74735e2a48532f176d`,
+completed non-root schema-0033 recovery: **103** table counts and **3,120** rekeyed
+objects, including **40** plans, **17** caches and **24** native profiles. The new
+parent approval, shared budget counters, frozen selection, authenticated fit and
+current source proposal survive key-only restore. Its independent routing sample
+made **384 synthetic native SDK calls**, checked both application trees and
+verified byte-exact rollback. A separate **2,000** accepted / **2,000** duplicate
+two-tenant profile took **2.390 seconds**; it is not an SLA or paid model result.
+
+Review then found expiry sweeps waiting on a busy project's mutation lock. Both
+campaign and routing expiry now take at most one candidate per project and skip
+busy projects without resetting authorization. Real PostgreSQL routing/campaign
+lock, expiry, late-bill retention and existing control checks pass **10 in 57.45
+seconds**. Those two runtime follow-ups require a new frozen artifact and final
+acceptance; the earlier image is not relabeled as testing changed bytes. New
+untouched-confirmation rejection checks are also being qualified. Initial new
+tests expected the default HTTP error envelope and replaced an earlier fixture's
+encrypted store before approval; both fixture assumptions were corrected. No
+failed run is counted as a pass. Wider cross-engine/platform work and independent
+customer acceptance remain open; PyPI dev5 is unchanged.
+
+31 October 2026 agent handoff **merged in [PR 76](https://github.com/CutbackAI/cutback/pull/76)**,
+merge `ffdacaec2b573594f36147c7d95483006bd87343`, with the exact reviewed tree.
+All **17** hosted jobs passed at `2b7cc830f288a9812c1c8e4f6e3c1ad950167807`:
+CI `41257816347`, Security `41257816332`. Full Python 3.11 verification passed
+**2,434 / 40 skipped in 3,270.17 seconds**; Python 3.13 **2,433 / 41 in 2,146.20
+seconds**. The separate HTTP-only gates passed. SDK3 core passed **1,532 / 5**
+and **1,533 / 4**, workflows **272 / 9** each, systems **386 / 5** each; both
+protected aggregate gates, both legacy jobs, isolated tools, infrastructure,
+dependency audit and both CodeQL jobs passed. These overlapping scopes are not
+summed. PR 75 is closed as superseded. No failed gate was waived and no private
+Git history was transferred. Published PyPI dev5 remains unchanged.
+
+31 October 2026 routing-program qualification follow-up. The combined source
+agent/native/independent-sample scope passed **10 in 289.87 seconds**, including
+the corrected full local-review ref. API/schema/dispatcher fairness passed
+**five in 32.72 seconds**. A further same-project source/template receipt guard
+passed **four in 0.15 seconds**. Source Ruff/format and mypy **402** files pass;
+the publication boundary scanned **1,252** files with zero findings before that
+extra unit file. These are development scopes, not final installed acceptance.
+The first complete container seed exceeded its existing **180-second** harness
+timer after the new program was appended to all prior fixtures. The program now
+has a separate bounded seed operation; its approved **600-second** native
+deadline is unchanged. That interrupted image run is not a recovery pass.
+
+31 October 2026 routing-program working source, **not yet published or finally
+qualified**. New additive migration `0033` introduces scoped parent/run/selection
+records; migrations `0001`–`0032` are unchanged. The program reserves native
+controls, conditional train/fit/routed validation and untouched confirmation in
+one approved envelope. Static success skips training. Parent/child counters use
+the canonical project-locked ledger; incomplete bills retain reservations and
+late settlement cannot revive cancelled work. Current rights, principal, vendor,
+ownership, immutable selection and persistent test families remain checked.
+
+Source acceptance so far: **19** pure budget/confirmation-gate checks in **0.42
+seconds**; **12** real PostgreSQL ledger/retention/migration-contract checks in
+**23.10 seconds**; **three** native SDK routing journeys in **84.51 seconds**;
+authenticated desktop/mobile/viewer/axe dashboard acceptance **one in 14.27
+seconds**. These scopes overlap earlier trials and are not summed. The first
+browser pass found a keyboard-inaccessible scrollable private specification;
+the focused block now receives keyboard focus. Earlier source trials caught a
+missing preparation-lock kind, a synthetic executor lacking router dispatch,
+and a generic source gate that intentionally excluded routing. Routing now has
+its own frozen confirmation gate; the ordinary source-edit gate is unchanged.
+A local-review assertion used a branch shorthand instead of its full ref and
+was corrected; its full rerun remains part of the pending acceptance scope.
+
+The API/OpenAPI/types and React production build are updated. The resumable
+HTTP-only agent prevents separately executing its old training template after
+program selection; the optional local operator uses the same canonical worker.
+New independent samples cover conditional routing, simple-model success and
+unknown billing, with actual both-tree checks and rollback. Their final source,
+SDK2/SDK3, independent wheel client, archive, non-root 103-table recovery and all
+exact-head hosted gates remain pending. Fit/hosting/engineering dollars and
+production benefit stay unknown. No paid inference, production deployment or
+new PyPI upload is authorized by these engineering checks. [Contract and limits](routing-programs.md).
+
 31 October 2026 final agent handoff qualification. The exact draft-publication
 wheel `bf3fa5100cea87d64c59e3562c7a14907be2861be7dc1ed3fe4d0840912659f8`
 passed **67 installed checks / one unavailable Windows symlink-privilege skip**

@@ -88,7 +88,7 @@ def sample_cases():
     return result
 
 
-def synthetic_executor():
+def synthetic_executor(*, simple_controls_pass=False, unknown_usage=False):
     import httpx
 
     from cutback.evals.executors import OpenAIExecutor
@@ -107,12 +107,16 @@ def synthetic_executor():
             raise ValueError("SYNTHETIC_ROUTING_REQUIRES_PLAIN_TEXT_INPUT")
         text = body["input"]
         output = "Urgent" if "Priority: urgent." in text else "Normal"
-        if body["model"] == "gpt-4.1-mini" and len(text.encode()) > 100:
+        if (
+            not simple_controls_pass
+            and body["model"] == "gpt-4.1-mini"
+            and len(text.encode()) > 100
+        ):
             output = "Normal"  # An intentionally bad fixture on some long tasks.
         if body["model"] == "gpt-4.1-nano":
             output = "Normal"  # The cheapest constant fixture is not a useful router.
         calls.append({"model": body["model"], "input_bytes": len(text.encode())})
-        return httpx.Response(
+        response = httpx.Response(
             200,
             json={
                 "id": "resp_owned_" + uuid4().hex,
@@ -138,6 +142,11 @@ def synthetic_executor():
                 },
             },
         )
+        if unknown_usage:
+            value = response.json()
+            value.pop("usage", None)
+            return httpx.Response(200, json=value)
+        return response
 
     with patch.dict("os.environ", {"CUTBACK_EXPERIMENT_OPENAI_KEY": "owned-synthetic-only"}):
         native = OpenAIExecutor(

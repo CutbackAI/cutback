@@ -13,6 +13,9 @@ def register_routing(app, output, request, fail):
         no_args_is_help=True, help="Fit train-only native routes, validate and confirm."
     )
     app.add_typer(group, name="routing")
+    from cutback.cli_routing_program import register_routing_program
+
+    register_routing_program(group, output, fail)
 
     def identity(value):
         try:
