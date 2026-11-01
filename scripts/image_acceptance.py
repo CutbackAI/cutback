@@ -21,6 +21,7 @@ from uuid import uuid4
 
 import httpx
 import psycopg
+from application_readiness_acceptance import qualify as qualify_readiness
 from backup_restore import backup, compose, restore
 from policy_cached_acceptance import SEED as POLICY_CACHED_SEED
 from policy_runtime_acceptance import SEED as POLICY_RUNTIME_SEED
@@ -500,6 +501,7 @@ def main(
         raise ValueError("SECURITY_IMAGE_GATE_REQUIRES_ACTUAL_ISOLATED_TOOLS")
 
     image_id = json.loads(checked(["docker", "image", "inspect", image]))[0]["Id"]
+    readiness_runtime = qualify_readiness(image_id, checked=checked)
     async_policy_runtime = qualify_async_policy_runtime(image_id) if source_policy else None
     password = (ROOT / "infra/compose/secrets/db_password").read_text().strip()
     kwargs = dict(host="127.0.0.1", port=55432, user="cutback", password=password, dbname="cutback")
@@ -1390,6 +1392,7 @@ engine.dispose()
                     "routing_program_sample": routing_sample,
                     "source_policy_program_sample": policy_sample,
                     "source_policy_async_native_runtime": async_policy_runtime,
+                    "offline_application_readiness": readiness_runtime,
                     "image": image,
                     "image_id": image_id,
                     "uid": 10001,

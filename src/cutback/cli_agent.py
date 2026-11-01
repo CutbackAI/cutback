@@ -73,6 +73,23 @@ def register_agent(app, output, fail):
         else:
             typer.echo(render_source_guide(report))
 
+    @group.command("diagnose")
+    @guarded
+    def diagnose(
+        target: Path = Path("."),
+        workflow: str | None = None,
+        json_output: Annotated[bool, typer.Option("--json")] = False,
+    ):
+        """Refresh offline discovery and explain source, check and permission readiness."""
+        from cutback.application_readiness import diagnose as inspect
+        from cutback.application_readiness import render
+
+        report = inspect(target, workflow=workflow)
+        if json_output:
+            output(report)
+        else:
+            typer.echo(render(report))
+
     @group.command("prepare")
     @guarded
     def prepare(

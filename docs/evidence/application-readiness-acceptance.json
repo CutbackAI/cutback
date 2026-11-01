@@ -1,0 +1,83 @@
+{
+  "contract": "cutback.application-readiness-acceptance.v1",
+  "date": "2026-11-01",
+  "status": "LOCAL_COMPONENT_QUALIFIED_EXACT_HEAD_HOSTED_PENDING",
+  "actual_runtime_source_revision": "348150103866564fbeb17d2c77f00fc0d0a3228d",
+  "wheel_sha256": "5159259bba84cacf2fec2dc5b381d65285e0ffd01223bf32bc6dc698c5e8e3b4",
+  "image_id": "sha256:d1f528aff85f4ef807dc72fe569627eeb389cc6598b366da2087321c535c8059",
+  "identical_application_files": 489,
+  "installed_sdk_tests": {
+    "2.29.0": {
+      "passed": 77,
+      "skipped": 2,
+      "seconds": 196.74,
+      "log_sha256": "385aeda5274fdf0fe1df8203875e56060916ca92a15822c814342d154b305f15",
+      "skip_scope": "Existing directory-symlink tests require host privileges on Windows.",
+      "new_readiness_cases_passed": true,
+      "pydantic": "2.14.1"
+    },
+    "3.35.1": {
+      "passed": 77,
+      "skipped": 2,
+      "seconds": 189.46,
+      "log_sha256": "097f90a59374de787619857882c95b0233d9bdda4f0f7a1125ab1a2dd6aa3bc8",
+      "skip_scope": "Existing directory-symlink tests require host privileges on Windows.",
+      "new_readiness_cases_passed": true,
+      "pydantic": "2.14.1"
+    }
+  },
+  "source_frozen_selection": {
+    "passed": 22,
+    "skipped": 0,
+    "seconds": 36.82
+  },
+  "core_only_installation": {
+    "actual_runtime_source_head": "348150103866564fbeb17d2c77f00fc0d0a3228d",
+    "wheel_sha256": "5159259bba84cacf2fec2dc5b381d65285e0ffd01223bf32bc6dc698c5e8e3b4",
+    "script_sha256": "afb784bead258746ca6c88526f6ed04fc04f6c14c00a1524ce3d92620c2de47f",
+    "core_wheel_smoke_passed": true,
+    "new_independent_core_environment": true,
+    "optional_openai_fastapi_httpx_absent": true,
+    "provider_calls": 0,
+    "log_sha256": "844c28d97cc9c87002df0dbea7713e6a8569b4e8bb1a827849c8fc6cec7cf886"
+  },
+  "container_boundary": {
+    "passed": 3,
+    "skipped": 0,
+    "seconds": 6.96,
+    "log_sha256": "00dd46f846e8227008e880f07aa24d3b249c19be100b3bb0615f84a142e7fae6",
+    "checker_sha256": "1a5a9ca099d93321a90fec64ed856611e00d7cca494dbbe0bdccc3944aef1761",
+    "native_request_and_whole_policy_diagnosis": true,
+    "linux_symlink_root_and_private_workspace_denials": true,
+    "lost_verified_running_client_cleanup": true,
+    "wrong_owner_container_preserved": true,
+    "read_only_nonroot_network_none": true,
+    "configured_daemon_deadline_seconds": 80,
+    "daemon_deadline_expiry_tested": false,
+    "scope": "Installed CLI and checker containment; no repeat of complete server recovery."
+  },
+  "earlier_source_trials": [
+    {
+      "passed": 17,
+      "seconds": 54.86
+    },
+    {
+      "passed": 31,
+      "failed": 1,
+      "skipped": 1,
+      "seconds": 128.73,
+      "reason": "New test incorrectly assumed a fixed-policy fixture had no separate native test entrypoint. Fixed consumers are now listed separately."
+    },
+    {
+      "passed": 19,
+      "seconds": 56.82
+    }
+  ],
+  "application_commands_executed_by_diagnosis": 0,
+  "provider_calls": 0,
+  "collector_contacted_by_diagnosis": false,
+  "rights_or_application_sdk_qualification_inferred": false,
+  "production_changed": false,
+  "new_pypi_release": false,
+  "all_platform_features_completed": false
+}

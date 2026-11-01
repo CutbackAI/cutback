@@ -147,6 +147,7 @@ include = [
   '/scripts/mixed_capacity_acceptance.py',
   '/scripts/instrumentation_profile.py','/docs/sdk-performance.md',
   '/docs/incident-comments.md',
+  '/docs/application-readiness.md','/scripts/application_readiness_acceptance.py',
 ]
 
 [tool.pytest.ini_options]

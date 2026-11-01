@@ -2,6 +2,14 @@
 
 Updated 1 November 2026. Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business.
 
+[Offline application readiness](application-readiness.md) passed local component qualification.
+It combines source blockers, workflow selection, startup/check readiness and
+missing rights/budget decisions without executing application code. Both pinned
+SDK selections, a core-only installation and the offline non-root image passed;
+[the receipt](evidence/application-readiness-acceptance.json) preserves exact
+scope and the two Windows privilege skips. Exact-head hosted acceptance remains
+pending; it is absent from PyPI dev5.
+
 [Encrypted incident comments](incident-comments.md) passed local component
 qualification: fresh installed SDK and independent HTTP-only client selections,
 authenticated browser/mobile/axe, resumable sample and complete new-image

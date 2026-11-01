@@ -140,6 +140,7 @@ jobs:
           export CUTBACK_TEST_APPLICATION_CHECK_NODE_IMAGE_ID="$(docker image inspect --format '{{.Id}}' node@sha256:0e5f906573693feaa1e21057ebdcfdb5bd5021f050b2dc7c9deceb629c7da2a8)"
           uv run python scripts/check.py tests/unit/test_application_container.py tests/unit/test_application_container_crash.py tests/unit/test_application_container_controls.py tests/integration/test_application_container_handoff.py -q
           uv run python scripts/check.py tests/unit/test_routing_publication.py -k v2_container -q
+          uv run python scripts/check.py tests/unit/test_readiness_image_boundary.py -q
       - name: Remove this job's owned image-acceptance database
         if: always()
         run: docker compose -f infra/compose/docker-compose.yml down --volumes --remove-orphans
@@ -256,6 +257,7 @@ jobs:
           tests/integration/test_shared_dashboards.py
           tests/integration/test_incident_comments.py
           tests/unit/test_image_execution_pipe.py
+          tests/unit/test_application_readiness.py
           tests/integration/test_incident_comments_remote_minimal.py
           tests/unit/test_policy_activity.py
           tests/unit/test_policy_activity_observer.py

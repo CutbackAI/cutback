@@ -1,5 +1,32 @@
 # Implementation progress
 
+Application readiness diagnosis has **passed local component qualification**;
+exact-head hosted acceptance remains pending. The new offline
+command combines fresh bounded source discovery, known request blockers,
+workflow selection, guarded tracked check candidates, startup proposals and
+explicit missing permissions. It preserves active experiment intents and shows
+tool interpreter metadata separately from unknown application SDK pins. The
+first source selection passed **17 in 54.86 seconds**, including the existing
+source guidance tests. An expanded selection passed 31, skipped one platform
+fixture and failed one new startup expectation: the synthetic policy application
+also has a separate native test entrypoint. The report now lists fixed consumers
+separately and keeps valid external startup proposals. The corrected source
+selection passed **19 in 56.82 seconds**; counts overlap. Static checks passed
+for **462 modules**. No application command, provider request or collector probe
+is authorized. The final frozen source selection passed **22 in 36.82 seconds**,
+zero skips. Both fresh installed SDK selections passed **77**, with **two existing
+Windows directory-symlink privilege skips**, in **196.74 / 189.46 seconds**. The
+new readiness cases all passed. The fresh core-only wheel smoke passed without
+OpenAI, FastAPI or HTTPX. The actual new image's 489 application files match its
+wheel; offline non-root/read-only diagnosis passed for native and policy
+consumers. Actual Linux symlink root/workspace guards and verified-running-client
+loss/ownership-safe cleanup passed **three in 6.96 seconds**, zero skips. The
+checker uses a separate daemon deadline; expiry of that deadline was not tested
+in this component selection. No complete new-image server recovery is claimed
+for this CLI-only change; the preceding comment runtime has its separate full
+recovery evidence. The [receipt](evidence/application-readiness-acceptance.json)
+binds package/image identity, actual checker hash, log hashes and prior failures.
+
 Cached-current source-policy v2 and isolated local-container application checks
 have **passed all 18 reviewed-head hosted jobs and merged normally in
 [PR 82](https://github.com/CutbackAI/cutback/pull/82)**. The reviewed head was
