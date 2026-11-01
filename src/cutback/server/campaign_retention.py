@@ -3,7 +3,7 @@
 from datetime import UTC, datetime
 from uuid import UUID
 
-from sqlalchemy import delete, or_, select, true
+from sqlalchemy import delete, func, or_, select, true
 
 from cutback.server.campaign_db import (
     CampaignCandidate,
@@ -13,7 +13,7 @@ from cutback.server.campaign_db import (
     CampaignSelection,
 )
 from cutback.server.campaign_ledger import ACTIVE
-from cutback.server.dataset_lineage import lock_lineage
+from cutback.server.dataset_lineage import try_lock_lineage
 from cutback.server.db import AuditEvent
 
 
@@ -24,20 +24,35 @@ def expire_campaigns(sessions, *, now=None, only_campaign_id=None):
     identifier = UUID(str(only_campaign_id)) if only_campaign_id is not None else None
     statuses = {"QUEUED", "READY_FOR_APPROVAL", *ACTIVE}
     with sessions() as reader:
-        expired = reader.execute(
+        ranked = (
             select(CampaignRecord.id, CampaignRecord.project_id)
+            .add_columns(
+                CampaignRecord.expires_at.label("expires"),
+                func.row_number()
+                .over(
+                    partition_by=CampaignRecord.project_id,
+                    order_by=(CampaignRecord.expires_at, CampaignRecord.id),
+                )
+                .label("rank"),
+            )
             .where(
                 CampaignRecord.status.in_(statuses),
                 CampaignRecord.id == identifier if identifier is not None else true(),
                 or_(CampaignRecord.expires_at <= now, CampaignRecord.deadline_at <= now),
             )
-            .order_by(CampaignRecord.expires_at, CampaignRecord.id)
+            .subquery()
+        )
+        expired = reader.execute(
+            select(ranked.c.id, ranked.c.project_id)
+            .where(ranked.c.rank == 1)
+            .order_by(ranked.c.expires, ranked.c.id)
             .limit(100)
         ).all()
     count = 0
     for identifier, project in expired:
         with sessions.begin() as session:
-            lock_lineage(session, project)
+            if not try_lock_lineage(session, project):
+                continue
             row = session.get(CampaignRecord, identifier, with_for_update=True)
             if (
                 row

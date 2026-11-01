@@ -24,7 +24,7 @@ Add versioned external evaluation-result metadata with exact targets, source/eva
 
 ## Release 2 — turn failures into trusted regression data
 
-Implementation: the bounded import/review/lineage workflow is implemented in the working source; [walkthrough and limits](imports-and-review.md), [independent example](../examples/review-workflow/README.md) and [acceptance/publication state](progress.md). Its bounded publication acceptance is recorded in progress.md; later features keep separate release gates. This does not implement Releases 3–7 or the scenario generator in A09.
+Implementation: the bounded import/review/lineage workflow is implemented in the working source; [walkthrough and limits](imports-and-review.md), [independent example](../examples/review-workflow/README.md) and [acceptance/publication state](progress.md). Later features keep separate release gates. Reviewed development scenario generation (A09) is separately accepted under [its own contract](generated-scenarios.md); it does not establish representative coverage or close Releases 3–7.
 
 **Baseline:** F07/F08, D05–D10, E07, A09. **User outcome:** select failures, distribute review, and create a maintained test dataset with provenance.
 
@@ -38,7 +38,7 @@ Promotion creates a new frozen dataset version with exact reviewed inputs/labels
 
 ## Release 3 — prompt versions and application experiments
 
-Implementation: the bounded registry/playground/alias and local-check journey is implemented and locally accepted; [contracts](prompt-releases.md), [portable checks](application-checks.md), [examples](../examples/prompt-releases/README.md) and [acceptance/publication state](progress.md). Its bounded publication gates are recorded in progress.md. Generated rubrics (P09), automatic shared-consumer scheduling (E09), tools and general conversation execution are still partial/later work; they are not implied by this increment.
+Implementation: the bounded registry/playground/alias and local-check journey is implemented and locally accepted; [contracts](prompt-releases.md), [portable checks](application-checks.md), [examples](../examples/prompt-releases/README.md) and [acceptance/publication state](progress.md). Generated deterministic/semantic rubrics have separate accepted contracts. Independent calibration, automatic shared-consumer scheduling (E09) and general application/tool/conversation coverage remain partial; they are not implied by this increment.
 
 **Baseline:** P01–P10, E06/E08/E09, F09. **User outcome:** author a change, compare it against declared application checks, and promote or roll back the exact version.
 
@@ -64,7 +64,7 @@ Add alert-rule and incident records with minimum samples, threshold/window, cool
 
 ## Release 5 — evaluate agents, retrieval and state
 
-Implementation: the bounded native fixture journey is locally accepted, including durable per-turn receipts, typed task/retrieval/state checks, encrypted episode revision, scenario drafts and independent support-agent/RAG dashboard samples. [Contracts and limits](agent-evaluation.md), [actual acceptance/publication state](progress.md). Optional [semantic episode judges](episode-semantic-judging.md) add bounded model proxies with separate reserved overhead; independent semantic verification, generative personas, real tools and specialty execution remain explicit gaps; this increment does not close the entire market baseline or Releases 6–7.
+Implementation: the bounded native fixture journey is accepted, including durable per-turn receipts, typed task/retrieval/state checks, encrypted episode revision and independent support-agent/RAG samples. [Contracts and limits](agent-evaluation.md), [actual acceptance/publication state](progress.md). Separate accepted contracts add [semantic proxies](episode-semantic-judging.md), [reviewed scenarios](generated-scenarios.md), [reactive users](reactive-users.md) and [contained SQL record tools](isolated-tools.md). Independent semantic verification, representative personas, general application tools and specialty execution remain explicit gaps; this does not close the entire market baseline or Releases 6–7.
 
 **Baseline:** A01–A10, X01–X04 as qualified specialties. **User outcome:** test the complete task, including alternative tool paths and final state.
 
@@ -87,7 +87,7 @@ Implementation: task outcomes, complete declared task-cost windows and cumulativ
 
 **Baseline:** C03–C10, G05/G06/G08/G09, X07/X08. **User outcome:** the agent prepares a useful change with less engineer effort and defensible total economics.
 
-The additional [actual local corpus workflow](retrieval-optimization.md) prepares bounded chunk/overlap/top-k/lexical-reranking alternatives, native answer evaluation, untouched confirmation and source-bound settings diffs with application-check review. Its acceptance/publication is tracked separately in progress.md. Remote/vector retrieval, tool selection, learned routing and other strategies remain unfinished.
+The additional [actual local corpus workflow](retrieval-optimization.md) prepares bounded chunk/overlap/top-k/lexical-reranking alternatives, native answer evaluation, untouched confirmation and source-bound settings diffs with application-check review. Its acceptance/publication is tracked separately in progress.md. Remote/vector retrieval, tool selection, general custom routing and unified strategy selection remain unfinished.
 
 The new [joint native/retrieval extension](joint-retrieval.md), under qualification,
 compares model/output-only, retrieval-only and combined alternatives on the same
@@ -103,6 +103,15 @@ Add pluggable candidate generators/optimizers with a strict adapter boundary. St
 The additional [source-bound learned routing journey](source-routing.md) now connects train-only fitting to current collector proposals, automatic agent stage preparation, exact configuration diffs, both-tree native consumer checks and local review/rollback. Final v16 acceptance is tracked in progress.md. This scoped plain-text Responses consumer does not close arbitrary routing, cross-engine selection or full-task economics.
 
 Choose search effort from the workload and expected break-even opportunity; abstain when evidence/volume/cost is unknown or benefit is too small. Adaptively select on validation, freeze a selected candidate, then separately confirm on untouched groups. Prepare application checks, exact diffs, affected-consumer tests and a reviewable branch/PR. Never deploy from the optimizer.
+
+The [whole routing program](routing-programs.md), under qualification, now
+reserves simple native controls, conditional training/fit/routed validation and
+one full untouched confirmation under a single approval. It skips training when
+a simple control passes and retains all trial costs and uncertain holds. It is
+a separate source-routing contract; a common dispatcher and shared comparison
+across cache, routing, prompt, retrieval, compression and training remain open.
+PR 76 supplies checked campaign draft-PR publication; routing currently ends at
+its own checked local review ref. Neither boundary is a deployment capability.
 
 The new [workload-bound native/cache portfolio](workload-native-portfolios.md)
 connects a canonical source window to automatic cache/model trial preparation,

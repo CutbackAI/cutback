@@ -64,6 +64,15 @@ def next_action(state):
             "provider_calls": 0,
             "automatic_billable_retry": False,
         }
+    if state.get("routing_program"):
+        return {
+            "code": "RESUME_SAME_ROUTING_PROGRAM",
+            "tool": "cutback routing program status",
+            "program": state["routing_program"],
+            "requires": ["whole_program_approval_before_worker_execution"],
+            "automatic_billable_retry": False,
+            "deployment_authorized": False,
+        }
     if state.get("search_mode") == "source_routing":
         from cutback.agent_routing import next_action as routing_action
 
@@ -1463,6 +1472,10 @@ def proposal(root, control, *, purpose, candidate=None):
         from cutback.agent_joint_retrieval import proposal as joint_retrieval_proposal
 
         return joint_retrieval_proposal(root, control, purpose=purpose, candidate=candidate)
+    if load_session(root).get("routing_program"):
+        from cutback.agent_routing_program import proposal as program_proposal
+
+        return program_proposal(root, control, purpose=purpose)
     if load_session(root).get("search_mode") == "source_routing":
         from cutback.agent_routing import proposal as routing_proposal
 

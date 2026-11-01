@@ -6,7 +6,9 @@ transactions inside a separately contained Linux process. It cannot execute an
 application's functions, arbitrary SQL, shell commands, URLs, browser actions or
 plugins. [Run the independent sample](../examples/isolated-tools/README.md).
 
-The feature is under qualification. PyPI `0.1.0.dev5` does not include it. The
+The bounded feature is accepted in [PR 46](https://github.com/CutbackAI/cutback/pull/46),
+with its exact installed/image/hosted gates in [progress](progress.md).
+PyPI `0.1.0.dev5` does not include it. The
 sample's native model responses are scripted; its container, HTTP requests,
 PostgreSQL intents, SQL effects, final-state checks and cleanup are real. Those
 checks do not establish real-model robustness, customer quality or savings.

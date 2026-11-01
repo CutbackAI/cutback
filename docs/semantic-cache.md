@@ -1,6 +1,6 @@
 # Qualify a semantic cache before serving answers
 
-This source feature is under qualification and is **not in PyPI dev5**. It reuses a curated answer from supplied dense vectors. It does not generate embeddings, silently invoke a model, or establish that similar questions have interchangeable answers.
+This bounded source feature is accepted in [PR 45](https://github.com/CutbackAI/cutback/pull/45), with exact artifact/hosted evidence in [progress](progress.md), and is **not in PyPI dev5**. It reuses a curated answer from supplied dense vectors. It does not generate embeddings, silently invoke a model, or establish that similar questions have interchangeable answers.
 
 ## Run the independent example
 

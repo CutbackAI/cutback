@@ -1,5 +1,12 @@
 # From a trained policy to a checked application change
 
+The working-source [routing program](routing-programs.md) puts native controls,
+conditional training and untouched confirmation under one approved envelope. Its
+[independent example](../examples/routing-program/README.md) also demonstrates
+skipping training and stopping on unknown billing. The separately approved stage
+workflow below remains available; do not approve its training template separately
+after the saved agent job has selected a program.
+
 This source feature is under qualification. Published PyPI `0.1.0.dev5` does not
 contain it. Use the current source environment and follow [progress](progress.md)
 for accepted artifacts. The [independent ticket application](../examples/source-routing/README.md)

@@ -1327,6 +1327,109 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/routing/programs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listing */
+        get: operations["listing_v1_projects__project_id__routing_programs_get"];
+        put?: never;
+        /** Prepare */
+        post: operations["prepare_v1_projects__project_id__routing_programs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/routing/programs/{program_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Detail */
+        get: operations["detail_v1_projects__project_id__routing_programs__program_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/routing/programs/{program_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve */
+        post: operations["approve_v1_projects__project_id__routing_programs__program_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/routing/programs/{program_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel */
+        post: operations["cancel_v1_projects__project_id__routing_programs__program_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/routing/programs/{program_id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Content */
+        post: operations["content_v1_projects__project_id__routing_programs__program_id__content_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/routing/programs/{program_id}/source-proposal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Proposal */
+        post: operations["proposal_v1_projects__project_id__routing_programs__program_id__source_proposal_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/native-request-profiles/analyses": {
         parameters: {
             query?: never;
@@ -10466,6 +10569,191 @@ export interface components {
              */
             max_fit_seconds: number;
         };
+        /** RoutingProgramApproval */
+        RoutingProgramApproval: {
+            /** Program Hash */
+            program_hash: string;
+            /** Approval Ref */
+            approval_ref: string;
+        };
+        /** RoutingProgramBrief */
+        RoutingProgramBrief: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            /**
+             * Template Plan Id
+             * Format: uuid
+             */
+            template_plan_id: string;
+            /**
+             * Dataset Id
+             * Format: uuid
+             */
+            dataset_id: string;
+            /** Program Hash */
+            program_hash: string;
+            /** Status */
+            status: string;
+            /** Approval Status */
+            approval_status: string;
+            /** Specification */
+            specification: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Economic Envelope */
+            economic_envelope: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Requests */
+            requests: number;
+            /** Known Cost Requests */
+            known_cost_requests: number;
+            /** Reserved Usd */
+            reserved_usd: string;
+            /** Known Spend Subtotal Usd */
+            known_spend_subtotal_usd: string;
+            /** Billing Complete */
+            billing_complete: boolean;
+            /** Summary */
+            summary: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Deadline At */
+            deadline_at: string | null;
+            /**
+             * Deployment Authorized
+             * @default false
+             */
+            deployment_authorized: boolean;
+        };
+        /** RoutingProgramCancel */
+        RoutingProgramCancel: Record<string, never>;
+        /** RoutingProgramDetail */
+        RoutingProgramDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Environment Id
+             * Format: uuid
+             */
+            environment_id: string;
+            /**
+             * Template Plan Id
+             * Format: uuid
+             */
+            template_plan_id: string;
+            /**
+             * Dataset Id
+             * Format: uuid
+             */
+            dataset_id: string;
+            /** Program Hash */
+            program_hash: string;
+            /** Status */
+            status: string;
+            /** Approval Status */
+            approval_status: string;
+            /** Specification */
+            specification: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Economic Envelope */
+            economic_envelope: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** Requests */
+            requests: number;
+            /** Known Cost Requests */
+            known_cost_requests: number;
+            /** Reserved Usd */
+            reserved_usd: string;
+            /** Known Spend Subtotal Usd */
+            known_spend_subtotal_usd: string;
+            /** Billing Complete */
+            billing_complete: boolean;
+            /** Summary */
+            summary: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Deadline At */
+            deadline_at: string | null;
+            /**
+             * Deployment Authorized
+             * @default false
+             */
+            deployment_authorized: boolean;
+            /** Runs */
+            runs: {
+                [key: string]: components["schemas"]["JsonValue"];
+            }[];
+        };
+        /** RoutingProgramDraft */
+        RoutingProgramDraft: {
+            /**
+             * Request Id
+             * Format: uuid4
+             */
+            request_id: string;
+            /**
+             * Template Plan Id
+             * Format: uuid
+             */
+            template_plan_id: string;
+            /**
+             * Baseline Snapshot Id
+             * Format: uuid
+             */
+            baseline_snapshot_id: string;
+            fit?: components["schemas"]["RoutingFitOptions"];
+            budget: components["schemas"]["CampaignBudget"];
+            /** Conservative Savings Per Success Usd */
+            conservative_savings_per_success_usd?: number | string | null;
+            /** Forecast Successful Tasks */
+            forecast_successful_tasks?: number | null;
+            /**
+             * Max Fraction Of Opportunity
+             * @default 0.1
+             */
+            max_fraction_of_opportunity: number | string;
+        };
+        /** RoutingProgramPage */
+        RoutingProgramPage: {
+            /** Items */
+            items: components["schemas"]["RoutingProgramBrief"][];
+            /** Next After */
+            next_after: string | null;
+        };
         /** RoutingSourceBinding */
         RoutingSourceBinding: {
             /**
@@ -15595,6 +15883,251 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listing_v1_projects__project_id__routing_programs_get: {
+        parameters: {
+            query?: {
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutingProgramPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    prepare_v1_projects__project_id__routing_programs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutingProgramDraft"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutingProgramBrief"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    detail_v1_projects__project_id__routing_programs__program_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                program_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutingProgramDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_v1_projects__project_id__routing_programs__program_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                program_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutingProgramApproval"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutingProgramBrief"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_v1_projects__project_id__routing_programs__program_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                program_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutingProgramCancel"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutingProgramBrief"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    content_v1_projects__project_id__routing_programs__program_id__content_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                program_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentPurpose"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    proposal_v1_projects__project_id__routing_programs__program_id__source_proposal_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                program_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentPurpose"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutingSourceProposal"];
                 };
             };
             /** @description Validation Error */

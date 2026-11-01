@@ -1,6 +1,6 @@
 # Runtime guardrails
 
-This source follow-up is under qualification. It is not included in the published PyPI dev5 wheel. Full installed-package, image recovery, authenticated browser and public-head acceptance remain required. Existing scanner and passive observation behavior stays independent.
+The bounded source workflow is accepted in [PR 48](https://github.com/CutbackAI/cutback/pull/48), with installed-package, image recovery, authenticated browser and hosted evidence in [progress](progress.md). Broker integration is separately accepted in PRs 49–50. It is not included in the published PyPI dev5 wheel. Existing scanner and passive observation remain independent; these literal/schema/tool-name rules do not establish semantic safety.
 
 ## Try the independent application
 

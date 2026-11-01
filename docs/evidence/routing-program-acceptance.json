@@ -1,0 +1,64 @@
+{
+  "contract": "cutback.routing-program-acceptance.v1",
+  "date": "2026-10-31",
+  "status": "local_acceptance_passed_hosted_pending",
+  "feature_contract": "cutback.routing-improvement-program.v1",
+  "schema_revision": "0033",
+  "released_migrations_0001_through_0032_unchanged": true,
+  "publication_wheel_sha256": "59763c7d45e98a471b90766603f0b2100e9546c1228f52fc2f57f157b78994fb",
+  "qualified_runtime_wheel_sha256": "ec6deb3d75bdf9d9092359d6b5807d9bb87be7eba768c51d25a46252e197319a",
+  "publication_bridge": {
+    "identical_application_files": 428,
+    "changed_only": ["wheel_long_description_METADATA", "wheel_RECORD"],
+    "package_and_dependency_headers_unchanged": true,
+    "fresh_core_only_consumer": "passed"
+  },
+  "installed_selection": [
+    {"openai": "2.29.0", "pydantic": "2.14.1", "python": "3.11.18", "passed": 61, "failed": 0, "skipped": 0, "seconds": 744.26},
+    {"openai": "3.35.1", "pydantic": "2.14.1", "python": "3.11.18", "passed": 61, "failed": 0, "skipped": 0, "seconds": 742.02}
+  ],
+  "selection_includes": [
+    "real_postgresql_scope_migrations_and_parent_child_accounting",
+    "current_authority_and_content_vendor_revocation",
+    "native_controls_skip_training_or_use_reserved_training",
+    "failed_untouched_confirmation_refuses_source_proposal",
+    "unknown_billing_and_no_automatic_replay",
+    "expiry_and_retention_with_late_settlement",
+    "busy_project_dispatch_and_expiry_isolation",
+    "independent_http_only_client_without_server_or_provider_dependencies",
+    "independent_native_application_both_tree_checks_and_rollback",
+    "authenticated_admin_viewer_desktop_mobile_and_axe"
+  ],
+  "prior_failed_final_selections": [
+    {"openai": "2.29.0", "passed": 59, "failed": 1, "seconds": 587.94, "reason": "fresh_source_checkout_missing_locked_browser_dependencies"},
+    {"openai": "3.35.1", "passed": 59, "failed": 1, "seconds": 585.86, "reason": "fresh_source_checkout_missing_locked_browser_dependencies"}
+  ],
+  "container": {
+    "image_id": "sha256:0360b42e2c2d82bf54749b26d7177e16bef66df74e3e1b4e7d039fd01f2c288a",
+    "uid": 10001,
+    "read_only_network_disabled_application_identity": "passed",
+    "restored_table_counts": 103,
+    "restored_and_rekeyed_objects": 3120,
+    "restored_plans": 40,
+    "restored_cache_objects": 17,
+    "restored_native_profiles": 24,
+    "parent_approval_shared_budget_selection_fit_and_source_restored": true,
+    "routing_sample_native_synthetic_calls": 384,
+    "both_application_trees_and_byte_exact_rollback_checked": true,
+    "concurrent_profile": {"tenants": 2, "accepted": 2000, "duplicate_replays": 2000, "seconds": 2.281, "production_sla": false}
+  },
+  "scope": {
+    "source_bound_openai_responses_wrapper": true,
+    "routing_review_is_local": true,
+    "cross_engine_optimizer_complete": false,
+    "full_market_baseline_complete": false,
+    "fit_compute_usd": null,
+    "routing_hosting_usd": null,
+    "production_savings_usd": null,
+    "customer_quality_verified": false,
+    "paid_provider_calls": 0,
+    "production_deployed": false,
+    "pypi_uploaded": false
+  },
+  "hosted_acceptance": {"required_jobs": 17, "status": "pending"}
+}

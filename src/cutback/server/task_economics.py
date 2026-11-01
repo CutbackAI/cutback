@@ -378,6 +378,21 @@ def retain_task_outcomes(session, cutoff, selected):
             == cast(TaskCostSnapshot.id, String),
         )
     )
+    from cutback.server.campaign_db import CampaignEconomicReference
+    from cutback.server.routing_program_db import RoutingProgramRecord
+
+    program_reference = exists(
+        select(RoutingProgramRecord.id).where(
+            RoutingProgramRecord.snapshot_id == TaskCostSnapshot.id,
+            RoutingProgramRecord.project_id == TaskCostSnapshot.project_id,
+        )
+    )
+    campaign_reference = exists(
+        select(CampaignEconomicReference.campaign_id).where(
+            CampaignEconomicReference.snapshot_id == TaskCostSnapshot.id,
+            CampaignEconomicReference.project_id == TaskCostSnapshot.project_id,
+        )
+    )
     session.execute(
         delete(TaskCostSnapshot).where(
             TaskCostSnapshot.created_at < cutoff,
@@ -385,6 +400,8 @@ def retain_task_outcomes(session, cutoff, selected):
             ~referenced,
             ~watch_reference,
             ~approved_baseline,
+            ~program_reference,
+            ~campaign_reference,
         )
     )
     current = exists(

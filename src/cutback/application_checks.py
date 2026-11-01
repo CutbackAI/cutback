@@ -241,7 +241,12 @@ def snapshot(root: Path):
         total += size
         if size > 16777216 or total > 67108864 or len(files) >= 10000:
             raise ValueError("APPLICATION_CHECK_SOURCE_BYTES_EXCEEDED")
-        raw = file.read_bytes()
+        # A file can grow after stat; bound the physical read as well.
+        with file.open("rb") as stream:
+            raw = stream.read(16777217)
+        total += len(raw) - size
+        if len(raw) > 16777216 or total > 67108864:
+            raise ValueError("APPLICATION_CHECK_SOURCE_BYTES_EXCEEDED")
 
         def blob_id(value, object_id=object_id):
             hasher = hashlib.new("sha1" if len(object_id) == 40 else "sha256")

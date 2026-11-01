@@ -163,6 +163,9 @@ def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False
             from cutback.server.campaign_retention import retain_campaigns
 
             retain_campaigns(session, now - timedelta(days=aggregate_days), selected)
+            from cutback.server.routing_program_retention import retain_programs
+
+            retain_programs(session, now - timedelta(days=aggregate_days), selected)
             from cutback.server.execution_db import ExecutionCall, ExecutionEpisode
             from cutback.server.quality_db import QualityEvaluation
             from cutback.server.tool_db import ToolSessionRecord

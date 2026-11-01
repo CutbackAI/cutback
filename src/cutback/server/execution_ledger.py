@@ -358,6 +358,17 @@ class ExecutionLedger:
                 amount,
                 operation=operation,
             )
+            from cutback.server.routing_program_ledger import reserve_program_call
+
+            reserve_program_call(
+                session,
+                run,
+                self.environment_id,
+                digest(self.plan.model_dump(mode="json")),
+                purpose,
+                amount,
+                operation=operation,
+            )
             if self.episode_id:
                 episode = session.get(ExecutionEpisode, self.episode_id, with_for_update=True)
                 if not episode or (
@@ -530,6 +541,9 @@ class ExecutionLedger:
                 from cutback.server.campaign_ledger import record_campaign_cost
 
                 record_campaign_cost(session, run, spent)
+                from cutback.server.routing_program_ledger import record_program_cost
+
+                record_program_cost(session, run, spent)
                 if row.episode_id:
                     episode = session.get(ExecutionEpisode, row.episode_id, with_for_update=True)
                     if episode:

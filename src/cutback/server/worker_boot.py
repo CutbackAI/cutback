@@ -91,6 +91,9 @@ def worker_cycle(sessions, store, *, maintenance_due=True, encrypted_expiry_due=
 
             attempt("tool_containment", lambda: recover_tool_one(sessions))
         attempt("campaign_expiry", lambda: expire_campaigns(sessions))
+        from cutback.server.routing_program_retention import expire_programs
+
+        attempt("routing_program_expiry", lambda: expire_programs(sessions))
         attempt(
             "maintenance",
             lambda: maintain_all(
@@ -116,9 +119,14 @@ def worker_cycle(sessions, store, *, maintenance_due=True, encrypted_expiry_due=
         from cutback.server.continuous import queue_schedules
         from cutback.server.criteria_worker import run_criteria_one
         from cutback.server.proposal_worker import run_proposal_one
+        from cutback.server.routing_program_worker import advance_one as advance_routing_program
         from cutback.server.scenario_worker import run_scenario_one
 
         attempt("campaigns", lambda: advance_one(sessions, store, execution_enabled=True))
+        attempt(
+            "routing_programs",
+            lambda: advance_routing_program(sessions, store, execution_enabled=True),
+        )
         attempt("proposals", lambda: run_proposal_one(sessions, store, execution_enabled=True))
         attempt(
             "criteria_generation", lambda: run_criteria_one(sessions, store, execution_enabled=True)

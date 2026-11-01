@@ -1,10 +1,8 @@
 """Prepare, fit and independently evaluate native input-size routing policies."""
 
-import time
-from datetime import UTC, datetime, timedelta
-from decimal import Decimal
+from datetime import UTC, datetime
 from typing import Literal
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from fastapi import Depends, HTTPException, Query
 from pydantic import UUID4, Field
@@ -15,15 +13,14 @@ from cutback.core.models import StrictModel
 from cutback.core.routing_producer import RoutingSourceBinding
 from cutback.evals.datasets import digest
 from cutback.evals.experiments import Budget, CriterionSpec, ExperimentPlan, ModelSpec
-from cutback.evals.learned_routing import RoutingFitOptions, fit_routes
+from cutback.evals.learned_routing import RoutingFitOptions
 from cutback.evals.metrics import MetricSpec
 from cutback.routing_changes import RoutingSourceProposal
 from cutback.server.campaign_content import content_transaction
-from cutback.server.content_policy import policy_content
 from cutback.server.dataset_lineage import lock_lineage, lock_preparation_identity
-from cutback.server.db import AuditEvent, CapturePolicyRecord, DatasetRecord, PayloadSample
+from cutback.server.db import AuditEvent, DatasetRecord, PayloadSample
 from cutback.server.evaluation_api import ContentPurpose, PlanInput
-from cutback.server.routing_service import authenticated_training, read_fit
+from cutback.server.routing_service import fit_training, read_fit
 
 FIT_REFUSALS = {
     "ROUTING_FIT_COMPUTE_BOUND",
@@ -97,7 +94,7 @@ def summary(sample):
 
 
 def install_routing(app, sessions, authorize, scope, create_plan):
-    from cutback.server.evaluation_api import policy_object_count, require_store
+    from cutback.server.evaluation_api import require_store
 
     authorized = Depends(authorize)
 
@@ -230,54 +227,18 @@ def install_routing(app, sessions, authorize, scope, create_plan):
                         409, "ROUTING_FIT_CURRENT_SOURCE_OR_CONTENT_UNAVAILABLE"
                     ) from None
                 return summary(prior)
-            started = time.perf_counter()
             try:
-                evidence, training, dataset, policy_id, policy, expiry = authenticated_training(
-                    session, store, project_id, body.training_run_id
+                sample = fit_training(
+                    session,
+                    store,
+                    project_id,
+                    body.training_run_id,
+                    body.options,
+                    identifier=body.request_id,
+                    request_hash=request_hash,
+                    actor=auth["actor"],
+                    refs=refs,
                 )
-                if training.routing_execution.source:
-                    from cutback.evals.routing_source import fit_source_routes
-
-                    result = fit_source_routes(
-                        evidence, body.options, training.routing_execution.source
-                    )
-                else:
-                    result = fit_routes(evidence, body.options)
-                # Fitting has no vendor call; unknown host/compute costs remain
-                # unknown instead of claiming that this operation was free.
-                value = {
-                    "version": "cutback.learned-routing-artifact.v1",
-                    "content_nonce": str(uuid4()),
-                    "training_run_id": str(body.training_run_id),
-                    "dataset_id": str(dataset.id),
-                    "training_plan_sha256": evidence.source_plan_sha256,
-                    "training_dataset_sha256": evidence.dataset_sha256,
-                    "fit": result,
-                    "fit_elapsed_ms": (time.perf_counter() - started) * 1000,
-                    "fit_compute_usd": None,
-                    "fit_provider_requests": 0,
-                    "training_setup_known_cost_usd": str(
-                        sum(
-                            (
-                                row.known_cost_usd
-                                for row in evidence.observations
-                                if row.known_cost_usd is not None
-                            ),
-                            start=Decimal(0),
-                        )
-                    ),
-                    "training_evidence": evidence.model_dump(mode="json"),
-                }
-                policy_row = session.get(CapturePolicyRecord, policy_id, with_for_update=True)
-                if (
-                    not policy_row
-                    or not policy_row.enabled
-                    or policy_object_count(session, policy_id) >= policy.max_samples
-                ):
-                    raise ValueError("ROUTING_SHARED_CONTENT_QUOTA_EXHAUSTED")
-                clean, blob = policy_content(value, policy, preserve_semantics=True)
-                ref = store.put(project_id, blob, policy.retention_days)
-                refs.append(ref)
             except ValueError as exc:
                 code = str(exc)
                 raise HTTPException(
@@ -286,24 +247,6 @@ def install_routing(app, sessions, authorize, scope, create_plan):
                     if code in FIT_REFUSALS
                     else "ROUTING_REQUIRES_COMPLETE_CURRENT_FEASIBLE_TRAINING_EVIDENCE",
                 ) from None
-            sample = PayloadSample(
-                id=body.request_id,
-                project_id=project_id,
-                policy_id=policy_id,
-                object_ref=ref,
-                content_hash=digest(clean),
-                expires_at=min(expiry, datetime.now(UTC) + timedelta(days=policy.retention_days)),
-                metadata_safe={
-                    "kind": "learned_routing_fit",
-                    "request_hash": request_hash,
-                    "created_by": auth["actor"],
-                    "training_run_id": str(body.training_run_id),
-                    "dataset_id": str(dataset.id),
-                    "training_cases": result["training_cases"],
-                    "training_groups": result["training_groups"],
-                },
-            )
-            session.add(sample)
             session.add(
                 AuditEvent(
                     project_id=project_id,

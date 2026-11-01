@@ -154,13 +154,9 @@ class RoutingSourceProposal(StrictModel):
         return self
 
 
-def prepare_patch(root: Path, proposal: RoutingSourceProposal):
-    baseline, binding = inspect_configuration(root, proposal.binding.producer_file)
-    if binding != proposal.binding or baseline != proposal.baseline:
-        raise ValueError("ROUTING_SOURCE_CHANGED_SINCE_APPROVED_PLAN")
-    before = (root / binding.settings_file).read_bytes()
-    if hashlib.sha256(before).hexdigest() != binding.settings_sha256:
-        raise ValueError("ROUTING_SOURCE_CHANGED_DURING_PATCH")
+def replacement_bytes(proposal: RoutingSourceProposal):
+    """Exact serialized policy bytes shared by patch preview and private materialization."""
+    binding = proposal.binding
     policy = proposal.proposed.model_copy(
         update={
             "key": binding.configuration_key,
@@ -169,9 +165,19 @@ def prepare_patch(root: Path, proposal: RoutingSourceProposal):
     )
     # Revalidate the actual serialized file, including outer router defaults.
     policy_bytes(json.dumps(policy.model_dump(mode="json")).encode())
-    after = (json.dumps(policy.model_dump(mode="json"), indent=2) + "\n").encode()
     if fingerprint(policy.model_dump(mode="json")) == binding.policy_sha256:
         raise ValueError("ROUTING_SOURCE_CHANGE_IS_EMPTY")
+    return (json.dumps(policy.model_dump(mode="json"), indent=2) + "\n").encode()
+
+
+def prepare_patch(root: Path, proposal: RoutingSourceProposal):
+    baseline, binding = inspect_configuration(root, proposal.binding.producer_file)
+    if binding != proposal.binding or baseline != proposal.baseline:
+        raise ValueError("ROUTING_SOURCE_CHANGED_SINCE_APPROVED_PLAN")
+    before = (root / binding.settings_file).read_bytes()
+    if hashlib.sha256(before).hexdigest() != binding.settings_sha256:
+        raise ValueError("ROUTING_SOURCE_CHANGED_DURING_PATCH")
+    after = replacement_bytes(proposal)
 
     def diff(first, second, old, new):
         return "".join(

@@ -1,19 +1,21 @@
 """Authenticate train-only routing evidence against scoped native call receipts."""
 
 import json
-from datetime import UTC, datetime
+import time
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from sqlalchemy import select
 
 from cutback.core.input_routing import LearnedRoutingBinding, RoutingTrainingExecution
 from cutback.evals.datasets import digest
-from cutback.evals.learned_routing import RoutingTrainingEvidence
+from cutback.evals.learned_routing import RoutingTrainingEvidence, fit_routes
 from cutback.evals.metrics import evaluate
 from cutback.server.content_policy import policy_content, require_payloads_enabled
 from cutback.server.dataset_lineage import inspect_exposure
 from cutback.server.db import (
+    CapturePolicyRecord,
     DatasetItem,
     DatasetRecord,
     ExperimentPlanRecord,
@@ -25,6 +27,85 @@ from cutback.server.execution_ledger import money
 from cutback.server.lineage_db import DatasetFamily
 from cutback.server.plan_artifacts import load_plan
 from cutback.server.principals import principal_role
+
+
+def fit_training(
+    session, store, project, training_run_id, options, *, identifier, request_hash, actor, refs
+):
+    """Persist a nonbillable CPU fit using the same authenticated native receipts.
+
+    The caller owns the project lock/content transaction and idempotency lookup.
+    No provider request occurs; compute and hosting dollars remain unknown.
+    """
+    from cutback.server.evaluation_api import policy_object_count
+
+    started = time.perf_counter()
+    evidence, training, dataset, policy_id, policy, expiry = authenticated_training(
+        session, store, project, training_run_id
+    )
+    if training.routing_execution.source:
+        from cutback.evals.routing_source import fit_source_routes
+
+        result = fit_source_routes(evidence, options, training.routing_execution.source)
+    else:
+        result = fit_routes(evidence, options)
+    value = {
+        "version": "cutback.learned-routing-artifact.v1",
+        "content_nonce": str(uuid4()),
+        "training_run_id": str(training_run_id),
+        "dataset_id": str(dataset.id),
+        "training_plan_sha256": evidence.source_plan_sha256,
+        "training_dataset_sha256": evidence.dataset_sha256,
+        "fit": result,
+        "fit_elapsed_ms": (time.perf_counter() - started) * 1000,
+        "fit_compute_usd": None,
+        "fit_provider_requests": 0,
+        "training_setup_known_cost_usd": str(
+            sum(
+                (
+                    row.known_cost_usd
+                    for row in evidence.observations
+                    if row.known_cost_usd is not None
+                ),
+                start=Decimal(0),
+            )
+        ),
+        "training_evidence": evidence.model_dump(mode="json"),
+    }
+    policy_row = session.get(
+        CapturePolicyRecord, policy_id, with_for_update=True, populate_existing=True
+    )
+    if (
+        not policy_row
+        or not policy_row.enabled
+        or policy_row.policy != policy.model_dump(mode="json")
+        or policy.expires_at <= datetime.now(UTC)
+        or policy_object_count(session, policy_id) >= policy.max_samples
+    ):
+        raise ValueError("ROUTING_SHARED_CONTENT_QUOTA_EXHAUSTED")
+    clean, blob = policy_content(value, policy, preserve_semantics=True)
+    ref = store.put(project, blob, policy.retention_days)
+    refs.append(ref)
+    sample = PayloadSample(
+        id=identifier,
+        project_id=project,
+        policy_id=policy_id,
+        object_ref=ref,
+        content_hash=digest(clean),
+        expires_at=min(expiry, datetime.now(UTC) + timedelta(days=policy.retention_days)),
+        metadata_safe={
+            "kind": "learned_routing_fit",
+            "request_hash": request_hash,
+            "created_by": actor,
+            "training_run_id": str(training_run_id),
+            "dataset_id": str(dataset.id),
+            "training_cases": result["training_cases"],
+            "training_groups": result["training_groups"],
+        },
+    )
+    session.add(sample)
+    session.flush()
+    return sample
 
 
 def reserve_training(session, run, environment_id, plan_sha256):

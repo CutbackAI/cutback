@@ -298,6 +298,29 @@ export function createSDK(request:Request) {return {
   confirmation_draft_v1_projects__project_id__routing_fits__fit_id__confirmation_drafts_post: (args:{project_id:string;fit_id:string;body:components["schemas"]["RoutingConfirmationDraftInput"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/routing/fits/${encodeURIComponent(String(args.fit_id))}/confirmation-drafts`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  prepare_v1_projects__project_id__routing_programs_post: (args:{project_id:string;body:components["schemas"]["RoutingProgramDraft"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/routing/programs`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  listing_v1_projects__project_id__routing_programs_get: (args:{project_id:string;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/routing/programs`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  detail_v1_projects__project_id__routing_programs__program_id__get: (args:{project_id:string;program_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/routing/programs/${encodeURIComponent(String(args.program_id))}`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  approve_v1_projects__project_id__routing_programs__program_id__approve_post: (args:{project_id:string;program_id:string;body:components["schemas"]["RoutingProgramApproval"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/routing/programs/${encodeURIComponent(String(args.program_id))}/approve`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  cancel_v1_projects__project_id__routing_programs__program_id__cancel_post: (args:{project_id:string;program_id:string;body:components["schemas"]["RoutingProgramCancel"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/routing/programs/${encodeURIComponent(String(args.program_id))}/cancel`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  content_v1_projects__project_id__routing_programs__program_id__content_post: (args:{project_id:string;program_id:string;body:components["schemas"]["ContentPurpose"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/routing/programs/${encodeURIComponent(String(args.program_id))}/content`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  proposal_v1_projects__project_id__routing_programs__program_id__source_proposal_post: (args:{project_id:string;program_id:string;body:components["schemas"]["ContentPurpose"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/routing/programs/${encodeURIComponent(String(args.program_id))}/source-proposal`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   queue_v1_projects__project_id__native_request_profiles_analyses_post: (args:{project_id:string;body:components["schemas"]["NativeProfileAnalysisInput"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/native-request-profiles/analyses`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
