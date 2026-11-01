@@ -23,6 +23,11 @@ import { PatchReview } from "./change-review";
 import { CaseEvidence } from "./case-evidence";
 import { TaskEconomics } from "./task-economics";
 import { Campaigns } from "./campaigns";
+const SourcePolicyPrograms = React.lazy(() =>
+  import("./routing-programs").then((module) => ({
+    default: module.RoutingPrograms,
+  })),
+);
 import { AgentWorkflow } from "./agent-workflow";
 import { Traces } from "./traces";
 import { Imports } from "./imports";
@@ -156,6 +161,7 @@ const views = [
   "Sample",
   "Overview",
   "Agent workflow",
+  "Automatic improvements",
   "Traces",
   "Inventory",
   "Costs",
@@ -324,6 +330,9 @@ function App() {
           api(base + "/experiments"),
         ]);
         result = { inventory: source.inventory, plans, runs };
+      }
+      if (view === "Automatic improvements") {
+        result = { plans: await api(base + "/experiments/plans") };
       }
       if (view === "Inventory")
         result = await api(
@@ -955,6 +964,24 @@ function App() {
                     ].includes(
                       identity.project_roles?.[project] || identity.role,
                     )}
+                  />
+                </React.Suspense>
+              </BudgetViewBoundary>
+            )}
+            {view === "Automatic improvements" && project && data.plans && (
+              <BudgetViewBoundary key={project}>
+                <h2>Automatic improvements</h2>
+                <React.Suspense
+                  fallback={
+                    <p role="status">Loading automatic improvements…</p>
+                  }
+                >
+                  <SourcePolicyPrograms
+                    api={api}
+                    base={base}
+                    admin={admin}
+                    templates={data.plans}
+                    family="source-policy"
                   />
                 </React.Suspense>
               </BudgetViewBoundary>

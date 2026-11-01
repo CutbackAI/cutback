@@ -1,5 +1,121 @@
 # Implementation progress
 
+1 November 2026 common source-policy program, **local installed and container
+acceptance passed; public exact-head hosted qualification remains pending**. A new
+deterministic-v19 encrypted policy binding unifies native model/instruction,
+input-size routing and explicitly authorized root exact-cache comparisons under
+one immutable request/cost budget and absolute deadline. Static controls precede
+bounded training-only instruction generation; native training/fitting occurs
+conditionally. One selection is frozen before complete untouched confirmation.
+New additive, unreleased schema `0034` scopes parent, phase/round, payload ownership
+and selection relations. Released migrations remain unchanged.
+
+The final frozen installed selection passed **158 in 1,339.02 seconds** on OpenAI
+**2.29.0** and **158 in 1,337.17 seconds** on **3.35.1**, both Pydantic **2.14.1**,
+with no skipped tests in that selection. It includes actual PostgreSQL, all
+native/generated/learned/exact-cache paths, current authority and billing holds,
+both-tree application checks, byte-exact rollback, cache runtime activation gates,
+an independent SDK/server-free HTTP client, and authenticated desktop/mobile/
+accessibility controls. The fresh minimal consumer has Pydantic **2.14.2** and
+HTTPX **0.28.1**, with SDK/server/crypto/evaluation extras absent.
+
+The accepted runtime wheel is
+`1ea0f73bece72f76b5baac790e3d3c7b90c28104efaae2fc894a91bd614d0b1a`;
+the matching non-root image is
+`sha256:7840db04725d2e95d483e547755dc884aaacd2974d6dffe2c8b27931322d588f`.
+All **463 application files / 436 Python files** match the installed wheel and
+image. That image passed the complete **107-table / 3,527-object / 45-plan**
+encrypted restore and key-rotation drill, including restored program approval,
+selection, canonical accounting and source proposal. A two-tenant fixture accepted
+2,000 items and deduplicated 2,000 in 2.594 seconds; no production SLA is claimed.
+Publication documentation/CI-only changes require an explicit byte-equivalence
+receipt and reproducible source/public archives; they are not another runtime
+feature. The full hosted verification allowance increases to 105 minutes because
+the previous native suite alone took over 67 minutes. Every required job and test
+selection remains required; the longer bound skips no gate.
+
+Native campaign handoff PR 78 passed all **17 exact-head hosted jobs**, including
+full regressions **2,534 / 40 skips in 4,034.73 seconds** on Python 3.11.18 and
+**2,533 / 41 in 3,613.44 seconds** on 3.13.18. It merged normally as
+`9d998b8e1aece2b71b4dbe4b03042bbcec4718f0`; its tree matches the accepted native
+handoff's local installed/image/archive inputs. The skips belong to those full
+suite platform/opt-in contracts, not the 158-test common-policy installed selection.
+
+### Earlier common-policy qualification notes
+
+The following notes retain the earlier source passes and failures. Pending
+installed/image items in this history are superseded by the final results above;
+public exact-head hosted acceptance remains open.
+
+Source evidence: common native/static/generated/learned workflows passed **four
+in 221.38 seconds** before the local operator addition. The newer bounded operator,
+approval/fixture isolation, CLI redaction and terminal-journal archive selection
+passed **11 in 183.38 seconds**. Those tests include an uncertain native reply
+that retains its reservation and never retries. Real PostgreSQL migration drift,
+upgrade/downgrade, populated refusal, tenant/counter/payload constraints, expiry,
+export/deletion and unresolved-bill retention passed **six in 33.39 seconds**.
+
+The new authenticated automatic-improvement dashboard and existing routing view
+passed **two in 30.63 seconds**, including desktop/mobile accessibility,
+purpose-scoped private policy reads, exact approval, cancellation, viewer denial
+and in-memory credentials. Its first browser run found a heading-order violation;
+the heading was corrected before that passing rerun. OpenAPI/client/types and
+React were regenerated and built. Source handoff passed **two in 452.28 seconds**:
+both actual application trees, byte-exact inverse rollback, retained receipt reuse
+and revocation after checks. Earlier test assertions used incorrect status names,
+and an explicit command mistakenly repeated the Python executable; corrected
+reruns provide the evidence above, not those failed runs.
+
+The independent common-program demo and final integrated SDK matrix are still
+under qualification. The independent HTTP/PostgreSQL/native sample passed **one
+in 152.48 seconds**, including conditional routing, confirmation, both-tree
+application checks and inverse rollback. Atomic parent-ledger contention, late
+known settlement after cancellation, current principal/expiry and orphan-marker
+guards passed **eight in 31.89 seconds**. Offline source discovery and repeated
+current-native-cycle compilation passed **seven in 6.30 seconds**; the initial
+cycle test incorrectly chose an unqualified model and was corrected to a pinned
+supported model with a smaller output cap. Existing source-guidance/strategy and
+release-control regression passed **26 in 4.82 seconds**. These are source checks;
+the independent minimal installed consumer and frozen SDK matrix remain gates.
+The first frozen SDK 2.29.0 and 3.35.1 selections each reached **119 passes**
+before a minimal-client test incorrectly counted other test projects' program
+rows. Its query was corrected to the current project; those failed runs do not
+constitute final acceptance. The actual minimal client's prepare/reconcile/status/
+cancel operations completed before that assertion. Final qualification must run
+the corrected scoped assertion and the remaining tests. A dashboard wording
+correction also distinguishes budgeted operations and declared cache cost upper
+bounds from actual native request counts and verified invoice spend.
+The first candidate image passed complete non-root encrypted backup/restore and
+key rotation across **107 tables / 3,527 objects / 45 plans**, including the new
+source-policy program's immutable selection, canonical known accounting and
+reconstructed private proposal. Its independent source sample made **320 closed
+synthetic SDK calls**, checked both source trees and inverse rollback, and left
+the original application unchanged. Two-tenant ingestion accepted 2,000 items
+and deduplicated 2,000 in 2.078 seconds; that is an acceptance fixture, not a
+production SLA. The dashboard wording/scoped test correction still requires
+final artifact identity and acceptance before publication.
+The corrected SDK/server-free client's scoped source rerun passed **one in
+22.18 seconds**. An additional PostgreSQL common-program cache selection passed
+**one in 58.20 seconds**, including actual encrypted hit receipts, canonical
+costs, one confirmation and a private cached-policy proposal. Its first fixture
+used an ineligible tool-capable response and correctly produced no choice; the
+corrected closed fixture returns the qualified plain response. The added cache
+source-handoff activation-gate assertion remains part of final qualification.
+This is no PyPI upload, production deployment or real model
+or customer-savings claim. Cached choices remain
+`CACHE_RUNTIME_CONFIGURATION_REQUIRED` while private runtime qualification is
+missing. Already cached/routed current references, retained production cache
+eligibility, retrieval/compression/local-model common selection, and the broader
+platform/specialty acceptance ledger remain open.
+
+PR 77 routing handoff was accepted after all 17 exact-head hosted jobs passed,
+then merged normally as `56afead357d6e812339a6eb6e9a47a0360f6a26f`. Native campaign
+handoff PR 78 remains at `50f5474780d2d3d3144312237c2c9b07497a93b3` pending the last
+hosted gates. Its exact installed SDK 2.29.0 and 3.35.1 selections each passed
+**166 / three Windows symlink skips**; the non-root Linux image separately passes
+those three guards. Its first unchanged image seed timed out at 180 seconds;
+the rerun passed, with that initial failure retained and no performance fix claimed.
+
 31 October 2026 native campaign handoff, **implementation/source qualification
 in progress; installed/archive/image/hosted gates pending**. `campaign finish`
 uses the same bounded private source/check execution state machine as routing,

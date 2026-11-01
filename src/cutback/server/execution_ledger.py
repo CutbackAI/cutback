@@ -119,7 +119,16 @@ def money(value):
 
 class ExecutionLedger:
     def __init__(
-        self, sessions, run_id, job_id, plan, environment_id, *, authorize, episode_id=None
+        self,
+        sessions,
+        run_id,
+        job_id,
+        plan,
+        environment_id,
+        *,
+        authorize,
+        episode_id=None,
+        source_policy_payloads=None,
     ):
         if not callable(authorize):
             raise ValueError("CURRENT_EXECUTION_AUTHORITY_CHECK_REQUIRED")
@@ -127,6 +136,45 @@ class ExecutionLedger:
         self.plan, self.environment_id = plan, UUID(str(environment_id))
         self.authorize, self.episode_id = authorize, UUID(str(episode_id)) if episode_id else None
         self.case_salt = secrets.token_bytes(32)
+        self.policy_targets = None
+        execution = getattr(plan, "source_policy_execution", None)
+        if execution is not None:
+            from cutback.evals.policy_artifacts import decode_policy_bundle
+            from cutback.evals.policy_models import policy_descriptors, policy_leaf_models
+
+            policies = decode_policy_bundle(source_policy_payloads, execution)
+            descriptions = policy_descriptors(execution, policies)
+            if any(
+                descriptions.get(value.key) != value for value in [plan.baseline, *plan.candidates]
+            ):
+                raise ValueError("POLICY_MODELS_COMPARISON_DESCRIPTOR_CHANGED")
+            self.policy_targets = [
+                model
+                for models in policy_leaf_models(execution, policies).values()
+                for model in models
+            ]
+            if len({value.key for value in self.policy_targets}) != len(self.policy_targets):
+                raise ValueError("POLICY_DISTINCT_NATIVE_LEAF_IDENTITIES_REQUIRED")
+        elif source_policy_payloads is not None:
+            raise ValueError("SOURCE_POLICY_PAYLOADS_REQUIRE_DISTINCT_EXECUTION_PLAN")
+
+    def approved_targets(self):
+        if self.policy_targets is not None:
+            return self.policy_targets
+        return [
+            target
+            for candidate in [
+                self.plan.baseline,
+                *self.plan.candidates,
+                *([self.plan.judge] if self.plan.judge else []),
+                *(
+                    [self.plan.episode_execution.user_simulation.model]
+                    if self.plan.episode_execution and self.plan.episode_execution.user_simulation
+                    else []
+                ),
+            ]
+            for target in provider_models(candidate)
+        ]
 
     def start_episode(self, model, case_key, repeat, max_requests):
         if self.episode_id is not None or not self.plan.episode_execution:
@@ -228,29 +276,21 @@ class ExecutionLedger:
         operation = getattr(self.plan, "operation", None)
         if isinstance(getattr(self.plan, "routing_execution", None), RoutingTrainingExecution):
             operation = "routing-training-v1"
+        source_policy = getattr(self.plan, "source_policy_execution", None)
+        if source_policy is not None and source_policy.phase == "training":
+            operation = "source-policy-training-v1"
         proposal = operation in {
             "candidate-generation-v1",
             "criteria-generation-v1",
             "criteria-generation-v2",
             "scenario-generation-v1",
             "routing-training-v1",
+            "source-policy-training-v1",
+            "source-policy-generation-v1",
         } or isinstance(getattr(self.plan, "routing_execution", None), RoutingTrainingExecution)
         if (purpose == "optimization") != proposal:
             raise ValueError("EXECUTION_PURPOSE_OUTSIDE_APPROVED_OPERATION")
-        targets = [
-            target
-            for candidate in [
-                self.plan.baseline,
-                *self.plan.candidates,
-                *([self.plan.judge] if self.plan.judge else []),
-                *(
-                    [self.plan.episode_execution.user_simulation.model]
-                    if self.plan.episode_execution and self.plan.episode_execution.user_simulation
-                    else []
-                ),
-            ]
-            for target in provider_models(candidate)
-        ]
+        targets = self.approved_targets()
         allowed = next(
             (
                 target
@@ -361,6 +401,19 @@ class ExecutionLedger:
             from cutback.server.routing_program_ledger import reserve_program_call
 
             reserve_program_call(
+                session,
+                run,
+                self.environment_id,
+                digest(self.plan.model_dump(mode="json")),
+                purpose,
+                amount,
+                operation=operation,
+            )
+            from cutback.server.policy_program_ledger import (
+                reserve_program_call as reserve_policy_program,
+            )
+
+            reserve_policy_program(
                 session,
                 run,
                 self.environment_id,
@@ -484,12 +537,7 @@ class ExecutionLedger:
                 raise ValueError("EXECUTION_CALL_SCOPE_MISMATCH")
             if cache_observation is not None:
                 approved = next(
-                    (
-                        target
-                        for candidate in [self.plan.baseline, *self.plan.candidates]
-                        for target in provider_models(candidate)
-                        if target.key == row.model_key
-                    ),
+                    (target for target in self.approved_targets() if target.key == row.model_key),
                     None,
                 )
                 if approved is None or approved.exact_cache is None:
@@ -544,6 +592,11 @@ class ExecutionLedger:
                 from cutback.server.routing_program_ledger import record_program_cost
 
                 record_program_cost(session, run, spent)
+                from cutback.server.policy_program_ledger import (
+                    record_program_cost as record_policy_program,
+                )
+
+                record_policy_program(session, run, spent)
                 if row.episode_id:
                     episode = session.get(ExecutionEpisode, row.episode_id, with_for_update=True)
                     if episode:

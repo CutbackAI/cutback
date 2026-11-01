@@ -275,6 +275,8 @@ def create_app(
             "workload_portfolio_contract": WORKLOAD_PORTFOLIO_CONTRACT,
             "workload_campaign_contract": WORKLOAD_CAMPAIGN_VERSION,
             "routing_program_contract": "cutback.routing-improvement-program.v1",
+            "source_policy_program_contract": "cutback.source-policy-program.v1",
+            "source_policy_execution_contract": "cutback.source-policy-execution.v1",
             "joint_retrieval_contract": JOINT_RETRIEVAL_CONTRACT,
             "retrieval_recipe_sha256": RETRIEVAL_RECIPE_SHA256,
         }

@@ -55,6 +55,8 @@ def lock_preparation_identity(session, kind, identity):
         "scenario-draft",
         "scenario-import",
         "source-scan",
+        "source-policy",
+        "source-policy-program",
         "capture-policy",
         "dataset-import",
         "project-bootstrap",

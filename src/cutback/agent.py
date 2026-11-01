@@ -129,6 +129,21 @@ def next_action(state):
             "provider_calls": 0,
         }
     if phase in {"ANALYZED", "SOURCE_CHANGED"}:
+        if state.get("policy_producers") and not state.get("profiles"):
+            return {
+                "code": "PREPARE_SOURCE_POLICY_WHOLE_BUDGET",
+                "tool": "cutback source-policy prepare",
+                "requires": [
+                    "permitted_frozen_dataset",
+                    "complete_baseline_task_cost_snapshot",
+                    "approved_collector",
+                    "whole_budget_ceiling",
+                    "declared_opportunity_assumptions",
+                    "independent_quality_threshold",
+                ],
+                "provider_calls": 0,
+                "automatic_billable_retry": False,
+            }
         if state.get("retrieval_producers") and not state.get("profiles"):
             return {
                 "code": "REVIEW_DATA_RIGHTS_AND_PREPARE_RETRIEVAL",
@@ -356,11 +371,28 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
             "qualification": "exact_wrapper_in_clean_git_source_only",
         }
         routing_producers = []
+        policy_producers = []
+        from cutback.core.policy_producer import qualify as qualify_policy
         from cutback.core.routing_producer import qualify as qualify_routing
+        from cutback.policy_source import inspect_configuration as inspect_policy
         from cutback.routing_changes import inspect_configuration
 
         for name in context_files[:200]:
             identity, _ = workflow_identity(name, "classify")
+            try:
+                path = permitted_file(root, name)
+                if path.stat().st_size <= 65536:
+                    qualify_policy(path.read_bytes())
+                    _, policy_source = inspect_policy(root, name)
+                    if workflow is None or workflow in {identity, policy_source.workflow}:
+                        policy_producers.append(
+                            {
+                                "workflow_id": identity,
+                                "source": policy_source.model_dump(mode="json"),
+                            }
+                        )
+            except (ValueError, OSError):
+                pass
             if not workflow or identity == workflow:
                 try:
                     path = permitted_file(root, name)
@@ -422,6 +454,7 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
                 "context_producers": context_producers,
                 "context_profile_analysis": context_analysis,
                 "routing_producers": routing_producers,
+                **({"policy_producers": policy_producers} if policy_producers else {}),
                 **({"retrieval_producers": retrieval_producers} if retrieval_producers else {}),
             }
         )
@@ -474,6 +507,7 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
             "profiles": profiles,
             "context_producers": context_producers,
             "routing_producers": routing_producers,
+            "policy_producers": policy_producers,
             "retrieval_producers": retrieval_producers,
             "context_profile_analysis": context_analysis,
             "profile_analysis": profile_analysis,
@@ -490,7 +524,13 @@ def analyze(root: Path, *, workflow: str | None = None, new_session=False):
         state["preparation_options"] = preparation_options(state)
         if previous_id:
             state["previous_session_id"] = previous_id
-        if not profiles and not context_producers and not routing_producers:
+        if (
+            not profiles
+            and not context_producers
+            and not routing_producers
+            and not policy_producers
+            and not retrieval_producers
+        ):
             state["decisions_required"].append("request_contract_qualification")
         if not fixtures:
             state["decisions_required"].append("permitted_examples_or_observation_scope")

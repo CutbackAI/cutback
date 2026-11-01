@@ -13,6 +13,7 @@ from test_campaign_workflow import prepare
 
 from cutback.server.campaign_db import CampaignEconomicReference, CampaignRecord
 from cutback.server.db import ExperimentPlanRecord, Project
+from cutback.server.migrate import CURRENT_REVISION
 from cutback.server.routing_program_db import RoutingProgramRecord
 
 pytestmark = pytest.mark.postgres
@@ -45,7 +46,7 @@ def test_additive_program_schema_roundtrip_preserves_existing_project(
     with api[2].state.sessions() as session:
         assert session.get(Project, UUID(tenant[0])) is not None
         assert tables.issubset(inspect(session.connection()).get_table_names())
-        assert session.scalar(text("SELECT version_num FROM alembic_version")) == "0033"
+        assert session.scalar(text("SELECT version_num FROM alembic_version")) == CURRENT_REVISION
 
 
 def test_populated_program_refuses_downgrade_and_cross_tenant_dependencies(

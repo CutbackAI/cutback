@@ -41,7 +41,7 @@ jobs:
       - name: Build non-root collector and complete synthetic demo image
         run: docker build --tag cutback-ci-acceptance:${{ github.sha }} --file infra/compose/Dockerfile .
       - name: Verify image demo, encrypted plan recovery and tenant isolation
-        run: uv run python scripts/image_acceptance.py --image cutback-ci-acceptance:${{ github.sha }} --isolated-tools --joint-model-context --learned-routing --generated-scenarios --reactive-users --routing-program
+        run: uv run python scripts/image_acceptance.py --image cutback-ci-acceptance:${{ github.sha }} --isolated-tools --joint-model-context --learned-routing --generated-scenarios --reactive-users --routing-program --source-policy
       - name: Remove this job's owned image-acceptance database
         if: always()
         run: docker compose -f infra/compose/docker-compose.yml down --volumes --remove-orphans
@@ -143,6 +143,16 @@ jobs:
           tests/integration/test_criteria_draft_reconciliation.py
           tests/integration/test_reviewed_criteria_migrations.py
           tests/end_to_end/test_reviewed_criteria_pipeline.py
+          tests/integration/test_source_policy_execution.py
+          tests/integration/test_source_policy_cache.py
+          tests/integration/test_source_policy_program_api.py
+          tests/integration/test_source_policy_program_workflow.py
+          tests/integration/test_source_policy_program_exact_cache.py
+          tests/integration/test_source_policy_program_ledger.py
+          tests/integration/test_source_policy_program_migrations.py
+          tests/integration/test_source_policy_program_retention.py
+          tests/integration/test_agent_source_policy_handoff.py
+          tests/end_to_end/test_source_policy_program_sample.py
       - name: Prepare independent HTTP-only agent for systems journeys
         if: matrix.scope == 'systems'
         run: |
@@ -163,6 +173,7 @@ jobs:
           tests/integration/test_workload_campaign.py
           tests/integration/test_agent_case_retention.py
           tests/integration/test_campaign_operator.py tests/integration/test_campaign_operator_local.py
+          tests/integration/test_source_policy_program_remote_minimal.py
           tests/integration/test_agent_campaign.py
           tests/integration/test_review_publication_remote_minimal.py
           tests/end_to_end/test_campaign_outcome_pipeline.py
@@ -234,7 +245,7 @@ jobs:
         run: test "$SDK3_SHARDS_RESULT" = success
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 75
+    timeout-minutes: 105
     strategy:
       fail-fast: false
       matrix:

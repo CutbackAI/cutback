@@ -1,6 +1,17 @@
 # What works and what remains
 
-Updated 31 October 2026. Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business.
+Updated 1 November 2026. Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business.
+
+The new [common source-policy program](source-policy-programs.md) passed local
+installed and container qualification. It compares simple native controls, bounded instruction
+variants, optional root exact cache and conditional learned routing under one
+search/confirmation budget, then prepares checked source copies and inverse
+rollback. Both pinned SDK installations passed 158 tests, including its CLI,
+client without SDK/server dependencies, checked handoff and authenticated dashboard.
+Public exact-head hosted acceptance remains required; this work
+is not in PyPI dev5. Cached/routed current references and common selection with
+retrieval/compression/local models remain unfinished. [Progress](progress.md)
+records exact tests, failures and remaining gates.
 
 ## Which installation to use
 
@@ -10,11 +21,12 @@ Updated 31 October 2026. Cutback is a pre-alpha product with tested, bounded wor
 | Current GitHub source | The additional workflows below. Use the source instructions in the [README](../README.md), matching collector/agent versions and the committed lockfiles. |
 | Local qualification artifacts | Development wheels/images identified by their exact hashes in [progress](progress.md). They are not additional public PyPI releases. |
 
-Source merges do not update PyPI. The stage runner and checked campaign draft-PR publisher are accepted in [PR 76](https://github.com/CutbackAI/cutback/pull/76), after all 17 exact-head hosted gates passed. The new [whole routing program](routing-programs.md), including private workspace preparation, existing checks and refreshed local review through `routing program finish`, is implemented and under final qualification in PR 77; its publication gates remain open.
+Source merges do not update PyPI. The stage runner and checked campaign draft-PR publisher are accepted in [PR 76](https://github.com/CutbackAI/cutback/pull/76), after all 17 exact-head hosted gates passed. The new [whole routing program](routing-programs.md), including private workspace preparation, existing checks and refreshed local review through `routing program finish`, was accepted in PR 77 after all 17 exact-head hosted jobs passed and a normal protected merge.
 
 The new [native campaign handoff](campaign-handoff.md) shares the bounded private
 workspace/check runner with routing and feeds the existing campaign publication
-preview. Its own installed, container and hosted qualification is in progress.
+preview. Its installed, container and all 17 exact-head hosted gates passed in
+[PR 78](https://github.com/CutbackAI/cutback/pull/78), merged normally on 1 November.
 It does not combine the different optimization engines' budgets or selections.
 
 ## Working source journeys
@@ -31,7 +43,7 @@ Each link states supported adapters, evidence semantics and limits. Executed che
 | [Agent, retrieval and tool evaluation](agent-evaluation.md) | Typed conversations/retrieval/state checks, separately budgeted semantic proxies, [contained record tools](isolated-tools.md), [paired security](security-suites.md) and [runtime guardrails](runtime-guardrails.md) within their declared contracts. |
 | [Automatic native/cache campaigns](improvement-campaigns.md) | Source-matched eligibility, static model/output/cache comparisons, conditional instruction search, one frozen confirmation and shared native effort accounting. |
 | [Retrieval and context changes](joint-retrieval.md) | Joint native/local retrieval search and separate [extractive context compression](context-compression.md), each with confirmation, source checks and rollback. |
-| [Source-bound routing](source-routing.md) | Train-only input-size fitting, native validation/confirmation, exact configuration diff and checked local review. The new one-approval [program](routing-programs.md) also tries simple native controls before training; final qualification is pending. |
+| [Source-bound routing](source-routing.md) | Train-only input-size fitting, native validation/confirmation, exact configuration diff and checked local review. The accepted one-approval [program](routing-programs.md) also tries simple native controls before training. |
 | [Checked change handoff](review-publication.md) | Real application checks on both source trees, exact rollback, local review refs and explicitly authorized campaign draft PRs with interrupted-reply reconciliation. Routing retains its own local review contract. |
 | [Later change outcomes](automatic-outcome-observation.md) | Finite approved metadata observation links reviewed changes to declared later task-cost windows and prepares re-evaluation/rollback review. It never changes traffic. |
 | [Optional platform controls](deployment.md) | Customer-owned PostgreSQL/storage, recovery references, OIDC/project grants, a separately enabled bounded text gateway, native provider batches, scoped caching and local CPU training. Supported modes keep separate acceptance gates. |

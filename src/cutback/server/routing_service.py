@@ -200,7 +200,7 @@ def _payload(session, store, project, policy_id, identifier, policy, *, remainin
     return row, value
 
 
-def training_source(session, store, project, run_id):
+def training_source(session, store, project, run_id, *, source_policy=False):
     from cutback.server.evaluation_api import active_policy
 
     require_payloads_enabled()
@@ -223,7 +223,14 @@ def training_source(session, store, project, run_id):
     ):
         raise ValueError("ROUTING_TRAINING_APPROVAL_OR_PRINCIPAL_NO_LONGER_AUTHORIZED")
     plan = load_plan(store, project, planned.specification)
-    if not isinstance(plan.routing_execution, RoutingTrainingExecution) or plan.split != "train":
+    execution = plan.source_policy_execution if source_policy else plan.routing_execution
+    if source_policy:
+        if execution is None or execution.phase != "training" or plan.split != "train":
+            raise ValueError("POLICY_REQUIRES_EXPLICIT_TRAIN_ONLY_SOURCE")
+        from cutback.server.policy_service import validate_binding
+
+        validate_binding(session, store, project, plan, planned.dataset_id)
+    elif not isinstance(execution, RoutingTrainingExecution) or plan.split != "train":
         raise ValueError("ROUTING_REQUIRES_EXPLICIT_TRAIN_ONLY_SOURCE")
     dataset = session.get(DatasetRecord, planned.dataset_id, populate_existing=True)
     if (
@@ -239,13 +246,13 @@ def training_source(session, store, project, run_id):
         provider not in policy.allowed_providers for provider in plan.approved_providers
     ):
         raise ValueError("ROUTING_TRAINING_CONTENT_RIGHTS_REVOKED")
-    items = check_training_scope(session, project, dataset, plan.routing_execution.max_cases)
+    items = check_training_scope(session, project, dataset, min(execution.max_cases, 256))
     return run, planned, plan, dataset, policy_id, policy, items
 
 
-def authenticated_training(session, store, project, run_id):
+def authenticated_training(session, store, project, run_id, *, source_policy=False):
     run, planned, plan, dataset, policy_id, policy, items = training_source(
-        session, store, project, run_id
+        session, store, project, run_id, source_policy=source_policy
     )
     cases = {}
     remaining_bytes = [16 * 1024 * 1024]
@@ -270,6 +277,20 @@ def authenticated_training(session, store, project, run_id):
         expiry = min(expiry, sample.expires_at)
     models = [plan.baseline, *plan.candidates]
     by_key = {model.key: model for model in models}
+    canonical_models = by_key
+    if source_policy:
+        from cutback.evals.policy_artifacts import decode_policy_bundle
+        from cutback.evals.policy_models import policy_leaf_models
+        from cutback.server.policy_service import validate_binding
+
+        payloads = validate_binding(session, store, project, plan, dataset.id)
+        leaves = policy_leaf_models(
+            plan.source_policy_execution,
+            decode_policy_bundle(payloads, plan.source_policy_execution),
+        )
+        if any(len(values) != 1 or values[0].exact_cache is not None for values in leaves.values()):
+            raise ValueError("POLICY_TRAINING_REQUIRES_ONE_UNCACHED_NATIVE_LEAF_PER_MODEL")
+        canonical_models = {key: values[0] for key, values in leaves.items()}
     expected = len(cases) * len(models)
     payloads = session.scalars(
         select(PayloadSample)
@@ -314,7 +335,7 @@ def authenticated_training(session, store, project, run_id):
         if not isinstance(receipt, dict):
             raise ValueError("ROUTING_TRAINING_CANONICAL_CASE_RECEIPT_REQUIRED")
         call = call_rows.get(str(receipt.get("id")))
-        model = by_key[identity[1]]
+        model = canonical_models[identity[1]]
         if (
             not call
             or call.id in seen_calls
@@ -327,6 +348,8 @@ def authenticated_training(session, store, project, run_id):
             or call.purpose != "optimization"
             or call.price_sha256 != plan.price_sha256
             or receipt.get("price_sha256") != plan.price_sha256
+            or source_policy
+            and call.cache_observation is not None
         ):
             raise ValueError("ROUTING_TRAINING_CALL_RECEIPT_CHANGED_OR_UNCERTAIN")
         try:

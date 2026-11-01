@@ -24,7 +24,13 @@ def target_evaluation_clause():
         operation.is_distinct_from("criteria-generation-v1"),
         operation.is_distinct_from("criteria-generation-v2"),
         operation.is_distinct_from("scenario-generation-v1"),
+        operation.is_distinct_from("source-policy-generation-v1"),
         ExperimentPlanRecord.specification["public_specification"]["routing_execution"]["phase"]
+        .as_string()
+        .is_distinct_from("training"),
+        ExperimentPlanRecord.specification["public_specification"]["source_policy_execution"][
+            "phase"
+        ]
         .as_string()
         .is_distinct_from("training"),
     )
@@ -46,6 +52,20 @@ def public_config(value, *, redact_content_hashes=False, redact_criteria=False):
     redact_criteria = redact_criteria or bool(value.get("criteria_binding"))
     result: dict[str, Any] = {}
     for key, item in value.items():
+        if key == "source_policy_execution" and item is not None:
+            from cutback.core.policy_execution import (
+                PublicPolicyExecution,
+                SourcePolicyExecutionSpec,
+            )
+
+            result[key] = (
+                SourcePolicyExecutionSpec.model_validate(item).public_summary()
+                if "reference" in item or "candidates" in item
+                else PublicPolicyExecution.model_validate(item).model_dump(
+                    mode="json", exclude_unset=True
+                )
+            )
+            continue
         if key == "output_field" and redact_criteria:
             result[key] = None
             continue

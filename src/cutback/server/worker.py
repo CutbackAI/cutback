@@ -2,6 +2,7 @@
 
 import json
 import os
+import time
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import UUID
@@ -200,6 +201,19 @@ def run_one(
             from cutback.server.campaign_service import authorize_campaign_run
 
             if (
+                plan.source_policy_execution is not None
+                and plan.source_policy_execution.transport == "scripted_test_only"
+                and getattr(executor, "synthetic_transport", False) is not True
+            ):
+                record.status = job.status = "BLOCKED"
+                job.available_at = None
+                record.results = {
+                    "code": "SCRIPTED_POLICY_REQUIRES_EXPLICIT_SYNTHETIC_EXECUTOR",
+                    "provider_calls": 0,
+                }
+                return {"status": "BLOCKED", "run_id": str(record.id), "provider_calls": 0}
+
+            if (
                 plan.native_fixture is not None
                 and getattr(executor, "synthetic_transport", False) is not True
             ):
@@ -250,6 +264,21 @@ def run_one(
             except ValueError:
                 job.status = record.status = "FAILED"
                 record.results = {"code": "ROUTING_PROGRAM_AUTHORITY_OR_TRANSPORT_INVALID"}
+                return {"status": "FAILED", "provider_calls": 0}
+            from cutback.server.policy_program_service import (
+                authorize_program_run as authorize_policy_program,
+            )
+
+            try:
+                authorize_policy_program(
+                    session,
+                    store,
+                    record.id,
+                    synthetic_transport=getattr(executor, "synthetic_transport", False),
+                )
+            except ValueError:
+                job.status = record.status = "FAILED"
+                record.results = {"code": "SOURCE_POLICY_PROGRAM_AUTHORITY_OR_TRANSPORT_INVALID"}
                 return {"status": "FAILED", "provider_calls": 0}
             if owned_executor:
                 if (
@@ -368,7 +397,9 @@ def run_one(
 
                 lock_lineage(session, project_id)
                 dataset_row = session.get(DatasetRecord, dataset_id)
-                source_routing = plan.routing_execution and plan.routing_execution.source
+                source_routing = plan.source_policy_execution is not None or (
+                    plan.routing_execution and plan.routing_execution.source
+                )
                 from cutback.core.input_routing import (
                     SOURCE_DATASET_CASE_BOUND,
                     SOURCE_DATASET_CONTENT_BOUND,
@@ -407,6 +438,11 @@ def run_one(
                 from cutback.server.routing_service import validate_binding as validate_routing
 
                 validate_routing(session, store, project_id, plan, dataset_id=dataset_id)
+                from cutback.server.policy_service import validate_binding as validate_source_policy
+
+                source_policy_payloads = validate_source_policy(
+                    session, store, project_id, plan, dataset_id
+                )
 
             def authorize_execution(session):
                 require_payloads_enabled()
@@ -433,6 +469,12 @@ def run_one(
                     synthetic_transport=getattr(executor, "synthetic_transport", False),
                 )
                 authorize_program_run(
+                    session,
+                    store,
+                    run_id,
+                    synthetic_transport=getattr(executor, "synthetic_transport", False),
+                )
+                authorize_policy_program(
                     session,
                     store,
                     run_id,
@@ -466,6 +508,7 @@ def run_one(
                 recheck_bindings(session, store, project_id, plan_row, plan)
                 validate_criteria(session, store, project_id, plan)
                 validate_routing(session, store, project_id, plan, dataset_id=dataset_id)
+                validate_source_policy(session, store, project_id, plan, dataset_id, read=False)
                 row = session.get(CapturePolicyRecord, provenance["policy_id"])
                 current_policy = CapturePolicy.model_validate(row.policy) if row else None
                 if (
@@ -493,6 +536,17 @@ def run_one(
                 )
             if environment_id is None:
                 raise ValueError("EXECUTION_ENVIRONMENT_NOT_REGISTERED")
+            execution_deadline = None
+            with sessions() as session:
+                from cutback.server.policy_program_service import program_for_run as policy_owner
+
+                owner, _ = policy_owner(
+                    session, session.get(ExperimentRunRecord, run_id), lock=False
+                )
+                if owner is not None:
+                    execution_deadline = time.monotonic() + max(
+                        0, (owner.deadline_at - datetime.now(UTC)).total_seconds()
+                    )
             call_ledger = ExecutionLedger(
                 sessions,
                 run_id,
@@ -500,6 +554,7 @@ def run_one(
                 plan,
                 environment_id,
                 authorize=authorize_execution,
+                source_policy_payloads=source_policy_payloads,
             )
 
             from cutback.server.case_evidence import recorder
@@ -558,6 +613,7 @@ def run_one(
                         for item in dataset["items"]
                         if item["split"] == plan.split
                     ][: plan.sample_limit],
+                    source_policy_payloads=source_policy_payloads,
                 ),
                 observation_scope("evaluation", run_id=run_id),
             ):
@@ -574,6 +630,8 @@ def run_one(
                     episode_lifecycle=call_ledger,
                     check_authority=check_authority,
                     environment_factory=tools_factory,
+                    source_policy_payloads=source_policy_payloads,
+                    execution_deadline=execution_deadline,
                     record_case=recorder(
                         sessions, store, project_id, run_id, provenance["policy_id"]
                     )

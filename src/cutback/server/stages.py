@@ -39,6 +39,15 @@ def validate_confirmation(session, store, project_id, plan, *, run_id=None):
     if selected not in [item.model_dump(mode="json") for item in prior.candidates]:
         raise ValueError("SELECTED_SEARCH_CANDIDATE_CHANGED")
     before, after = prior.model_dump(mode="json"), plan.model_dump(mode="json")
+    if prior.source_policy_execution is not None:
+        if plan.source_policy_execution is None:
+            raise ValueError("CONFIRMATION_SOURCE_POLICY_CONTRACT_CHANGED")
+        keys = {plan.candidates[0].key}
+        before["source_policy_execution"]["candidates"] = [
+            value
+            for value in before["source_policy_execution"]["candidates"]
+            if value["key"] in keys
+        ]
     if prior.retrieval_execution:
         if not plan.retrieval_execution:
             raise ValueError("CONFIRMATION_RETRIEVAL_CONTRACT_CHANGED")

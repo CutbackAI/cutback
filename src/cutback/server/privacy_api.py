@@ -66,6 +66,12 @@ from cutback.server.monitoring_db import (
 )
 from cutback.server.native_profile_db import NativeProfileAnalysis
 from cutback.server.outcome_watch_db import OutcomeWatch, OutcomeWatchWindow
+from cutback.server.policy_program_db import (
+    SourcePolicyProgramPayload,
+    SourcePolicyProgramRecord,
+    SourcePolicyProgramRun,
+    SourcePolicyProgramSelection,
+)
 from cutback.server.prompt_db import (
     PromptAlias,
     PromptAliasChange,
@@ -125,6 +131,10 @@ def install_privacy(app, sessions, authorize, scope):
         def records():
             with sessions() as session:
                 for cls in (
+                    SourcePolicyProgramRecord,
+                    SourcePolicyProgramRun,
+                    SourcePolicyProgramSelection,
+                    SourcePolicyProgramPayload,
                     RoutingProgramRecord,
                     RoutingProgramRun,
                     RoutingProgramSelection,
@@ -370,6 +380,10 @@ def install_privacy(app, sessions, authorize, scope):
                 .values(state="REVOKED", active_qualification_id=None, active_approval_hash=None)
             )
             for cls in (
+                SourcePolicyProgramSelection,
+                SourcePolicyProgramPayload,
+                SourcePolicyProgramRun,
+                SourcePolicyProgramRecord,
                 RoutingProgramSelection,
                 RoutingProgramRun,
                 RoutingProgramRecord,

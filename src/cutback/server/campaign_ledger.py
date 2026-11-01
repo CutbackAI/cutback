@@ -29,6 +29,21 @@ def reserve_campaign_call(
     session, run, environment, plan_sha256, purpose, amount, *, operation=None
 ):
     parent, link = campaign_for_run(session, run)
+    if operation == "source-policy-generation-v1":
+        if parent is not None or purpose != "optimization":
+            raise ValueError("POLICY_GENERATION_REQUIRES_SEPARATE_APPROVED_PARENT")
+        from cutback.server.policy_program_service import program_for_run
+
+        if program_for_run(session, run)[0] is None:
+            raise ValueError("POLICY_GENERATION_REQUIRES_APPROVED_PARENT")
+        return
+    if operation == "source-policy-training-v1":
+        if parent is not None or purpose != "optimization":
+            raise ValueError("POLICY_TRAINING_REQUIRES_SEPARATE_APPROVED_RUN")
+        from cutback.server.policy_service import reserve_training
+
+        reserve_training(session, run, environment, plan_sha256)
+        return
     if operation == "scenario-generation-v1":
         if parent is not None or purpose != "optimization":
             raise ValueError("SCENARIO_GENERATION_REQUIRES_SEPARATE_APPROVED_RUN")

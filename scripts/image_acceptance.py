@@ -45,7 +45,7 @@ def inside(container, code, values, *, timeout=180):
     )
 
 
-def seed_owned_routing_program(container, values):
+def seed_owned_routing_program(container, values, *, source_policy=False):
     """Keep this whole program separate from the existing multi-fixture seed timer."""
     code = """import json,os,httpx
 from pathlib import Path
@@ -53,15 +53,15 @@ from cutback.server.runtime import configure_secrets
 from cutback.server.api import create_app
 from cutback.evals.artifacts import configured_store
 from cutback.agent_control import Control
-from cutback.demo_routing_program import run_sample
+from cutback.DEMO_MODULE import run_sample
 configure_secrets()
 assert os.getuid()==10001
 app=create_app(allow_insecure_http=True)
 app.state.artifact_store=configured_store()
 channel=Control("http://127.0.0.1:8080",os.environ["CUTBACK_ADMIN_TOKEN"])
-project=channel("POST","/v1/projects",{"slug":"owned-image-routing-program"})["id"]
+project=channel("POST","/v1/projects",{"slug":PROGRAM_SLUG})["id"]
 ingest=channel("POST",f"/v1/projects/{project}/keys",{"role":"ingest"})["token"]
-workspace=Path("/tmp/owned-routing-program")
+workspace=Path(PROGRAM_WORKSPACE)
 workspace.mkdir(mode=0o700)
 with httpx.Client(base_url=channel.endpoint,trust_env=False,
  follow_redirects=False,timeout=30) as client:
@@ -69,11 +69,30 @@ with httpx.Client(base_url=channel.endpoint,trust_env=False,
   project,ingest,workspace)
 assert receipt["phases"]==[
  "static_validation","training","routed_validation","confirmation"]
-assert receipt["both_application_trees_checked"] is True
-assert receipt["byte_exact_rollback_checked"] is True
+checked=receipt["checked_handoff"] if SOURCE_POLICY_EXPECTED else receipt
+assert checked["both_application_trees_checked"] is True
+assert checked["byte_exact_rollback_checked"] is True
 assert receipt["production_savings_usd"] is None
 print(json.dumps(receipt))
 """
+    code = (
+        code.replace(
+            "DEMO_MODULE", "demo_policy_program" if source_policy else "demo_routing_program"
+        )
+        .replace(
+            "PROGRAM_SLUG",
+            repr("owned-image-source-policy" if source_policy else "owned-image-routing-program"),
+        )
+        .replace(
+            "PROGRAM_WORKSPACE",
+            repr(
+                "/tmp/owned-source-policy-program"
+                if source_policy
+                else "/tmp/owned-routing-program"
+            ),
+        )
+        .replace("SOURCE_POLICY_EXPECTED", repr(source_policy))
+    )
     # The native program retains its own 600-second approval deadline. This
     # outer harness also allows bounded setup and two actual application checks.
     return json.loads(inside(container, code, values, timeout=720).strip().splitlines()[-1])
@@ -317,6 +336,7 @@ def main(
     learned_routing=False,
     source_routing=False,
     routing_program=False,
+    source_policy=False,
     generated_scenarios=False,
     reactive_users=False,
 ):
@@ -506,6 +526,11 @@ print(json.dumps({"project_id":manifest["project_id"],
                 manifest = json.loads(inside(container, code, values).strip().splitlines()[-1])
                 routing_sample = (
                     seed_owned_routing_program(container, values) if routing_program else None
+                )
+                policy_sample = (
+                    seed_owned_routing_program(container, values, source_policy=True)
+                    if source_policy
+                    else None
                 )
                 base = "/v1/projects/" + manifest["project_id"]
                 usage = client.get(
@@ -936,6 +961,30 @@ with sessions() as session:
   assert selection.strategy=="learned_input_size"
   proposal=source_proposal(session,new_only,program)
   assert proposal.full_task_cost_known is False and proposal.decision=="synthetic_local_review_only"
+ if SOURCE_POLICY_EXPECTED:
+  from cutback.server.policy_program_db import (
+   SourcePolicyProgramRecord,SourcePolicyProgramRun,SourcePolicyProgramSelection)
+  from cutback.server.policy_program_service import load_program,source_proposal
+  programs=session.scalars(select(SourcePolicyProgramRecord)).all()
+  assert len(programs)==1
+  program=programs[0]
+  assert program.status=="COMPLETED" and program.approval_status=="consumed"
+  assert program.requests_used==program.known_cost_requests and program.requests_used>0
+  spec,_,_,_=load_program(session,new_only,program)
+  children=session.execute(select(SourcePolicyProgramRun,ExperimentRunRecord).join(
+   ExperimentRunRecord,ExperimentRunRecord.id==SourcePolicyProgramRun.run_id
+  ).where(SourcePolicyProgramRun.program_id==program.id)).all()
+  assert {link.phase for link,run in children}=={
+   "static_validation","training","routed_validation","confirmation"}
+  assert all(run.status=="COMPLETED" and run.results["billing_complete"] is True
+   for link,run in children)
+  assert sum(run.requests_used for link,run in children)==program.requests_used
+  assert sum(run.spent_usd for link,run in children)==program.spent_usd
+  selection=session.scalar(select(SourcePolicyProgramSelection).where(
+   SourcePolicyProgramSelection.program_id==program.id))
+  assert selection.strategy=="learned"
+  proposal=source_proposal(session,new_only,program)
+  assert proposal.full_task_cost_known is False and proposal.decision=="synthetic_local_review_only"
 print(json.dumps({"restored_and_rekeyed_objects":len(rows)+len(caches)+profile_objects,"restored_and_rekeyed_cache_objects":len(caches),"restored_and_rekeyed_plans":len(plans),"restored_native_profile_objects":profile_objects,"native_profile_analysis_restored":True,"semantic_qualified_catalog_restored":True,"isolated_tool_receipts_restored":bool(TOOLS_EXPECTED),"paired_security_suite_restored":bool(SECURITY_EXPECTED),"runtime_guardrail_receipts_restored":bool(RUNTIME_GUARDS),"database_pointers_preserved":True}))
 engine.dispose()
 """.replace("RECOVERED", repr(names[1]))
@@ -954,6 +1003,7 @@ engine.dispose()
                     .replace("ROUTING_EXPECTED", repr(learned_routing or source_routing))
                     .replace("SOURCE_BOUND_EXPECTED", repr(source_routing))
                     .replace("ROUTING_PROGRAM_EXPECTED", repr(routing_program))
+                    .replace("SOURCE_POLICY_EXPECTED", repr(source_policy))
                     .replace("SCENARIOS_EXPECTED", repr(generated_scenarios))
                     .replace("REACTIVE_EXPECTED", repr(reactive_users))
                 )
@@ -1070,6 +1120,7 @@ engine.dispose()
                 result = {
                     "native_request_profile_sample": native_profiles,
                     "routing_program_sample": routing_sample,
+                    "source_policy_program_sample": policy_sample,
                     "image": image,
                     "image_id": image_id,
                     "uid": 10001,
@@ -1098,6 +1149,7 @@ engine.dispose()
                     "routing_program_approval_shared_budget_selection_and_source_restored": (
                         routing_program
                     ),
+                    "source_policy_program_envelope_selection_and_source_restored": source_policy,
                     "joint_retrieval_confirmation_and_both_tree_checks": joint_model_retrieval,
                     "pending_workload_portfolio_and_source_window_restored": workload_portfolio,
                     "complete_workload_fixture_confirmation_restored": workload_portfolio_demo,
@@ -1157,6 +1209,7 @@ if __name__ == "__main__":
     parser.add_argument("--learned-routing", action="store_true")
     parser.add_argument("--source-routing", action="store_true")
     parser.add_argument("--routing-program", action="store_true")
+    parser.add_argument("--source-policy", action="store_true")
     parser.add_argument("--generated-scenarios", action="store_true")
     parser.add_argument("--reactive-users", action="store_true")
     args = parser.parse_args()
@@ -1177,6 +1230,7 @@ if __name__ == "__main__":
         learned_routing=args.learned_routing,
         source_routing=args.source_routing,
         routing_program=args.routing_program,
+        source_policy=args.source_policy,
         generated_scenarios=args.generated_scenarios,
         reactive_users=args.reactive_users,
     )
