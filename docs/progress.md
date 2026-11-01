@@ -1,5 +1,54 @@
 # Implementation progress
 
+31 October 2026 routing-program **local final acceptance passed; protected
+hosted/publication gates pending**. The complete expiry-fairness installed
+selection passed **61 in 744.26 seconds** on OpenAI **2.29.0** and **61 in 742.02
+seconds** on **3.35.1**, both with Pydantic **2.14.1**. This includes the real
+PostgreSQL parent/child ledger, rights and cancellation, skipped/conditional
+training, rejected untouched confirmation, migration/retention/lock isolation,
+independent HTTP-only client, source/check/rollback samples and authenticated
+admin/viewer/desktop/mobile/accessibility browser gate. The prerequisite-only
+failures below remain failed runs; the complete corrected reruns supersede them.
+A separate browser/migration preflight passed **two in 38.65 seconds**.
+
+The final README publication wheel
+`59763c7d45e98a471b90766603f0b2100e9546c1228f52fc2f57f157b78994fb`
+preserves every **428** application file of installed-qualified wheel
+`ec6deb3d75bdf9d9092359d6b5807d9bb87be7eba768c51d25a46252e197319a`;
+only METADATA/RECORD differ, with dependency/package headers unchanged. Its fresh
+core-only consumer passes. The exact runtime image remains
+`sha256:0360b42e2c2d82bf54749b26d7177e16bef66df74e3e1b4e7d039fd01f2c288a`,
+with full **103-table / 3,120-object** recovery evidence above. Only additive
+migration `0033` differs from accepted schema `0032`; released migrations are
+unchanged. OpenAPI/client/types regenerate without drift and the frontend build
+reproduces committed assets. [Acceptance receipt](evidence/routing-program-acceptance.json).
+
+Source archives are regenerated after this CI/evidence-only follow-up. All 17
+current-head hosted checks remain mandatory before merge; none is waived. The
+broader cross-engine and platform baseline remains unfinished. These are
+synthetic engineering results; no customer quality, paid inference, production
+deployment or PyPI upload is asserted.
+
+31 October 2026 final checkout prerequisite correction. Both expiry-fairness
+installed selections stopped at the authenticated browser gate because that
+fresh source checkout lacked its locked Node dependencies: default **59 passed /
+one failed in 587.94 seconds**, SDK3 **59 / one in 585.86 seconds**. These are
+failed runs. Dependencies are now installed in that checkout and both complete
+selections are rerunning. The existing **600-second** native program approval
+and **720-second** owned seed allowance are unchanged. The infrastructure job
+now allows **20 minutes** for dependency/image setup plus that seed and recovery;
+the SDK3 shard allowance is **30 minutes**. All checks and matrix shards remain.
+
+The README/status refresh has **148 checked local document targets / zero
+missing** across twelve guides; external URLs were not validated by that check.
+Private/public publication builds reproduce byte-for-byte. The new README changes
+only wheel METADATA/RECORD; all **428** application files and package/dependency
+headers match the expiry-qualified runtime. Fresh core-only consumer acceptance
+passes. The working source/history/four-archive boundary checked **1,254 files /
+6,278 reachable public objects / 3,368 members / zero findings** before this
+CI/evidence-only follow-up. Current final source archives and hosted gates remain
+separate requirements. No PyPI upload, paid inference or production deployment.
+
 31 October 2026 routing-program final follow-up. The dashboard-copy installed
 wheel passed **52 in 577.70 seconds** on SDK2 and **52 in 577.72 seconds** on
 SDK3, including real PostgreSQL, the independent HTTP-only client and
