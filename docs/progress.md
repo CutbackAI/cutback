@@ -83,6 +83,15 @@ the prior image is not presented as that new image's acceptance.
 
 ## Latest local automation acceptance
 
+The full generic dashboard harness exposed a pre-existing fixture assumption:
+the guided-plan test selected the first dataset and expected one dataset in the
+shared project. Four new cloud imports make that assumption invalid. The test
+now binds to the exact dataset returned by its own create request, rather than
+an option count/index. The complete generic dashboard harness passed **one
+pytest in 54.50 seconds** with the cloud import journeys included. Application
+wheel bytes are unchanged; the public hosted cohort is rerun on the corrected
+test head instead of accepting the superseded cohort.
+
 Current source-router references and the supplied async consumer merged normally
 in [PR 80](https://github.com/CutbackAI/cutback/pull/80), after **all 17 required
 exact-head hosted jobs passed** on `cfae91bab532078df36eb92cbadd04c4e5ec2b22`.
