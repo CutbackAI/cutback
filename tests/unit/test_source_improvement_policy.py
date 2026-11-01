@@ -137,7 +137,7 @@ def test_input_domain_and_utf8_size_refuse_before_native_io():
         client.close()
 
 
-def test_async_stream_and_nonofficial_endpoint_are_explicitly_unsupported():
+def test_sync_entrypoint_refuses_async_stream_and_nonofficial_endpoint():
     calls = []
     async_client = AsyncOpenAI(
         api_key="owned-synthetic-only",

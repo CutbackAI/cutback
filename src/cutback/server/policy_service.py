@@ -86,6 +86,8 @@ def put_policy(session, store, project, dataset_id, source, key, value, identifi
     """Caller must establish current admin authority and hold the preparation lock."""
     from cutback.server.evaluation_api import policy_object_count
 
+    if source.async_consumer and value.cache_execution is not None:
+        raise ValueError("POLICY_SOURCE_ASYNC_CACHE_RUNTIME_UNQUALIFIED")
     dataset, environment, policy_id, policy = dataset_scope(session, project, dataset_id, source)
     expiry = dataset_expiry(session, dataset, policy_id)
     if value.workflow != source.workflow or value.max_input_bytes != source.max_input_bytes:

@@ -55,13 +55,13 @@ class SourcePolicyProgram(StrictModel):
             or plan.split != "validation"
             or plan.predecessor_run_id
             or execution.reference.cache_enabled
-            or plan.baseline.routes
             or self.generator is not None
             and self.generator.transport != execution.transport
         ):
-            raise ValueError("POLICY_PROGRAM_DISTINCT_NATIVE_REFERENCE_TEMPLATE_REQUIRED")
+            raise ValueError("POLICY_PROGRAM_DISTINCT_CURRENT_REFERENCE_TEMPLATE_REQUIRED")
         if self.generator is not None and (
-            self.generator.max_output_tokens > plan.baseline.max_output_tokens
+            not plan.baseline.routes
+            and self.generator.max_output_tokens > plan.baseline.max_output_tokens
             or self.generator.model.exact_cache is not None
         ):
             raise ValueError("POLICY_PROGRAM_GENERATOR_OUTSIDE_SOURCE_OUTPUT_FRAME")
@@ -158,15 +158,25 @@ def compile_policy_program(
     if any(descriptions[value.key] != value for value in [plan.baseline, *plan.candidates]):
         raise ValueError("POLICY_PROGRAM_FROZEN_DESCRIPTORS_CHANGED")
     original = policies[execution.reference.key]
-    if original.strategy.provider != "openai" or original.cache_execution is not None:
-        raise ValueError("POLICY_PROGRAM_CURRENT_UNCACHED_NATIVE_FRAME_REQUIRED")
+    if original.cache_execution is not None:
+        raise ValueError("POLICY_PROGRAM_CURRENT_UNCACHED_SOURCE_FRAME_REQUIRED")
     if specification.generator is not None and (
         specification.generator.max_instruction_bytes > original.max_instruction_bytes
+        or specification.generator.max_output_tokens > original.baseline.max_output_tokens
     ):
         raise ValueError("POLICY_PROGRAM_GENERATOR_INSTRUCTION_BOUND_CHANGED")
     counts, inputs = _dataset(specification, dataset, policies)
     costs = policy_upper_costs(execution, policies)
     baseline = costs[execution.reference.key]
+    if specification.generator is not None:
+        from cutback.evals.policy_generation import seeds
+
+        for seed in seeds(policies).values():
+            possible = seed.strategy.model_copy(
+                update={"max_output_tokens": specification.generator.max_output_tokens}
+            )
+            if upper_cost(possible) > baseline:
+                raise ValueError("POLICY_PROGRAM_GENERATOR_NATIVE_UPPER_EXCEEDS_CURRENT_REFERENCE")
     multiplicities = Counter(inputs)
     hits = sum(number - 1 for number in multiplicities.values())
     eligible, omitted, cache_evidence = [], {}, {}
@@ -304,6 +314,10 @@ def compile_policy_program(
             else None,
             "dataset_split_counts": counts,
             "cache_trial_eligibility": cache_evidence,
+            "reference_kind": "current_source_router"
+            if original.strategy.routes
+            else "current_source_native",
+            "historical_anchor_substituted_for_reference": False,
             "baseline_complete_declared_cost_per_success_usd": str(baseline_cost)
             if baseline_cost is not None
             else None,

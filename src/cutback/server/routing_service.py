@@ -10,7 +10,11 @@ from sqlalchemy import select
 
 from cutback.core.input_routing import LearnedRoutingBinding, RoutingTrainingExecution
 from cutback.evals.datasets import digest
-from cutback.evals.learned_routing import RoutingTrainingEvidence, fit_routes
+from cutback.evals.learned_routing import (
+    RoutingTrainingEvidence,
+    SourcePolicyRoutingTrainingEvidence,
+    fit_routes,
+)
 from cutback.evals.metrics import evaluate
 from cutback.server.content_policy import policy_content, require_payloads_enabled
 from cutback.server.dataset_lineage import inspect_exposure
@@ -280,17 +284,14 @@ def authenticated_training(session, store, project, run_id, *, source_policy=Fal
     canonical_models = by_key
     if source_policy:
         from cutback.evals.policy_artifacts import decode_policy_bundle
-        from cutback.evals.policy_models import policy_leaf_models
+        from cutback.evals.policy_models import policy_leaf_models, resolve_policy_target
         from cutback.server.policy_service import validate_binding
 
         payloads = validate_binding(session, store, project, plan, dataset.id)
-        leaves = policy_leaf_models(
-            plan.source_policy_execution,
-            decode_policy_bundle(payloads, plan.source_policy_execution),
-        )
-        if any(len(values) != 1 or values[0].exact_cache is not None for values in leaves.values()):
-            raise ValueError("POLICY_TRAINING_REQUIRES_ONE_UNCACHED_NATIVE_LEAF_PER_MODEL")
-        canonical_models = {key: values[0] for key, values in leaves.items()}
+        policies = decode_policy_bundle(payloads, plan.source_policy_execution)
+        leaves = policy_leaf_models(plan.source_policy_execution, policies)
+        if any(target.exact_cache is not None for values in leaves.values() for target in values):
+            raise ValueError("POLICY_TRAINING_REQUIRES_UNCACHED_NATIVE_LEAVES")
     expected = len(cases) * len(models)
     payloads = session.scalars(
         select(PayloadSample)
@@ -335,7 +336,13 @@ def authenticated_training(session, store, project, run_id, *, source_policy=Fal
         if not isinstance(receipt, dict):
             raise ValueError("ROUTING_TRAINING_CANONICAL_CASE_RECEIPT_REQUIRED")
         call = call_rows.get(str(receipt.get("id")))
-        model = canonical_models[identity[1]]
+        model = (
+            resolve_policy_target(
+                plan.source_policy_execution, policies, by_key[identity[1]], case["input"]
+            )
+            if source_policy
+            else canonical_models[identity[1]]
+        )
         if (
             not call
             or call.id in seen_calls
@@ -402,7 +409,12 @@ def authenticated_training(session, store, project, run_id, *, source_policy=Fal
                     "known_cost_usd": result[1],
                 }
             )
-    evidence = RoutingTrainingEvidence.model_validate(
+    evidence_type = (
+        SourcePolicyRoutingTrainingEvidence
+        if source_policy and plan.baseline.routes
+        else RoutingTrainingEvidence
+    )
+    evidence = evidence_type.model_validate(
         dict(
             split="train",
             dataset_sha256=dataset.immutable_hash,

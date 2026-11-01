@@ -11,7 +11,7 @@ from cutback.core.policy_producer import PolicySourceBinding
 from cutback.evals.campaigns import NativeGeneratorSpec
 from cutback.evals.experiments import ExperimentPlan, ModelSpec
 from cutback.evals.policy_artifacts import prepare_policy_payload
-from cutback.evals.policy_models import policy_descriptors
+from cutback.evals.policy_models import policy_descriptors, policy_upper_costs
 from cutback.evals.source_policy_programs import SourcePolicyProgram, compile_policy_program
 
 
@@ -189,3 +189,52 @@ def test_next_cycle_uses_current_native_source_as_reference_instead_of_its_histo
     assert result["eligible"] and result["selected_control_keys"] == ["cheap"]
     assert policies["reference"].baseline.model == "gpt-4.1"
     assert current.template.baseline.model == "gpt-4.1-mini"
+
+
+def current_router_program(*, generate=False, small_current_cap=False):
+    specification, data, policies = program(cached=False, generate=generate)
+    current = policy(routed=True).model_dump(mode="json")
+    if small_current_cap:
+        for route in current["strategy"]["routes"]:
+            route["target"]["max_output_tokens"] = 16
+        raw_control = policies["cheap"].model_dump(mode="json")
+        raw_control["strategy"] = {**current["baseline"], "max_output_tokens": 16}
+        policies["cheap"] = type(policies["cheap"]).model_validate(raw_control)
+    policies["reference"] = type(policies["reference"]).model_validate(current)
+    references = [prepare_policy_payload(key, uuid4(), value)[1] for key, value in policies.items()]
+    raw = specification.model_dump(mode="json")
+    execution = raw["template"]["source_policy_execution"]
+    execution["source"]["policy_sha256"] = policies["reference"].policy_sha256
+    execution["reference"] = references[0].model_dump(mode="json")
+    execution["candidates"] = [references[1].model_dump(mode="json")]
+    bound = SourcePolicyExecutionSpec.model_validate(execution)
+    descriptions = policy_descriptors(bound, policies)
+    raw["template"]["baseline"] = descriptions["reference"].model_dump(mode="json")
+    raw["template"]["candidates"] = [descriptions["cheap"].model_dump(mode="json")]
+    return SourcePolicyProgram.model_validate(raw), data, policies
+
+
+def test_current_router_has_one_complete_budget_and_the_current_policy_reference():
+    specification, data, policies = current_router_program(generate=True)
+    result = compile_((specification, data, policies))
+    costs = policy_upper_costs(specification.template.source_policy_execution, policies)
+    assert result["eligible"] is True and result["reference_kind"] == "current_source_router"
+    assert result["historical_anchor_substituted_for_reference"] is False
+    assert result["confirmation_sample_reduction"] is False
+    assert Decimal(result["phase_upper_usd"]["static_validation"]) == 4 * sum(
+        costs.values(), Decimal(0)
+    )
+    assert (
+        Decimal(result["phase_upper_usd"]["untouched_confirmation"]) == 4 * 2 * costs["reference"]
+    )
+    assert Decimal(result["phase_upper_usd"]["training_if_search_fails"]) > 0
+    training = specification.template.model_dump(mode="json")
+    training["split"] = "train"
+    training["source_policy_execution"]["phase"] = "training"
+    assert ExperimentPlan.model_validate(training).baseline.routes
+
+
+def test_generation_cannot_borrow_a_higher_historical_output_budget_from_the_anchor():
+    specification, data, policies = current_router_program(generate=True, small_current_cap=True)
+    with pytest.raises(ValueError, match="GENERATOR_NATIVE_UPPER_EXCEEDS_CURRENT_REFERENCE"):
+        compile_((specification, data, policies))

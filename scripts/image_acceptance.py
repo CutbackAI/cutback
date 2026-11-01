@@ -45,6 +45,64 @@ def inside(container, code, values, *, timeout=180):
     )
 
 
+def qualify_async_policy_runtime(image):
+    """Exercise the installed async sample in an offline read-only non-root image."""
+    code = """import json,os,runpy,sys,tempfile
+from pathlib import Path
+from cutback.application_checks import git
+from cutback.policy_source import inspect_configuration
+from cutback.sample_app.policy_fixture import fixture
+assert os.getuid()==10001
+with tempfile.TemporaryDirectory(prefix="owned-async-policy-") as name:
+ root=Path(name)
+ for filename,value in fixture(async_consumer=True).items():
+  (root/filename).write_text(value,encoding="utf-8")
+ git(root,"init","--template=")
+ git(root,"add",".")
+ git(root,"-c","user.name=Synthetic","-c","user.email=synthetic@example.invalid",
+     "commit","-m","Independent async policy check")
+ _,before=inspect_configuration(root,"app.py")
+ assert before.async_consumer
+ sys.path.insert(0,str(root))
+ runpy.run_path(str(root/"check_application.py"),run_name="__main__")
+ _,after=inspect_configuration(root,"app.py")
+ assert before==after
+ cases=len((root/"tickets.jsonl").read_text("utf-8").splitlines())
+print(json.dumps({"contract":"cutback.source-policy-async.v1","uid":10001,
+ "native_response_checks_passed":True,"sample_cases":cases,
+ "source_unchanged":True,"paid_provider_calls":0,"network":"none"}))
+"""
+    output = checked(
+        [
+            "docker",
+            "run",
+            "--rm",
+            "--network",
+            "none",
+            "--read-only",
+            "--tmpfs",
+            "/tmp:rw,noexec,nosuid,size=64m,mode=1777",
+            "--memory",
+            "256m",
+            "--pids-limit",
+            "128",
+            "--cpus",
+            "1",
+            "--cap-drop",
+            "ALL",
+            "--security-opt",
+            "no-new-privileges",
+            "--entrypoint",
+            "/app/.venv/bin/python",
+            image,
+            "-c",
+            code,
+        ],
+        timeout=90,
+    )
+    return json.loads(output.strip().splitlines()[-1])
+
+
 def seed_owned_routing_program(container, values, *, source_policy=False):
     """Keep this whole program separate from the existing multi-fixture seed timer."""
     code = """import json,os,httpx
@@ -351,6 +409,7 @@ def main(
         raise ValueError("SECURITY_IMAGE_GATE_REQUIRES_ACTUAL_ISOLATED_TOOLS")
 
     image_id = json.loads(checked(["docker", "image", "inspect", image]))[0]["Id"]
+    async_policy_runtime = qualify_async_policy_runtime(image_id) if source_policy else None
     password = (ROOT / "infra/compose/secrets/db_password").read_text().strip()
     kwargs = dict(host="127.0.0.1", port=55432, user="cutback", password=password, dbname="cutback")
     names = ["cutback_image_" + uuid4().hex, "cutback_recovered_" + uuid4().hex]
@@ -1121,6 +1180,7 @@ engine.dispose()
                     "native_request_profile_sample": native_profiles,
                     "routing_program_sample": routing_sample,
                     "source_policy_program_sample": policy_sample,
+                    "source_policy_async_native_runtime": async_policy_runtime,
                     "image": image,
                     "image_id": image_id,
                     "uid": 10001,

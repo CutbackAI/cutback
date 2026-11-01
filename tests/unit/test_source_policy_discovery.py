@@ -1,5 +1,6 @@
 """An application agent discovers the qualified consumer without importing the app."""
 
+import pytest
 from support_policy_application import application
 
 from cutback.agent import analyze
@@ -7,8 +8,11 @@ from cutback.application_checks import git
 from cutback.core.source_guidance import explain_source
 
 
-def test_policy_consumer_discovery_is_parse_only_and_gives_a_concrete_whole_budget_action(tmp_path):
-    root = application(tmp_path)
+@pytest.mark.parametrize("async_consumer", [False, True])
+def test_policy_consumer_discovery_is_parse_only_and_gives_a_concrete_whole_budget_action(
+    tmp_path, async_consumer
+):
+    root = application(tmp_path, async_consumer=async_consumer)
     (root / "never_import.py").write_text(
         "raise RuntimeError('DO_NOT_EXECUTE_SOURCE')\n", encoding="utf-8"
     )

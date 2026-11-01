@@ -1,7 +1,10 @@
 """Public controls preserve approval boundaries and omit private validation details."""
 
+import subprocess
+import sys
 from uuid import uuid4
 
+import pytest
 import typer
 from typer.testing import CliRunner
 
@@ -17,6 +20,27 @@ def command():
 
     register_policy_program(app, result.append, fail)
     return app, result, errors
+
+
+@pytest.mark.parametrize("async_consumer", [False, True])
+def test_independent_sample_copies_and_runs_actual_native_consumer_without_paid_io(
+    tmp_path, async_consumer
+):
+    app, output, errors = command()
+    root = tmp_path / "independent-policy-sample"
+    args = ["source-policy", "sample", str(root), *(["--async"] if async_consumer else [])]
+    result = CliRunner().invoke(app, args)
+    assert result.exit_code == 0, result.output
+    assert output == [{"status": "SYNTHETIC_SAMPLE_READY", "provider_calls": 0}] and errors == []
+    checked = subprocess.run(
+        [sys.executable, "check_application.py"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        timeout=45,
+    )
+    assert checked.returncode == 0, checked.stdout + checked.stderr
+    assert "contract passed" in checked.stdout
 
 
 def test_preparation_forwards_explicit_scope_and_budget_without_auto_approval(
@@ -97,3 +121,73 @@ def test_uncertain_approval_is_not_repeated_and_content_errors_are_redacted(tmp_
     assert calls[0] == {"program_hash": "a" * 64, "approval_ref": "owned-cli-approval"}
     assert "PRIVATE_SYNTHETIC" not in result.output + str(errors)
     assert errors[0][0] == "POLICY_PROGRAM_ACTION_STOPPED" and not output
+
+
+@pytest.mark.parametrize(
+    "current_routed,async_consumer,code",
+    [
+        (False, True, "ASYNC_COLLECTOR_UPGRADE_REQUIRED"),
+        (True, False, "CURRENT_ROUTER_COLLECTOR_UPGRADE_REQUIRED"),
+    ],
+)
+def test_older_collectors_get_a_concrete_upgrade_action_before_any_payload_upload(
+    tmp_path, monkeypatch, current_routed, async_consumer, code
+):
+    from support_policy_application import application
+
+    from cutback.agent_policy_program import prepare
+
+    root = application(tmp_path, current_routed=current_routed, async_consumer=async_consumer)
+    calls = []
+
+    class OldCollector:
+        endpoint = "https://collector.example.invalid"
+
+        def __call__(self, method, path):
+            calls.append((method, path))
+            assert method == "GET" and path == "/v1/health/ready"
+            return {"source_policy_program_contract": "cutback.source-policy-program.v1"}
+
+    with pytest.raises(ValueError, match=code):
+        prepare(
+            root,
+            OldCollector(),
+            uuid4(),
+            dataset_id=uuid4(),
+            baseline_snapshot_id=uuid4(),
+            producer_file="app.py",
+            purpose="owned-upgrade-check",
+            max_usd="1",
+            generate=False,
+        )
+    assert calls == [("GET", "/v1/health/ready")]
+    assert not (root / ".cutback/agent/policy-program.json").exists()
+    import cutback.agent_control as connection
+
+    monkeypatch.setattr(connection, "connect", lambda *a, **kw: (OldCollector(), str(uuid4())))
+    app, output, errors = command()
+    result = CliRunner().invoke(
+        app,
+        [
+            "source-policy",
+            "prepare",
+            "--target",
+            str(root),
+            "--dataset",
+            str(uuid4()),
+            "--baseline-snapshot",
+            str(uuid4()),
+            "--producer",
+            "app.py",
+            "--purpose-reference",
+            "owned-upgrade-check",
+            "--max-usd",
+            "1",
+            "--no-generate",
+        ],
+    )
+    assert result.exit_code == 2 and not output
+    assert errors[0][0].endswith(code)
+    assert "Upgrade the collector and worker" in errors[0][1]
+    assert "SDK pin unchanged" in errors[0][1]
+    assert not (root / ".cutback/agent/policy-program.json").exists()

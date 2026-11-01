@@ -24,11 +24,20 @@ def register_policy_program(app, output, fail):
                 fail("POLICY_PROGRAM_DEPENDENCIES_REQUIRED", "Install the documented eval extra.")
             except (OSError, ValueError, KeyError, TypeError) as error:
                 code = str(error)
+                upgrade = code in {
+                    "POLICY_PROGRAM_COLLECTOR_UPGRADE_REQUIRED",
+                    "POLICY_PROGRAM_ASYNC_COLLECTOR_UPGRADE_REQUIRED",
+                    "POLICY_PROGRAM_CURRENT_ROUTER_COLLECTOR_UPGRADE_REQUIRED",
+                }
                 fail(
                     code
                     if type(error) is ValueError and re.fullmatch(r"[A-Z_]{3,120}", code)
                     else "POLICY_PROGRAM_ACTION_STOPPED",
-                    "Inspect the same saved program; private content omitted.",
+                    "Upgrade the collector and worker to the matching Cutback source revision, "
+                    "keep the application SDK pin unchanged, then prepare again. "
+                    "No provider call was sent."
+                    if upgrade
+                    else "Inspect the same saved program; private content omitted.",
                 )
 
         return call
@@ -203,13 +212,13 @@ def register_policy_program(app, output, fail):
 
     @group.command("sample")
     @guarded
-    def sample(destination: Path):
+    def sample(destination: Path, async_consumer: Annotated[bool, typer.Option("--async")] = False):
         """Copy an independent synthetic policy consumer and offline checks into a new directory."""
         from cutback.sample_app.policy_fixture import fixture
 
         if destination.exists() or destination.is_symlink():
             raise ValueError("POLICY_SAMPLE_DESTINATION_MUST_BE_NEW")
         destination.mkdir(parents=True)
-        for name, value in fixture().items():
+        for name, value in fixture(async_consumer=async_consumer).items():
             (destination / name).write_text(value, encoding="utf-8", newline="")
         output({"status": "SYNTHETIC_SAMPLE_READY", "provider_calls": 0})

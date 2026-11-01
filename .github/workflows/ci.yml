@@ -64,7 +64,7 @@ jobs:
       - run: /tmp/cutback-legacy/bin/python -m pytest tests/unit/test_legacy_sdk.py tests/unit/test_scanner.py tests/unit/test_scanner_extended.py tests/unit/test_scanner_lazy.py -q
   openai3-sdk:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -144,6 +144,7 @@ jobs:
           tests/integration/test_reviewed_criteria_migrations.py
           tests/end_to_end/test_reviewed_criteria_pipeline.py
           tests/integration/test_source_policy_execution.py
+          tests/integration/test_source_policy_async_scope.py
           tests/integration/test_source_policy_cache.py
           tests/integration/test_source_policy_program_api.py
           tests/integration/test_source_policy_program_workflow.py

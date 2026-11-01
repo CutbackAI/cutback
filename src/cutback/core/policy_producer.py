@@ -34,6 +34,21 @@ def classify(client, text):
 PROGRAM_AST = program_dump(ast.parse(PROGRAM))
 PROGRAM_SHA256 = hashlib.sha256(PROGRAM_AST.encode()).hexdigest()
 
+ASYNC_PROGRAM = """from pathlib import Path
+
+from cutback.source_policy import load_policy, responses_create_async
+
+ROOT = Path(__file__).resolve().parent
+
+
+async def classify(client, text):
+    policy = load_policy(ROOT / "policy.json")
+    return await responses_create_async(client, text, policy)
+"""
+ASYNC_PROGRAM_AST = program_dump(ast.parse(ASYNC_PROGRAM))
+ASYNC_PROGRAM_SHA256 = hashlib.sha256(ASYNC_PROGRAM_AST.encode()).hexdigest()
+PROGRAMS = {PROGRAM_AST: PROGRAM_SHA256, ASYNC_PROGRAM_AST: ASYNC_PROGRAM_SHA256}
+
 
 def qualify(raw: bytes):
     if type(raw) is not bytes or len(raw) > 65536:
@@ -46,11 +61,12 @@ def qualify(raw: bytes):
             first = tree.body[0].value
             if isinstance(first, ast.Constant) and isinstance(first.value, str):
                 tree.body.pop(0)
-        if program_dump(tree) != PROGRAM_AST:
+        identity = PROGRAMS.get(program_dump(tree))
+        if identity is None:
             raise ValueError
     except (ValueError, UnicodeError, SyntaxError, RecursionError):
         raise ValueError("POLICY_SOURCE_UNQUALIFIED_NATIVE_PROGRAM") from None
-    return PROGRAM_SHA256
+    return identity
 
 
 class PolicySourceBinding(StrictModel):
@@ -76,7 +92,11 @@ class PolicySourceBinding(StrictModel):
             not self.producer_file.endswith(".py")
             or str(PurePosixPath(self.producer_file).parent / "policy.json")
             != self.configuration_file
-            or self.program_sha256 != PROGRAM_SHA256
+            or self.program_sha256 not in PROGRAMS.values()
         ):
             raise ValueError("POLICY_SOURCE_EXACT_PAIRED_PROGRAM_AND_CONFIGURATION_REQUIRED")
         return self
+
+    @property
+    def async_consumer(self):
+        return self.program_sha256 == ASYNC_PROGRAM_SHA256

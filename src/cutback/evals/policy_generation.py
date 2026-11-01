@@ -116,7 +116,9 @@ def _document(specification, policies, training, feedback, previous):
             for value in specification.template.criteria
             if value.required
         ],
-        "source_output_ceiling": specification.template.baseline.max_output_tokens,
+        "source_output_ceiling": policies[
+            specification.template.source_policy_execution.reference.key
+        ].baseline.max_output_tokens,
         "instruction_byte_limit": specification.generator.max_instruction_bytes,
         "variant_limit": specification.generator.variants_per_round,
         "output_bounds": [

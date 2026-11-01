@@ -1,5 +1,125 @@
 # Implementation progress
 
+The common-program foundation merged in [PR 79](https://github.com/CutbackAI/cutback/pull/79)
+as `ec3c2e73af3def811942211d12a6d61798621458` after all **17 exact-head hosted
+jobs** passed for `2be013a687213e142a2aae31bc1961d0e4886150`. Python 3.11 passed
+**2634 / 40 skips in 4754.61 seconds**; Python 3.13 passed **2633 / 41 skips in
+3869.80 seconds**, alongside separate legacy/native SDK matrices, infrastructure,
+isolated tools, audits and CodeQL. Private/public wheel and source archives were
+byte-identical and passed the publication boundary. This closes that bounded
+foundation's hosted gate; the following router/async follow-up keeps its own
+publication and exact-head checks. PyPI dev5 is unchanged.
+
+1 November 2026 current-reference routing and async source follow-up, **locally
+accepted; exact public-head hosted gates pending**. Current uncached input-size
+routers are compared against their actual per-input native leaves. Native
+controls, train-only generation/fitting and one untouched confirmation retain
+their shared whole-search envelope. Historical anchors do not substitute for
+current observations. The independent dashboard sample explains its four stages,
+failed controls, recorded program and unknown compute/hosting costs.
+
+The exact async wheel is
+`20d4d069034354b8b7fcb48ca95d372815b5f501a0e9577028d375da060f103d`.
+Fresh installed SDK **2.29.0 / 3.35.1**, Pydantic **2.14.1**, each passed **196
+tests**, in **2301.19 / 2343.95 seconds**, with matching independent core-plus-HTTPX
+clients and authenticated browser/mobile/accessibility journeys. The earlier
+current-router wheel separately passed **175 / 175** in **2086.08 / 2080.60
+seconds**. Scope fixes after the initial duplicate-test-basename collection
+failure changed tests/CI/documentation only; the async wheel remained byte-identical.
+Ruff/format, mypy (**438 modules**), generated OpenAPI/types and React build pass.
+
+The owned async image
+`sha256:85d46c162a783fa23ed82a920d56846d4c516e646a7880d4fec63448e0e696d6`
+matches all **465 application files / 438 Python files** in that wheel. Full
+encrypted backup, key rotation and restore preserved **107 tables / 3527 objects**,
+including source programs, both application trees, inverse rollback, scoped
+receipts and prior native/routing/retrieval/security workflows. The new async
+consumer ran **80 synthetic cases** as non-root with networking disabled and a
+read-only filesystem; source identity stayed unchanged. Separate Linux symlink
+guards passed. The two-tenant 2000-event accept/deduplicate smoke took **2.375
+seconds**, which is not a production SLA.
+
+Async cache, current cached references, arbitrary wrappers/tools/streams and
+cross-engine selection with retrieval/compression/local models remain unqualified.
+Synthetic outcomes do not establish real model quality, customer savings or full
+task costs. No paid inference, production deployment or PyPI upload occurred;
+published dev5 is unchanged. Final private/public archive equality, publication
+boundary and hosted acceptance are recorded by their own subsequent gates.
+
+1 November 2026 async source consumer, **under qualification**. The supplied
+awaited producer has its own complete AST identity within the existing source
+binding. The synchronous binding's defaults and serialized fields are unchanged.
+The adapter borrows the exact pinned `AsyncOpenAI` client, returns native response
+objects, preserves native errors/retries/timeouts/cancellation, and suppresses SDK
+payload logging only during the owned async request. It adds no tools, streaming,
+async cache or new provider/model. Async cache is refused by inspection, import,
+execution specification and runtime before dispatch. Separate collector readiness
+capabilities diagnose old async/current-router collectors before payload uploads.
+
+Pinned installed SDK 2.29.0 and 3.35.1 async implementations were inspected.
+Focused SDK2 native async checks passed **seven in 2.17 seconds**. SDK3 runtime
+and actual offline sample-copy checks passed **11 in 9.30 seconds**. Parse-only
+binding/discovery/runtime checks passed **19 in 31.92 seconds**. The later
+binding/discovery/runtime/CLI selection passed **25 in 61.33 seconds**. Actual
+async application checks on both private source trees, exact rollback and the
+PostgreSQL async-cache refusal passed **two in 271.23 seconds**. A separately
+selected current-router synchronous regression passed **one in 257.58 seconds**;
+it is not relabeled as async evidence. The examples use independent synthetic
+tickets and closed HTTP. Mypy passed **438 Python files**. A new read-only,
+network-disabled non-root image check exercises the actual async sample; that
+new image gate and the fresh installed SDK/minimal-client matrix are pending.
+Nothing here establishes real model quality or end-to-end async latency.
+
+The first frozen SDK2/SDK3 selections stopped during collection in **11.43 /
+11.46 seconds** because the new unit and integration tests shared a module
+basename. No test pass is claimed for those runs. The integration file and its
+CI/archive selectors now have a unique name; the complete installed selection
+must pass again. This correction changes tests, CI and documentation only; the
+qualified application wheel remains a separately verified identity.
+
+The preceding current-router revision's exact wheel is
+`bed3b5b60f0d2a8f1fdab803362d99df48cd42539df09792624bf500f2a68ff1`.
+Its image `sha256:37803bd28741874b0b655014954b10b395819da86264533b76e1fa2c3aecf19f`
+matches all **464 application files / 437 Python files** and passed the complete
+**107-table / 3,527-object** encrypted restore/key-rotation drill. Both source
+trees, selected program, canonical receipts, existing native/routing/security/
+retrieval workflows and scoped pointers survived recovery. Its two-tenant fixture
+accepted and deduplicated 2,000 items in 2.234 seconds; no production SLA is
+claimed. The 175-test installed SDK selections for that frozen revision are
+still running separately. Source-policy PR 79 remains under exact-head hosted
+qualification; source merges do not update the published PyPI dev5.
+
+1 November 2026 follow-up, **current routed reference and guided first use are
+under qualification**. The common program can now freeze an uncached current
+input-size router as its actual reference. Static controls, bounded instruction
+generation and conditional refitting retain the same program budget, deadline,
+content ownership and single confirmation. Every routed training receipt must
+match the canonical native leaf for that exact input. The separate source-only
+fitter compares actual current-router costs, uses only paired native controls,
+and preserves the current router above the largest training input. Ordinary
+native routing training keeps its original contract. The historical anchor is
+never substituted for a current reference or used to enlarge the generation
+budget. Cached current references and the broader common-engine work remain open.
+
+The dashboard's independent one-budget sample now explains the failed controls,
+conditional training, validation and confirmation in four steps, links to the
+exact program, and identifies checked source copies and rollback. OpenAPI,
+generated clients/types and React were regenerated/built. Source checks passed
+**69 unit tests in 2.79 seconds** and mypy **437 files**. These are early source
+checks, not installed or hosted acceptance. The initial browser fixtures omitted
+the demo availability flag and then the existing guide's source/stage fields;
+both failed runs are retained and do not count as acceptance. The corrected
+fixture now supplies actual recorded stages and the real private synthetic diff.
+Database/native journeys, complete browser checks, fresh installed SDKs, minimal
+consumer and container qualification remain required. The corrected source
+browser/sample passed **one in 158.44 seconds**, and the source native/current-router
+static/generated/fitted and uncertain-call selection passed **seven in 375.39
+seconds**, including rejection of a forged current-route call receipt. These
+source runs precede the final installed matrix and its additional uncertainty,
+minimal-client and checked-handoff cases. The SDK compatibility job
+allowance increases from 30 to 45 minutes for the added complete native journeys;
+every selector and required job remains in place.
+
 1 November 2026 common source-policy program, **local installed and container
 acceptance passed; public exact-head hosted qualification remains pending**. A new
 deterministic-v19 encrypted policy binding unifies native model/instruction,

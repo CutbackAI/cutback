@@ -4,7 +4,7 @@ import hashlib
 from pathlib import Path, PurePosixPath
 
 from cutback.application_checks import snapshot, source_root
-from cutback.core.policy_producer import PolicySourceBinding, qualify
+from cutback.core.policy_producer import ASYNC_PROGRAM_SHA256, PolicySourceBinding, qualify
 from cutback.core.request_profiles import safe_relative
 from cutback.source_policy import MAX_POLICY_BYTES, parse_policy
 
@@ -26,6 +26,8 @@ def inspect_configuration(root: Path, producer_file: str):
     if hashlib.sha256(configuration).hexdigest() != original.files[configuration_file]:
         raise ValueError("POLICY_SOURCE_CHANGED_DURING_INSPECTION")
     policy = parse_policy(configuration)
+    if program == ASYNC_PROGRAM_SHA256 and policy.cache_execution is not None:
+        raise ValueError("POLICY_SOURCE_ASYNC_CACHE_RUNTIME_UNQUALIFIED")
     if snapshot(root) != original:
         raise ValueError("POLICY_SOURCE_CHANGED_DURING_INSPECTION")
     return policy, PolicySourceBinding(

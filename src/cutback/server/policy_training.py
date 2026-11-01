@@ -5,8 +5,9 @@ from decimal import Context, localcontext
 from cutback.core.improvement_policy import SourceImprovementPolicy
 from cutback.evals.datasets import digest
 from cutback.evals.experiments import ModelSpec
-from cutback.evals.learned_routing import fit_routes
+from cutback.evals.learned_routing import SourcePolicyRoutingTrainingEvidence, fit_routes
 from cutback.evals.policy_artifacts import decode_policy_bundle
+from cutback.evals.policy_routing_fit import fit_current_routes
 from cutback.server.policy_service import validate_binding
 from cutback.server.routing_service import authenticated_training
 
@@ -27,7 +28,11 @@ def fit_policy(session, store, project, training_run_id, options):
     if any(row.input_bytes > execution.source.max_input_bytes for row in evidence.observations):
         raise ValueError("POLICY_TRAINING_OUTSIDE_SOURCE_INPUT_DOMAIN")
     with localcontext(Context(prec=80)):
-        result = fit_routes(evidence, options)
+        result = (
+            fit_current_routes(evidence, options)
+            if isinstance(evidence, SourcePolicyRoutingTrainingEvidence)
+            else fit_routes(evidence, options)
+        )
     fitted = ModelSpec.model_validate(result["candidate"])
     routes = []
     for route in fitted.routes:

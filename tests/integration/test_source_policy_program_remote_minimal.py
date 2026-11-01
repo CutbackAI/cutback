@@ -15,8 +15,11 @@ from cutback.policy_source import inspect_configuration
 pytestmark = pytest.mark.postgres
 
 
+@pytest.mark.parametrize(
+    "current_routed,async_consumer", [(False, False), (True, False), (False, True)]
+)
 def test_minimal_remote_program_prepare_reconcile_status_and_cancel_without_sdk_or_content_logs(
-    api, tenant, tmp_path, monkeypatch
+    api, tenant, tmp_path, monkeypatch, current_routed, async_consumer
 ):
     configured = os.getenv("CUTBACK_TEST_REMOTE_PYTHON")
     if not configured:
@@ -41,10 +44,10 @@ def test_minimal_remote_program_prepare_reconcile_status_and_cancel_without_sdk_
         timeout=30,
     )
     assert probe.returncode == 0, "POLICY_PROGRAM_REQUIRES_MATCHING_MINIMAL_WHEEL"
-    root = application(tmp_path)
+    root = application(tmp_path, current_routed=current_routed, async_consumer=async_consumer)
     _, binding = inspect_configuration(root, "app.py")
     base, _, dataset, _, executor, calls, _, _, request = prepared_program(
-        api, tenant, tmp_path, monkeypatch, source_binding=binding
+        api, tenant, tmp_path, monkeypatch, source_binding=binding, current_routed=current_routed
     )
     admin = api[1]["Authorization"][7:]
     env["CUTBACK_CONTROL_TOKEN"] = admin
@@ -101,6 +104,9 @@ def test_minimal_remote_program_prepare_reconcile_status_and_cancel_without_sdk_
             ]
             row = invoke(arguments)
             assert row["status"] == "READY_FOR_APPROVAL"
+            assert row["economic_envelope"]["reference_kind"] == (
+                "current_source_router" if current_routed else "current_source_native"
+            )
             assert invoke(arguments)["id"] == row["id"]
             assert invoke(["status", "--target", str(root)])["program_hash"] == row["program_hash"]
             assert invoke(["cancel", "--target", str(root)])["status"] == "CANCELLED"

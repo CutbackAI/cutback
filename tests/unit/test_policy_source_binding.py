@@ -8,20 +8,30 @@ from test_source_improvement_policy import policy
 
 import cutback.policy_source as source
 from cutback.application_checks import git
-from cutback.core.policy_producer import PROGRAM, PROGRAM_SHA256, PolicySourceBinding, qualify
+from cutback.core.policy_producer import (
+    ASYNC_PROGRAM,
+    ASYNC_PROGRAM_SHA256,
+    PROGRAM,
+    PROGRAM_SHA256,
+    PolicySourceBinding,
+    qualify,
+)
 
 
-def application(tmp_path):
+def application(tmp_path, *, async_consumer=False):
     root, _ = repository(tmp_path)
-    (root / "app.py").write_text(PROGRAM, encoding="utf-8")
+    (root / "app.py").write_text(ASYNC_PROGRAM if async_consumer else PROGRAM, encoding="utf-8")
     (root / "policy.json").write_text(policy(routed=True).model_dump_json(), encoding="utf-8")
     git(root, "add", "app.py", "policy.json")
     git(root, "commit", "-m", "Independent common-policy source fixture")
     return root
 
 
-def test_exact_metadata_binding_without_importing_provider_or_application(tmp_path, monkeypatch):
-    root = application(tmp_path)
+@pytest.mark.parametrize("async_consumer", [False, True])
+def test_exact_metadata_binding_without_importing_provider_or_application(
+    tmp_path, monkeypatch, async_consumer
+):
+    root = application(tmp_path, async_consumer=async_consumer)
     original = builtins.__import__
 
     def no_application_or_provider(name, *args, **kwargs):
@@ -31,7 +41,9 @@ def test_exact_metadata_binding_without_importing_provider_or_application(tmp_pa
 
     monkeypatch.setattr(builtins, "__import__", no_application_or_provider)
     selected, binding = source.inspect_configuration(root, "app.py")
-    assert binding.program_sha256 == PROGRAM_SHA256
+    assert binding.program_sha256 == (ASYNC_PROGRAM_SHA256 if async_consumer else PROGRAM_SHA256)
+    assert binding.async_consumer is async_consumer
+    assert "async_consumer" not in binding.model_dump(mode="json")
     assert binding.policy_sha256 == selected.policy_sha256
     assert binding.workflow == selected.workflow
     assert "OWNED_PRIVATE_VARIANT" not in binding.model_dump_json()
@@ -77,3 +89,28 @@ def test_program_changes_cannot_execute_side_effects_and_paths_remain_paired(tmp
 def test_oversized_producer_is_refused_without_parsing():
     with pytest.raises(ValueError, match="PRODUCER_BYTE_BOUND"):
         qualify(b" " * 65537)
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        lambda raw: raw.replace(
+            "return await responses_create_async", "return responses_create_async"
+        ),
+        lambda raw: raw.replace('"policy.json"', '"other-policy.json"'),
+        lambda raw: raw + "\nraise RuntimeError('MUST_NOT_EXECUTE')\n",
+        lambda raw: raw.replace("async def classify", "def classify"),
+    ],
+)
+def test_async_program_requires_complete_awaited_contract_without_importing_or_executing(change):
+    with pytest.raises(ValueError, match="UNQUALIFIED_NATIVE_PROGRAM"):
+        qualify(change(ASYNC_PROGRAM).encode())
+
+
+def test_async_source_cannot_silently_turn_a_cached_policy_into_uncached_execution(tmp_path):
+    root = application(tmp_path, async_consumer=True)
+    (root / "policy.json").write_bytes(policy(cached=True).configuration_bytes())
+    git(root, "add", ".")
+    git(root, "commit", "-m", "Independent unsupported async cache contract")
+    with pytest.raises(ValueError, match="ASYNC_CACHE_RUNTIME_UNQUALIFIED"):
+        source.inspect_configuration(root, "app.py")
