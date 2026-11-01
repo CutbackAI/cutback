@@ -9,7 +9,9 @@ def test_sdk3_protected_names_require_all_matrix_shards_even_after_failure():
     shards, required = jobs["openai3-sdk"], jobs["openai3-sdk-required"]
     assert set(shards["strategy"]["matrix"]["scope"]) == {"core", "workflows", "systems"}
     assert set(required["needs"]) == {"openai3-sdk"}
-    assert required["if"] == "always()"
+    # Dependency failure must still run the fail-closed guard, while cancelling
+    # the workflow must also cancel this aggregate. Neither outcome is success.
+    assert required["if"] == "${{ !cancelled() }}"
     assert required["name"] == "openai3-sdk (${{ matrix.python }})"
     assert required["strategy"]["matrix"]["python"] == shards["strategy"]["matrix"]["python"]
     step = required["steps"][0]

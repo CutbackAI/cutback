@@ -1,6 +1,10 @@
 # One budget for a source policy
 
 This source feature is being qualified. PyPI `0.1.0.dev5` does not contain it.
+For applications already declaring exact cache, inspect their actual retained
+[policy activity](policy-runtime-activity.md) before choosing an improvement
+reference. Configured cache is not proof it ran. Automatic cached-current
+reference evaluation remains an explicit open gate.
 It supports the supplied fixed, stateless sync or async OpenAI Responses consumer with a
 plain text input and exact-label evaluation. See [current acceptance](progress.md)
 before treating a source checkout, wheel or container as a tested release.

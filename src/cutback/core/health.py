@@ -27,6 +27,15 @@ CounterName = Literal[
     "native_profile_queued",
     "native_profile_exported",
     "native_profile_overhead_us_total",
+    "policy_runtime_observed",
+    "policy_runtime_queued",
+    "policy_runtime_dropped",
+    "policy_runtime_exported",
+    "policy_runtime_rejected",
+    "policy_runtime_export_failed",
+    "policy_runtime_unattributed",
+    "policy_runtime_normalization_failed",
+    "policy_runtime_queue_depth",
 ]
 
 

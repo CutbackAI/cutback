@@ -1,0 +1,85 @@
+{
+  "status": "LOCAL_COMPONENT_ACCEPTANCE_PASSED_HOSTED_PUBLICATION_PENDING",
+  "application_source_commit": "12ec4576aedc417218a971eeb983939862216c8c",
+  "recovery_test_source_commit": "73fde0ba15b4f633535b471a1483ed67d6e67a4f",
+  "installed": {
+    "default": {
+      "openai": "2.29.0",
+      "pydantic": "2.14.1",
+      "passed": 168,
+      "skipped": 0,
+      "seconds": 275.56,
+      "log_sha256": "00f736ec25cb58f81333965ece9a061116f7b1f4b8cc265cc5b3629cb5a08793"
+    },
+    "sdk3": {
+      "openai": "3.35.1",
+      "pydantic": "2.14.1",
+      "passed": 168,
+      "skipped": 0,
+      "seconds": 275.98,
+      "log_sha256": "45bd395beb7f815fd2b6686d29f01e80720ccc19efffdc344f3e66f46b38e1b7"
+    }
+  },
+  "scope": "content-free logical policy activity; not automatic cached-current optimization",
+  "paid_provider_calls": 0,
+  "production_changed": false,
+  "pypi_changed": false,
+  "new_cached_async_or_stream_support_claimed": false,
+  "wheel_sha256": "7e8a641e2c9f80261c0b0a64a580bce10541e6add7f71259401e38fd668961ee",
+  "image_id": "sha256:ba00f508476e88c7b71c0429bca8793700b0a618363d886d34f3d53bcc4279ec",
+  "application_files": 480,
+  "python_files": 453,
+  "metadata_files": 5,
+  "recovery": {
+    "migration": "0035",
+    "tables": 108,
+    "all_previous_feature_profile": {
+      "restored_encrypted_objects": 3527,
+      "matching_row_counts": true,
+      "deduplication_2000_operations_seconds": 1.875,
+      "production_sla_claimed": false
+    },
+    "focused_activity_profile": {
+      "restored_encrypted_objects": 1459,
+      "matching_row_counts": true,
+      "scope": "default sample and actual source/cache activity; expansion flags disabled",
+      "retained_logical_operations": 4,
+      "actual_native_sdk_invocations": 2,
+      "states": {
+        "native_miss": 1,
+        "hit": 1,
+        "inactive": 1,
+        "unknown": 1
+      },
+      "raw_sha256": "6fb0063a4dd17344960da99e6abbbf7bc8f346dc93f7365698ebfdcd4f897ae6",
+      "actual_report_compared_equal_after_restore": true,
+      "current_cache_revocation_verified": true,
+      "unknown_native_operations": 1,
+      "unknown_cache_operations": 1,
+      "invoice_verified_cost_usd": null,
+      "business_task_success": null
+    },
+    "test_only_followup_whole_wheel_identical": true
+  },
+  "browser": {
+    "authenticated_generic_dashboard_python_test": "passed in each installed selection",
+    "mobile_and_axe": "included in generic authenticated browser profile",
+    "credentials": "memory only"
+  },
+  "minimal_remote": {
+    "cases_per_installed_selection": 2,
+    "client": "matching core-plus-HTTPX installed wheel",
+    "provider_server_crypto_test_dependencies": "absent"
+  },
+  "linux_path_guards": {
+    "source_publication": "passed",
+    "source_observation": "passed",
+    "routing_handoff": "passed"
+  },
+  "open_gates": [
+    "exact public head and hosted workflows",
+    "cached current reference evaluation and uncached training shadow",
+    "independent customer evidence",
+    "broader competitive baseline requirements"
+  ]
+}

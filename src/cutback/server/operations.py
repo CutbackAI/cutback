@@ -157,6 +157,15 @@ def maintain(sessions, *, now=None, raw_days=30, aggregate_days=395, apply=False
             from cutback.server.traces import prune_traces
 
             prune_traces(session, cutoff, selected)
+            from cutback.server.policy_activity_db import PolicyActivityRecord
+
+            # No retained aggregate can reconstruct policy activation or missing activity.
+            session.execute(
+                delete(PolicyActivityRecord).where(
+                    selected(PolicyActivityRecord.project_id),
+                    PolicyActivityRecord.received_at < cutoff,
+                )
+            )
             from cutback.server.task_economics import retain_task_outcomes
 
             retain_task_outcomes(session, cutoff, selected)

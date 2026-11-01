@@ -25,6 +25,7 @@ def register_policy_program(app, output, fail):
             except (OSError, ValueError, KeyError, TypeError) as error:
                 code = str(error)
                 upgrade = code in {
+                    "POLICY_ACTIVITY_MATCHING_COLLECTOR_REQUIRED",
                     "POLICY_PROGRAM_COLLECTOR_UPGRADE_REQUIRED",
                     "POLICY_PROGRAM_ASYNC_COLLECTOR_UPGRADE_REQUIRED",
                     "POLICY_PROGRAM_CURRENT_ROUTER_COLLECTOR_UPGRADE_REQUIRED",
@@ -59,6 +60,35 @@ def register_policy_program(app, output, fail):
                 )
 
         return call
+
+    @group.command("inspect-activity")
+    @guarded
+    def inspect_activity(
+        producer: Annotated[str, typer.Option("--producer")],
+        service: Annotated[str, typer.Option("--service")],
+        target: Path = Path("."),
+        environment: str = "staging",
+        window_minutes: int = 60,
+        local: bool = False,
+        endpoint: str | None = None,
+        project: str | None = None,
+    ):
+        """Inspect current-source cache activity metadata; no application imports or inference."""
+        from cutback.agent_control import connect
+        from cutback.agent_policy_activity import inspect_current
+
+        control, project_id = connect(target, local=local, endpoint=endpoint, project=project)
+        output(
+            inspect_current(
+                target,
+                control,
+                project_id,
+                producer_file=producer,
+                service_name=service,
+                environment=environment,
+                window_minutes=window_minutes,
+            )
+        )
 
     @group.command("assess-workload")
     @guarded

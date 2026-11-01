@@ -172,8 +172,17 @@ jobs:
           tests/unit/test_cloud_imports.py
           tests/unit/test_importers.py
           tests/integration/test_cloud_import_scope.py
+          tests/integration/test_shared_dashboards.py
+          tests/unit/test_policy_activity.py
+          tests/unit/test_policy_activity_observer.py
+          tests/unit/test_policy_activity_discovery.py
+          tests/integration/test_policy_activity_scope.py
+          tests/integration/test_policy_activity_migrations.py
+          tests/integration/test_policy_activity_runtime.py
+          tests/integration/test_policy_activity_remote_minimal.py
           tests/integration/test_cloud_import_remote_minimal.py
           tests/end_to_end/test_cloud_import_dashboard.py
+          tests/end_to_end/test_shared_dashboard.py
           tests/integration/test_policy_data_discovery_scope.py
           tests/unit/test_policy_publication.py
           tests/unit/test_review_publication.py
@@ -323,6 +332,8 @@ jobs:
         run: UV_PROJECT_ENVIRONMENT=/tmp/cutback-training uv sync --project infra/training --locked --no-dev
       - run: uv run python scripts/check_public_boundary.py
       - run: uv run python scripts/check_toolchain.py
+      - name: Verify protected release controls before the long regression
+        run: uv run pytest tests/contract/test_release_controls.py -q
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy

@@ -38,8 +38,9 @@ class Disabled:
 class Observers:
     enabled = True
 
-    def __init__(self, observers, identity):
+    def __init__(self, observers, identity, policy_runtime=None):
         self.observers, self.identity = observers, identity
+        self.policy_runtime = policy_runtime
         self.closed = False
 
     def flush(self, timeout_seconds=0.3):
@@ -81,6 +82,7 @@ def init(
     enabled: bool | None = None,
     providers: tuple[str, ...] | None = None,
     source_map: str | None = None,
+    observe_policy_runtime: bool = False,
     **export_options,
 ):
     """Initialize once per process, outside Lambda handler. Explicit shutdown restores SDK hooks."""
@@ -119,6 +121,7 @@ def init(
         capture_content,
         capture_policy_id,
         source_map,
+        observe_policy_runtime,
     )
 
     with _lock:
@@ -129,7 +132,7 @@ def init(
                 if _active.identity != identity:
                     raise ValueError("Cutback already initialized with different configuration")
                 return _active
-        observers = []
+        observers: list[Any] = []
         try:
             for provider in providers:
                 cls = OpenAIInstrumentation if provider == "openai" else AnthropicInstrumentation
@@ -161,9 +164,45 @@ def init(
                         capture.close()
                     raise
                 observers.append(observer)
+            activity = None
+            if observe_policy_runtime:
+                from cutback.instrumentation.policy_activity import PolicyActivityObserver
+
+                activity = PolicyActivityObserver(
+                    service_name=service_name,
+                    environment=environment,
+                    endpoint=endpoint or os.environ["CUTBACK_ENDPOINT"],
+                    project_id=project_id or os.environ["CUTBACK_PROJECT_ID"],
+                    token=os.environ.get(project_key_from_env, ""),
+                    attribution=attribution,
+                    **export_options,
+                )
+                observers.append(activity)
         except BaseException:
             for observer in observers:
                 observer.close()
             raise
-        _active = observers[0] if len(observers) == 1 else Observers(observers, identity)
+        _active = observers[0] if len(observers) == 1 else Observers(observers, identity, activity)
         return _active
+
+
+def _begin_policy_activity(**metadata):
+    observer = getattr(_active, "policy_runtime", None)
+    if observer is None or observer.closed:
+        return None
+    try:
+        token = observer.begin(**metadata)
+        return (observer, token) if token is not None else None
+    except Exception:
+        observer.count("normalization_failed")
+        return None
+
+
+def _finish_policy_activity(activity, *, completion, receipt=None):
+    if activity is None:
+        return
+    observer, token = activity
+    try:
+        observer.finish(token, completion=completion, receipt=receipt)
+    except Exception:
+        observer.count("normalization_failed")

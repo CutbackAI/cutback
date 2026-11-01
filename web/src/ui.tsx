@@ -22,6 +22,16 @@ export const money = (value: unknown) =>
 export function explain(error: unknown) {
   const code = (error as Error)?.message || "REQUEST_FAILED";
   const messages: Record<string, string> = {
+    DASHBOARD_REVISION_CONFLICT:
+      "A teammate changed this dashboard. Refresh it and review the current composition before saving again.",
+    DASHBOARD_SOURCE_VIEW_CHANGED:
+      "A selected view changed. Refresh the saved views and review their current filters and revisions.",
+    DASHBOARD_CHOOSE_ONE_TO_EIGHT_CURRENT_VIEWS:
+      "Choose one to eight available saved views in this environment. Remove unavailable source views before saving.",
+    DASHBOARD_SINGLE_ENVIRONMENT_REQUIRED:
+      "Every panel must use the dashboard's environment. Choose views for one environment.",
+    SAVED_VIEW_TYPE_CONFLICT:
+      "A shared view or dashboard already uses that key. Choose a different key.",
     CURRENT_SOURCE_WORKLOAD_EVIDENCE_REQUIRED:
       "This window no longer matches the supplied source evidence. Check rights and expiry, refresh your committed-source export, and inspect the current analysis.",
     CACHE_WORKLOAD_COMPLETED_ANALYSIS_REQUIRED:

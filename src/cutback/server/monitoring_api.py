@@ -99,6 +99,10 @@ def new_revision(session, cls, project, body):
 
 
 def install_monitoring(app, sessions, authorize, scope):
+    from cutback.server.dashboard_api import install_dashboards
+
+    install_dashboards(app, sessions, authorize, scope)
+
     @app.post("/v1/projects/{project_id}/online-rules", status_code=201)
     def create_online(project_id: UUID, body: OnlineRuleInput, auth=Depends(authorize)):
         scope(auth, project_id, ("admin",))
@@ -467,6 +471,8 @@ def install_monitoring(app, sessions, authorize, scope):
                 .where(SavedView.project_id == project_id, SavedView.key == body.key)
                 .with_for_update()
             )
+            if row and row.specification.get("page") == "dashboard":
+                raise HTTPException(409, "SAVED_VIEW_TYPE_CONFLICT")
             if (row.revision if row else 0) != body.expected_revision:
                 if row and row.specification == body.model_dump(mode="json"):
                     return metadata(row)
@@ -519,6 +525,9 @@ def install_monitoring(app, sessions, authorize, scope):
                     for r in session.scalars(
                         select(SavedView)
                         .where(SavedView.project_id == project_id)
+                        .where(
+                            SavedView.specification["page"].as_string().in_(["traces", "incidents"])
+                        )
                         .order_by(SavedView.key)
                         .limit(100)
                     )
@@ -535,6 +544,8 @@ def install_monitoring(app, sessions, authorize, scope):
         scope(auth, project_id, ("editor", "admin"))
         with sessions.begin() as session:
             row = scoped(session, SavedView, project_id, view_id, lock=True)
+            if row.specification.get("page") == "dashboard":
+                raise HTTPException(404, "MONITORING_RECORD_NOT_FOUND")
             if row.revision != expected_revision:
                 raise HTTPException(409, "SAVED_VIEW_REVISION_CONFLICT")
             session.delete(row)

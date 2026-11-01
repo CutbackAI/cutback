@@ -1,5 +1,80 @@
 # Implementation progress
 
+The next publication combines the already locally qualified shared dashboards
+and policy runtime activity below with the cloud-import/source-workload changes.
+The preceding exact-head Python 3.13 full regression passed **2,770 tests** and
+skipped **42**, but failed the release-control contract because its expectation
+still required `always()` after the aggregate was changed to `!cancelled()`.
+That stale expectation is corrected; the aggregate still depends on every SDK3
+shard and its actual Bash guard accepts only `success`. The fast contract now
+runs before the long regression. The failed cohort is not acceptance evidence
+for publication. Fresh exact-head hosted gates remain required. This follow-up
+changes CI/tests/docs only; the qualified runtime wheel stays unchanged.
+
+Policy runtime activity has **passed local component qualification; public
+publication and exact-head hosted gates remain pending**. It adds opt-in content-free logical operation
+metadata, an additive `0035` PostgreSQL migration, current scoped ingestion,
+bounded source-specific inspection, and a parse-only agent inspection command.
+Both fresh installed SDK environments passed **168 tests, zero skips**, in
+**275.56 / 275.98 seconds**, including actual cache/HTTP/PostgreSQL behavior,
+native response and retry semantics, async cancellation, privacy, current scoped
+keys, migration drift/downgrade, the SDK-free remote client and authenticated
+browser/mobile/accessibility checks. The exact wheel, image and log identities
+are in the [acceptance receipt](evidence/policy-runtime-activity-acceptance.json).
+The real local SDK/cache/HTTP/PostgreSQL case observed four logical operations
+(miss, hit, configured-but-inactive cache and revoked access) with only two native
+provider records. Cache-hit usage is historical, uncertain outcomes stay unknown,
+and no provider bill or business success is inferred. This does **not** remove
+the automatic program's cached-current-reference refusal. The full prior-feature
+container profile restored **108 tables / 3,527 encrypted objects** with matching
+row counts. A separate focused profile replayed the actual fixed source consumer,
+native SDK and encrypted cache; its four-record report compared equal through
+the restored collector HTTP API. That focused profile disables the broader
+expansion flags and is not represented as another full-profile pass. Its test-only
+follow-up uses the **identical whole wheel and actual image**, without claiming a
+new image or environment. The three Linux path guards also passed. The two
+synthetic 2,000-operation deduplication checks are correctness evidence, not a
+production performance promise.
+See [policy runtime activity](policy-runtime-activity.md).
+
+Shared team dashboards have **passed local component qualification; publication
+and exact-head hosted gates remain separate**. Both installed SDK environments
+passed **49 tests**, in **389.48 / 389.14 seconds**, covering the new and existing
+monitoring APIs, current OIDC membership, scoped keys, privacy, migration contracts,
+the core-only client, the generic and dedicated browser flows, and the default
+independent support-desk demo. An additional installed scoped-editor creation,
+update and immediate revocation case passed **one in 4.11 / 4.10 seconds**.
+Exact identities and the separate result sets are in the
+[acceptance receipt](evidence/shared-dashboard-acceptance.json).
+
+The source composes one to
+eight typed saved trace/incident views, preserves their pinned filters through
+source edits/deletion, and uses revision checks for updates, deletion and each
+panel read. It reuses the existing bounded metadata store and project export /
+deletion behavior; released migrations are unchanged. New/old monitoring tests
+passed **20 in 19.99 seconds**. The first authenticated browser journey passed
+**one in 9.02 seconds** with mobile/axe, viewer access and empty credential storage.
+After adding required panel-read revision binding and a cross-environment case,
+the actual PostgreSQL/browser selection passed **22 in 26.03 seconds**.
+The separate actual HTTP demo seeder and the final revision-bound PostgreSQL /
+browser selection passed **23 in 26.89 seconds**. The default independent demo
+now prepares a shared metadata dashboard; its definition and retained evidence
+were verified through the recovered collector's HTTP API in the complete
+**107-table / 3527-object** image recovery drill. Both pinned panels retained
+their exact definition hash and actual retained span evidence. All older
+recovery checks passed; the two-tenant 2000-event accept/deduplication smoke took
+**1.938 seconds**, not a production SLA.
+
+The self-contained shared-dashboard browser test and generic full dashboard
+harness passed **two pytest tests in 61.66 seconds**, after replacing the older
+guided-plan test's global dataset-count/index assumption with its exact created
+dataset ID. Newly issued browser keys stay in memory and failure diagnostics
+redact them. OpenAPI/client/types, React, Ruff and mypy (447 modules) pass.
+The source/archive privacy boundary found zero findings. Final public archive
+reproducibility and hosted gates remain separate. The
+[walkthrough](shared-dashboards.md) states scopes and limits; comments and SCIM
+remain open.
+
 1 November 2026 cloud text-evaluation imports: **local component gates passed;
 publication and exact-head hosted gates remain separate**. Both fresh installed
 SDK environments passed **63 tests**, in **64.56 / 64.94 seconds**, after the

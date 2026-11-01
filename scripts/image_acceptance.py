@@ -22,6 +22,7 @@ from uuid import uuid4
 import httpx
 import psycopg
 from backup_restore import backup, compose, restore
+from policy_runtime_acceptance import SEED as POLICY_RUNTIME_SEED
 from psycopg import sql
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -450,6 +451,7 @@ def main(
         with tempfile.TemporaryDirectory(prefix="cutback-image-acceptance-") as temporary:
             directory = Path(temporary)
             values = {
+                "CUTBACK_CACHE_ENABLED": "true",
                 "CUTBACK_SEMANTIC_CACHE_ENABLED": "true",
                 "CUTBACK_DATABASE_URL": (
                     f"postgresql+psycopg://cutback:{quote(password, safe='')}"
@@ -574,6 +576,7 @@ if RUNTIME_GUARDS:
  assert manifest["runtime_guardrail_sample"]["native_fixture_calls"]==4
  assert manifest["runtime_guardrail_sample"]["complete_application_cost_usd"] is None
 print(json.dumps({"project_id":manifest["project_id"],
+ "shared_dashboard_sample":manifest["shared_dashboard_sample"],
  "paid_provider_calls":manifest["paid_provider_calls"]}))
 """
                 code = code.replace("RUNTIME_GUARDS", repr(runtime_guardrails))
@@ -587,6 +590,9 @@ print(json.dumps({"project_id":manifest["project_id"],
                 code = code.replace("RETRIEVAL_EXPECTED", repr(joint_model_retrieval))
                 code = code.replace("WORKLOAD_DEMO_EXPECTED", repr(workload_portfolio_demo))
                 manifest = json.loads(inside(container, code, values).strip().splitlines()[-1])
+                policy_activity_sample = json.loads(
+                    inside(container, POLICY_RUNTIME_SEED, values).strip().splitlines()[-1]
+                )
                 routing_sample = (
                     seed_owned_routing_program(container, values) if routing_program else None
                 )
@@ -1048,7 +1054,32 @@ with sessions() as session:
   assert selection.strategy=="learned"
   proposal=source_proposal(session,new_only,program)
   assert proposal.full_task_cost_known is False and proposal.decision=="synthetic_local_review_only"
-print(json.dumps({"restored_and_rekeyed_objects":len(rows)+len(caches)+profile_objects,"restored_and_rekeyed_cache_objects":len(caches),"restored_and_rekeyed_plans":len(plans),"restored_native_profile_objects":profile_objects,"native_profile_analysis_restored":True,"semantic_qualified_catalog_restored":True,"isolated_tool_receipts_restored":bool(TOOLS_EXPECTED),"paired_security_suite_restored":bool(SECURITY_EXPECTED),"runtime_guardrail_receipts_restored":bool(RUNTIME_GUARDS),"database_pointers_preserved":True}))
+from fastapi.testclient import TestClient
+from cutback.server.api import create_app
+restored_app=create_app(database_url=url.render_as_string(hide_password=False),
+ admin_token=os.environ["CUTBACK_ADMIN_TOKEN"],allow_insecure_http=True)
+with TestClient(restored_app) as client:
+ headers={"Authorization":"Bearer "+os.environ["CUTBACK_ADMIN_TOKEN"]}
+ dashboard=client.get("/v1/projects/"+SHARED_DASHBOARD_PROJECT+"/dashboards/"+SHARED_DASHBOARD_ID,headers=headers)
+ assert dashboard.status_code==200
+ dashboard=dashboard.json()
+ assert dashboard["definition_sha256"]==SHARED_DASHBOARD_SHA and dashboard["revision"]==1
+ assert len(dashboard["panels"])==2
+ assert all(p["source_state"]=="current" for p in dashboard["panels"])
+ for panel in dashboard["panels"]:
+  response=client.get("/v1/projects/"+SHARED_DASHBOARD_PROJECT+"/dashboards/"+SHARED_DASHBOARD_ID+"/panels/"+panel["view_id"],
+   headers=headers,params={"expected_revision":1})
+  assert response.status_code==200
+  evidence=response.json()
+  assert evidence["content_included"] is False and evidence["population_coverage"]=="unknown"
+  if panel["page"]=="traces":
+   assert evidence["items"] and evidence["selection_basis"]=="matching_retained_spans"
+ activity=POLICY_ACTIVITY_RECEIPT
+ response=client.post("/v1/projects/"+activity["project_id"]+"/policy-runtime/inspect",
+  headers=headers,json=activity["summary"]["scope"])
+ assert response.status_code==200 and response.json()==activity["summary"]
+restored_app.state.engine.dispose()
+print(json.dumps({"restored_and_rekeyed_objects":len(rows)+len(caches)+profile_objects,"restored_and_rekeyed_cache_objects":len(caches),"restored_and_rekeyed_plans":len(plans),"restored_native_profile_objects":profile_objects,"native_profile_analysis_restored":True,"semantic_qualified_catalog_restored":True,"isolated_tool_receipts_restored":bool(TOOLS_EXPECTED),"paired_security_suite_restored":bool(SECURITY_EXPECTED),"runtime_guardrail_receipts_restored":bool(RUNTIME_GUARDS),"database_pointers_preserved":True,"shared_dashboard_pins_and_retained_evidence_restored":True}))
 engine.dispose()
 """.replace("RECOVERED", repr(names[1]))
                     .replace("TOOLS_EXPECTED", repr(isolated_tools))
@@ -1069,6 +1100,16 @@ engine.dispose()
                     .replace("SOURCE_POLICY_EXPECTED", repr(source_policy))
                     .replace("SCENARIOS_EXPECTED", repr(generated_scenarios))
                     .replace("REACTIVE_EXPECTED", repr(reactive_users))
+                    .replace("SHARED_DASHBOARD_PROJECT", repr(manifest["project_id"]))
+                    .replace("POLICY_ACTIVITY_RECEIPT", repr(policy_activity_sample))
+                    .replace(
+                        "SHARED_DASHBOARD_ID",
+                        repr(manifest["shared_dashboard_sample"]["dashboard_id"]),
+                    )
+                    .replace(
+                        "SHARED_DASHBOARD_SHA",
+                        repr(manifest["shared_dashboard_sample"]["definition_sha256"]),
+                    )
                 )
                 recovered = json.loads(inside(container, recovery, values).strip().splitlines()[-1])
 
@@ -1214,6 +1255,7 @@ engine.dispose()
                         routing_program
                     ),
                     "source_policy_program_envelope_selection_and_source_restored": source_policy,
+                    "policy_runtime_native_cache_metadata_restored": policy_activity_sample,
                     "joint_retrieval_confirmation_and_both_tree_checks": joint_model_retrieval,
                     "pending_workload_portfolio_and_source_window_restored": workload_portfolio,
                     "complete_workload_fixture_confirmation_restored": workload_portfolio_demo,

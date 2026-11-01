@@ -2,6 +2,12 @@
 
 Updated 1 November 2026. Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business.
 
+[Policy activity inspection](policy-runtime-activity.md) now distinguishes actual
+cache hits, misses, configured-but-inactive cache and uncertain failures. Both
+installed SDK selections passed 168 tests and actual metadata survived container
+database recovery. This component awaits public hosted acceptance and is not in
+PyPI dev5. It does not yet enable automatic cached-current-reference optimization.
+
 The new [common source-policy program](source-policy-programs.md) passed local,
 container and all 17 hosted gates and merged in [PR 79](https://github.com/CutbackAI/cutback/pull/79).
 It compares simple native controls, bounded instruction
@@ -32,6 +38,13 @@ Discovery can replace manual ID copying only for a unique bounded compatible
 choice. It cannot invent labels, costs or permission to run an experiment.
 
 ## Which installation to use
+
+Shared team metadata dashboards passed local component qualification, including
+49 tests per installed SDK plus a separate scoped-editor revocation case, the
+authenticated mobile/accessibility journey and restored definition/evidence
+checks. Their public hosted acceptance remains separate. The
+[walkthrough](shared-dashboards.md) covers pinned trace/incident views, teammate
+edits and bounded retained evidence. Comments and broader analytics remain open.
 
 Cloud text-evaluation file imports passed local component qualification;
 their public source and exact-head hosted gates remain separate. They connect
