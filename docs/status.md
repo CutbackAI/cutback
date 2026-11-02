@@ -2,6 +2,23 @@
 
 Updated 2 November 2026 (UTC). Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business.
 
+[Application handoff coverage drafts](application-checks.md#use-the-mapping-in-an-agent-handoff)
+passed local component qualification. Exact tracked workflow mappings
+can produce the coverage JSON for review, while existing execution approval,
+current authority and no-replay behavior remain in place. Both installed SDK
+selections passed 131 checks each, zero skips. [The receipt](evidence/application-check-planning-acceptance.json)
+binds the actual runtime and preserves the prior alias regression. Exact-head
+hosted acceptance and PyPI publication remain pending.
+
+[Shared-workflow check planning](application-checks.md#plan-checks-for-shared-changes)
+passed local component qualification. It automatically
+explains affected consumers from reviewed declarations and both source graphs,
+keeps unchanged regression guards, and falls back to all checks for uncertain
+impact. [The independent example](../examples/workflow-checks/README.md) compares
+equivalent and broken shared changes. A fresh core-only installation and the
+non-root, read-only, offline product image passed all four journeys. Complete
+semantic workflow coverage remains unknown; hosted acceptance is still pending.
+
 [Shared analytical dashboards](analytics-dashboards.md) passed local component qualification.
 Both fresh installed SDK selections passed 116 tests, zero skips, including
 current access, retained/raw accounting, real migrations, isolated HTTP-only

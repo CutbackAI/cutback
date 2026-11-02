@@ -8,6 +8,14 @@ For the native asynchronous batch lifecycle, use [`provider-batches`](provider-b
 
 The examples below are supplementary compatibility and integration references.
 
+For a small offline demonstration of **why one shared change needs several
+workflow checks**, run [workflow-checks](workflow-checks/README.md). It needs no
+Docker, collector, SDK or model account. Preview the automatically selected
+checks, run an equivalent change, then deliberately break the shared code or
+prompt. Both affected workflows must fail while the unchanged health guard
+passes. This source addition is separate from the published dev5 package;
+qualification and publication gates are in [progress](../docs/progress.md).
+
 For a team incident discussion, follow the [encrypted comment example](incident-collaboration/README.md)
 after the independent online-monitoring example creates an incident. It previews
 without a network request, then uses one private resumable journal for two

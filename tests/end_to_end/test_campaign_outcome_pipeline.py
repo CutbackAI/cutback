@@ -96,6 +96,9 @@ def test_ordinary_campaign_checks_uploaded_diff_and_later_rollback_review(
             )
             assert not any(call.purpose == "optimization" for call in calls)
     assert result["application_check_discovery"]["executed_during_discovery"] == 0
+    assert result["application_check_discovery"]["coverage_candidate_used"]
+    assert result["application_check_discovery"]["impact_mode"] == "all_commands_affected_first"
+    assert len(result["application_check_discovery"]["coverage_candidate_hash"]) == 64
     assert len(result["application_check_discovery"]["commands"]) == 1
     assert result["review"]["status"] == "READY_FOR_PR_REVIEW"
     preview = result["publication_preview"]

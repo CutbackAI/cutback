@@ -263,6 +263,11 @@ jobs:
           tests/integration/test_incident_comments.py
           tests/unit/test_image_execution_pipe.py
           tests/unit/test_application_readiness.py
+          tests/unit/test_application_check_impact.py
+          tests/unit/test_handoff_coverage_candidate.py
+          tests/unit/test_demo_declared_checks.py
+          tests/integration/test_declared_coverage_handoff.py
+          tests/unit/test_application_check_discovery.py
           tests/integration/test_incident_comments_remote_minimal.py
           tests/unit/test_policy_activity.py
           tests/unit/test_policy_activity_observer.py

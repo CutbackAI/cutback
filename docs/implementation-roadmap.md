@@ -38,7 +38,7 @@ Promotion creates a new frozen dataset version with exact reviewed inputs/labels
 
 ## Release 3 — prompt versions and application experiments
 
-Implementation: the bounded registry/playground/alias and local-check journey is implemented and locally accepted; [contracts](prompt-releases.md), [portable checks](application-checks.md), [examples](../examples/prompt-releases/README.md) and [acceptance/publication state](progress.md). Generated deterministic/semantic rubrics have separate accepted contracts. Independent calibration, automatic shared-consumer scheduling (E09) and general application/tool/conversation coverage remain partial; they are not implied by this increment.
+Implementation: the bounded registry/playground/alias and local-check journey is implemented and locally accepted; [contracts](prompt-releases.md), [portable checks](application-checks.md), [examples](../examples/prompt-releases/README.md) and [acceptance/publication state](progress.md). Generated deterministic/semantic rubrics have separate accepted contracts. Bounded shared-consumer scheduling (E09), reviewed workflow declarations, unchanged guards and review-only handoff coverage drafts passed local qualification on both pinned SDKs, core-only and the non-root image. Their current-head hosted/publication gates remain open. Independent calibration and general dynamic application/tool/conversation coverage remain partial; they are not implied by this increment.
 
 **Baseline:** P01–P10, E06/E08/E09, F09. **User outcome:** author a change, compare it against declared application checks, and promote or roll back the exact version.
 

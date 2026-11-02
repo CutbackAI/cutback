@@ -1,5 +1,67 @@
 # Implementation progress
 
+Shared-workflow check planning and reviewed handoff coverage drafts have
+**passed local component qualification**. The actual frozen runtime is
+`7715e26d835a72072404bd1f2496114f22145e89`; [the acceptance receipt](evidence/application-check-planning-acceptance.json)
+binds its complete wheel, both Linux SDK environments, Windows core-only
+installation and non-root product image.
+
+OpenAI **2.29.0 and 3.35.1 each passed 131 checks, zero skips**: 123 controls in
+**95.60 / 95.19 seconds**, then eight native PostgreSQL/campaign/handoff tests in
+**270.15 / 276.02 seconds**. Both environments matched all **494 application
+files and five wheel metadata files before and after testing**. The matrix
+covers shared code/resources, aliases/reflection, bounds, frozen definitions,
+source changes, unchanged guards, current access, exact rollback, one-shot
+dispatch and the classifier/ticket-router/modern-model examples. Native profile
+checks preserve response objects, async/stream/retry/outage and privacy behavior.
+
+The independent preview/equivalent/broken-code/broken-resource walkthroughs
+passed in a fresh Windows core-only environment and the actual product image
+as UID 10001 with a read-only filesystem, no network route, dropped capabilities
+and no new privileges. Core has no SDK, HTTP, server, crypto or pytest dependency.
+The owned Linux PostgreSQL fixture exposed no host ports or host data; all test
+databases and that container were removed. Ruff/format **1,090 files** and mypy
+**467 modules** passed. No new migration, server, instrumentation or frontend
+source change is introduced by this increment; their prior qualification remains
+separate. These are controlled synthetic component results. Current-head hosted
+acceptance and PyPI publication remain open, along with broader baseline and
+external evidence gates.
+
+Earlier Windows variants also finished their extended selections: **124 passed / three symlink-privilege skips in 3,732.32 seconds**, plus **32 controls on each SDK** in **1,118.43 / 1,090.90 seconds**. Their installed bytes were checked before/after; they predate the alias correction and are preserved separately from the current zero-skip acceptance.
+
+The final planner review found an alias case before acceptance: assigning a
+builtin importer/evaluator to a local name could evade the direct-call fallback.
+The prior identity-checked installed wheel failed the dedicated regression in
+**14.08 seconds**, reproducing selective omission instead of full fallback.
+The corrected runtime treats references to recognized dynamic/reflection
+constructs as opaque before invocation. The regression passed in both corrected
+SDK selections. Earlier runtime results remain historical.
+
+All **12 published archives across six releases**, latest `0.1.0.dev5`, were
+downloaded as inert data with their official SHA-256 digests checked. The
+private-name boundary scan checked **1,759 archive members with zero findings**.
+[The receipt](evidence/published-archives-privacy-2026-11-02.json) records hashes
+and scope. Nothing was installed or executed from those archives; this is not a
+general secrets/vulnerability audit.
+
+Application handoffs add a **locally qualified coverage draft**.
+When tracked declarations exactly match every required affected workflow and
+bounded impact analysis has no fallback reason, preview writes plain coverage JSON for the existing
+explicit review/execution step. It does not accept its own draft. Candidate
+hashes freeze in the journal; changed/missing/malformed drafts refuse resume.
+Real private repositories, source rollback, one-shot dispatch and native
+campaign/current-rights integration passed the qualified selections above.
+
+Shared-workflow application check planning is **locally qualified**.
+It adds reviewed mappings, both-tree static Python import/resource dependencies,
+affected-first full checks and explicit selective checks retaining unchanged
+workflow guards. Unknown impact retains every command; no application code is
+imported during discovery. The independent example includes equivalent and
+deliberately broken shared changes. The initial source selection passed 36 with
+one Windows symlink-privilege skip. The frozen Linux qualification above includes
+package-initializer, bounds, standalone-example and symlink cases with zero skips.
+Complete semantic coverage, hosted acceptance and PyPI publication remain separate.
+
 Shared analytical dashboards have **passed local component qualification**. The corrected frozen runtime is `a9f8df8aff14360c908762098ec349eaa3a79a7b`; [its receipt](evidence/shared-analytics-acceptance.json) binds the complete wheel, both installed SDK environments, core-only and HTTP-only consumers, authenticated desktop/mobile/axe journeys and the new image recovery.
 
 Both OpenAI 2.29.0 and 3.35.1 selections passed **116**, zero skips, in **644.23 / 572.40 seconds**. The non-root full-image recovery passed in **404.81 seconds**: **110** matching table counts and **3,695** rekeyed objects, with two immutable comment versions, three exact purpose audits, all prior recovery gates and identical saved analytical definitions/canonical panels. Frontend units passed **17**; mypy passed **466 modules**. The source/archive privacy scan checked **1,496 files / 1,991 archive members / zero findings**. These are controlled synthetic component results, not customer quality, production capacity or market validation.

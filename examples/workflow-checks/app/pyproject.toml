@@ -1,0 +1,32 @@
+[tool.cutback.application_checks]
+commands = [
+  {key = "triage-full", arguments = ["check_application.py", "triage", "full"]},
+  {key = "triage-guard", arguments = ["check_application.py", "triage", "guard"]},
+  {key = "escalation-full", arguments = ["check_application.py", "escalation", "full"]},
+  {key = "escalation-guard", arguments = ["check_application.py", "escalation", "guard"]},
+  {key = "health-full", arguments = ["check_application.py", "health", "full"]},
+  {key = "health-guard", arguments = ["check_application.py", "health", "guard"]},
+]
+
+[tool.cutback.workflow_checks]
+version = 1
+
+[[tool.cutback.workflow_checks.workflows]]
+key = "triage"
+entrypoints = ["triage.py"]
+resources = ["prompt.txt"]
+commands = ["triage-full", "triage-guard"]
+regression_commands = ["triage-guard"]
+
+[[tool.cutback.workflow_checks.workflows]]
+key = "escalation"
+entrypoints = ["escalation.py"]
+resources = ["prompt.txt"]
+commands = ["escalation-full", "escalation-guard"]
+regression_commands = ["escalation-guard"]
+
+[[tool.cutback.workflow_checks.workflows]]
+key = "health"
+entrypoints = ["health.py"]
+commands = ["health-full", "health-guard"]
+regression_commands = ["health-guard"]

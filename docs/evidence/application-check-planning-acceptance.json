@@ -1,0 +1,210 @@
+{
+  "contract": "cutback.application-check-planning-acceptance.v1",
+  "date": "2026-11-02",
+  "status": "LOCAL_COMPONENT_QUALIFIED_HOSTED_NOT_RUN",
+  "actual_runtime_source_revision": "7715e26d835a72072404bd1f2496114f22145e89",
+  "wheel_sha256": "acad1866e2991ef662dc9dce7e5ca076757c5b049fb102ae12692069f9f608cf",
+  "product_image_id": "sha256:7f00490a8c4d233fc408f710af4392d8d4b7e433a1f3457b6ee32a47d3f123c0",
+  "application_files": 494,
+  "python_files": 467,
+  "wheel_metadata_files": 5,
+  "installed_sdk_matrix": {
+    "2.29.0": {
+      "passed": 131,
+      "skipped": 0,
+      "qualification_image_id": "sha256:80b7f01f43fc612193eb158e8db7916bf70509640c65f18169e598575236293f",
+      "suites": {
+        "unit": {
+          "passed": 123,
+          "skipped": 0,
+          "seconds": 95.6,
+          "log_sha256": "ee0941b31e7d44d80736258b3c98a9d3c504a9bf4e174d8129f58a8f446c0542",
+          "complete_wheel_identity_before_and_after": true,
+          "pydantic": "2.14.1",
+          "git": "git version 2.47.3",
+          "node": "v20.19.2"
+        },
+        "integration": {
+          "passed": 8,
+          "skipped": 0,
+          "seconds": 270.15,
+          "log_sha256": "04f84f9928383785ffe5d9dcbc61785144a44412bfcac023432e20c5f37840b4",
+          "complete_wheel_identity_before_and_after": true,
+          "pydantic": "2.14.1",
+          "git": "git version 2.47.3",
+          "node": "v20.19.2"
+        }
+      }
+    },
+    "3.35.1": {
+      "passed": 131,
+      "skipped": 0,
+      "qualification_image_id": "sha256:32765ea4e522d68a7a5391dcb99e0d39cd3d6fa97f61cc891907bf64533c0f76",
+      "suites": {
+        "unit": {
+          "passed": 123,
+          "skipped": 0,
+          "seconds": 95.19,
+          "log_sha256": "a2d7490b635e8df543f4b0020c9ad730bf10f5c54d5cfe3c294ccec414d7ffdc",
+          "complete_wheel_identity_before_and_after": true,
+          "pydantic": "2.14.1",
+          "git": "git version 2.47.3",
+          "node": "v20.19.2"
+        },
+        "integration": {
+          "passed": 8,
+          "skipped": 0,
+          "seconds": 276.02,
+          "log_sha256": "6357e98ea1324d5a8140e1876e875ffdcd48d1ab97c6549c7a0039b6ef40795c",
+          "complete_wheel_identity_before_and_after": true,
+          "pydantic": "2.14.1",
+          "git": "git version 2.47.3",
+          "node": "v20.19.2"
+        }
+      }
+    }
+  },
+  "scope": "Reviewed workflow/check declarations; both-tree Python imports/resources; affected-first full checks; explicit selective checks with unchanged guards; conservative opaque/unowned fallback; review-only handoff coverage drafts; real current authority/rollback/one-shot checks; independent native campaign examples.",
+  "windows_core_only": {
+    "optional_sdk_server_http_crypto_pytest_absent": true,
+    "complete_wheel_identity": true,
+    "outcomes": {
+      "preview": {
+        "exit_code": 0,
+        "executed": false,
+        "all_passed": null,
+        "result_count": 0
+      },
+      "good": {
+        "exit_code": 0,
+        "executed": true,
+        "all_passed": true,
+        "result_count": 10
+      },
+      "broken": {
+        "exit_code": 1,
+        "executed": true,
+        "all_passed": false,
+        "result_count": 10
+      },
+      "broken-resource": {
+        "exit_code": 1,
+        "executed": true,
+        "all_passed": false,
+        "result_count": 10
+      }
+    },
+    "log_sha256": "ea6ede6c7dc36c628977a95c2d3858821446d408cf9a80d63eaeb5fba84143f7"
+  },
+  "non_root_product_image": {
+    "user": "10001",
+    "read_only": true,
+    "network": "none",
+    "capabilities_dropped": "ALL",
+    "no_new_privileges": true,
+    "outcomes": {
+      "preview": {
+        "exit_code": 0,
+        "executed": false,
+        "all_passed": null,
+        "result_count": 0
+      },
+      "good": {
+        "exit_code": 0,
+        "executed": true,
+        "all_passed": true,
+        "result_count": 10
+      },
+      "broken": {
+        "exit_code": 1,
+        "executed": true,
+        "all_passed": false,
+        "result_count": 10
+      },
+      "broken-resource": {
+        "exit_code": 1,
+        "executed": true,
+        "all_passed": false,
+        "result_count": 10
+      }
+    },
+    "application_bytes_identical_to_wheel": true,
+    "log_sha256": "5d97fc06d728158149cba6847820eebf108c4dc0196ea28d3ab65b7c92693e58"
+  },
+  "code_quality": {
+    "ruff_passed": true,
+    "formatted_python_files": 1090,
+    "mypy_passed": true,
+    "mypy_python_files": 467
+  },
+  "database_fixture": {
+    "fresh_owned_postgres_17_container": true,
+    "network": "none",
+    "host_ports": false,
+    "host_data_mounted": false,
+    "real_credentials_supplied": false,
+    "owned_test_databases_remaining": 0,
+    "container_removed": true
+  },
+  "unchanged_component_sources_since": "a9f8df8aff14360c908762098ec349eaa3a79a7b",
+  "unchanged_component_paths": [
+    "src/cutback/server",
+    "src/cutback/instrumentation",
+    "web"
+  ],
+  "new_migrations": 0,
+  "retained_regression": {
+    "prior_runtime_source_revision": "a293606ec1e052d1c86661e65b881a7e52a9b26c",
+    "prior_wheel_sha256": "df869f03c49fa61410ca473d850ae13cc4ce02a50932e54f54e44771895cc755",
+    "failed": 1,
+    "seconds": 14.08,
+    "log_sha256": "6f03f314a992e57f546c2f6a39407d4dfc44af654b665887a3ff6620b38123a8",
+    "reason": "Aliasing a builtin importer evaded the prior direct-call fallback. Current tests cover references, aliases and reflection."
+  },
+  "limits": [
+    "Static import reachability is not semantic test coverage.",
+    "Root/src Python layouts and exact reviewed resources only; arbitrary dynamic/non-Python/external consumers remain unknown.",
+    "The generated coverage map requires explicit review; preparation never grants execution or model-call authority.",
+    "Local receipts do not provide independent application CI authenticity attestation.",
+    "These controlled synthetic results establish neither customer quality nor production capacity or comparative advantage."
+  ],
+  "paid_provider_requests": 0,
+  "production_deployed": false,
+  "component_published_to_pypi": false,
+  "current_published_package_at_check": "0.1.0.dev5",
+  "exact_head_hosted_acceptance": "pending_public_upload_approval",
+  "prior_hosted_failures": "application-readiness-hosted-failures.json",
+  "published_archive_privacy_receipt": "published-archives-privacy-2026-11-02.json",
+  "superseded_windows_trials": [
+    {
+      "source_revision": "98274b585d77fc753e87d636ce395fcac34be30e",
+      "wheel_sha256": "d9d3296cdd0cb0e8535d6ddb6f1c741ee75d7ba3aa13e7d5637f06dfb2d26676",
+      "passed": 124,
+      "skipped": 3,
+      "seconds": 3732.32,
+      "log_sha256": "617f6445a7538bd90da518a4273a556f6ac521f901d14fc0f6e388e4dd5854ea",
+      "superseded_variant_not_current_runtime_acceptance": true,
+      "skip_reason": "Windows host cannot create the directory-symlink fixtures"
+    },
+    {
+      "source_revision": "a293606ec1e052d1c86661e65b881a7e52a9b26c",
+      "wheel_sha256": "df869f03c49fa61410ca473d850ae13cc4ce02a50932e54f54e44771895cc755",
+      "passed": 32,
+      "skipped": 0,
+      "seconds": 1118.43,
+      "log_sha256": "e0ade02196349bf860711dbb3934361c349da2663d787e53cf1fe7de08ecdfc5",
+      "superseded_variant_not_current_runtime_acceptance": true,
+      "skip_reason": null
+    },
+    {
+      "source_revision": "a293606ec1e052d1c86661e65b881a7e52a9b26c",
+      "wheel_sha256": "df869f03c49fa61410ca473d850ae13cc4ce02a50932e54f54e44771895cc755",
+      "passed": 32,
+      "skipped": 0,
+      "seconds": 1090.9,
+      "log_sha256": "7f9f708c5a09d6dd727f443b4aad1478705a8e9f8531f216d9a423c46f6b192d",
+      "superseded_variant_not_current_runtime_acceptance": true,
+      "skip_reason": null
+    }
+  ]
+}

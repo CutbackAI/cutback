@@ -1,6 +1,8 @@
 # Finish a confirmed campaign without copying repositories
 
-Working-source feature under qualification. Published PyPI `0.1.0.dev5` does not
+Locally qualified source feature; exact-head hosted/publication gates are in
+[progress](progress.md) and the [check-planning receipt](evidence/application-check-planning-acceptance.json).
+Published PyPI `0.1.0.dev5` does not
 contain `campaign finish`. Use a matching source collector/agent and inspect the
 exact acceptance state in [progress](progress.md).
 
@@ -27,7 +29,17 @@ qualify the application's checks, pass an explicit [command definition](applicat
 with `--commands COMMANDS.json` from the first preview onward. Commands and their
 bounds freeze with the source, destination and branch.
 
-Prepare `CONSUMERS.json` mapping **every returned affected workflow** to the
+When the application's tracked workflow declaration matches every returned
+affected workflow ID and static impact is known, the preview now returns
+`coverage_candidate_file` and writes the plain `coverage-candidate.json` map.
+Inspect its source declarations and actual checks, then use that file as
+`CONSUMERS.json` below. It is a draft, not automatically accepted coverage;
+the preview retains `owner_consumer_coverage_required: true`. The candidate's
+hash freezes in the handoff journal and is checked on resume. Missing mappings,
+uncertain impact or explicit command overrides retain manual preparation.
+[Declaration format and limits](application-checks.md#use-the-mapping-in-an-agent-handoff).
+
+Otherwise prepare `CONSUMERS.json` mapping **every returned affected workflow** to the
 existing command keys that actually exercise it. This remains an owner's
 coverage assertion; a passing command does not independently prove coverage.
 The coding agent can prepare this file from its inspected application knowledge.

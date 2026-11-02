@@ -1,0 +1,93 @@
+{
+  "contract": "cutback.published-archives-privacy.v1",
+  "source_checker_revision": "ddba976b674cb4f3081a3481cafe09a8af373b70",
+  "metadata_source": "https://pypi.org/pypi/cutback/json",
+  "scope": "Configured private-name markers in inert published archives; not a general secret or vulnerability audit",
+  "date": "2026-11-02",
+  "latest_version": "0.1.0.dev5",
+  "release_count": 6,
+  "archives": [
+    {
+      "version": "0.1.0.dev0",
+      "filename": "cutback-0.1.0.dev0-py3-none-any.whl",
+      "sha256": "13470118c961ea49b1ef13deceb00c60194614f89fa62f15cd60f0754f972b4b",
+      "bytes": 41005
+    },
+    {
+      "version": "0.1.0.dev0",
+      "filename": "cutback-0.1.0.dev0.tar.gz",
+      "sha256": "317572ceb77950e608852d5033172b1d8ab1bad6f702944e6aee816e9503fd34",
+      "bytes": 183565
+    },
+    {
+      "version": "0.1.0.dev1",
+      "filename": "cutback-0.1.0.dev1-py3-none-any.whl",
+      "sha256": "eeb0df7cf16336c24249137d9ebe0694233662a29aa9ba79384bd500e653bc28",
+      "bytes": 187053
+    },
+    {
+      "version": "0.1.0.dev1",
+      "filename": "cutback-0.1.0.dev1.tar.gz",
+      "sha256": "b084c0a988118159e34d4c882b9e8f05353a50e10d7dd680d6e4ac69c62c118c",
+      "bytes": 399430
+    },
+    {
+      "version": "0.1.0.dev2",
+      "filename": "cutback-0.1.0.dev2-py3-none-any.whl",
+      "sha256": "f634717395b4d1e9e8d8cbcb4e2eec11b3636a19de7714580eead4b59c814227",
+      "bytes": 254853
+    },
+    {
+      "version": "0.1.0.dev2",
+      "filename": "cutback-0.1.0.dev2.tar.gz",
+      "sha256": "1f6711ce6b570f7ce110f5f8a5480f88a00ad7f255b3cf68c54e5525fe32e1b5",
+      "bytes": 694309
+    },
+    {
+      "version": "0.1.0.dev3",
+      "filename": "cutback-0.1.0.dev3-py3-none-any.whl",
+      "sha256": "8da93bce1f6a4c9d67a978279154d7ff0270063277637f233aabfd9569c71352",
+      "bytes": 272821
+    },
+    {
+      "version": "0.1.0.dev3",
+      "filename": "cutback-0.1.0.dev3.tar.gz",
+      "sha256": "731d90b4e285a2df3f5c87c326c2a12be772c3924a91e21ecdb689209f083173",
+      "bytes": 784465
+    },
+    {
+      "version": "0.1.0.dev4",
+      "filename": "cutback-0.1.0.dev4-py3-none-any.whl",
+      "sha256": "e2f7b545139ae6dc76d825b732dfdc84c7cbfa11b71e0b18e7193cd88898fcd5",
+      "bytes": 295189
+    },
+    {
+      "version": "0.1.0.dev4",
+      "filename": "cutback-0.1.0.dev4.tar.gz",
+      "sha256": "0c8d9f57bb8f1615ed9190569fcd519b588eec7f6b1d1e8c05a4b881199c6aab",
+      "bytes": 853057
+    },
+    {
+      "version": "0.1.0.dev5",
+      "filename": "cutback-0.1.0.dev5-py3-none-any.whl",
+      "sha256": "a481277a14747e7927a5046c517a7716879782d438a426f9d80963ad631142b1",
+      "bytes": 322757
+    },
+    {
+      "version": "0.1.0.dev5",
+      "filename": "cutback-0.1.0.dev5.tar.gz",
+      "sha256": "e2b625b4fc7c62daf70a77af3cb57b58db800443125a752a28f94b7f4844ddb6",
+      "bytes": 1070100
+    }
+  ],
+  "total_bytes": 5358604,
+  "boundary": {
+    "files_checked": 1512,
+    "history_objects_checked": 0,
+    "archive_members_checked": 1759,
+    "findings": 0,
+    "private_marker_values_logged": false
+  },
+  "downloaded_as_data_only": true,
+  "installed_or_executed": false
+}
