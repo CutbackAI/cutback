@@ -117,7 +117,9 @@ Shared team metadata dashboards passed local component qualification, including
 authenticated mobile/accessibility journey and restored definition/evidence
 checks. Their public source and hosted acceptance merged in PR 81. The
 [walkthrough](shared-dashboards.md) covers pinned trace/incident views, teammate
-edits and bounded retained evidence. Comments and broader analytics remain open.
+edits and bounded retained evidence. Encrypted comments and bounded cost/reliability
+charts now have separate local component acceptance above. Their corrected hosted
+gates, attachments and external mentions remain open.
 
 Cloud text-evaluation file imports passed local and hosted qualification and
 merged in PR 81. They connect
