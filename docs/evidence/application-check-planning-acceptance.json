@@ -1,7 +1,7 @@
 {
   "contract": "cutback.application-check-planning-acceptance.v1",
   "date": "2026-11-02",
-  "status": "LOCAL_COMPONENT_QUALIFIED_HOSTED_NOT_RUN",
+  "status": "LOCAL_COMPONENT_AND_REVIEWED_PUBLIC_RUNTIME_HOSTED_QUALIFIED",
   "actual_runtime_source_revision": "7715e26d835a72072404bd1f2496114f22145e89",
   "wheel_sha256": "acad1866e2991ef662dc9dce7e5ca076757c5b049fb102ae12692069f9f608cf",
   "product_image_id": "sha256:7f00490a8c4d233fc408f710af4392d8d4b7e433a1f3457b6ee32a47d3f123c0",
@@ -172,7 +172,12 @@
   "production_deployed": false,
   "component_published_to_pypi": false,
   "current_published_package_at_check": "0.1.0.dev5",
-  "exact_head_hosted_acceptance": "pending_public_upload_approval",
+  "exact_head_hosted_acceptance": {
+    "reviewed_public_source_revision": "77ce70085ae1e565563601da30773ae9149b87c0",
+    "all_20_workflow_jobs_passed": true,
+    "receipt": "reviewed-workflow-hosted-acceptance.json",
+    "later_head_checks": "Required separately; this record does not relabel a documentation/CI follow-up as the measured runtime."
+  },
   "prior_hosted_failures": "application-readiness-hosted-failures.json",
   "published_archive_privacy_receipt": "published-archives-privacy-2026-11-02.json",
   "superseded_windows_trials": [

@@ -57,8 +57,10 @@ support-desk journey and does not contain this source-only extension.
 
 ## Try shared analytical charts in the current checkout
 
-This source feature passed local component qualification; corrected hosted
-acceptance remains pending. PyPI `0.1.0.dev5` does not include it. Keep this Cutback checkout separate from the application you may
+This source feature passed local component qualification and the reviewed public
+runtime [hosted gates](evidence/reviewed-workflow-hosted-acceptance.json). Check
+[PR 83](https://github.com/CutbackAI/cutback/pull/83) for its current review-head checks.
+PyPI `0.1.0.dev5` does not include it. Keep this Cutback checkout separate from the application you may
 instrument later. Docker Desktop, Git, Python and uv are sufficient; the built
 dashboard is included and the sample needs no provider key or Node setup.
 

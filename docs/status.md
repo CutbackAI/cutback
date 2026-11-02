@@ -2,13 +2,15 @@
 
 Updated 2 November 2026 (UTC). Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business.
 
+Reviewed public runtime `77ce70085ae1e565563601da30773ae9149b87c0` passed **all 20 hosted workflow jobs** on 2 November. The [hosted acceptance](evidence/reviewed-workflow-hosted-acceptance.json) records Python 3.11 **3,138 passed / 62 skipped**, Python 3.13 **3,137 passed / 63 skipped**, both complete SDK3 matrices, security, infrastructure and both ten-minute service profiles. The source remains under review in [draft PR 83](https://github.com/CutbackAI/cutback/pull/83); later documentation/CI heads must pass their own protected checks. PyPI dev5 is unchanged. These controlled synthetic results do not complete the platform or establish customer outcomes.
+
 [Application handoff coverage drafts](application-checks.md#use-the-mapping-in-an-agent-handoff)
 passed local component qualification. Exact tracked workflow mappings
 can produce the coverage JSON for review, while existing execution approval,
 current authority and no-replay behavior remain in place. Both installed SDK
 selections passed 131 checks each, zero skips. [The receipt](evidence/application-check-planning-acceptance.json)
-binds the actual runtime and preserves the prior alias regression. Exact-head
-hosted acceptance and PyPI publication remain pending.
+binds the actual runtime and preserves the prior alias regression. Hosted acceptance
+for the reviewed public runtime is linked above; PyPI publication remains open.
 
 [Shared-workflow check planning](application-checks.md#plan-checks-for-shared-changes)
 passed local component qualification. It automatically
@@ -17,7 +19,7 @@ keeps unchanged regression guards, and falls back to all checks for uncertain
 impact. [The independent example](../examples/workflow-checks/README.md) compares
 equivalent and broken shared changes. A fresh core-only installation and the
 non-root, read-only, offline product image passed all four journeys. Complete
-semantic workflow coverage remains unknown; hosted acceptance is still pending.
+semantic workflow coverage remains unknown; reviewed public runtime hosted acceptance is linked above.
 
 [Shared analytical dashboards](analytics-dashboards.md) passed local component qualification.
 Both fresh installed SDK selections passed 116 tests, zero skips, including
@@ -25,7 +27,7 @@ current access, retained/raw accounting, real migrations, isolated HTTP-only
 clients and authenticated browser/mobile/accessibility checks. The new image
 also passed full backup/restore/rekey and exact canonical chart comparisons.
 [The receipt](evidence/shared-analytics-acceptance.json) preserves exact runtime
-identity and earlier failures. Corrected hosted acceptance remains pending;
+identity and earlier failures. Corrected source is included in the reviewed public runtime hosted acceptance;
 the source feature is absent from PyPI dev5.
 
 [Offline application readiness](application-readiness.md) passed local component qualification.
@@ -33,15 +35,13 @@ It combines source blockers, workflow selection, startup/check readiness and
 missing rights/budget decisions without executing application code. Both pinned
 SDK selections, a core-only installation and the offline non-root image passed;
 [the receipt](evidence/application-readiness-acceptance.json) preserves exact
-scope and the two Windows privilege skips. Exact-head hosted acceptance remains
-pending; it is absent from PyPI dev5.
+scope and the two Windows privilege skips. Hosted acceptance is recorded for the reviewed public runtime; it is absent from PyPI dev5.
 
 [Encrypted incident comments](incident-comments.md) passed local component
 qualification: fresh installed SDK and independent HTTP-only client selections,
 authenticated browser/mobile/axe, resumable sample and complete new-image
 database/encrypted-object recovery. The [receipt](evidence/incident-comments-acceptance.json)
-preserves earlier failures and the separate corrected selections; exact-head
-hosted acceptance remains pending. Comments use current project rights, separately approved encrypted
+preserves earlier failures and the separate corrected selections; hosted acceptance is recorded for the reviewed public runtime. Comments use current project rights, separately approved encrypted
 storage, purpose-scoped reads, immutable revisions and explicit erasure. This
 does not add arbitrary attachments, external mentions, enterprise provisioning
 or a verified customer outcome. PyPI dev5 remains unchanged.
@@ -51,7 +51,7 @@ synthetic five-millisecond median target for OpenAI Responses/Chat and Anthropic
 Messages, both with healthy and failed collector transports, in both pinned
 OpenAI SDK envelopes. Raw timing noise and actual runtime identity are retained.
 This does not measure async/stream/cold-start/memory or live-provider performance.
-Exact-head hosted acceptance remains pending; PyPI dev5 is unchanged.
+Hosted acceptance is recorded for the reviewed public runtime; PyPI dev5 is unchanged.
 
 The source-only [routing draft publisher](routing-programs.md#preview-and-publish-a-checked-routing-draft)
 passed local component qualification. It connects checked routing-program reviews to explicit
@@ -59,8 +59,7 @@ single-file draft publication with current authority and uncertain-write
 reconciliation. It discloses instruction-text upload and refuses synthetic gates;
 installed/HTTP-only rights checks, source/ref/lost-reply cases, authenticated
 browser checks and complete image recovery passed with the failures and
-corrections retained in [progress](progress.md). Exact-head hosted acceptance
-remains pending. PyPI dev5 is unchanged.
+corrections retained in [progress](progress.md). Hosted acceptance is recorded for the reviewed public runtime. PyPI dev5 is unchanged.
 
 The new [simultaneous service qualification](load-qualification.md#simultaneous-synthetic-service-qualification)
 passed local component qualification: 27 fault/regression checks per installed
@@ -68,7 +67,7 @@ SDK plus a complete ten-minute profile per SDK. Actual collector/gateway HTTP,
 native workers, online quality and PostgreSQL ran with closed provider fixtures
 and owned disposable data. All canonical charges and cleanup reconciled. The
 runs shared this host/database concurrently; intended deployment capacity and
-live provider behavior remain unverified. Public hosted gates remain pending.
+live provider behavior remain unverified. Both declared profiles also passed the reviewed public runtime hosted gates.
 
 The opt-in [local-container application checks](application-containers.md)
 passed **119 tests per installed SDK**, with three Windows symlink-privilege
@@ -136,7 +135,7 @@ checks. Their public source and hosted acceptance merged in PR 81. The
 [walkthrough](shared-dashboards.md) covers pinned trace/incident views, teammate
 edits and bounded retained evidence. Encrypted comments and bounded cost/reliability
 charts now have separate local component acceptance above. Their corrected hosted
-gates, attachments and external mentions remain open.
+gates are recorded above; attachments and external mentions remain open.
 
 Cloud text-evaluation file imports passed local and hosted qualification and
 merged in PR 81. They connect
@@ -197,7 +196,7 @@ These are Cutback implementation responsibilities, not tasks delegated to the us
 1. **Unified optimization:** measured selection and a common execution/review contract across the currently separate native/cache, routing, retrieval, compression and training engines. Complete task economics must include independently measured non-native costs.
 2. **Adapter breadth:** additional dynamic/shared/framework source consumers, remote/vector retrieval, learned reranking/compression, broader gateway providers and qualified specialty tool/application execution.
 3. **Evaluation breadth:** independent judge calibration, broader attack/guardrail integrations, and the explicitly missing voice, multimodal, browser/computer and cloud-result specialties.
-4. **Operations and collaboration:** sustained mixed evaluator/worker/gateway capacity, intended clean-host operational modes, remaining team dashboards/comments/provisioning and their authenticated accessible lifecycles.
+4. **Operations and collaboration:** intended deployment capacity beyond the declared synthetic envelope, clean-host operational modes, attachments, external mentions, enterprise provisioning and their authenticated accessible lifecycles.
 5. **Release convergence:** final artifact/hosted qualification for new work and a separately versioned publication containing accepted source features. Local QA artifacts do not replace the published release.
 
 The [120-requirement baseline](market-baseline.md) is the detailed acceptance ledger; the [implementation roadmap](implementation-roadmap.md) retains platform and specialty requirements. A long feature list or synthetic test count cannot close them.

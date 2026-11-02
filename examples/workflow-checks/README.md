@@ -8,6 +8,8 @@ the published dev5 package does not include this new planner.
 Local component qualification passed 131 checks on each pinned SDK, zero skips,
 plus all four walkthroughs in a core-only installation and non-root offline
 image. [Exact runtime, earlier regression and remaining gates](../../docs/evidence/application-check-planning-acceptance.json).
+Reviewed public runtime `77ce700` also passed all 20 [hosted workflow jobs](../../docs/evidence/reviewed-workflow-hosted-acceptance.json).
+Later documentation/CI heads still require their own protected checks in PR 83.
 
 Run these from the Cutback source checkout with that build installed. Each command
 requires a new workspace, creates two local Git commits there and retains all

@@ -407,9 +407,9 @@ jobs:
         run: test "$SDK3_SHARDS_RESULT" = success
   verify:
     runs-on: ubuntu-latest
-    # Retain the complete regression: the qualified prior cohort took 90 minutes;
-    # shared dashboards, runtime activity and cached-current journeys add real PG/SDK work.
-    timeout-minutes: 135
+    # Retain the complete regression: the qualified 3.11 cohort took 130m41s.
+    # Leave CI headroom for the full PostgreSQL/SDK journeys.
+    timeout-minutes: 160
     strategy:
       fail-fast: false
       matrix:

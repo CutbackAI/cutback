@@ -1,5 +1,9 @@
 # Implementation progress
 
+Reviewed public runtime `77ce70085ae1e565563601da30773ae9149b87c0` passed **all 20 hosted workflow jobs** on 2 November. The [hosted acceptance](evidence/reviewed-workflow-hosted-acceptance.json) records Python 3.11 **3,138 passed / 62 skipped**, Python 3.13 **3,137 passed / 63 skipped**, both complete SDK3 matrices, security, infrastructure and both ten-minute service profiles. The source remains under review in [draft PR 83](https://github.com/CutbackAI/cutback/pull/83); later documentation/CI heads must pass their own protected checks. PyPI dev5 is unchanged. These controlled synthetic results do not complete the platform or establish customer outcomes.
+
+The hosted receipt qualifies the reviewed public runtime, not a later documentation commit. Earlier component paragraphs retain their historical checkpoint wording and actual measured runtime identities; this record supersedes their pending hosted state for `77ce700`. The Python 3.11 hosted job used **130 minutes 41 seconds** of a 135-minute budget. The documentation/CI follow-up raises only that job budget to **160 minutes** so the complete suite has headroom.
+
 Shared-workflow check planning and reviewed handoff coverage drafts have
 **passed local component qualification**. The actual frozen runtime is
 `7715e26d835a72072404bd1f2496114f22145e89`; [the acceptance receipt](evidence/application-check-planning-acceptance.json)
@@ -23,9 +27,10 @@ The owned Linux PostgreSQL fixture exposed no host ports or host data; all test
 databases and that container were removed. Ruff/format **1,090 files** and mypy
 **467 modules** passed. No new migration, server, instrumentation or frontend
 source change is introduced by this increment; their prior qualification remains
-separate. These are controlled synthetic component results. Current-head hosted
-acceptance and PyPI publication remain open, along with broader baseline and
-external evidence gates.
+separate. These are controlled synthetic component results. The reviewed public
+runtime hosted receipt above closes its hosted gate; later PR heads must pass
+their own protected checks. PyPI publication, broader baseline and external
+evidence gates remain open.
 
 Earlier Windows variants also finished their extended selections: **124 passed / three symlink-privilege skips in 3,732.32 seconds**, plus **32 controls on each SDK** in **1,118.43 / 1,090.90 seconds**. Their installed bytes were checked before/after; they predate the alias correction and are preserved separately from the current zero-skip acceptance.
 
@@ -68,7 +73,7 @@ Both OpenAI 2.29.0 and 3.35.1 selections passed **116**, zero skips, in **644.23
 
 Typed charts preserve exact Decimal subtotals, unknown population coverage and missing quantiles. The corrected canonical merge keeps current attempts in retained groups promoted beyond a truncated raw page, and keeps all attempts under the unknown-model label. Current grants, revision conflicts, erased intents, project erasure and SQL/cardinality bounds are covered. The owned sample may wait for already queued capture under three SDK flush budgets; it neither replays provider calls nor accepts missing profile exports.
 
-**Hosted acceptance remains open.** The prior reviewed head failed two of its 20 required jobs; [the failure record](evidence/application-readiness-hosted-failures.json) retains exact counts and causes/uncertainty. The corrected source has not been pushed or rerun on GitHub. PyPI dev5, production and paid providers are unchanged. Broader baseline and external gates remain open.
+**The corrected reviewed public runtime passed all 20 hosted jobs**, as recorded above. The prior reviewed head failed two jobs; [the failure record](evidence/application-readiness-hosted-failures.json) retains exact counts and causes/uncertainty. Source is under review in draft PR 83. PyPI dev5, production and paid providers are unchanged. Broader baseline and external gates remain open.
 
 The following paragraphs preserve earlier trials of this increment; their qualification state is historical rather than the current component status.
 
