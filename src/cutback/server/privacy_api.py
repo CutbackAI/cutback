@@ -28,6 +28,7 @@ from cutback.server.db import (
     JobRecord,
     PayloadSample,
     Project,
+    RateBucket,
     ScanRun,
     StoredEvent,
 )
@@ -377,8 +378,10 @@ def install_privacy(app, sessions, authorize, scope):
                 for cache in caches:
                     store.delete(project_id, cache.object_ref)
             # Deletion order follows restrictive FKs. Project cascades remove the remaining records.
+            from cutback.server.analytics_api import quota_bucket
             from cutback.server.db import ChangeProposal, DatasetItem, RecommendationRecord
 
+            session.execute(delete(RateBucket).where(RateBucket.key == quota_bucket(project_id)))
             session.execute(
                 update(SemanticCacheNamespace)
                 .where(SemanticCacheNamespace.project_id == project_id)

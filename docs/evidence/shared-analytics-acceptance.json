@@ -1,0 +1,219 @@
+{
+  "contract": "cutback.shared-analytics-acceptance.v1",
+  "date": "2026-11-02",
+  "status": "LOCAL_COMPONENT_QUALIFIED_HOSTED_NOT_RUN_FOR_CORRECTED_SOURCE",
+  "actual_runtime_source_revision": "a9f8df8aff14360c908762098ec349eaa3a79a7b",
+  "wheel_sha256": "edf06f63ae3d383696cedf0de2393dacd795d4bdd897fb5d9ff0aee215392136",
+  "image_id": "sha256:d49317c4dd4ade965d4efdea14515c6c88fa568ad7284d5c996a0198e220d490",
+  "identical_application_files": 493,
+  "installed_sdk_tests": {
+    "2.29.0": {
+      "passed": 116,
+      "skipped": 0,
+      "seconds": 644.23,
+      "pydantic": "2.14.1",
+      "log_sha256": "b9a4eae030c1cac85207f8f6b628903e8e4778526c9fed18d9167f0b8f0d6ee4",
+      "scope": "Analytical CRUD, canonical raw/retained accounting, snapshot/cardinality/SQL-deadline/concurrency faults, real migration/tenant/RBAC/OIDC, isolated HTTP-only client, comment lifecycle, delayed queued capture without native replay, campaign source/charge checks, pinned native sync/async/stream/retry/outage/privacy behavior, existing operations, archives and authenticated browser/mobile/axe."
+    },
+    "3.35.1": {
+      "passed": 116,
+      "skipped": 0,
+      "seconds": 572.4,
+      "pydantic": "2.14.1",
+      "log_sha256": "449e31dba8427faab62c478c5e42c97a330c96917af9190ac64eed1886b0b2ed",
+      "scope": "Analytical CRUD, canonical raw/retained accounting, snapshot/cardinality/SQL-deadline/concurrency faults, real migration/tenant/RBAC/OIDC, isolated HTTP-only client, comment lifecycle, delayed queued capture without native replay, campaign source/charge checks, pinned native sync/async/stream/retry/outage/privacy behavior, existing operations, archives and authenticated browser/mobile/axe."
+    }
+  },
+  "core_only_installation": {
+    "actual_runtime_source_head": "a9f8df8aff14360c908762098ec349eaa3a79a7b",
+    "wheel_sha256": "edf06f63ae3d383696cedf0de2393dacd795d4bdd897fb5d9ff0aee215392136",
+    "script_sha256": "afb784bead258746ca6c88526f6ed04fc04f6c14c00a1524ce3d92620c2de47f",
+    "core_wheel_smoke_passed": true,
+    "new_independent_core_environment": true,
+    "optional_openai_fastapi_httpx_absent": true,
+    "provider_calls": 0,
+    "log_sha256": "3df6fb2dea45d9b10afc2b5408906dc5cc62d1583969f4a43727427953e2ac58"
+  },
+  "independent_http_only_client": {
+    "minimal_remote_import": true,
+    "optional_dependencies_absent": {
+      "openai": true,
+      "anthropic": true,
+      "fastapi": true,
+      "uvicorn": true,
+      "sqlalchemy": true,
+      "alembic": true,
+      "psycopg": true,
+      "cryptography": true,
+      "jsonschema": true,
+      "stripe": true,
+      "boto3": true,
+      "jwt": true,
+      "pytest": true
+    },
+    "pydantic": "2.14.2",
+    "httpx": "0.28.1"
+  },
+  "image_recovery": {
+    "seconds": 404.8129999998491,
+    "migration": "0037",
+    "restored_tables": 110,
+    "restored_and_rekeyed_objects": 3695,
+    "prior_gates_verified": [
+      "native_batch_fixture_restored",
+      "guarded_tool_effects_and_delivery_restored",
+      "guarded_security_utility_and_policy_decisions_restored",
+      "joint_model_context_confirmation_and_source_binding_restored",
+      "reviewed_criteria_versions_and_confirmation_restored",
+      "generated_semantic_rubrics_and_proxy_confirmation_restored",
+      "routing_fits_and_canonical_training_restored",
+      "source_bound_routing_and_both_tree_checks",
+      "routing_program_approval_shared_budget_selection_and_source_restored",
+      "source_policy_program_envelope_selection_and_source_restored",
+      "joint_retrieval_confirmation_and_both_tree_checks",
+      "pending_workload_portfolio_and_source_window_restored",
+      "complete_workload_fixture_confirmation_restored",
+      "workload_campaign_envelope_confirmation_and_source_checks_restored",
+      "reviewed_generated_development_scenarios_restored",
+      "reactive_user_contracts_receipts_and_trajectories_restored",
+      "shared_dashboard_pins_and_retained_evidence_restored"
+    ],
+    "exact_database_counts_preserved_before_quota_read": true,
+    "exact_analytics_definition_and_canonical_panels_restored": true,
+    "encrypted_comment_versions": 2,
+    "purpose_audit_events": 3,
+    "checker_sha256": "8a0da8cf3d3d63bd6f87bc1be94a623dbdc4376305fdec1a777483a99190aab0",
+    "receipt_sha256": "ee3bff3ede589133818bd6f09cba252b99e50f93ef060b8f9c2f98f767fd5ab3"
+  },
+  "corrected_source_selections": [
+    {
+      "passed": 13,
+      "skipped": 0,
+      "seconds": 58.5,
+      "scope": "Six isolated read-boundary/raw-retained accounting cases plus existing observation dimensions and operations."
+    },
+    {
+      "passed": 5,
+      "skipped": 0,
+      "seconds": 301.55,
+      "scope": "Real delayed queued delivery and all workload campaign source/approval/charge cases."
+    }
+  ],
+  "frontend_units": {
+    "passed": 17,
+    "skipped": 0
+  },
+  "mypy_modules": 466,
+  "scope": {
+    "typed_metadata_only": true,
+    "max_panels": 8,
+    "max_window_days": 365,
+    "max_daily_points": 365,
+    "max_dimension_groups": 100,
+    "max_retained_rows": 50000,
+    "project_reads_per_minute": 60,
+    "sql_statement_cap_seconds": 5,
+    "selection_deadline_seconds": 15,
+    "money": "Exact Decimal strings, known subtotal separate from unknown full cost.",
+    "population_coverage": "unknown",
+    "missing_days_are_gaps": true,
+    "missing_combined_quantiles_reconstructed": false,
+    "promoted_retained_groups_include_current_raw_attempts": true,
+    "unknown_model_group_drops_attempts": false
+  },
+  "owned_sample_capture": {
+    "sdk_timeout_or_flush_caps_changed": false,
+    "max_existing_five_second_flush_budgets": 3,
+    "native_provider_calls_replayed": false,
+    "partial_or_dropped_capture_accepted": false,
+    "failure_diagnostics": "Fixed counters only; opaque values omitted."
+  },
+  "previous_hosted_head": {
+    "head": "8b7275745e849e14a198160f337b939a7a50c351",
+    "ci_run": 41337362981,
+    "security_run": 41337362841,
+    "required_jobs_succeeded": 18,
+    "required_jobs_total": 20,
+    "status": "FAILED_NOT_ACCEPTED",
+    "python_311": {
+      "passed": 3038,
+      "failed": 1,
+      "skipped": 62,
+      "seconds": 7125.18
+    },
+    "python_313": {
+      "passed": 3036,
+      "failed": 2,
+      "skipped": 63,
+      "seconds": 5342.01
+    },
+    "comment_fixture_cause": "Shared OIDC subject retained a membership elsewhere; unique subject preserves exact revocation assertions.",
+    "capture_failure_cause": "Unconfirmed from original generic error. Delayed queued delivery mode reproduced and addressed; full hosted reruns remain required."
+  },
+  "earlier_regressions": [
+    {
+      "old_wheel_sha256": "04413e0d3dd845918e0b2fbbf2022d8b37de1412e802236fedcd1a5f15ce2276",
+      "failed": 2,
+      "deselected": 3,
+      "seconds": 7.68,
+      "scope": "Retained promoted group lost a current attempt; unknown model label collapsed two attempts."
+    },
+    {
+      "failed": 1,
+      "deselected": 5,
+      "seconds": 6.24,
+      "scope": "Typed date-group retained/raw totals lost one attempt."
+    },
+    {
+      "failed": 1,
+      "seconds": 21.82,
+      "scope": "Same corrected real delivery fixture still fails on the identity-checked old wheel single-wait sample."
+    },
+    {
+      "passed": 10,
+      "failed": 1,
+      "seconds": 25.76,
+      "scope": "Late-event fault fixture contaminated later global maintenance; new fixtures now use isolated databases, with unchanged production refusal."
+    },
+    {
+      "passed": 26,
+      "failed": 1,
+      "seconds": 31.73,
+      "scope": "Comment rollback test had stale 0036 latest-head expectation after additive 0037; uses CURRENT_REVISION without changing guards."
+    },
+    {
+      "passed": 32,
+      "failed": 1,
+      "seconds": 65.12,
+      "scope": "New delivery fixture hooked combined observer instead of direct single-provider observer and expired its barrier; test corrected, SDK limits preserved."
+    },
+    {
+      "failed": 1,
+      "seconds": 29.46,
+      "scope": "Intermediate test barrier extension still used wrong observer hook; corrected actual observer hook in passing final fixture."
+    }
+  ],
+  "earlier_concurrent_old_runtime_trials": {
+    "sdk_229": {
+      "passed": 9,
+      "errors": 1,
+      "seconds": 154.03
+    },
+    "sdk_335": {
+      "passed": 9,
+      "errors": 1,
+      "seconds": 153.06
+    },
+    "image": {
+      "completed": false,
+      "seconds": 201.891,
+      "child_deadline_seconds": 180
+    },
+    "cause": "Unconfirmed; isolated PostgreSQL setup connections timed out while old image fixture ran. Not capacity acceptance."
+  },
+  "new_pypi_release": false,
+  "production_changed": false,
+  "paid_provider_calls": 0,
+  "customer_or_competitive_capacity_claimed": false,
+  "all_platform_features_completed": false
+}

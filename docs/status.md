@@ -1,6 +1,15 @@
 # What works and what remains
 
-Updated 1 November 2026. Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business.
+Updated 2 November 2026 (UTC). Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business.
+
+[Shared analytical dashboards](analytics-dashboards.md) passed local component qualification.
+Both fresh installed SDK selections passed 116 tests, zero skips, including
+current access, retained/raw accounting, real migrations, isolated HTTP-only
+clients and authenticated browser/mobile/accessibility checks. The new image
+also passed full backup/restore/rekey and exact canonical chart comparisons.
+[The receipt](evidence/shared-analytics-acceptance.json) preserves exact runtime
+identity and earlier failures. Corrected hosted acceptance remains pending;
+the source feature is absent from PyPI dev5.
 
 [Offline application readiness](application-readiness.md) passed local component qualification.
 It combines source blockers, workflow selection, startup/check readiness and

@@ -352,6 +352,7 @@ def test_populated_comment_downgrade_refuses_until_audited_project_erasure(
     from support_incident_comments import prepare_collaboration
 
     from cutback.server.api import create_app
+    from cutback.server.migrate import CURRENT_REVISION
 
     admin = {"Authorization": "Bearer " + secrets.token_urlsafe(48)}
     app = create_app(
@@ -372,7 +373,10 @@ def test_populated_comment_downgrade_refuses_until_audited_project_erasure(
             ValueError, match="INCIDENT_COMMENTS_EXPORT_AND_REMOVE_BEFORE_DOWNGRADE"
         ):
             command.downgrade(cfg, "0035")
-        assert client.get("/v1/health/ready", headers=admin).json()["schema_revision"] == "0036"
+        assert (
+            client.get("/v1/health/ready", headers=admin).json()["schema_revision"]
+            == CURRENT_REVISION
+        )
         assert (
             client.delete(
                 f"/v1/projects/{project['id']}",
@@ -464,6 +468,7 @@ def test_comment_oidc_grants_are_live_and_token_role_cannot_override_revocation(
     from support_incident_comments import prepare_collaboration
 
     verifier, token = identity
+    subject = "synthetic-comment-" + uuid4().hex
     api[2].state.oidc_verifier = verifier
     org = (
         api[0]
@@ -486,12 +491,12 @@ def test_comment_oidc_grants_are_live_and_token_role_cannot_override_revocation(
         .post(
             f"/v1/organizations/{org}/members",
             headers=api[1],
-            json={"issuer": verifier.issuer, "subject": "synthetic-user"},
+            json={"issuer": verifier.issuer, "subject": subject},
         )
         .json()["id"]
     )
     grant = f"/v1/organizations/{org}/members/{member}/grants"
-    user = {"Authorization": "Bearer " + token(role="admin")}
+    user = {"Authorization": "Bearer " + token(sub=subject, role="admin")}
     assert (
         api[0]
         .post(grant, headers=api[1], json={"project_id": project, "role": "viewer"})

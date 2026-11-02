@@ -665,6 +665,7 @@ if RUNTIME_GUARDS:
  assert manifest["runtime_guardrail_sample"]["complete_application_cost_usd"] is None
 print(json.dumps({"project_id":manifest["project_id"],
  "shared_dashboard_sample":manifest["shared_dashboard_sample"],
+ "analytics_dashboard_sample":manifest["analytics_dashboard_sample"],
  "paid_provider_calls":manifest["paid_provider_calls"]}))
 """
                 code = code.replace("RUNTIME_GUARDS", repr(runtime_guardrails))
@@ -734,6 +735,16 @@ print(json.dumps({"project_id":manifest["project_id"],
                         guarded_tools=guarded_tools,
                         guarded_security=guarded_security,
                     )
+                analytics_sample = manifest["analytics_dashboard_sample"]
+                analytics_path = base + "/analytics-dashboards/" + analytics_sample["dashboard_id"]
+                analytics_response = client.get(analytics_path + "/data?expected_revision=1")
+                assert analytics_response.status_code == 200
+                analytics_before = analytics_response.json()
+                assert (
+                    analytics_before["definition_sha256"] == analytics_sample["definition_sha256"]
+                )
+                assert analytics_before["population_coverage"] == "unknown"
+                assert analytics_before["content_included"] is False
                 with psycopg.connect(**kwargs, autocommit=True) as conn:
                     key = os.urandom(32)
                     dump = directory / "database.cbk"
@@ -1217,6 +1228,11 @@ with TestClient(restored_app) as client:
  assert dashboard["definition_sha256"]==SHARED_DASHBOARD_SHA and dashboard["revision"]==1
  assert len(dashboard["panels"])==2
  assert all(p["source_state"]=="current" for p in dashboard["panels"])
+ analytics=ANALYTICS_RECEIPT
+ analytical=client.get("/v1/projects/"+SHARED_DASHBOARD_PROJECT+"/analytics-dashboards/"+analytics["dashboard_id"],headers=headers)
+ assert analytical.status_code==200
+ assert analytical.json()["definition_sha256"]==analytics["definition_sha256"]
+ assert analytical.json()["revision"]==1 and len(analytical.json()["panels"])==4
  for panel in dashboard["panels"]:
   response=client.get("/v1/projects/"+SHARED_DASHBOARD_PROJECT+"/dashboards/"+SHARED_DASHBOARD_ID+"/panels/"+panel["view_id"],
    headers=headers,params={"expected_revision":1})
@@ -1274,6 +1290,7 @@ engine.dispose()
                     .replace("SHARED_DASHBOARD_PROJECT", repr(manifest["project_id"]))
                     .replace("POLICY_ACTIVITY_RECEIPT", repr(policy_activity_sample))
                     .replace("INCIDENT_COMMENT_RECEIPT", repr(comment_sample))
+                    .replace("ANALYTICS_RECEIPT", repr(analytics_sample))
                     .replace("CACHED_CURRENT_RECEIPT", repr(cached_policy_sample))
                     .replace(
                         "SOURCE_POLICY_PROGRAM_ID",
@@ -1297,6 +1314,36 @@ engine.dispose()
                 if cached_policy_sample:
                     expected_after["audit_events"] += 1
                 assert counts(names[1]) == expected_after
+                # The exact database comparison above precedes this explicitly
+                # quota-consuming analytics read; do not waive any count differences.
+                analytics_recovery = """import json,os
+from sqlalchemy.engine import make_url
+from fastapi.testclient import TestClient
+from cutback.server.api import create_app
+url=make_url(os.environ["CUTBACK_DATABASE_URL"]).set(database=RECOVERED)
+app=create_app(database_url=url.render_as_string(hide_password=False),
+ admin_token=os.environ["CUTBACK_ADMIN_TOKEN"],allow_insecure_http=True)
+with TestClient(app) as client:
+ response=client.get(ANALYTICS_PATH+"/data?expected_revision=1",
+  headers={"Authorization":"Bearer "+os.environ["CUTBACK_ADMIN_TOKEN"]})
+ assert response.status_code==200
+ value=response.json()
+ assert value["content_included"] is False and value["population_coverage"]=="unknown"
+ assert value["revision"]==1 and value["definition_sha256"]==ANALYTICS_HASH
+ assert value["starts_at"]==ANALYTICS_START and value["panels"]==ANALYTICS_PANELS
+app.state.engine.dispose()
+print(json.dumps({"analytics_definition_and_canonical_data_restored":True}))
+"""
+                analytics_recovery = (
+                    analytics_recovery.replace("RECOVERED", repr(names[1]))
+                    .replace("ANALYTICS_PATH", repr(analytics_path))
+                    .replace("ANALYTICS_HASH", repr(analytics_before["definition_sha256"]))
+                    .replace("ANALYTICS_START", repr(analytics_before["starts_at"]))
+                    .replace("ANALYTICS_PANELS", repr(analytics_before["panels"]))
+                )
+                analytics_recovered = json.loads(
+                    inside(container, analytics_recovery, values).strip().splitlines()[-1]
+                )
                 with psycopg.connect(**{**kwargs, "dbname": names[1]}) as connection:
                     revision = connection.execute(
                         "SELECT version_num FROM alembic_version"
@@ -1438,6 +1485,9 @@ engine.dispose()
                     "reactive_user_contracts_receipts_and_trajectories_restored": reactive_users,
                     "restored_tables": len(before),
                     "row_counts_match": True,
+                    "analytics_definition_and_canonical_data_restored": analytics_recovered[
+                        "analytics_definition_and_canonical_data_restored"
+                    ],
                     **recovered,
                     "production_changed": False,
                     "secret_delivery": "anonymous_stdin_pipes_and_scoped_memory_clients"

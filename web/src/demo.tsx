@@ -75,6 +75,18 @@ export function SampleGuide({
         money is useful only if urgent tickets still receive urgent priority.
       </p>
       <p className="disclosure">{demo.disclosure}</p>
+      {demo.analytics_dashboard_sample && (
+        <section aria-label="Shared analytics walkthrough">
+          <h3>See the same observed calls in a shared dashboard</h3>
+          <p>
+            Open Costs, choose Saved charts, then{" "}
+            {demo.analytics_dashboard_sample.key}. Its traffic, known cost,
+            error and duration panels use the sample's existing observations.
+            Unpriced attempts, missing days and unavailable p95s remain visible.
+          </p>
+          <button onClick={() => navigate("Costs")}>Open cost workspace</button>
+        </section>
+      )}
       {demo.source_policy_sample && (
         <section aria-label="One-budget improvement walkthrough">
           <h3>

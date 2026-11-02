@@ -22,6 +22,18 @@ export const money = (value: unknown) =>
 export function explain(error: unknown) {
   const code = (error as Error)?.message || "REQUEST_FAILED";
   const messages: Record<string, string> = {
+    ANALYTICS_REVISION_CONFLICT:
+      "This analytical dashboard changed. Open its current saved version before editing or refreshing it.",
+    ANALYTICS_DASHBOARD_WAS_DELETED:
+      "This dashboard was deleted. Create a new dashboard to start a separate identity; the old save cannot recreate it.",
+    ANALYTICS_QUERY_BOUND_REACHED_NARROW_WINDOW:
+      "This selection exceeds the reporting bound. Use a shorter period or narrower workflow and traffic selection.",
+    ANALYTICS_QUERY_UNAVAILABLE:
+      "The analytical read could not complete. Refresh when storage is available; no partial chart was substituted.",
+    ANALYTICS_ENVIRONMENT_NOT_CONFIGURED:
+      "Choose an environment already configured in this project.",
+    ANALYTICS_RETAINED_EVIDENCE_UNAVAILABLE:
+      "The retained data cannot support this chart contract. Inspect the source usage report; missing values are not filled in.",
     INCIDENT_COMMENT_REVISION_CONFLICT:
       "This comment changed. Refresh comments, read the current revision and review your edit again.",
     INCIDENT_COMMENT_AUTHOR_REQUIRED:

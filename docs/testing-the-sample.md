@@ -55,6 +55,45 @@ developer's successful first use remains separate evidence from automated tests.
 The version-pinned PyPI dev5 walkthrough in the following section is the earlier
 support-desk journey and does not contain this source-only extension.
 
+## Try shared analytical charts in the current checkout
+
+This source feature passed local component qualification; corrected hosted
+acceptance remains pending. PyPI `0.1.0.dev5` does not include it. Keep this Cutback checkout separate from the application you may
+instrument later. Docker Desktop, Git, Python and uv are sufficient; the built
+dashboard is included and the sample needs no provider key or Node setup.
+
+```sh
+uv sync --locked --no-dev --extra server --extra openai
+uv run --no-sync cutback demo
+```
+
+1. Open the printed **Ready** address and choose **Explore sample**.
+2. Choose **Costs → Saved charts**, then `support-cost-and-reliability`. The
+   sample contains four charts: observed application attempts, known modeled
+   cost, marked errors and observed p95 duration. They use the demo's existing
+   observations; creating charts makes no additional provider calls.
+3. Open each chart's exact table. Check decimal amounts and the observed,
+   unpriced, usage and duration counts. Missing days are gaps. Known modeled
+   cost is a subtotal, and population coverage stays unknown.
+4. Choose **Edit**, change a chart or period, and save. Reopen it and confirm the
+   revision increased. The same definition is shared with other currently
+   authorized project users. Conflicting edits require refresh and review.
+5. Download the JSON export. It contains the selected metadata evidence and
+   exact values, with no credential or customer payload.
+6. Return to **Explore usage** to compare the canonical report. Standard source
+   demo application traffic contains 19 observed calls; the separate
+   `--workload-portfolio` mode adds eight. The two source-linked support-desk
+   workflows still total 12. These are synthetic fixture observations, not
+   measured customer performance.
+7. Reload the page and reconnect with **Explore sample**. No credential should
+   persist in the URL, local/session storage or cookies. Press **Ctrl+C** to stop
+   the sample and its own temporary database.
+
+For a separate existing local collector, use the
+[HTTP-only example](../examples/shared-analytics/README.md). It previews offline
+and requires an explicit execution flag and current editor key to save. Reusing
+a completed receipt does not refresh evidence or recreate a deleted view.
+
 ## What to check in the browser
 
 1. Click **Explore sample**. The comparison loads directly: **compact: Passes sample gates**, **unsafe: Not eligible**, with failed `priority`. These are synthetic fixture decisions, not measured model or customer performance. The short-lived scoped key stays in page memory.

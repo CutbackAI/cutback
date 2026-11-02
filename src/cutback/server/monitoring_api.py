@@ -102,6 +102,9 @@ def install_monitoring(app, sessions, authorize, scope):
     from cutback.server.dashboard_api import install_dashboards
 
     install_dashboards(app, sessions, authorize, scope)
+    from cutback.server.analytics_api import install_analytics
+
+    install_analytics(app, sessions, authorize, scope)
     from cutback.server.comment_api import install_comments
 
     install_comments(app, sessions, authorize, scope)
@@ -474,7 +477,7 @@ def install_monitoring(app, sessions, authorize, scope):
                 .where(SavedView.project_id == project_id, SavedView.key == body.key)
                 .with_for_update()
             )
-            if row and row.specification.get("page") == "dashboard":
+            if row and row.specification.get("page") not in {"traces", "incidents"}:
                 raise HTTPException(409, "SAVED_VIEW_TYPE_CONFLICT")
             if (row.revision if row else 0) != body.expected_revision:
                 if row and row.specification == body.model_dump(mode="json"):
@@ -547,7 +550,7 @@ def install_monitoring(app, sessions, authorize, scope):
         scope(auth, project_id, ("editor", "admin"))
         with sessions.begin() as session:
             row = scoped(session, SavedView, project_id, view_id, lock=True)
-            if row.specification.get("page") == "dashboard":
+            if row.specification.get("page") not in {"traces", "incidents"}:
                 raise HTTPException(404, "MONITORING_RECORD_NOT_FOUND")
             if row.revision != expected_revision:
                 raise HTTPException(409, "SAVED_VIEW_REVISION_CONFLICT")

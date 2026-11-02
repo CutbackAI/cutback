@@ -1,5 +1,113 @@
 # Implementation progress
 
+Shared analytical dashboards have **passed local component qualification**. The corrected frozen runtime is `a9f8df8aff14360c908762098ec349eaa3a79a7b`; [its receipt](evidence/shared-analytics-acceptance.json) binds the complete wheel, both installed SDK environments, core-only and HTTP-only consumers, authenticated desktop/mobile/axe journeys and the new image recovery.
+
+Both OpenAI 2.29.0 and 3.35.1 selections passed **116**, zero skips, in **644.23 / 572.40 seconds**. The non-root full-image recovery passed in **404.81 seconds**: **110** matching table counts and **3,695** rekeyed objects, with two immutable comment versions, three exact purpose audits, all prior recovery gates and identical saved analytical definitions/canonical panels. Frontend units passed **17**; mypy passed **466 modules**. The source/archive privacy scan checked **1,496 files / 1,991 archive members / zero findings**. These are controlled synthetic component results, not customer quality, production capacity or market validation.
+
+Typed charts preserve exact Decimal subtotals, unknown population coverage and missing quantiles. The corrected canonical merge keeps current attempts in retained groups promoted beyond a truncated raw page, and keeps all attempts under the unknown-model label. Current grants, revision conflicts, erased intents, project erasure and SQL/cardinality bounds are covered. The owned sample may wait for already queued capture under three SDK flush budgets; it neither replays provider calls nor accepts missing profile exports.
+
+**Hosted acceptance remains open.** The prior reviewed head failed two of its 20 required jobs; [the failure record](evidence/application-readiness-hosted-failures.json) retains exact counts and causes/uncertainty. The corrected source has not been pushed or rerun on GitHub. PyPI dev5, production and paid providers are unchanged. Broader baseline and external gates remain open.
+
+The following paragraphs preserve earlier trials of this increment; their qualification state is historical rather than the current component status.
+
+The prior reviewed public head's full hosted regressions finished with failures:
+Python 3.11 **3,038 passed / one failed / 62 skipped** (7,125.18 seconds), Python
+3.13 **3,036 passed / two failed / 63 skipped** (5,342.01 seconds). Security and
+the other required jobs passed; **18 of 20** required jobs succeeded. This is
+not hosted acceptance. An incident-comment fixture reused an OIDC subject that
+still belonged to another organization, so removal of one membership correctly
+returned project denial rather than an unknown identity. The fixture now uses
+an independent subject while preserving its exact revocation and forged-role
+assertions. The comment rollback test also follows the current migration head
+while retaining its refusal and real roundtrip checks.
+
+The additional Python 3.13 failure reported incomplete synthetic workload
+capture without counters; its precise cause remains unconfirmed. A queued
+delivery reproducer exercises the same failure mode. The owned sample now waits
+for up to three existing five-second SDK flush budgets, requires all eight
+profile exports and no drops, and emits fixed numeric failure diagnostics.
+It neither reenqueues samples nor repeats provider calls. SDK request deadlines,
+flush limits and instrumentation remain unchanged. The corrected real-collector
+fixture and all workload campaign cases passed **five in 301.55 seconds**, zero
+skips. The broader source trial passed 32 before the new delivery fixture failed:
+its first hook targeted a combined observer while a single-provider setup returns
+the OpenAI observer directly. The hook and test barrier were corrected without
+changing the SDK deadlines or accepting a dropped capture. Identity/comment
+checks and four capture failure-state cases passed in that earlier trial; the
+new frozen installed selections and hosted reruns remain required. With the
+corrected identical delivery fixture, the older installed wheel still failed in
+**21.82 seconds**; its complete wheel identity was checked before that trial.
+
+Accounting review found two reproducible canonical grouping defects before
+analytical component acceptance: a retained group promoted beyond the first
+raw page lost its current attempts, and a missing model plus the retained
+`unknown_model` label collapsed a displayed counter. The prior installed wheel
+failed both regressions (**two failed in 7.68 seconds**); a separate date-group
+regression failed in **6.24 seconds**. The working source now normalizes the
+unknown-model grouping and recovers only the missing retained keys' bounded,
+scoped raw aggregates before ranking. Complete summaries are not added twice;
+Decimal subtotals and unknown combined quantiles are preserved.
+
+The corrected initial source selection passed **five in 14.85 seconds**. A
+larger selection passed **10** and failed **one in 25.76 seconds**: a deliberate
+late-event fixture correctly made a later global retention sweep refuse pruning.
+Those fault fixtures now use isolated databases. The corrected selection of
+new bounds, existing observation dimensions and operations passed **13 in
+58.50 seconds**, zero skips. Ruff/format and mypy **466 modules** pass. Earlier
+corrected preview archives passed application-byte/release-boundary checks;
+they predate the capture-wait change and are not freshly qualified releases.
+
+Before that accounting correction, both fresh installed SDK selections passed
+**60**, zero skips, in **179.22 / 168.99 seconds**, and separate snapshot,
+cardinality and actual SQL-timeout guards passed **three each** in
+**12.29 / 12.95 seconds**. The prior frozen runtime also passed full non-root
+image recovery in **390.36 seconds**: **110** matching table counts, **3,695**
+rekeyed objects, two comment versions, three exact purpose audits and preserved
+analytical definitions/canonical panels. Those results do not qualify the newer
+accounting correction. Corrected installed/client/browser/image verification
+and exact-head hosted acceptance remain pending. Initial concurrent trials had
+PostgreSQL connection timeouts on both SDKs (nine passed/one setup error each)
+and a full-demo child timeout; the same prior runtime passed serially with
+unchanged assertions and deadlines. The concurrent failure cause remains
+unconfirmed and is not capacity acceptance. PyPI dev5 remains unchanged.
+
+Shared analytical dashboards are **under implementation and qualification**.
+They use typed metadata chart definitions over the canonical usage path; no
+query code, arbitrary scripts or customer payload is accepted. Additive migration
+`0037` binds saved-view environments to their project and refuses rollback while
+new analytical definitions remain. Released migrations are preserved. Server,
+retention, permission, migration, generated API/client, React/browser and fresh
+package/image acceptance remain required before this feature is called qualified.
+
+The corrected source server selection passed **21 in 35.74 seconds**, including
+existing shared views, observation dimensions and migration drift. Separate
+additive migration/current-access/failure guards passed **six in 22.63 seconds**.
+The stronger deleted-UUID and project quota-erasure selection passed **10 in
+18.95 seconds**. Earlier fixtures incorrectly used a staging key for production
+and treated a known single retained-day p95 as missing; both were corrected
+without weakening the application boundaries. Source authenticated browser
+acceptance passed **one in 12.24 seconds**, then **one in 12.45 seconds** after
+visual review and the Costs → Saved charts navigation. Lost replies, stale edits,
+viewer access/revocation, escaped untrusted stored labels, mobile/axe and no
+credential persistence are included. Source mypy passed **465 modules**, React
+build passes and **17 frontend unit tests** pass. These scopes overlap and do not
+constitute fresh installed or full-image acceptance.
+
+Follow-up source acceptance: the explicit concurrent project-erasure/read and
+current-rights/query-failure guards passed **four in 10.89 seconds**. The
+independent real-HTTP sample, lost save/read replies and deleted-intent refusal
+passed **four in 10.65 seconds**. The ordinary native support-desk journey passed
+**one in 167.95 seconds**, with its separate workload mode deselected. It seeds
+four charts over existing synthetic observations and adds no provider calls.
+Regenerated API/types, rebuilt React and mypy **466 modules** pass. New installed
+client and full-image recovery qualification remain pending.
+
+The final combined source selection passed **31 in 132.59 seconds**, zero skips:
+analytical CRUD/evidence, actual migrations, fault/concurrency guards, independent
+HTTP examples, existing shared views, and both analytical and general
+authenticated browser/mobile/accessibility journeys. This is source evidence;
+fresh wheel/image qualification is still separate.
+
 Application readiness diagnosis has **passed local component qualification**;
 exact-head hosted acceptance remains pending. The new offline
 command combines fresh bounded source discovery, known request blockers,

@@ -682,6 +682,25 @@ export function createSDK(request:Request) {return {
     if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
     if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/dashboards/${encodeURIComponent(String(args.dashboard_id))}/panels/${encodeURIComponent(String(args.view_id))}`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  save_analytics_v1_projects__project_id__analytics_dashboards_post: (args:{project_id:string;body:components["schemas"]["AnalyticsInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/analytics-dashboards`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  list_analytics_v1_projects__project_id__analytics_dashboards_get: (args:{project_id:string;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/analytics-dashboards`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  get_analytics_v1_projects__project_id__analytics_dashboards__dashboard_id__get: (args:{project_id:string;dashboard_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/analytics-dashboards/${encodeURIComponent(String(args.dashboard_id))}`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  delete_analytics_v1_projects__project_id__analytics_dashboards__dashboard_id__delete: (args:{project_id:string;dashboard_id:string;expected_revision:number}) => {
+    const query=new URLSearchParams();
+    if(args.expected_revision!==undefined && args.expected_revision!==null) query.set("expected_revision",String(args.expected_revision));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/analytics-dashboards/${encodeURIComponent(String(args.dashboard_id))}`+(query.size?"?"+query.toString():""),{method:"DELETE"});},
+  read_analytics_v1_projects__project_id__analytics_dashboards__dashboard_id__data_get: (args:{project_id:string;dashboard_id:string;expected_revision:number}) => {
+    const query=new URLSearchParams();
+    if(args.expected_revision!==undefined && args.expected_revision!==null) query.set("expected_revision",String(args.expected_revision));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/analytics-dashboards/${encodeURIComponent(String(args.dashboard_id))}/data`+(query.size?"?"+query.toString():""),{method:"GET"});},
   list_comments_v1_projects__project_id__incidents__incident_id__comments_get: (args:{project_id:string;incident_id:string;after?:string | null;limit?:number}) => {
     const query=new URLSearchParams();
     if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));

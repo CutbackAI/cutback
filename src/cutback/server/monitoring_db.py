@@ -8,6 +8,7 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Index,
     Integer,
     String,
@@ -167,7 +168,15 @@ class IncidentEvent(Base):
 
 class SavedView(Base):
     __tablename__ = "saved_views"
-    __table_args__ = (UniqueConstraint("project_id", "key", name="uq_saved_view_key"),)
+    __table_args__ = (
+        UniqueConstraint("project_id", "key", name="uq_saved_view_key"),
+        ForeignKeyConstraint(
+            ["environment_id", "project_id"],
+            ["environments.id", "environments.project_id"],
+            name="fk_saved_view_environment_project",
+            ondelete="CASCADE",
+        ),
+    )
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     project_id: Mapped[UUID] = mapped_column(
         ForeignKey("projects.id", ondelete="CASCADE"), index=True

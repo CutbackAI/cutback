@@ -1,0 +1,158 @@
+{
+  "contract": "cutback.hosted-failure-evidence.v1",
+  "recorded_at": "2026-11-02T00:13:23.724172+00:00",
+  "reviewed_head": "8b7275745e849e14a198160f337b939a7a50c351",
+  "status": "FAILED_NOT_ACCEPTED",
+  "required_jobs": 20,
+  "successful_required_jobs": 18,
+  "runs": [
+    {
+      "run_id": 41337362981,
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "name": "isolated-tools",
+          "conclusion": "success",
+          "job_id": 124939966784
+        },
+        {
+          "name": "legacy-sdk (3.13.18)",
+          "conclusion": "success",
+          "job_id": 124939966851
+        },
+        {
+          "name": "mixed-services (sdk3)",
+          "conclusion": "success",
+          "job_id": 124939966919
+        },
+        {
+          "name": "cloud-import-producers",
+          "conclusion": "success",
+          "job_id": 124939966997
+        },
+        {
+          "name": "legacy-sdk (3.11.18)",
+          "conclusion": "success",
+          "job_id": 124939967061
+        },
+        {
+          "name": "openai3-sdk (3.11.18, core)",
+          "conclusion": "success",
+          "job_id": 124939967092
+        },
+        {
+          "name": "openai3-sdk (3.13.18, workflows)",
+          "conclusion": "success",
+          "job_id": 124939967094
+        },
+        {
+          "name": "mixed-services (default)",
+          "conclusion": "success",
+          "job_id": 124939967098
+        },
+        {
+          "name": "verify (3.13.18)",
+          "conclusion": "failure",
+          "job_id": 124939967104
+        },
+        {
+          "name": "openai3-sdk (3.13.18, core)",
+          "conclusion": "success",
+          "job_id": 124939967129
+        },
+        {
+          "name": "openai3-sdk (3.11.18, workflows)",
+          "conclusion": "success",
+          "job_id": 124939967142
+        },
+        {
+          "name": "verify (3.11.18)",
+          "conclusion": "failure",
+          "job_id": 124939967189
+        },
+        {
+          "name": "openai3-sdk (3.13.18, systems)",
+          "conclusion": "success",
+          "job_id": 124939967220
+        },
+        {
+          "name": "openai3-sdk (3.11.18, systems)",
+          "conclusion": "success",
+          "job_id": 124939967226
+        },
+        {
+          "name": "infrastructure",
+          "conclusion": "success",
+          "job_id": 124939967233
+        },
+        {
+          "name": "openai3-sdk (3.11.18)",
+          "conclusion": "success",
+          "job_id": 124964047754
+        },
+        {
+          "name": "openai3-sdk (3.13.18)",
+          "conclusion": "success",
+          "job_id": 124964047763
+        }
+      ]
+    },
+    {
+      "run_id": 41337362841,
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "codeql (javascript-typescript)",
+          "conclusion": "success",
+          "job_id": 124940183209
+        },
+        {
+          "name": "codeql (python)",
+          "conclusion": "success",
+          "job_id": 124940183367
+        },
+        {
+          "name": "audit",
+          "conclusion": "success",
+          "job_id": 124940183523
+        }
+      ]
+    }
+  ],
+  "full_regressions": {
+    "3.11.18": {
+      "passed": 3038,
+      "failed": 1,
+      "skipped": 62,
+      "seconds": 7125.18
+    },
+    "3.13.18": {
+      "passed": 3036,
+      "failed": 2,
+      "skipped": 63,
+      "seconds": 5342.01
+    }
+  },
+  "failures": [
+    {
+      "test": "test_comment_oidc_grants_are_live_and_token_role_cannot_override_revocation",
+      "observed": "403 project denial versus expected 401 unknown identity.",
+      "cause": "The fixture reused a subject with a remaining organization membership.",
+      "correction": "Use an independent subject, preserving exact grant, forged-role and revocation assertions."
+    },
+    {
+      "test": "test_workload_campaign_rechecks_create_approve_and_each_target_call",
+      "observed": "SYNTHETIC_WORKLOAD_CAPTURE_INCOMPLETE during preparation on Python 3.13.",
+      "cause": "Unconfirmed; original generic error had no delivery counters.",
+      "correction": "A reproducible queued-delivery mode now drains existing work under three bounded flush budgets, with no native replay or dropped-capture acceptance and fixed counter diagnostics."
+    }
+  ],
+  "retained_sanitized_log_sha256": {
+    "124939967189": "2825cf9793ee017cc5f64b8833d9e9831ad2ae586bdb6137db29dcac264c136e",
+    "124939967104": "980d7b6dd71b17adad05e28c8d4d0be738c81cfc52ea604a9abf23171e6b9e62"
+  },
+  "corrected_hosted_rerun_required": true,
+  "github_modified": false,
+  "paid_provider_calls": 0,
+  "production_changed": false
+}

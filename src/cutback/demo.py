@@ -496,9 +496,13 @@ def seed_support_desk(
                 policy_sample = run_policy_sample(
                     app, control, endpoint, admin, project["id"], ingest, workspace
                 )
+            from cutback.demo_analytics import seed_analytics_dashboard
+
+            analytics_sample = seed_analytics_dashboard(control, project["id"])
             manifest = {
                 "available": True,
                 "shared_dashboard_sample": shared_dashboard_sample,
+                "analytics_dashboard_sample": analytics_sample,
                 "title": "Support-desk triage",
                 "disclosure": (
                     "SYNTHETIC provider replies. Modeled fixture costs are not "
