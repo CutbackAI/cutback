@@ -186,6 +186,8 @@ def check(directory: Path):
             "tests/integration/test_campaign_portfolio.py",
             "examples/automatic-portfolio/README.md",
             "scripts/check_source_snapshot.py",
+            "scripts/check_release_hashes.py",
+            "docs/testing-dev6-release.md",
             "tests/contract/test_committed_source_snapshot.py",
             "src/cutback/sample_app/ticket_campaign.py",
             "src/cutback/sample_app/ticket_fixture.py",

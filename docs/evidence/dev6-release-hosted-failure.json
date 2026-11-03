@@ -1,0 +1,43 @@
+{
+  "contract": "cutback.dev6-hosted-release-failure.v1",
+  "public_head": "f2359bc98d53690ad90eda073a289a2402e0602b",
+  "ci_run": 41583343958,
+  "security_run": 41583343972,
+  "python_313_job": 125743001856,
+  "job_conclusion": "failure",
+  "regression": {
+    "python": "3.13.18",
+    "passed": 3150,
+    "skipped": 63,
+    "seconds": 6022.42
+  },
+  "failed_step": "Run uv run python scripts/check_source_snapshot.py",
+  "source_guard": {
+    "status": "refused",
+    "files": 1519,
+    "different": 2,
+    "missing": 0,
+    "unsafe": 0,
+    "staged_changes": false,
+    "untracked": 0
+  },
+  "cause": "The package-version bump changed two sdk_version defaults from dev5 to dev6 in generated OpenAPI and TypeScript documentation. CI regenerated them; the committed copies were stale. API info.version remaining 1.0 did not establish complete contract equality.",
+  "affected_files": [
+    "web/openapi.json",
+    "web/src/api.generated.ts"
+  ],
+  "correction": "Regenerate the contract and types from the qualified dev6 runtime, rebuild React, and retain both an early generated-source guard and the existing post-regression committed-byte guard.",
+  "local_correction_checks": {
+    "frontend_units_passed": 17,
+    "frontend_units_skipped": 0,
+    "typescript_generation_passed": true,
+    "react_build_passed": true,
+    "release_and_source_controls_passed": 21,
+    "release_and_source_controls_seconds": 2.39,
+    "tracked_dashboard_bundle_changes": 0
+  },
+  "replacement_head_qualification": "Required separately; this failed job is not an accepted hosted source revision.",
+  "merged_at_failure": false,
+  "publication_dispatched_at_failure": false,
+  "paid_provider_requests": 0
+}

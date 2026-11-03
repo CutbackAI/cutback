@@ -445,6 +445,8 @@ jobs:
         working-directory: packages/js-sdk
       - run: npm run test:unit && npm run types && npm run build
         working-directory: web
+      - name: Reject stale generated dashboard files before the long regression
+        run: uv run python scripts/check_source_snapshot.py
       - run: npx playwright install --with-deps chromium
         working-directory: web
       - name: Install isolated native CPU training runtime

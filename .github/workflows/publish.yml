@@ -3,22 +3,35 @@ on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: 'Type cutback-0.1.0.dev5 to publish this pre-alpha release'
+        description: 'Type cutback-0.1.0.dev6 to publish this pre-alpha release'
+        required: true
+        type: string
+      wheel_sha256:
+        description: 'SHA-256 of the qualified complete wheel, including metadata'
+        required: true
+        type: string
+      sdist_sha256:
+        description: 'SHA-256 of the qualified source distribution'
         required: true
         type: string
 permissions:
   contents: read
+env:
+  SOURCE_DATE_EPOCH: '315532800'
+  CUTBACK_RELEASE_VERSION: '0.1.0.dev6'
+  CUTBACK_EXPECTED_WHEEL_SHA256: ${{ inputs.wheel_sha256 }}
+  CUTBACK_EXPECTED_SDIST_SHA256: ${{ inputs.sdist_sha256 }}
 concurrency:
   group: pypi-release
   cancel-in-progress: false
 jobs:
   validate:
-    if: ${{ inputs.confirm == 'cutback-0.1.0.dev5' }}
+    if: ${{ inputs.confirm == 'cutback-0.1.0.dev6' }}
     uses: ./.github/workflows/ci.yml
     permissions:
       contents: read
   security:
-    if: ${{ inputs.confirm == 'cutback-0.1.0.dev5' }}
+    if: ${{ inputs.confirm == 'cutback-0.1.0.dev6' }}
     uses: ./.github/workflows/security.yml
     permissions:
       contents: read
@@ -38,6 +51,8 @@ jobs:
       - run: uv run python scripts/check_source_snapshot.py
       - run: uv build
       - run: uv run python scripts/check_release_artifacts.py
+      - name: Verify exact qualified distribution bytes
+        run: uv run python scripts/check_release_hashes.py dist
       - run: uv run twine check dist/*
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -55,11 +70,19 @@ jobs:
       name: pypi
       url: https://pypi.org/project/cutback/
     permissions:
+      contents: read
       id-token: write
     steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/check_release_hashes.py
+          sparse-checkout-cone-mode: false
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: distributions
           path: dist/
+      - name: Reverify downloaded distributions before publishing
+        run: python3 scripts/check_release_hashes.py dist
       - name: Publish reviewed pre-alpha artifacts to PyPI
         uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # release/v1

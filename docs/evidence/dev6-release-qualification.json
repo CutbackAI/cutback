@@ -1,0 +1,176 @@
+{
+  "contract": "cutback.dev6-release-qualification.v1",
+  "recorded_at": "2026-11-03T05:11:14.706918+00:00",
+  "status": "LOCAL_RELEASE_CANDIDATE_QUALIFIED_NOT_PUBLICATION_RECEIPT",
+  "version": "0.1.0.dev6",
+  "actual_local_runtime_source_revision": "f06b8fd3f3fdedb0dc36b13b6adb61387104fa03",
+  "whole_wheel_sha256": "983236708bba7cd28e06f59c1524794c84475c93f03f4d8edae7bb71b8d6d9e1",
+  "application_files": 494,
+  "python_files": 467,
+  "wheel_metadata_files": 5,
+  "sdk_matrix": {
+    "2.29.0": {
+      "passed": 144,
+      "skipped": 0,
+      "qualification_image_id": "sha256:99b93b1a65b2f410a114fe48e60de37caa353886f73ad7afdb24b731edec49c1",
+      "suites": {
+        "unit": {
+          "passed": 136,
+          "skipped": 0,
+          "seconds": 94.45,
+          "complete_installed_identity_before_and_after": true,
+          "log_sha256": "c7954c367207c01fcb1afe44ca8fa94cf01614baa846c5f53ef15a718f66d954",
+          "pydantic": "2.14.1",
+          "git": "git version 2.47.3",
+          "node": "v20.19.2"
+        },
+        "integration": {
+          "passed": 8,
+          "skipped": 0,
+          "seconds": 262.95,
+          "complete_installed_identity_before_and_after": true,
+          "log_sha256": "ed7fb54c1af3c95e29c1f87b2e594d391486da0838c1ef8770dcb9272fd10946",
+          "pydantic": "2.14.1",
+          "git": "git version 2.47.3",
+          "node": "v20.19.2"
+        }
+      }
+    },
+    "3.35.1": {
+      "passed": 144,
+      "skipped": 0,
+      "qualification_image_id": "sha256:acd80d2eaf18fe42c2784fbedc4c2627b59de7f111ba365c892f5b17f6e79300",
+      "suites": {
+        "unit": {
+          "passed": 136,
+          "skipped": 0,
+          "seconds": 94.18,
+          "complete_installed_identity_before_and_after": true,
+          "log_sha256": "236ab1c931c42d4192d6de263e41e85903c74019a8934b153fd15a51b208d4a8",
+          "pydantic": "2.14.1",
+          "git": "git version 2.47.3",
+          "node": "v20.19.2"
+        },
+        "integration": {
+          "passed": 8,
+          "skipped": 0,
+          "seconds": 264.46,
+          "complete_installed_identity_before_and_after": true,
+          "log_sha256": "e2ba3b0b934fd612188482423eacea1ccd40c05cad3d01141538dcb45ab6bb04",
+          "pydantic": "2.14.1",
+          "git": "git version 2.47.3",
+          "node": "v20.19.2"
+        }
+      }
+    }
+  },
+  "windows_core_only": {
+    "identity_before": true,
+    "identity_after": true,
+    "optional_dependencies_absent": true,
+    "outcomes": {
+      "preview": {
+        "exit_code": 0,
+        "executed": false,
+        "all_passed": null,
+        "result_count": 0
+      },
+      "good": {
+        "exit_code": 0,
+        "executed": true,
+        "all_passed": true,
+        "result_count": 10
+      },
+      "broken": {
+        "exit_code": 1,
+        "executed": true,
+        "all_passed": false,
+        "result_count": 10
+      },
+      "broken-resource": {
+        "exit_code": 1,
+        "executed": true,
+        "all_passed": false,
+        "result_count": 10
+      }
+    }
+  },
+  "product_image": {
+    "application_files": 494,
+    "metadata_files": 5,
+    "version": "0.1.0.dev6",
+    "complete_installed_identity": true,
+    "wheel_sha256": "983236708bba7cd28e06f59c1524794c84475c93f03f4d8edae7bb71b8d6d9e1",
+    "image_id": "sha256:156aca648f444c434806b70178806cde95bd9f62806c0aa8042a8a1552450a71",
+    "actual_runtime_source_head": "f06b8fd3f3fdedb0dc36b13b6adb61387104fa03",
+    "network": "none",
+    "user": "10001",
+    "read_only": true
+  },
+  "non_root_offline_cli": {
+    "image_id": "sha256:156aca648f444c434806b70178806cde95bd9f62806c0aa8042a8a1552450a71",
+    "actual_runtime_source_head": "f06b8fd3f3fdedb0dc36b13b6adb61387104fa03",
+    "user": "10001",
+    "read_only": true,
+    "network": "none",
+    "capabilities_dropped": "ALL",
+    "no_new_privileges": true,
+    "provider_calls": 0,
+    "outcomes": {
+      "preview": {
+        "exit_code": 0,
+        "executed": false,
+        "all_passed": null,
+        "result_count": 0
+      },
+      "good": {
+        "exit_code": 0,
+        "executed": true,
+        "all_passed": true,
+        "result_count": 10
+      },
+      "broken": {
+        "exit_code": 1,
+        "executed": true,
+        "all_passed": false,
+        "result_count": 10
+      },
+      "broken-resource": {
+        "exit_code": 1,
+        "executed": true,
+        "all_passed": false,
+        "result_count": 10
+      }
+    },
+    "script_sha256": "1deb153db100e581a413144ef4389a7d2fffa82ea1ef1eb801d213a2f060a54e"
+  },
+  "owned_postgres_cleanup": {
+    "owned_container_removed": true,
+    "owned_test_databases_remaining": 0,
+    "existing_local_test_service_touched": false,
+    "qualification_images_preserved": true
+  },
+  "candidate_archive_boundary": {
+    "files_checked": 1518,
+    "history_objects_checked": 0,
+    "archive_members_checked": 2014,
+    "findings": 0,
+    "private_marker_values_logged": false
+  },
+  "source_release_control_tests": {
+    "passed": 16,
+    "scope": "Source trial before freeze; installed control checks are also included in both unit cohorts."
+  },
+  "runtime_change_from_previous_qualified_source": "Package version only; README changes affect wheel metadata. External dependency pins and migrations are preserved.",
+  "qualification_scope": "Fresh complete installed wheel identity before and after each native SDK cohort, core-only independent consumers and the non-root product image. Later docs-only evidence edits must retain the complete wheel hash including metadata.",
+  "hosted_and_publication_gates": "Required separately on the exact release source revision; see the release PR checks, hash-bound publishing workflow and official PyPI release metadata.",
+  "paid_provider_requests": 0,
+  "production_deployed_at_local_qualification": false,
+  "pypi_uploaded_at_local_qualification": false,
+  "complete_platform": false,
+  "limits": [
+    "Controlled synthetic results do not establish customer quality, production capacity or comparative advantage.",
+    "Unknown economics and coverage stay unknown; static dependency reachability is not semantic application coverage.",
+    "Publishing a package does not provision an operator-selected collector deployment."
+  ]
+}

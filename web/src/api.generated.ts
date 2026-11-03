@@ -8170,7 +8170,7 @@ export interface components {
             service_name: string;
             /**
              * Sdk Version
-             * @default 0.1.0.dev5
+             * @default 0.1.0.dev6
              */
             sdk_version: string;
             /** Counters */
@@ -8997,7 +8997,7 @@ export interface components {
             service_name: string;
             /**
              * Sdk Version
-             * @default 0.1.0.dev5
+             * @default 0.1.0.dev6
              */
             sdk_version: string;
             /** Trace Id */

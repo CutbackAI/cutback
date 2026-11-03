@@ -115,21 +115,21 @@ for the exact tested source and publication state.
 | Installation | What it contains |
 |---|---|
 | This GitHub source checkout | Newer source workflows; exact acceptance is recorded in [progress](https://github.com/CutbackAI/cutback/blob/main/docs/progress.md). Follow the source command above. |
-| Published PyPI `0.1.0.dev5` | The earlier scanner, observation and source-bound support-desk evaluation workflow. It does **not** contain the newer platform, campaign or routing commands. |
+| `0.1.0.dev6` development release | Packages the bounded source workflows, collector/dashboard, campaigns, routing and reviewed application checks. [PyPI](https://pypi.org/project/cutback/) records publication availability. The platform remains pre-alpha. |
 
-To try that published version in a fresh virtual environment:
+To try this development release in a fresh virtual environment:
 
 ```sh
-python -m pip install "cutback[server,openai]==0.1.0.dev5"
-cutback demo
+python -m pip install "cutback[server,openai]==0.1.0.dev6"
+cutback demo --source-policy
 ```
 
-Use its [versioned walkthrough](https://github.com/CutbackAI/cutback/blob/v0.1.0.dev5/docs/testing-the-sample.md). Source merges and local QA wheels do not update PyPI.
+Follow the [release walkthrough](https://github.com/CutbackAI/cutback/blob/main/docs/testing-dev6-release.md). Older dev5 instructions remain available at their versioned tag. Source merges and local QA wheels do not update PyPI.
 
 For offline discovery without Docker or optional SDKs:
 
 ```sh
-python -m pip install "cutback==0.1.0.dev5"
+python -m pip install "cutback==0.1.0.dev6"
 cutback sample support-desk
 cutback scan support-desk
 cutback opportunities --target support-desk
