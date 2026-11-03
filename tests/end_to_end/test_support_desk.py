@@ -58,6 +58,12 @@ def test_support_desk_decisions_stages_encrypted_cases_and_browser(
             == 409
         )
         assert manifest["paid_provider_calls"] == 0
+        analytics = manifest["analytics_dashboard_sample"]
+        assert analytics["provider_calls_added"] == 0 and analytics["panels"] == 4
+        assert analytics["population_coverage"] == "unknown"
+        saved_analytics = client.get(base + "/analytics-dashboards/" + analytics["dashboard_id"])
+        assert saved_analytics.status_code == 200
+        assert saved_analytics.json()["definition_sha256"] == analytics["definition_sha256"]
         usage = client.get(base + "/usage?traffic_kind=application&group_by=workflow").json()
         assert usage["summary"]["observed_attempts"] == 19 + 8 * workload_portfolio
         assert len(usage["groups"]) == 3 + workload_portfolio

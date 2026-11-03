@@ -279,6 +279,7 @@ def create_app(
             "workload_campaign_contract": WORKLOAD_CAMPAIGN_VERSION,
             "routing_program_contract": "cutback.routing-improvement-program.v1",
             "source_policy_program_contract": "cutback.source-policy-program.v1",
+            "analytics_dashboard_contract": "cutback.analytics-dashboard.v1",
             "source_policy_cached_current_program_contract": "cutback.source-policy-program.v2",
             "source_policy_async_contract": "cutback.source-policy-async.v1",
             "source_policy_current_router_contract": "cutback.source-policy-current-router.v1",

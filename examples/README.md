@@ -8,6 +8,20 @@ For the native asynchronous batch lifecycle, use [`provider-batches`](provider-b
 
 The examples below are supplementary compatibility and integration references.
 
+For a small offline demonstration of **why one shared change needs several
+workflow checks**, run [workflow-checks](workflow-checks/README.md). It needs no
+Docker, collector, SDK or model account. Preview the automatically selected
+checks, run an equivalent change, then deliberately break the shared code or
+prompt. Both affected workflows must fail while the unchanged health guard
+passes. This source addition is separate from the published dev5 package;
+qualification and publication gates are in [progress](../docs/progress.md).
+
+For a team incident discussion, follow the [encrypted comment example](incident-collaboration/README.md)
+after the independent online-monitoring example creates an incident. It previews
+without a network request, then uses one private resumable journal for two
+synthetic revisions, explicit content reads and erasure. It makes no paid call
+or external notification; this source feature is under qualification.
+
 For a user that reacts to the agent's observed replies, run the [reactive user example](reactive-user/README.md) or `uv run cutback demo --reactive-users` from source. It uses explicit synthetic native transports, separate user/target call accounting and encrypted trajectory review. This source addition is under qualification and is not included in PyPI dev5.
 
 For the agent's automatic model/output-cap portfolio, start with the [independent campaign example](automatic-portfolio/README.md). It explains the reference, static alternatives, reserved prompt-search fallback, untouched confirmation, exact diff and application-check review. Every synthetic transport remains explicit; none is a real-model benchmark.

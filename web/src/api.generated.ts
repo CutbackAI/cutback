@@ -2805,6 +2805,161 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/projects/{project_id}/analytics-dashboards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Analytics */
+        get: operations["list_analytics_v1_projects__project_id__analytics_dashboards_get"];
+        put?: never;
+        /** Save Analytics */
+        post: operations["save_analytics_v1_projects__project_id__analytics_dashboards_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/analytics-dashboards/{dashboard_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Analytics */
+        get: operations["get_analytics_v1_projects__project_id__analytics_dashboards__dashboard_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Analytics */
+        delete: operations["delete_analytics_v1_projects__project_id__analytics_dashboards__dashboard_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/analytics-dashboards/{dashboard_id}/data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Analytics */
+        get: operations["read_analytics_v1_projects__project_id__analytics_dashboards__dashboard_id__data_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/incidents/{incident_id}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Comments */
+        get: operations["list_comments_v1_projects__project_id__incidents__incident_id__comments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/incidents/{incident_id}/comments/policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Comment Policies */
+        get: operations["comment_policies_v1_projects__project_id__incidents__incident_id__comments_policies_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/incidents/{incident_id}/comments/{comment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Write Comment */
+        put: operations["write_comment_v1_projects__project_id__incidents__incident_id__comments__comment_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/incidents/{incident_id}/comments/{comment_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Versions */
+        get: operations["versions_v1_projects__project_id__incidents__incident_id__comments__comment_id__versions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/incidents/{incident_id}/comments/{comment_id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Read Content */
+        post: operations["read_content_v1_projects__project_id__incidents__incident_id__comments__comment_id__content_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/projects/{project_id}/incidents/{incident_id}/comments/{comment_id}/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Delete Comment */
+        post: operations["delete_comment_v1_projects__project_id__incidents__incident_id__comments__comment_id__delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{project_id}/online-rules": {
         parameters: {
             query?: never;
@@ -4707,6 +4862,224 @@ export interface components {
              */
             cooldown_seconds: number;
         };
+        /** AnalyticsData */
+        AnalyticsData: {
+            /**
+             * Dashboard Id
+             * Format: uuid
+             */
+            dashboard_id: string;
+            /** Revision */
+            revision: number;
+            /** Definition Sha256 */
+            definition_sha256: string;
+            /** Environment */
+            environment: string;
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /**
+             * Ends At
+             * Format: date-time
+             */
+            ends_at: string;
+            /** Panels */
+            panels: components["schemas"]["AnalyticsPanelData"][];
+            /**
+             * Population Coverage
+             * @default unknown
+             * @constant
+             */
+            population_coverage: "unknown";
+            /**
+             * Cost Evidence
+             * @default recorded_usage_modeled_not_invoice
+             * @constant
+             */
+            cost_evidence: "recorded_usage_modeled_not_invoice";
+            /**
+             * Content Included
+             * @default false
+             * @constant
+             */
+            content_included: false;
+        };
+        /** AnalyticsDetail */
+        AnalyticsDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Key */
+            key: string;
+            /** Revision */
+            revision: number;
+            /** Environment */
+            environment: string;
+            /** Window Days */
+            window_days: number;
+            /** Panel Count */
+            panel_count: number;
+            /** Definition Sha256 */
+            definition_sha256: string;
+            /** Panels */
+            panels: components["schemas"]["AnalyticsPanel"][];
+            /**
+             * Content Included
+             * @default false
+             * @constant
+             */
+            content_included: false;
+        };
+        /** AnalyticsInput */
+        AnalyticsInput: {
+            /**
+             * Dashboard Id
+             * Format: uuid
+             */
+            dashboard_id: string;
+            /** Key */
+            key: string;
+            /** Expected Revision */
+            expected_revision: number;
+            /** Environment */
+            environment: string;
+            /**
+             * Window Days
+             * @default 7
+             */
+            window_days: number;
+            /** Panels */
+            panels: components["schemas"]["AnalyticsPanel"][];
+        };
+        /** AnalyticsPage */
+        AnalyticsPage: {
+            /** Items */
+            items: components["schemas"]["AnalyticsSummary"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
+        /** AnalyticsPanel */
+        AnalyticsPanel: {
+            /** Key */
+            key: string;
+            /**
+             * Metric
+             * @enum {string}
+             */
+            metric: "observed_attempts" | "known_modeled_cost_subtotal_usd" | "errors" | "latency_p95_ms" | "input_tokens_observed" | "output_tokens_observed";
+            /**
+             * Chart
+             * @default bar
+             * @enum {string}
+             */
+            chart: "stat" | "bar" | "line" | "table";
+            /**
+             * Group By
+             * @default day
+             * @enum {string}
+             */
+            group_by: "day" | "model" | "provider" | "workflow" | "traffic";
+            /** Traffic Kind */
+            traffic_kind?: ("application" | "evaluation" | "judge" | "optimization" | "simulation" | "unknown") | null;
+            /** Workflow */
+            workflow?: string | null;
+        };
+        /** AnalyticsPanelData */
+        AnalyticsPanelData: {
+            /** Key */
+            key: string;
+            /**
+             * Metric
+             * @enum {string}
+             */
+            metric: "observed_attempts" | "known_modeled_cost_subtotal_usd" | "errors" | "latency_p95_ms" | "input_tokens_observed" | "output_tokens_observed";
+            /**
+             * Chart
+             * @enum {string}
+             */
+            chart: "stat" | "bar" | "line" | "table";
+            /**
+             * Group By
+             * @enum {string}
+             */
+            group_by: "day" | "model" | "provider" | "workflow" | "traffic";
+            /**
+             * Unit
+             * @enum {string}
+             */
+            unit: "attempts" | "USD" | "ms" | "tokens";
+            /** Metric Semantics */
+            metric_semantics: string;
+            summary: components["schemas"]["AnalyticsPoint"];
+            /** Points */
+            points: components["schemas"]["AnalyticsPoint"][];
+            /** Points Truncated */
+            points_truncated: boolean;
+            /** Archived Daily Rows */
+            archived_daily_rows: number;
+            /** Partial Days Excluded */
+            partial_days_excluded: string[];
+            /**
+             * Population Coverage
+             * @default unknown
+             * @constant
+             */
+            population_coverage: "unknown";
+            /**
+             * Content Included
+             * @default false
+             * @constant
+             */
+            content_included: false;
+        };
+        /** AnalyticsPoint */
+        AnalyticsPoint: {
+            /** Key */
+            key: string;
+            /** Value */
+            value: string | null;
+            /** Observed Attempts */
+            observed_attempts: number;
+            /** Unpriced Attempts */
+            unpriced_attempts: number | null;
+            /** Missing Usage Attempts */
+            missing_usage_attempts: number | null;
+            /** Timed Attempts */
+            timed_attempts: number | null;
+            /** Modeled Cost Usd */
+            modeled_cost_usd: string | null;
+            /** Known Modeled Cost Subtotal Usd */
+            known_modeled_cost_subtotal_usd: string | null;
+        };
+        /** AnalyticsSummary */
+        AnalyticsSummary: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Key */
+            key: string;
+            /** Revision */
+            revision: number;
+            /** Environment */
+            environment: string;
+            /** Window Days */
+            window_days: number;
+            /** Panel Count */
+            panel_count: number;
+            /** Definition Sha256 */
+            definition_sha256: string;
+        };
         /** Approval */
         Approval: {
             /** Approval Hash */
@@ -5666,6 +6039,50 @@ export interface components {
              * Format: uuid
              */
             request_id: string;
+        };
+        /** CommentContent */
+        CommentContent: {
+            /**
+             * Comment Id
+             * Format: uuid
+             */
+            comment_id: string;
+            /** Revision */
+            revision: number;
+            /** Text */
+            text: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Evidence
+             * @default human_comment_not_application_truth
+             */
+            evidence: string;
+        };
+        /** CommentDelete */
+        CommentDelete: {
+            /** Expected Revision */
+            expected_revision: number;
+        };
+        /** CommentWrite */
+        CommentWrite: {
+            /**
+             * Version Id
+             * Format: uuid
+             */
+            version_id: string;
+            /** Expected Revision */
+            expected_revision: number;
+            /**
+             * Policy Id
+             * Format: uuid
+             */
+            policy_id: string;
+            /** Text */
+            text: string;
         };
         /** CompressionConfigurationBinding */
         CompressionConfigurationBinding: {
@@ -20752,6 +21169,388 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DashboardEvidencePage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_analytics_v1_projects__project_id__analytics_dashboards_get: {
+        parameters: {
+            query?: {
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalyticsPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_analytics_v1_projects__project_id__analytics_dashboards_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnalyticsInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalyticsDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_analytics_v1_projects__project_id__analytics_dashboards__dashboard_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                dashboard_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalyticsDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_analytics_v1_projects__project_id__analytics_dashboards__dashboard_id__delete: {
+        parameters: {
+            query: {
+                expected_revision: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                dashboard_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_analytics_v1_projects__project_id__analytics_dashboards__dashboard_id__data_get: {
+        parameters: {
+            query: {
+                expected_revision: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                dashboard_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalyticsData"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_comments_v1_projects__project_id__incidents__incident_id__comments_get: {
+        parameters: {
+            query?: {
+                after?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    comment_policies_v1_projects__project_id__incidents__incident_id__comments_policies_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    write_comment_v1_projects__project_id__incidents__incident_id__comments__comment_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                incident_id: string;
+                comment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    versions_v1_projects__project_id__incidents__incident_id__comments__comment_id__versions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                incident_id: string;
+                comment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_content_v1_projects__project_id__incidents__incident_id__comments__comment_id__content_post: {
+        parameters: {
+            query?: {
+                revision?: number | null;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                incident_id: string;
+                comment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentPurpose"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommentContent"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_comment_v1_projects__project_id__incidents__incident_id__comments__comment_id__delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                incident_id: string;
+                comment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentDelete"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

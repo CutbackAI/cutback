@@ -133,6 +133,7 @@ def run_sample(
     from cutback.application_checks import ApplicationCheckContract, git
     from cutback.campaign_operator import CampaignOperator
     from cutback.campaign_outcomes import record_outcomes
+    from cutback.core.inventory import workflow_identity
     from cutback.core.workspace import read_private
     from cutback.demo_campaigns import synthetic_executor
 
@@ -179,8 +180,41 @@ def run_sample(
         "\n".join(json.dumps(record) for record in records),
         encoding="utf-8",
     )
+    from cutback.scanner import scan
+
+    entries = {}
+    for site in scan(application)["call_sites"]:
+        if site["source_file"] != "app.py":
+            continue
+        for entry in site["entry_points"] or [
+            {"file": site["source_file"], "symbol": site["source_symbol"]}
+        ]:
+            entries[workflow_identity(entry["file"], entry["symbol"])[0]] = entry["file"]
+    if not entries:
+        raise ValueError("OWNED_APPLICATION_WORKFLOW_DECLARATION_MISSING")
+    (application / "pyproject.toml").write_text(
+        "[tool.cutback.application_checks]\n"
+        "commands = [{key='owned-native-application', arguments=['check_application.py']}]\n"
+        "[tool.cutback.workflow_checks]\nversion = 1\n"
+        + "\n".join(
+            "[[tool.cutback.workflow_checks.workflows]]\n"
+            f"key = {json.dumps(key)}\nentrypoints = [{json.dumps(name)}]\n"
+            "commands = ['owned-native-application']\n"
+            "regression_commands = ['owned-native-application']\n"
+            for key, name in sorted(entries.items())
+        ),
+        encoding="utf-8",
+    )
     git(application, "init")
-    git(application, "add", "app.py", "check_application.py", "cases.jsonl", ".gitignore")
+    git(
+        application,
+        "add",
+        "app.py",
+        "check_application.py",
+        "cases.jsonl",
+        ".gitignore",
+        "pyproject.toml",
+    )
     git(
         application,
         "-c",
@@ -194,6 +228,8 @@ def run_sample(
     initial = (application / "app.py").read_bytes()
     discovered = analyze(application)
     workflow = discovered["profiles"][0]["binding"]["workflow_id"]
+    if workflow not in entries:
+        raise ValueError("OWNED_DECLARED_WORKFLOW_DOES_NOT_MATCH_DISCOVERY")
     prepare(
         application,
         control,
@@ -266,12 +302,21 @@ def run_sample(
             branch="cutback/owned-outcome-review",
             sample_only=True,
         )
+        candidate_path = destination / "coverage-candidate.json"
+        if preview.get("coverage_candidate_file") != str(candidate_path):
+            raise ValueError("OWNED_APPLICATION_COVERAGE_DRAFT_REQUIRED")
+        candidate_coverage = read_private(candidate_path)
+        # The owned harness knows this application's actual native check. A real
+        # agent must inspect its application's declaration and checks separately.
+        expected_coverage = {
+            key: ["owned-native-application"] for key in artifact["affected_workflows"]
+        }
+        if not set(expected_coverage) <= set(entries) or candidate_coverage != expected_coverage:
+            raise ValueError("OWNED_APPLICATION_COVERAGE_DRAFT_MISMATCH")
         completed = finish(
             application,
             control,
-            coverage={
-                workflow: preview["command_keys"] for workflow in preview["affected_workflows"]
-            },
+            coverage=candidate_coverage,
             execute_local=True,
             destination=destination,
             purpose="owned-application-check-review",
@@ -403,6 +448,9 @@ def run_sample(
                 "commands": [command.key for command in contract.commands],
                 "executed_during_discovery": discovered["application_commands_executed"],
                 "coverage": discovered["coverage"],
+                "impact_mode": discovered["impact"]["mode"],
+                "coverage_candidate_used": True,
+                "coverage_candidate_hash": preview["coverage_candidate_hash"],
             },
             "paid_provider_calls": 0,
             "baseline_model": "gpt-6-luna" if modern_model else "gpt-4.1",

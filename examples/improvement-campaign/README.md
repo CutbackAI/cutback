@@ -38,7 +38,16 @@ uv run python examples/improvement-campaign/sample.py --local-target .
 
 Add `--outcomes` for ordinary agent preparation → native search → application checks → encrypted diff → later task outcomes. The later synthetic fixture is deliberately cheap but worse and must return `REVIEW_ROLLBACK`. Read [the outcome walkthrough](../../docs/campaign-outcomes.md) for trust, accounting and cleanup boundaries. No live application is deployed.
 
-The collector and worker code must both come from this source checkout and run its current migrations through `0033`. The script reads the owned local configuration privately, creates a synthetic project, leaves its receipts available in the dashboard and writes the independent classifier only under the target's ignored `.cutback/campaign-example/` directory. Add `--cleanup` to explicitly delete that project afterward. It never reads another application's source or examples.
+The working-source outcome sample now freezes its synthetic workflow/check
+declarations before search, then uses the handoff's generated coverage draft.
+Its harness checks every declared workflow/command before passing the draft to
+the ordinary explicit execution step. Inspect `discovery.json`,
+`coverage-candidate.json`, `contract.json` and `checks.json` in the printed
+`checked_handoff_workspace`. This addition passed local component qualification;
+hosted acceptance and package publication are pending. It does
+not establish coverage for an application outside the synthetic example.
+
+The collector and worker code must both come from this source checkout and use its full current migration chain. The script reads the owned local configuration privately, creates a synthetic project, leaves its receipts available in the dashboard and writes the independent classifier only under the target's ignored `.cutback/campaign-example/` directory. Add `--cleanup` to explicitly delete that project afterward. It never reads another application's source or examples.
 
 The ordinary `--outcomes` agent path now prepares a v3 portfolio before instruction search; see the [step-by-step portfolio walkthrough](../automatic-portfolio/README.md). The guided demo's saved campaign below remains v2 for compatibility. Both use one cumulative parent ledger and untouched confirmation.
 

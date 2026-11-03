@@ -71,7 +71,7 @@ These commands prepare or explain a saved local job. They do not authorize infer
 
 For qualified native calls, [automatic campaigns](https://github.com/CutbackAI/cutback/blob/main/docs/improvement-campaigns.md) try simple model/output-limit alternatives before instruction search. The [common source-policy program](https://github.com/CutbackAI/cutback/blob/main/docs/source-policy-programs.md) also compares conditional routing under one approved envelope and one untouched confirmation. It can discover a unique compatible dataset/cost snapshot and use current observed metadata to decide whether a cache trial qualifies. Missing evidence and ambiguous versions require an explicit choice.
 
-After confirmation, the agent prepares independent source copies, discovers the application's checks, requires their declared coverage, and checks both trees plus exact rollback. [Explicit draft-PR publication](https://github.com/CutbackAI/cutback/blob/main/docs/review-publication.md) requires its own upload flag and repository credential. It reconciles an interrupted reply without pushing local history or overwriting a remote branch. A missing check receipt stops continuation. Nothing merges or deploys.
+After confirmation, the agent prepares independent source copies, discovers the application's checks, requires their declared coverage, and checks both trees plus exact rollback. [Explicit draft-PR publication](https://github.com/CutbackAI/cutback/blob/main/docs/review-publication.md) requires its own upload flag and repository credential. Source-policy publication has separate acceptance; a [routing-program publisher](https://github.com/CutbackAI/cutback/blob/main/docs/routing-programs.md#preview-and-publish-a-checked-routing-draft) is under qualification. Each discloses the uploaded source, reconciles an interrupted reply without pushing local history or overwriting a remote branch, and refuses uncertain or missing check evidence. Nothing merges or deploys.
 
 Supported source and request contracts are listed in [adapter limits](https://github.com/CutbackAI/cutback/blob/main/docs/providers.md). Unified selection across retrieval, compression, local models and every other engine remains unfinished.
 
@@ -83,11 +83,13 @@ controls followed by conditional learned routing, one shared search/confirmation
 budget and a checked configuration diff with rollback in an independent app.
 The program can also include bounded instruction generation and authorized exact
 cache controls. The published dev5 package does not contain this work; broader
-cross-engine optimization and cached current-reference cycles remain open.
+cross-engine optimization remains open. Cached current-reference cycles passed
+local installed/native/browser/recovery acceptance; their public hosted gates
+remain separate.
 Current uncached routers and the supplied async consumer have separate installed
 acceptance. Source observation, workload-aware cache preparation, compatible-data
-selection and checked policy draft publication have local component acceptance.
-Their public hosted gates remain separate; consult [progress](https://github.com/CutbackAI/cutback/blob/main/docs/progress.md)
+selection, checked policy draft publication and shared metadata dashboards
+merged after all eighteen exact-head hosted jobs passed in PR 81. Consult [progress](https://github.com/CutbackAI/cutback/blob/main/docs/progress.md)
 for the exact tested source and publication state.
 
 | You want to… | Guide or independent example |
@@ -102,6 +104,8 @@ for the exact tested source and publication state.
 | Test caching or learned routing | [Native exact cache](https://github.com/CutbackAI/cutback/blob/main/docs/native-response-cache.md), [routing program](https://github.com/CutbackAI/cutback/blob/main/examples/routing-program/README.md) |
 | Check whether a security rule blocks legitimate work | [Paired security and utility sample](https://github.com/CutbackAI/cutback/blob/main/examples/paired-security/README.md) |
 | Check a proposed source change in a local container | [Container check contract, under qualification](https://github.com/CutbackAI/cutback/blob/main/docs/application-containers.md) |
+| Share an investigation with a teammate | [Project-scoped metadata dashboards](https://github.com/CutbackAI/cutback/blob/main/docs/shared-dashboards.md) |
+| Exercise ingestion, queries, workers and gateway calls together | [Declared synthetic mixed-service profile](https://github.com/CutbackAI/cutback/blob/main/docs/load-qualification.md#simultaneous-synthetic-service-qualification), locally qualified with public gates separate |
 | Track incidents and later change outcomes | [Monitoring](https://github.com/CutbackAI/cutback/blob/main/docs/online-monitoring.md), [finite outcome observation](https://github.com/CutbackAI/cutback/blob/main/docs/automatic-outcome-observation.md) |
 
 [All examples](https://github.com/CutbackAI/cutback/blob/main/examples/README.md) include native sync/async/streams, FastAPI, Django, Lambda, Node, batch execution, simulation and isolated tools. Each guide states its version, execution requirements and limits.

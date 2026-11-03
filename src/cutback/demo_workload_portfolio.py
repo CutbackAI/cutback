@@ -12,6 +12,42 @@ from unittest.mock import patch
 from uuid import UUID, uuid4
 
 
+def drain_workload_capture(observer):
+    """Wait at most three SDK flush budgets for existing work; never enqueue or replay."""
+    health, drained = {}, False
+    for _ in range(3):
+        drained = observer.flush(5)
+        health = observer.health()
+        exported = health.get("native_profile_exported", 0)
+        dropped = health.get("native_profile_dropped", 0)
+        if (
+            drained
+            and type(exported) is int
+            and exported == 8
+            and type(dropped) is int
+            and dropped == 0
+        ):
+            return
+        if drained or dropped:
+            break
+
+    def count(name):
+        value = health.get(name, 0)
+        return str(value) if type(value) is int and 0 <= value <= 1_000_000 else "UNKNOWN"
+
+    raise ValueError(
+        "SYNTHETIC_WORKLOAD_CAPTURE_INCOMPLETE"
+        + "_QUEUED_"
+        + count("native_profile_queued")
+        + "_EXPORTED_"
+        + count("native_profile_exported")
+        + "_DROPPED_"
+        + count("native_profile_dropped")
+        + "_DRAINED_"
+        + str(int(drained))
+    )
+
+
 def seed_workload_portfolio(app, control, project_id, workspace, ingest_token, *, execute=True):
     from cutback.demo import require_demo_git
 
@@ -177,8 +213,7 @@ def seed_workload_portfolio(app, control, project_id, workspace, ingest_token, *
                     text = "Owned observed reuse billing " + ("repeat" if index < 4 else str(index))
                     if module.classify_reuse(text).output_text != "billing":
                         raise ValueError("SYNTHETIC_WORKLOAD_NATIVE_RESPONSE_MISMATCH")
-            if not observer.flush(5) or observer.health().get("native_profile_exported") != 8:
-                raise ValueError("SYNTHETIC_WORKLOAD_CAPTURE_INCOMPLETE")
+            drain_workload_capture(observer)
         finally:
             observer.close()
         analysis = adapter(

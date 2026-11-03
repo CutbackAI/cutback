@@ -1,0 +1,7 @@
+{
+  "contract": "cutback.native-hook-profile.v1",
+  "samples_per_trial": 200,
+  "warmup_per_trial": 10,
+  "queue_capacity": 64,
+  "median_added_ms_ceiling": 5.0
+}

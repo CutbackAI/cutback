@@ -18,13 +18,42 @@ pytestmark = pytest.mark.postgres
 
 @pytest.mark.parametrize("revoke_after_checks", [False, True])
 def test_native_campaign_cli_finish_refreshes_rights_without_repeating_native_spend(
-    api, tenant, tmp_path, monkeypatch, postgres_url, revoke_after_checks, container=None
+    api,
+    tenant,
+    tmp_path,
+    monkeypatch,
+    postgres_url,
+    revoke_after_checks,
+    container=None,
+    declared_mapping=False,
 ):
     fresh = support_agent.fresh_application
 
     def committed_application(root, *args, **options):
         fresh(root, *args, **options)
         (root / ".gitignore").write_text(".cutback/\n__pycache__/\n", encoding="utf-8")
+        if declared_mapping:
+            from cutback.core.inventory import workflow_identity
+
+            workflow = workflow_identity("app.py", "classify")[0]
+            (root / "check_application.py").write_text(
+                "import ast\nfrom pathlib import Path\n"
+                "def check():\n"
+                "    tree = ast.parse(Path('app.py').read_text(encoding='utf-8'))\n"
+                "    assert any(isinstance(n, ast.FunctionDef) and n.name == 'classify' "
+                "for n in tree.body)\n"
+                "if __name__ == '__main__':\n    check()\n",
+                encoding="utf-8",
+            )
+            (root / "pyproject.toml").write_text(
+                "[tool.cutback.application_checks]\n"
+                "commands = [{key='application', arguments=['check_application.py']}]\n"
+                "[tool.cutback.workflow_checks]\nversion = 1\n"
+                "[[tool.cutback.workflow_checks.workflows]]\n"
+                f"key = '{workflow}'\nentrypoints = ['app.py']\n"
+                "commands = ['application']\nregression_commands = ['application']\n",
+                encoding="utf-8",
+            )
         git(root, "init", "--template=")
         git(root, "add", ".")
         git(
@@ -71,9 +100,9 @@ def test_native_campaign_cli_finish_refreshes_rights_without_repeating_native_sp
         "--purpose-reference",
         "owned-sample-handoff",
         "--sample-only",
-        "--commands",
-        str(commands),
     ]
+    if not declared_mapping:
+        arguments += ["--commands", str(commands)]
     if container is not None:
         arguments += [
             "--container-image",
@@ -85,11 +114,23 @@ def test_native_campaign_cli_finish_refreshes_rights_without_repeating_native_sp
     assert preview.exit_code == 0, preview.output
     value = json.loads(preview.stdout)
     assert value["status"] == "CHECKS_READY" and not value["application_checks_executed"]
-    coverage = tmp_path / "owned-coverage.json"
-    coverage.write_text(
-        json.dumps({key: value["command_keys"] for key in value["affected_workflows"]}),
-        encoding="utf-8",
-    )
+    if declared_mapping:
+        from pathlib import Path
+
+        assert value["owner_consumer_coverage_required"]
+        assert value["coverage_candidate_trust"] == (
+            "tracked_workflow_declaration_requires_explicit_review"
+        )
+        coverage = Path(value["coverage_candidate_file"])
+        assert read_private(coverage) == {
+            key: ["application"] for key in value["affected_workflows"]
+        }
+    else:
+        coverage = tmp_path / "owned-coverage.json"
+        coverage.write_text(
+            json.dumps({key: value["command_keys"] for key in value["affected_workflows"]}),
+            encoding="utf-8",
+        )
     actual, physical_checks = handoff.run_checks, []
 
     def checked(*args, **kwargs):

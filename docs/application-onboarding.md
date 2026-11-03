@@ -20,6 +20,13 @@ cutback instrument --target . --entrypoint actual/entrypoint.py --plan --json
 ```
 
 Working-source follow-up under qualification: run
+[`cutback workflow diagnose --target .`](application-readiness.md) for a fresh,
+readable source/check/startup and permission-readiness report. It runs no
+application command or provider call, distinguishes tool dependencies from
+application pins, and preserves active run intents. Use `--json` for bounded
+argument vectors and report identity. This is absent from PyPI dev5.
+
+For the previously saved source analysis, run
 `cutback workflow explain --target .` for a readable explanation of the saved
 discovery, or add `--json` for its bounded metadata report. It identifies missing
 request/output bounds, unresolved model references, expanded arguments, dynamic

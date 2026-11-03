@@ -682,6 +682,46 @@ export function createSDK(request:Request) {return {
     if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
     if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/dashboards/${encodeURIComponent(String(args.dashboard_id))}/panels/${encodeURIComponent(String(args.view_id))}`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  save_analytics_v1_projects__project_id__analytics_dashboards_post: (args:{project_id:string;body:components["schemas"]["AnalyticsInput"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/analytics-dashboards`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  list_analytics_v1_projects__project_id__analytics_dashboards_get: (args:{project_id:string;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/analytics-dashboards`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  get_analytics_v1_projects__project_id__analytics_dashboards__dashboard_id__get: (args:{project_id:string;dashboard_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/analytics-dashboards/${encodeURIComponent(String(args.dashboard_id))}`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  delete_analytics_v1_projects__project_id__analytics_dashboards__dashboard_id__delete: (args:{project_id:string;dashboard_id:string;expected_revision:number}) => {
+    const query=new URLSearchParams();
+    if(args.expected_revision!==undefined && args.expected_revision!==null) query.set("expected_revision",String(args.expected_revision));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/analytics-dashboards/${encodeURIComponent(String(args.dashboard_id))}`+(query.size?"?"+query.toString():""),{method:"DELETE"});},
+  read_analytics_v1_projects__project_id__analytics_dashboards__dashboard_id__data_get: (args:{project_id:string;dashboard_id:string;expected_revision:number}) => {
+    const query=new URLSearchParams();
+    if(args.expected_revision!==undefined && args.expected_revision!==null) query.set("expected_revision",String(args.expected_revision));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/analytics-dashboards/${encodeURIComponent(String(args.dashboard_id))}/data`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  list_comments_v1_projects__project_id__incidents__incident_id__comments_get: (args:{project_id:string;incident_id:string;after?:string | null;limit?:number}) => {
+    const query=new URLSearchParams();
+    if(args.after!==undefined && args.after!==null) query.set("after",String(args.after));
+    if(args.limit!==undefined && args.limit!==null) query.set("limit",String(args.limit));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/incidents/${encodeURIComponent(String(args.incident_id))}/comments`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  comment_policies_v1_projects__project_id__incidents__incident_id__comments_policies_get: (args:{project_id:string;incident_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/incidents/${encodeURIComponent(String(args.incident_id))}/comments/policies`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  write_comment_v1_projects__project_id__incidents__incident_id__comments__comment_id__put: (args:{project_id:string;incident_id:string;comment_id:string;body:components["schemas"]["CommentWrite"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/incidents/${encodeURIComponent(String(args.incident_id))}/comments/${encodeURIComponent(String(args.comment_id))}`+(query.size?"?"+query.toString():""),{method:"PUT",body:JSON.stringify(args.body)});},
+  versions_v1_projects__project_id__incidents__incident_id__comments__comment_id__versions_get: (args:{project_id:string;incident_id:string;comment_id:string}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/incidents/${encodeURIComponent(String(args.incident_id))}/comments/${encodeURIComponent(String(args.comment_id))}/versions`+(query.size?"?"+query.toString():""),{method:"GET"});},
+  read_content_v1_projects__project_id__incidents__incident_id__comments__comment_id__content_post: (args:{project_id:string;incident_id:string;comment_id:string;revision?:number | null;body:components["schemas"]["ContentPurpose"]}) => {
+    const query=new URLSearchParams();
+    if(args.revision!==undefined && args.revision!==null) query.set("revision",String(args.revision));
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/incidents/${encodeURIComponent(String(args.incident_id))}/comments/${encodeURIComponent(String(args.comment_id))}/content`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
+  delete_comment_v1_projects__project_id__incidents__incident_id__comments__comment_id__delete_post: (args:{project_id:string;incident_id:string;comment_id:string;body:components["schemas"]["CommentDelete"]}) => {
+    const query=new URLSearchParams();
+    return request(`/projects/${encodeURIComponent(String(args.project_id))}/incidents/${encodeURIComponent(String(args.incident_id))}/comments/${encodeURIComponent(String(args.comment_id))}/delete`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},
   create_online_v1_projects__project_id__online_rules_post: (args:{project_id:string;body:components["schemas"]["OnlineRuleInput"]}) => {
     const query=new URLSearchParams();
     return request(`/projects/${encodeURIComponent(String(args.project_id))}/online-rules`+(query.size?"?"+query.toString():""),{method:"POST",body:JSON.stringify(args.body)});},

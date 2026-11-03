@@ -53,6 +53,7 @@ def register_checks(app, output, fail):
         proposed_root: Path,
         destination: Annotated[Path, typer.Option("--output")],
         report: Annotated[Path, typer.Option("--report")],
+        select_affected: bool = False,
     ):
         """Inspect existing application checks and prepare a contract without executing code."""
         from cutback.application_check_discovery import discover
@@ -64,7 +65,7 @@ def register_checks(app, output, fail):
                 for root in (base_root, proposed_root)
             ):
                 raise ValueError("APPLICATION_CHECK_OUTPUTS_MUST_STAY_OUTSIDE_FROZEN_TREES")
-            result = discover(base_root, proposed_root)
+            result = discover(base_root, proposed_root, select_affected=select_affected)
         except (ValueError, OSError, SyntaxError, TypeError):
             fail(
                 "APPLICATION_CHECK_DISCOVERY_NEEDS_EXPLICIT_REVIEW",

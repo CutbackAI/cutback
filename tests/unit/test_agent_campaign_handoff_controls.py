@@ -14,7 +14,7 @@ from cutback.core.workspace import read_private
 
 
 @pytest.fixture
-def journey(tmp_path, monkeypatch):
+def journey(tmp_path, monkeypatch, request):
     root = tmp_path / "source"
     root.mkdir()
     before, after = b'MODEL = "baseline"\n', b'MODEL = "cheap"\n'
@@ -29,6 +29,19 @@ def journey(tmp_path, monkeypatch):
         "if __name__ == '__main__':\n    main()\n",
         encoding="utf-8",
     )
+    if getattr(request, "param", None) == "mapped":
+        (root / "pyproject.toml").write_text(
+            "[tool.cutback.application_checks]\n"
+            "commands = [{key='application', arguments=['check_application.py']}]\n"
+            "[tool.cutback.workflow_checks]\nversion = 1\n"
+            + "\n".join(
+                "[[tool.cutback.workflow_checks.workflows]]\n"
+                f"key = '{workflow}'\nentrypoints = ['sample.py']\n"
+                "commands = ['application']\nregression_commands = ['application']\n"
+                for workflow in ("classify", "route")
+            ),
+            encoding="utf-8",
+        )
     git(root, "init", "--template=")
     git(root, "add", ".")
     git(

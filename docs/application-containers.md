@@ -1,7 +1,8 @@
 # Run reviewed application checks in local containers
 
-This unreleased source feature passed local component qualification; exact
-public source and hosted gates remain pending. Its v2 contract extends
+This source feature passed local qualification and all 18 reviewed-head hosted
+jobs, then merged in [PR 82](https://github.com/CutbackAI/cutback/pull/82).
+It is absent from PyPI dev5. Its v2 contract extends
 the [portable application checks](application-checks.md); the v1 local runner
 and its serialized contracts remain unchanged. See [progress](progress.md) for
 the actual acceptance and publication state.

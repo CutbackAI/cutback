@@ -1,3 +1,5 @@
+import math
+import time
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal, localcontext
 from typing import Protocol
@@ -14,6 +16,7 @@ from sqlalchemy import (
     exists,
     func,
     select,
+    text,
     true,
     values,
 )
@@ -286,14 +289,40 @@ class PostgresEventRepository:
         )
 
     def query_usage(
-        self, session, project_id, start, end, group_by, *, traffic_kind=None, call_site=None
+        self,
+        session,
+        project_id,
+        start,
+        end,
+        group_by,
+        *,
+        traffic_kind=None,
+        call_site=None,
+        environment_name=None,
+        workflow=None,
+        group_limit=100,
+        deadline=None,
     ):
+        if type(group_limit) is not int or not 1 <= group_limit <= 365:
+            raise ValueError("REPORT_GROUP_BOUND_INVALID")
+
+        def execute(statement):
+            if deadline is not None:
+                remaining = math.floor((deadline - time.monotonic()) * 1000)
+                if remaining <= 0:
+                    raise ValueError("REPORT_READ_DEADLINE_EXCEEDED")
+                session.execute(
+                    text("SELECT set_config('statement_timeout', :limit, true)"),
+                    {"limit": str(min(5000, remaining))},
+                )
+            return session.execute(statement)
+
         if not session.in_transaction():
             session.connection(execution_options={"isolation_level": "REPEATABLE READ"})
         table = StoredEvent
         metadata = event_metadata(table)
         group = {
-            "model": table.model_actual,
+            "model": func.coalesce(table.model_actual, "unknown_model"),
             "provider": table.provider,
             "workflow": func.coalesce(table.workflow_id, "workflow_unattributed"),
             "environment": metadata.c.environment,
@@ -312,20 +341,24 @@ class PostgresEventRepository:
             scope.append(func.coalesce(metadata.c.traffic_kind, "unknown") == traffic_kind)
         if call_site:
             scope.append(func.coalesce(metadata.c.call_site_id, "unattributed") == call_site)
+        if environment_name is not None:
+            scope.append(metadata.c.environment == environment_name)
+        if workflow is not None:
+            scope.append(func.coalesce(table.workflow_id, "workflow_unattributed") == workflow)
 
-        total = session.execute(
+        total = execute(
             select(*selected).select_from(table).join(metadata, true()).where(*scope)
         ).one()
-        groups = session.execute(
+        groups = execute(
             select(group.label("key"), *selected)
             .select_from(table)
             .join(metadata, true())
             .where(*scope)
             .group_by(group)
             .order_by(func.sum(table.cost_usd).desc().nullslast(), func.count().desc())
-            .limit(101)
+            .limit(group_limit + 1)
         ).all()
-        unknown_reasons = session.execute(
+        unknown_reasons = execute(
             select(table.cost_reason, func.count())
             .select_from(table)
             .join(metadata, true())
@@ -345,9 +378,9 @@ class PostgresEventRepository:
                     "key": str(row.key) if row.key is not None else "unknown_model",
                     **render_usage(row),
                 }
-                for row in groups[:100]
+                for row in groups[:group_limit]
             ],
-            "groups_truncated": len(groups) > 100,
+            "groups_truncated": len(groups) > group_limit,
             "unpriced_reasons": {reason or "unknown": count for reason, count in unknown_reasons},
             "coverage": {
                 "population_coverage_percent": None,
@@ -357,18 +390,58 @@ class PostgresEventRepository:
             "next_action": "validate_coverage_and_collect_authorized_evaluation_evidence",
             "semantic_quality": "NOT VERIFIED",
         }
-        archived = session.scalars(
-            select(DailyUsage)
-            .where(
-                DailyUsage.project_id == project_id,
-                DailyUsage.day >= start.replace(hour=0, minute=0, second=0, microsecond=0),
-                DailyUsage.day < end,
-            )
-            .limit(50001)
-        ).all()
+        archive_scope = [
+            DailyUsage.project_id == project_id,
+            DailyUsage.day >= start.replace(hour=0, minute=0, second=0, microsecond=0),
+            DailyUsage.day < end,
+        ]
+        for supplied, column_value in (
+            (environment_name, DailyUsage.environment),
+            (workflow, DailyUsage.workflow),
+        ):
+            if supplied is not None:
+                archive_scope.append(column_value == supplied)
+        for supplied, column_value in (
+            (traffic_kind, DailyUsage.traffic_kind),
+            (call_site, DailyUsage.call_site),
+        ):
+            if supplied:
+                archive_scope.append(column_value == supplied)
+        archived = execute(select(DailyUsage).where(*archive_scope).limit(50001)).scalars().all()
         if len(archived) > 50000:
             raise ValueError("REPORT_TOO_LARGE: narrow reporting period")
         by_key = {group["key"]: group for group in result["groups"]}
+        if result["groups_truncated"]:
+            # Retained data can promote a key outside the initial raw page. Its
+            # raw contribution is already in the full summary, but must also be
+            # included in that displayed group's counters and known subtotal.
+            # At most the 50,000 retained rows above supply these typed keys.
+            missing = {}
+            for row in archived:
+                if row.day < start or row.day + timedelta(days=1) > end:
+                    continue
+                value = {
+                    "model": row.model,
+                    "provider": row.provider,
+                    "workflow": row.workflow,
+                    "environment": row.environment,
+                    "day": row.day,
+                    "call_site": row.call_site,
+                    "traffic": row.traffic_kind,
+                }[group_by]
+                if str(value) not in by_key:
+                    missing[str(value)] = value
+            if missing:
+                recovered = execute(
+                    select(group.label("key"), *selected)
+                    .select_from(table)
+                    .join(metadata, true())
+                    .where(*scope, group.in_(list(missing.values())))
+                    .group_by(group)
+                    .limit(len(missing))
+                ).all()
+                for current in recovered:
+                    by_key[str(current.key)] = {"key": str(current.key), **render_usage(current)}
         partial = []
         for row in archived:
             if (
@@ -376,6 +449,10 @@ class PostgresEventRepository:
                 and row.traffic_kind != traffic_kind
                 or call_site
                 and row.call_site != call_site
+                or environment_name is not None
+                and row.environment != environment_name
+                or workflow is not None
+                and row.workflow != workflow
             ):
                 continue
             if row.day < start or row.day + timedelta(days=1) > end:
@@ -408,8 +485,8 @@ class PostgresEventRepository:
             ),
             reverse=True,
         )
-        result["groups"] = groups_merged[:100]
-        result["groups_truncated"] |= len(groups_merged) > 100
+        result["groups"] = groups_merged[:group_limit]
+        result["groups_truncated"] |= len(groups_merged) > group_limit
         result["retention"] = {
             "archived_daily_rows": len(archived),
             "partial_days_excluded": sorted(set(partial)),

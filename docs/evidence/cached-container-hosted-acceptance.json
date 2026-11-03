@@ -1,0 +1,261 @@
+{
+  "reviewed_head": "bb48b7b4961373d6fbc9b7d1845571cde210f538",
+  "runs": [
+    {
+      "run_id": 41321944671,
+      "jobs": [
+        {
+          "name": "cloud-import-producers",
+          "id": 124893842725,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 10.75
+            }
+          ]
+        },
+        {
+          "name": "verify (3.13.18)",
+          "id": 124893842807,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 2,
+              "skipped": 0,
+              "seconds": 0.05
+            },
+            {
+              "passed": 1,
+              "skipped": 0,
+              "seconds": 8.53
+            },
+            {
+              "passed": 2941,
+              "skipped": 58,
+              "seconds": 6290.27
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.11.18, workflows)",
+          "id": 124893842842,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 571,
+              "skipped": 17,
+              "seconds": 1805.5
+            }
+          ]
+        },
+        {
+          "name": "infrastructure",
+          "id": 124893842844,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 7,
+              "skipped": 0,
+              "seconds": 2.16
+            },
+            {
+              "passed": 36,
+              "skipped": 0,
+              "seconds": 245.93
+            }
+          ]
+        },
+        {
+          "name": "legacy-sdk (3.11.18)",
+          "id": 124893842863,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 0.83
+            }
+          ]
+        },
+        {
+          "name": "legacy-sdk (3.13.18)",
+          "id": 124893842864,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 21,
+              "skipped": 0,
+              "seconds": 0.92
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.13.18, core)",
+          "id": 124893842912,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1895,
+              "skipped": 16,
+              "seconds": 190.07
+            }
+          ]
+        },
+        {
+          "name": "verify (3.11.18)",
+          "id": 124893842919,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 2,
+              "skipped": 0,
+              "seconds": 0.06
+            },
+            {
+              "passed": 1,
+              "skipped": 0,
+              "seconds": 7.45
+            },
+            {
+              "passed": 2942,
+              "skipped": 57,
+              "seconds": 4781.3
+            }
+          ]
+        },
+        {
+          "name": "isolated-tools",
+          "id": 124893842923,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 13,
+              "skipped": 0,
+              "seconds": 129.11
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.13.18, workflows)",
+          "id": 124893842945,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 571,
+              "skipped": 17,
+              "seconds": 1818.19
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.11.18, systems)",
+          "id": 124893842948,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 435,
+              "skipped": 5,
+              "seconds": 2153.54
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.13.18, systems)",
+          "id": 124893843040,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 435,
+              "skipped": 5,
+              "seconds": 1409.25
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.11.18, core)",
+          "id": 124893843060,
+          "conclusion": "success",
+          "tests": [
+            {
+              "passed": 1894,
+              "skipped": 17,
+              "seconds": 181.58
+            }
+          ]
+        },
+        {
+          "name": "openai3-sdk (3.11.18)",
+          "id": 124917617940,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "openai3-sdk (3.13.18)",
+          "id": 124917618097,
+          "conclusion": "success",
+          "tests": []
+        }
+      ]
+    },
+    {
+      "run_id": 41321944745,
+      "jobs": [
+        {
+          "name": "codeql (javascript-typescript)",
+          "id": 124893842968,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "audit",
+          "id": 124893843163,
+          "conclusion": "success",
+          "tests": []
+        },
+        {
+          "name": "codeql (python)",
+          "id": 124893843178,
+          "conclusion": "success",
+          "tests": []
+        }
+      ]
+    }
+  ],
+  "all_required_workflow_jobs": [
+    "audit",
+    "cloud-import-producers",
+    "codeql (javascript-typescript)",
+    "codeql (python)",
+    "infrastructure",
+    "isolated-tools",
+    "legacy-sdk (3.11.18)",
+    "legacy-sdk (3.13.18)",
+    "openai3-sdk (3.11.18)",
+    "openai3-sdk (3.11.18, core)",
+    "openai3-sdk (3.11.18, systems)",
+    "openai3-sdk (3.11.18, workflows)",
+    "openai3-sdk (3.13.18)",
+    "openai3-sdk (3.13.18, core)",
+    "openai3-sdk (3.13.18, systems)",
+    "openai3-sdk (3.13.18, workflows)",
+    "verify (3.11.18)",
+    "verify (3.13.18)"
+  ],
+  "identical_private_public_archives": {
+    "cutback-0.1.0.dev5-py3-none-any.whl": "1c2453fc2826582e5116da1aedfa42eb7ee70aab541e2fe0177ec852e0634e52",
+    "cutback-0.1.0.dev5.tar.gz": "937df485d85be42dc727a6007b1423875b945cb2a5943b5329043013ce313925"
+  },
+  "contract": "cutback.cached-container-hosted-acceptance.v1",
+  "date": "2026-11-01",
+  "pull_request": "https://github.com/CutbackAI/cutback/pull/82",
+  "merged_commit": "28edb836215380681d449f991160c3306ffbe568",
+  "reviewed_and_merged_source_tree": "8a574a7fb46b20bb6f803cc9c2f3f6639e4f49a9",
+  "status": "ALL_18_REVIEWED_HEAD_JOBS_PASSED_NORMAL_MERGE_SOURCE_TREE_IDENTICAL",
+  "new_pypi_release": false,
+  "production_deployed": false,
+  "scope": "Cached-current source-policy v2 and isolated local-container application checks.",
+  "test_counts_are_overlapping": true,
+  "later_mixed_capacity_routing_publication_hook_profiles_and_incident_comments": "separate qualification"
+}

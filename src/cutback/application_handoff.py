@@ -54,6 +54,33 @@ def validate_coverage(coverage, commands, expected):
             raise ValueError("APPLICATION_HANDOFF_OWNER_CONSUMER_COVERAGE_REQUIRED")
 
 
+def declared_coverage_candidate(discovery, commands, expected):
+    """Draft existing coverage JSON from exact declarations; never accept it for the owner."""
+    if not isinstance(expected, (list, set, tuple)) or not 1 <= len(expected) <= 32:
+        return None
+    if any(type(key) is not str for key in expected) or len(set(expected)) != len(expected):
+        return None
+    impact = discovery.get("impact", {})
+    if impact.get("fallback_reasons") or impact.get("mode") not in {
+        "all_commands_affected_first",
+        "affected_with_regression_guards",
+    }:
+        return None
+    workflows = {row["key"]: row for row in impact.get("workflows", [])}
+    keys = {command.key for command in commands}
+    coverage = {}
+    for key in sorted(expected):
+        workflow = workflows.get(key)
+        if workflow is None or workflow.get("status") != "affected":
+            return None
+        selected = workflow.get("commands", [])
+        if not selected or any(command not in keys for command in selected):
+            return None
+        coverage[key] = list(selected)
+    validate_coverage(coverage, commands, expected)
+    return coverage
+
+
 def checked_paths(state, root, destination, expected, replacements):
     pair = destination / ("attempt-" + str(state["preparations"]))
     base, proposed = pair / "base", pair / "proposed"
@@ -264,6 +291,12 @@ def finish(
                 discovery = discover(base, proposed)
                 contract = ApplicationCheckContract.model_validate(discovery["contract"])
                 engine.write(destination / "discovery.json", discovery)
+                candidate = declared_coverage_candidate(
+                    discovery, contract.commands, affected_workflows
+                )
+                if candidate is not None:
+                    engine.write(destination / "coverage-candidate.json", candidate)
+                    state["coverage_candidate_hash"] = fingerprint(candidate)
             else:
                 contract = ApplicationCheckContract(
                     base=snapshot(base), proposed=snapshot(proposed), commands=declared
@@ -282,6 +315,15 @@ def finish(
         contract = validate_contract(read_private(destination / "contract.json"))
         if fingerprint(contract.model_dump(mode="json")) != state.get("contract_hash"):
             raise ValueError("APPLICATION_HANDOFF_CHECK_CONTRACT_CHANGED")
+        candidate_path = None
+        if state.get("coverage_candidate_hash") is not None:
+            candidate_path = destination / "coverage-candidate.json"
+            try:
+                candidate_hash = fingerprint(read_private(candidate_path))
+            except (OSError, ValueError):
+                raise ValueError("APPLICATION_HANDOFF_COVERAGE_CANDIDATE_CHANGED") from None
+            if candidate_hash != state["coverage_candidate_hash"]:
+                raise ValueError("APPLICATION_HANDOFF_COVERAGE_CANDIDATE_CHANGED")
         if coverage is not None:
             validate_coverage(coverage, contract.commands, affected_workflows)
             if state.get("coverage") is not None and state["coverage"] != coverage:
@@ -325,6 +367,11 @@ def finish(
                 if affected_workflows is not None
                 else None,
                 "owner_consumer_coverage_required": coverage is None,
+                "coverage_candidate_file": str(candidate_path) if candidate_path else None,
+                "coverage_candidate_hash": state.get("coverage_candidate_hash"),
+                "coverage_candidate_trust": "tracked_workflow_declaration_requires_explicit_review"
+                if candidate_path
+                else None,
                 "application_checks_executed": known_execution,
                 "production_deployed": False,
             }

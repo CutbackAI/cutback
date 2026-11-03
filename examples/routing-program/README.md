@@ -54,3 +54,12 @@ For an authorized real application, use the [program guide](../../docs/routing-p
 Synthetic passes demonstrate control flow and native contracts, not real model
 quality or realized savings. Router hosting, fitting dollars and full-task return
 remain unknown.
+
+The source checkout also adds an explicit [checked routing draft publisher](../../docs/routing-programs.md#preview-and-publish-a-checked-routing-draft),
+under qualification. It refreshes current rights and exact application-check
+evidence, previews the named destination, and uploads one checked routing file
+and one commit only after explicit `--publish`. That file includes instruction
+text. Its private one-shot journal reconciles lost replies without resending
+uncertain writes. This synthetic sample remains ineligible for remote
+publication; neither a test transport nor a local passing check is real
+held-out quality evidence.

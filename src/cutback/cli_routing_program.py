@@ -194,6 +194,33 @@ def register_routing_program(group, output, fail):
         write_private_output(destination, result)
         output({"status": "LOCAL_REVIEW_READY", "deployment_authorized": False})
 
+    @commands.command("publish")
+    @guarded
+    def publish(
+        repository: Annotated[str, typer.Option("--repository")],
+        head_branch: Annotated[str, typer.Option("--head-branch")],
+        purpose: Annotated[str, typer.Option("--purpose-reference")],
+        target: Path = Path("."),
+        base_branch: str = "main",
+        publish: Annotated[bool, typer.Option("--publish")] = False,
+    ):
+        """Preview checked routing settings; upload a draft only with explicit --publish."""
+        from cutback.agent_control import connect
+        from cutback.agent_routing_publication import publish_review
+
+        control, _ = connect(target)
+        output(
+            publish_review(
+                target,
+                control,
+                purpose=purpose,
+                repository=repository,
+                base_branch=base_branch,
+                head_branch=head_branch,
+                publish=publish,
+            )
+        )
+
     @commands.command("finish")
     @guarded
     def finish(

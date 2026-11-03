@@ -205,11 +205,21 @@ def prepare_patch(root: Path, proposal: RoutingSourceProposal):
 
 
 def review_change(
-    artifact, contract, receipt, base: Path, proposed: Path, coverage, *, branch=None
+    artifact,
+    contract,
+    receipt,
+    base: Path,
+    proposed: Path,
+    coverage,
+    *,
+    branch=None,
+    create_branch=True,
 ):
     """Verify both actual Git trees and recorded checks; create only an optional local ref."""
     from cutback.application_checks import git, validate_contract, verify
 
+    if type(create_branch) is not bool:
+        raise ValueError("ROUTING_REVIEW_BRANCH_CREATION_REQUIRES_BOOLEAN")
     proposal = RoutingSourceProposal.model_validate(artifact["proposal"])
     if artifact != prepare_patch(base, proposal):
         raise ValueError("ROUTING_SOURCE_REVIEW_ARTIFACT_CHANGED")
@@ -264,6 +274,8 @@ def review_change(
         if existing and existing != contract.proposed.commit:
             raise ValueError("ROUTING_REVIEW_BRANCH_ALREADY_POINTS_ELSEWHERE")
         if not existing:
+            if not create_branch:
+                raise ValueError("ROUTING_REVIEW_BRANCH_MISSING")
             git(
                 proposed,
                 "update-ref",

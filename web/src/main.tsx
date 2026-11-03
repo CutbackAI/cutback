@@ -34,6 +34,7 @@ import { Imports } from "./imports";
 import { Reviews } from "./reviews";
 import { Prompts } from "./prompts";
 import { Monitoring } from "./monitoring";
+import { AnalyticsDashboards } from "./analytics-dashboards";
 import { PriceSnapshots } from "./price-snapshots";
 import { NativeContracts } from "./native-contracts";
 import { ExactCacheContracts, ExactCacheEvidence } from "./exact-cache";
@@ -1141,7 +1142,19 @@ function App() {
                 focus={agentFocus}
               />
             )}
-            {view === "Costs" && data.report && <Costs report={data.report} />}
+            {view === "Costs" && data.report && (
+              <>
+                <CostsWorkspace
+                  key={project}
+                  report={data.report}
+                  api={api}
+                  base={base}
+                  editor={["admin", "project_admin", "editor"].includes(
+                    projectRole,
+                  )}
+                />
+              </>
+            )}
             {view === "Inventory" && "inventory" in data && (
               <InventoryView
                 inventory={data.inventory}
@@ -1489,6 +1502,42 @@ function InventoryView({
         data={{ coverage: inventory.coverage, warnings: inventory.warnings }}
       />
       <Download data={inventory} name="cutback-inventory.json" />
+    </>
+  );
+}
+function CostsWorkspace({
+  report,
+  api,
+  base,
+  editor,
+}: {
+  report: RecordData;
+  api: (path: string, options?: RequestInit) => Promise<any>;
+  base: string;
+  editor: boolean;
+}) {
+  const [mode, setMode] = useState("usage");
+  return (
+    <>
+      <div className="analytics-actions" role="group" aria-label="Cost views">
+        <button
+          aria-pressed={mode === "usage"}
+          onClick={() => setMode("usage")}
+        >
+          Explore usage
+        </button>
+        <button
+          aria-pressed={mode === "saved"}
+          onClick={() => setMode("saved")}
+        >
+          Saved charts
+        </button>
+      </div>
+      {mode === "usage" ? (
+        <Costs report={report} />
+      ) : (
+        <AnalyticsDashboards api={api} base={base} editor={editor} />
+      )}
     </>
   );
 }

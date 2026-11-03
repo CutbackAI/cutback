@@ -153,7 +153,11 @@ def candidates(root, tree):
     return commands, origins, sorted(set(unknowns))
 
 
-def discover(base: Path, proposed: Path):
+def discover(base: Path, proposed: Path, *, select_affected: bool = False):
+    from cutback.application_check_impact import impact_plan
+
+    if type(select_affected) is not bool:
+        raise ValueError("APPLICATION_CHECK_IMPACT_EXPLICIT_BOOLEAN_SELECTION_REQUIRED")
     a, b = source_root(base), source_root(proposed)
     if a == b or a.is_relative_to(b) or b.is_relative_to(a):
         raise ValueError("APPLICATION_CHECK_INDEPENDENT_WORKSPACES_REQUIRED")
@@ -166,6 +170,9 @@ def discover(base: Path, proposed: Path):
         raise ValueError("APPLICATION_CHECK_DISCOVERY_RUNNER_CHANGED_REVIEW_EXPLICIT_COMMANDS")
     if not left:
         raise ValueError("APPLICATION_CHECK_DISCOVERY_NO_DISCOVERED_COMMAND_CANDIDATES")
+    # Validate the entire candidate set before selective planning can omit a key.
+    ApplicationCheckContract(base=before, proposed=after, commands=left)
+    left, impact = impact_plan(a, b, before, after, left, selective=select_affected)
     if snapshot(a) != before or snapshot(b) != after:
         raise ValueError("APPLICATION_CHECK_DISCOVERY_SOURCE_CHANGED")
     contract = ApplicationCheckContract(base=before, proposed=after, commands=left)
@@ -175,6 +182,7 @@ def discover(base: Path, proposed: Path):
         "contract": contract.model_dump(mode="json"),
         "contract_hash": fingerprint(contract.model_dump(mode="json")),
         "origins": {"base": left_origins, "proposed": right_origins},
+        "impact": impact,
         "unknowns": sorted(
             set(
                 left_unknowns

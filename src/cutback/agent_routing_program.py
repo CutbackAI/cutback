@@ -3,6 +3,7 @@
 import math
 import time
 from decimal import Decimal
+from pathlib import Path
 from uuid import UUID, uuid4
 
 from pydantic import TypeAdapter
@@ -229,15 +230,31 @@ def proposal(root, control, *, purpose):
 
 def review(root, control, *, purpose, contract, receipt, proposed_root, coverage, branch=None):
     from cutback.agent import workspace
+    from cutback.application_checks import validate_contract
     from cutback.routing_changes import review_change
 
     # Refresh canonical authority before trusting any saved local proposal.
     artifact = proposal(root, control, purpose=purpose)
     root, directory = workspace(root)
     with workspace_lock(directory):
-        current(root, control)
+        saved = current(root, control)
         result = review_change(
             artifact, contract, receipt, root, proposed_root, coverage, branch=branch
         )
         write_private(directory / "routing-program-review.json", result)
+        write_private(
+            directory / "routing-program-review-inputs.json",
+            {
+                "version": "cutback.routing-review-inputs.v1",
+                "program_id": saved["program_id"],
+                "program_hash": saved["program_hash"],
+                "review_sha256": result["review_sha256"],
+                "base": str(root),
+                "proposed": str(Path(proposed_root).resolve()),
+                "contract": validate_contract(contract).model_dump(mode="json"),
+                "receipt": receipt,
+                "coverage": coverage,
+                "branch": branch,
+            },
+        )
         return result

@@ -118,6 +118,12 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
     assert job["phase"] == "ANALYZED" and job["profiles"]
     assert job["next_action"]["provider_calls"] == 0
     assert command("workflow", "status")["id"] == job["id"]
+    readiness = command("workflow", "diagnose", "--target", ".", "--json")
+    assert readiness["readiness"] == "REVIEW_PREPARATION_INPUTS"
+    assert readiness["application_commands_executed"] == readiness["provider_calls"] == 0
+    assert readiness["dependencies"]["installed_versions"]["openai"] is None
+    assert readiness["dependencies"]["application_sdk_versions"] is None
+    assert readiness["application_checks"]["workflow_coverage"] == "unknown"
     guide = command("workflow", "explain", "--json")
     assert guide["qualified_request_profiles"] == 1 and guide["provider_calls"] == 0
     assert guide["source_changed"] is None and guide["source_edit_performed"] is False
@@ -136,6 +142,11 @@ with tempfile.TemporaryDirectory(prefix="cutback-wheel-") as temporary:
         "EXPANDED_REQUEST_ARGUMENTS_REQUIRE_REVIEW"
     )
     assert explanation["next_action"]["tool"] == "cutback workflow explain"
+    blocked_readiness = command("workflow", "diagnose", "--target", str(blocked), "--json")
+    assert blocked_readiness["readiness"] == "SOURCE_ADAPTER_REQUIRED"
+    assert blocked_readiness["source_contracts"]["issues"][0]["diagnostic_code"] == (
+        "EXPANDED_REQUEST_ARGUMENTS_REQUIRE_REVIEW"
+    )
     assert (blocked / "app.py").read_text(encoding="utf-8") == blocked_source
     git_env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
     git_env.update(GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull, GIT_ATTR_NOSYSTEM="1")

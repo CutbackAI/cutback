@@ -1,0 +1,114 @@
+{
+  "contract": "cutback.routing-publication-acceptance.v1",
+  "date": "2026-11-01",
+  "status": "LOCAL_COMPONENT_QUALIFIED_EXACT_HEAD_HOSTED_PENDING",
+  "actual_runtime_source_revision": "ff534a6982050b8dbaf23149b2f2fa53daf4a811",
+  "corrected_test_source_revision": "480dd53b204cefd3811c4babaa30cb9cc295520a",
+  "wheel_sha256": "cecd7d806b44120acbd47c3b21866ab1cb6de0f18b0fdaa48bed4a186fa2f568",
+  "image_id": "sha256:0ff69480926ee3fcd698635d965ac981f017e16af31ae3499f14c0b19402bc02",
+  "installed_sdk_tests": {
+    "2.29.0": {
+      "first_cohort": {
+        "passed_before_stop": 99,
+        "failed": 1,
+        "seconds": 1799.83,
+        "log_sha256": "992f22b2e97476d804a9b2ac0be9780298a53e64b65698851cc8479a5c02aeb9",
+        "reason": "New HTTP-only test used the state-free checked copy and omitted explicit collector configuration.",
+        "full_suite_passed": false
+      },
+      "corrected_fixture_followup": {
+        "passed_before_browser_stop": 20,
+        "failed": 1,
+        "seconds": 463.7,
+        "log_sha256": "406e231ece7114c7865c97891ce375557817abf418367a90a243ed75625b6d8f",
+        "reason": "New frozen checkout lacked its locked local browser dependencies; no application failure.",
+        "selection": [
+          "routing publication HTTP-only static and learned journeys",
+          "routing program API and canonical ledger",
+          "audit and capture privacy",
+          "migration and release contracts"
+        ]
+      },
+      "remaining_browser_and_profile_checks": {
+        "passed": 13,
+        "skipped": 0,
+        "seconds": 114.76,
+        "log_sha256": "6285ab51cab600ef62bcad30b88c11e0a326db76742f52c9fe8aca7d6084b824",
+        "locked_web_dependencies_installed_before_run": true,
+        "selection": [
+          "authenticated dashboard/mobile/accessibility",
+          "native-hook profiling failure/privacy tests"
+        ]
+      },
+      "runtime_application_files_identical": 485
+    },
+    "3.35.1": {
+      "first_cohort": {
+        "passed_before_stop": 99,
+        "failed": 1,
+        "seconds": 1791.42,
+        "log_sha256": "6078a918def1393773e9f7fa3d6deaeb1a264db893bb9b6bc2c25c4a43058480",
+        "reason": "New HTTP-only test used the state-free checked copy and omitted explicit collector configuration.",
+        "full_suite_passed": false
+      },
+      "corrected_fixture_followup": {
+        "passed_before_browser_stop": 20,
+        "failed": 1,
+        "seconds": 463.56,
+        "log_sha256": "f163bfe7e4506e3b79bdf71bccab9817c73d5c3b379e49f054cedab8145fefbd",
+        "reason": "New frozen checkout lacked its locked local browser dependencies; no application failure.",
+        "selection": [
+          "routing publication HTTP-only static and learned journeys",
+          "routing program API and canonical ledger",
+          "audit and capture privacy",
+          "migration and release contracts"
+        ]
+      },
+      "remaining_browser_and_profile_checks": {
+        "passed": 13,
+        "skipped": 0,
+        "seconds": 114.73,
+        "log_sha256": "03b34f9cad0f622f4032e3576dc0b61fc04d34ec8c9dbb4493b7e20de891107c",
+        "locked_web_dependencies_installed_before_run": true,
+        "selection": [
+          "authenticated dashboard/mobile/accessibility",
+          "native-hook profiling failure/privacy tests"
+        ]
+      },
+      "runtime_application_files_identical": 485
+    }
+  },
+  "runtime_changed_for_fixture_correction": false,
+  "new_environment_or_image_claimed_for_fixture_correction": false,
+  "current_rights_before_github": true,
+  "core_httpx_only_client_without_provider_server_crypto_dependencies": true,
+  "synthetic_sample_publication_refused": true,
+  "removed_review_ref_recreation_refused": true,
+  "static_and_learned_native_source_checks_and_five_lost_reply_boundaries": true,
+  "default_preview_and_explicit_single_file_draft_only": true,
+  "application_policy_text_upload_disclosed": true,
+  "uncertain_github_write_reconciled_without_automatic_resend": true,
+  "full_recovery": {
+    "tables": 108,
+    "encrypted_objects": 3693,
+    "cache_objects": 20,
+    "plans": 46,
+    "native_profile_objects": 24,
+    "row_counts_match": true,
+    "seconds": 404.0470000000205,
+    "receipt_sha256": "93f79a1ef31c7052bc30a78e5be88efe4ba7eda40f584ba3f381e8ea11ad8fb9",
+    "diagnostic_sha256": "686780d9bec1ecb69052e5666a73b0ac3f41cc797770d207424de2eca265825f",
+    "first_trial": {
+      "status": "FAILED",
+      "code": "OWNED_SECURITY_SAMPLE_DID_NOT_COMPLETE",
+      "cause": "unresolved; first failure retained, deadlines and assertions unchanged"
+    },
+    "focused_guarded_security_diagnostic": "PASSED",
+    "second_identical_full_trial": "PASSED"
+  },
+  "real_application_external_publication_verified": false,
+  "real_customer_quality_or_savings_verified": false,
+  "production_changed": false,
+  "paid_provider_calls": 0,
+  "new_pypi_release": false
+}

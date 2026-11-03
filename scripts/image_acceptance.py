@@ -21,6 +21,7 @@ from uuid import uuid4
 
 import httpx
 import psycopg
+from application_readiness_acceptance import qualify as qualify_readiness
 from backup_restore import backup, compose, restore
 from policy_cached_acceptance import SEED as POLICY_CACHED_SEED
 from policy_runtime_acceptance import SEED as POLICY_RUNTIME_SEED
@@ -28,6 +29,12 @@ from psycopg import sql
 
 ROOT = Path(__file__).resolve().parents[1]
 PREAMBLE = "import json,os,sys\nos.environ.update(json.load(sys.stdin))\n"
+PIPE_EXEC = (
+    "import json,os,sys\n"
+    "owned=json.load(sys.stdin)\n"
+    "os.environ.update(owned['environment'])\n"
+    "exec(compile(owned['code'],'<owned-image-fixture>','exec'))\n"
+)
 
 
 def checked(command, *, source=None, timeout=180, env=None):
@@ -40,9 +47,15 @@ def checked(command, *, source=None, timeout=180, env=None):
 
 
 def inside(container, code, values, *, timeout=180):
+    # Keep fixture code as well as credentials out of argv. Expanded recovery
+    # scripts can exceed Windows' process command-line bound even when the
+    # source template fits. Anonymous stdin preserves the exact code/values.
+    source = json.dumps({"environment": values, "code": code})
+    if len(source.encode("utf-8")) > 1048576:
+        raise ValueError("IMAGE_FIXTURE_PIPE_PAYLOAD_TOO_LARGE")
     return checked(
-        ["docker", "exec", "-i", container, "/app/.venv/bin/python", "-c", PREAMBLE + code],
-        source=json.dumps(values),
+        ["docker", "exec", "-i", container, "/app/.venv/bin/python", "-c", PIPE_EXEC],
+        source=source,
         timeout=timeout,
     )
 
@@ -107,6 +120,78 @@ print(json.dumps({"contract":"cutback.source-policy-async.v1","uid":10001,
         timeout=90,
     )
     return json.loads(output.strip().splitlines()[-1])
+
+
+def seed_owned_incident_comments(container, values):
+    """Actual metadata alert and encrypted revision APIs in the owned image database."""
+    code = """import json,os,httpx
+from datetime import UTC,datetime,timedelta
+from uuid import UUID,uuid4
+from cutback.server.runtime import configure_secrets
+from cutback.server.api import create_app
+from cutback.server.monitoring import queue_online_intake,run_online_one
+from cutback.server.incidents import evaluate_alert
+configure_secrets()
+app=create_app(allow_insecure_http=True)
+now=datetime.now(UTC)
+anchor=now.replace(second=0,microsecond=0)-timedelta(minutes=1)
+with httpx.Client(base_url="http://127.0.0.1:8080",trust_env=False,follow_redirects=False,
+ headers={"Authorization":"Bearer "+os.environ["CUTBACK_ADMIN_TOKEN"]},timeout=30) as client:
+ def call(method,path,body=None):
+  response=client.request(method,path,**({"json":body} if body is not None else {}))
+  if response.status_code not in (200,201,202):raise ValueError("IMAGE_COMMENT_API_REFUSED")
+  return response.json()
+ project=call("POST","/v1/projects",{"slug":"owned-image-comments"})["id"]
+ base="/v1/projects/"+project
+ ingest=call("POST",base+"/keys",{"role":"ingest"})["token"]
+ rule=call("POST",base+"/online-rules",{"version_id":str(uuid4()),"key":"owned-comments",
+  "expected_revision":0,"environment":"staging","filter":{"workflow":"synthetic-comment-source"},
+  "evaluator":{"kind":"execution_ok"},"starts_at":(now-timedelta(hours=1)).isoformat(),
+  "expires_at":(now+timedelta(days=1)).isoformat(),"max_evaluations":10,"approval_ref":"owned-image-only"})
+ alert=call("POST",base+"/alert-rules",{"version_id":str(uuid4()),"key":"owned-comments",
+  "expected_revision":0,"online_rule_id":rule["id"],"window_seconds":60,"grace_seconds":0,
+  "min_samples":1,"threshold":"0.5","cooldown_seconds":0})
+ started=int((anchor+timedelta(seconds=1)).timestamp())*1000000000
+ response=client.post("/v1/ingest/spans",headers={"Authorization":"Bearer "+ingest},json={"spans":[{
+  "trace_id":uuid4().hex,"span_id":uuid4().hex[:16],"operation":"synthetic-comment-source",
+  "service":"synthetic-desk","workflow":"synthetic-comment-source","kind":"chain","status":"error",
+  "started_ns":started,"ended_ns":started+1000000}]})
+ assert response.status_code==200 and response.json()["accepted"]==1
+ for _ in range(10):
+  outcome=queue_online_intake(app.state.sessions,enabled=True,only_project_id=UUID(project))
+  if outcome["status"]!="TARGETS_QUEUED":break
+ # This database is newly created by this acceptance process, containing only
+ # owned synthetic fixtures. The metadata worker cannot call a model provider.
+ for _ in range(32):
+  run_online_one(app.state.sessions,enabled=True)
+  jobs=call("GET",base+"/online-rules/"+rule["id"]+"/evaluations")["items"]
+  if jobs and jobs[0]["state"]=="failed":break
+ assert jobs and jobs[0]["state"]=="failed"
+ evaluate_alert(app.state.sessions,UUID(alert["id"]),window_end=anchor+timedelta(minutes=1))
+ incidents=call("GET",base+"/incidents")["items"]
+ assert len(incidents)==1
+ incident=incidents[0]["id"]
+ call("POST",base+"/online-rules/"+rule["id"]+"/switch",{
+  "expected_revision":1,"expected_enabled":True,"enabled":False})
+ policy=call("POST",base+"/capture-policies",{"enabled":True,
+  "approval_ref":"owned-image-comment-storage","rights_basis":"synthetic",
+  "environments":["staging"],"workflows":["incident-comments"],"allowed_providers":["local"],
+  "expires_at":(now+timedelta(days=1)).isoformat(),"sample_rate":1,"max_samples":2,
+  "max_payload_bytes":4096,"retention_days":1})["id"]
+ identifier=str(uuid4())
+ path=base+"/incidents/"+incident+"/comments/"+identifier
+ texts=["Owned synthetic incident discussion revision one.",
+        "Owned synthetic incident discussion revision two."]
+ for revision,text in enumerate(texts,1):
+  call("PUT",path,{"version_id":str(uuid4()),"expected_revision":revision-1,"policy_id":policy,"text":text})
+  response=call("POST",path+"/content?revision="+str(revision),{"purpose":"owned-image-comment-seed"})
+  assert response["text"]==text
+ receipt={"project_id":project,"incident_id":incident,"comment_id":identifier,
+  "versions":2,"actual_metadata_incident_created":True,"synthetic_only":True,"paid_provider_calls":0}
+app.state.engine.dispose()
+print(json.dumps(receipt))
+"""
+    return json.loads(inside(container, code, values, timeout=120).strip().splitlines()[-1])
 
 
 def seed_owned_routing_program(container, values, *, source_policy=False):
@@ -416,6 +501,7 @@ def main(
         raise ValueError("SECURITY_IMAGE_GATE_REQUIRES_ACTUAL_ISOLATED_TOOLS")
 
     image_id = json.loads(checked(["docker", "image", "inspect", image]))[0]["Id"]
+    readiness_runtime = qualify_readiness(image_id, checked=checked)
     async_policy_runtime = qualify_async_policy_runtime(image_id) if source_policy else None
     password = (ROOT / "infra/compose/secrets/db_password").read_text().strip()
     kwargs = dict(host="127.0.0.1", port=55432, user="cutback", password=password, dbname="cutback")
@@ -579,6 +665,7 @@ if RUNTIME_GUARDS:
  assert manifest["runtime_guardrail_sample"]["complete_application_cost_usd"] is None
 print(json.dumps({"project_id":manifest["project_id"],
  "shared_dashboard_sample":manifest["shared_dashboard_sample"],
+ "analytics_dashboard_sample":manifest["analytics_dashboard_sample"],
  "paid_provider_calls":manifest["paid_provider_calls"]}))
 """
                 code = code.replace("RUNTIME_GUARDS", repr(runtime_guardrails))
@@ -610,6 +697,7 @@ print(json.dumps({"project_id":manifest["project_id"],
                     if source_policy
                     else None
                 )
+                comment_sample = seed_owned_incident_comments(container, values)
                 base = "/v1/projects/" + manifest["project_id"]
                 usage = client.get(
                     base + "/usage?traffic_kind=application&group_by=workflow"
@@ -647,6 +735,16 @@ print(json.dumps({"project_id":manifest["project_id"],
                         guarded_tools=guarded_tools,
                         guarded_security=guarded_security,
                     )
+                analytics_sample = manifest["analytics_dashboard_sample"]
+                analytics_path = base + "/analytics-dashboards/" + analytics_sample["dashboard_id"]
+                analytics_response = client.get(analytics_path + "/data?expected_revision=1")
+                assert analytics_response.status_code == 200
+                analytics_before = analytics_response.json()
+                assert (
+                    analytics_before["definition_sha256"] == analytics_sample["definition_sha256"]
+                )
+                assert analytics_before["population_coverage"] == "unknown"
+                assert analytics_before["content_included"] is False
                 with psycopg.connect(**kwargs, autocommit=True) as conn:
                     key = os.urandom(32)
                     dump = directory / "database.cbk"
@@ -1105,12 +1203,36 @@ restored_app=create_app(database_url=url.render_as_string(hide_password=False),
 restored_app.state.artifact_store=new_only
 with TestClient(restored_app) as client:
  headers={"Authorization":"Bearer "+os.environ["CUTBACK_ADMIN_TOKEN"]}
+ comments=INCIDENT_COMMENT_RECEIPT
+ comment_base="/v1/projects/"+comments["project_id"]+"/incidents/"+comments["incident_id"]+"/comments"
+ response=client.get(comment_base,headers=headers)
+ assert response.status_code==200 and response.json()["content_included"] is False
+ assert len(response.json()["items"])==1 and response.json()["items"][0]["revision"]==2
+ texts=["Owned synthetic incident discussion revision one.",
+        "Owned synthetic incident discussion revision two."]
+ for revision,text in enumerate(texts,1):
+  assert text not in response.text
+  body=client.post(comment_base+"/"+comments["comment_id"]+"/content?revision="+str(revision),
+   headers=headers,json={"purpose":"owned-recovered-comment"})
+  assert body.status_code==200 and body.json()["text"]==text
+ from sqlalchemy import func
+ from cutback.server.db import AuditEvent
+ with sessions() as audit_session:
+  assert audit_session.scalar(select(func.count()).select_from(AuditEvent).where(
+   AuditEvent.project_id==__import__("uuid").UUID(comments["project_id"]),
+   AuditEvent.action=="incident_comment_read",
+   AuditEvent.details["purpose"].as_string()=="owned-recovered-comment"))==2
  dashboard=client.get("/v1/projects/"+SHARED_DASHBOARD_PROJECT+"/dashboards/"+SHARED_DASHBOARD_ID,headers=headers)
  assert dashboard.status_code==200
  dashboard=dashboard.json()
  assert dashboard["definition_sha256"]==SHARED_DASHBOARD_SHA and dashboard["revision"]==1
  assert len(dashboard["panels"])==2
  assert all(p["source_state"]=="current" for p in dashboard["panels"])
+ analytics=ANALYTICS_RECEIPT
+ analytical=client.get("/v1/projects/"+SHARED_DASHBOARD_PROJECT+"/analytics-dashboards/"+analytics["dashboard_id"],headers=headers)
+ assert analytical.status_code==200
+ assert analytical.json()["definition_sha256"]==analytics["definition_sha256"]
+ assert analytical.json()["revision"]==1 and len(analytical.json()["panels"])==4
  for panel in dashboard["panels"]:
   response=client.get("/v1/projects/"+SHARED_DASHBOARD_PROJECT+"/dashboards/"+SHARED_DASHBOARD_ID+"/panels/"+panel["view_id"],
    headers=headers,params={"expected_revision":1})
@@ -1167,6 +1289,8 @@ engine.dispose()
                     .replace("REACTIVE_EXPECTED", repr(reactive_users))
                     .replace("SHARED_DASHBOARD_PROJECT", repr(manifest["project_id"]))
                     .replace("POLICY_ACTIVITY_RECEIPT", repr(policy_activity_sample))
+                    .replace("INCIDENT_COMMENT_RECEIPT", repr(comment_sample))
+                    .replace("ANALYTICS_RECEIPT", repr(analytics_sample))
                     .replace("CACHED_CURRENT_RECEIPT", repr(cached_policy_sample))
                     .replace(
                         "SOURCE_POLICY_PROGRAM_ID",
@@ -1183,12 +1307,43 @@ engine.dispose()
                 )
                 recovered = json.loads(inside(container, recovery, values).strip().splitlines()[-1])
 
-                # Rekeying preserves rows. The sole allowed new row is the
-                # exact purpose/program audit event verified inside the image.
+                # Only the two exact purpose/revision comment audits and the
+                # optional cached-program content audit verified inside may grow.
                 expected_after = dict(before)
+                expected_after["audit_events"] += 2
                 if cached_policy_sample:
                     expected_after["audit_events"] += 1
                 assert counts(names[1]) == expected_after
+                # The exact database comparison above precedes this explicitly
+                # quota-consuming analytics read; do not waive any count differences.
+                analytics_recovery = """import json,os
+from sqlalchemy.engine import make_url
+from fastapi.testclient import TestClient
+from cutback.server.api import create_app
+url=make_url(os.environ["CUTBACK_DATABASE_URL"]).set(database=RECOVERED)
+app=create_app(database_url=url.render_as_string(hide_password=False),
+ admin_token=os.environ["CUTBACK_ADMIN_TOKEN"],allow_insecure_http=True)
+with TestClient(app) as client:
+ response=client.get(ANALYTICS_PATH+"/data?expected_revision=1",
+  headers={"Authorization":"Bearer "+os.environ["CUTBACK_ADMIN_TOKEN"]})
+ assert response.status_code==200
+ value=response.json()
+ assert value["content_included"] is False and value["population_coverage"]=="unknown"
+ assert value["revision"]==1 and value["definition_sha256"]==ANALYTICS_HASH
+ assert value["starts_at"]==ANALYTICS_START and value["panels"]==ANALYTICS_PANELS
+app.state.engine.dispose()
+print(json.dumps({"analytics_definition_and_canonical_data_restored":True}))
+"""
+                analytics_recovery = (
+                    analytics_recovery.replace("RECOVERED", repr(names[1]))
+                    .replace("ANALYTICS_PATH", repr(analytics_path))
+                    .replace("ANALYTICS_HASH", repr(analytics_before["definition_sha256"]))
+                    .replace("ANALYTICS_START", repr(analytics_before["starts_at"]))
+                    .replace("ANALYTICS_PANELS", repr(analytics_before["panels"]))
+                )
+                analytics_recovered = json.loads(
+                    inside(container, analytics_recovery, values).strip().splitlines()[-1]
+                )
                 with psycopg.connect(**{**kwargs, "dbname": names[1]}) as connection:
                     revision = connection.execute(
                         "SELECT version_num FROM alembic_version"
@@ -1284,6 +1439,7 @@ engine.dispose()
                     "routing_program_sample": routing_sample,
                     "source_policy_program_sample": policy_sample,
                     "source_policy_async_native_runtime": async_policy_runtime,
+                    "offline_application_readiness": readiness_runtime,
                     "image": image,
                     "image_id": image_id,
                     "uid": 10001,
@@ -1317,7 +1473,8 @@ engine.dispose()
                     "cached_current_policy_preparation_and_retained_reference_restored": (
                         cached_policy_sample
                     ),
-                    "new_verification_audit_events": int(bool(cached_policy_sample)),
+                    "new_verification_audit_events": 2 + int(bool(cached_policy_sample)),
+                    "encrypted_incident_comment_versions_restored": comment_sample["versions"],
                     "joint_retrieval_confirmation_and_both_tree_checks": joint_model_retrieval,
                     "pending_workload_portfolio_and_source_window_restored": workload_portfolio,
                     "complete_workload_fixture_confirmation_restored": workload_portfolio_demo,
@@ -1328,6 +1485,9 @@ engine.dispose()
                     "reactive_user_contracts_receipts_and_trajectories_restored": reactive_users,
                     "restored_tables": len(before),
                     "row_counts_match": True,
+                    "analytics_definition_and_canonical_data_restored": analytics_recovered[
+                        "analytics_definition_and_canonical_data_restored"
+                    ],
                     **recovered,
                     "production_changed": False,
                     "secret_delivery": "anonymous_stdin_pipes_and_scoped_memory_clients"
