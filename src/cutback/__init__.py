@@ -1,6 +1,6 @@
 """Cutback. Import is offline and does not install instrumentation."""
 
-__version__ = "0.1.0.dev5"
+__version__ = "0.1.0.dev6"
 
 
 def init(**kwargs):

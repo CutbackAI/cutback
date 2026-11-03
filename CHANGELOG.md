@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.1.0.dev6 — development release
+
+Packages the merged bounded source work since dev5: workflow tracing and review,
+prompt versions, online monitoring, native application/cache campaigns, source-policy
+and routing programs, checked handoff and rollback, declared later outcomes,
+shared analytical charts and encrypted incident discussion. Offline readiness,
+shared-workflow dependency planning and review-only coverage drafts accompany
+independent synthetic applications. Current limits remain in docs/status.md.
+
+Additive migrations through 0037 preserve the released migration files. Back up
+an existing deployment and qualify the upgrade in staging; this pre-alpha line
+has no production compatibility guarantee. Complete task economics, broader
+adapters/evaluation specialties and independent customer evidence remain open.
+
+Release publication requires exact-source CI/security, source/archive privacy
+checks and matching whole-wheel and sdist SHA-256 inputs. Candidate preparation
+is not a claim that PyPI publication or a production deployment has succeeded.
+The paragraphs below retain their earlier source checkpoints and release history.
+
 Source follow-up, 30 October 2026: bounded training-only input-size route fitting
 from authenticated paired native observations, separate validation and untouched
 confirmation, shared setup accounting and encrypted policy lifecycle. The guided

@@ -1,8 +1,8 @@
 # What works and what remains
 
-Updated 2 November 2026 (UTC). Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business.
+Updated 3 November 2026 (UTC). Cutback is a pre-alpha product with tested, bounded workflows. It is not a complete competitive platform or a validated business.
 
-Reviewed public runtime `77ce70085ae1e565563601da30773ae9149b87c0` passed **all 20 hosted workflow jobs** on 2 November. The [hosted acceptance](evidence/reviewed-workflow-hosted-acceptance.json) records Python 3.11 **3,138 passed / 62 skipped**, Python 3.13 **3,137 passed / 63 skipped**, both complete SDK3 matrices, security, infrastructure and both ten-minute service profiles. The source remains under review in [draft PR 83](https://github.com/CutbackAI/cutback/pull/83); later documentation/CI heads must pass their own protected checks. PyPI dev5 is unchanged. These controlled synthetic results do not complete the platform or establish customer outcomes.
+Reviewed public runtime `77ce70085ae1e565563601da30773ae9149b87c0` passed **all 20 hosted workflow jobs** on 2 November. The [hosted acceptance](evidence/reviewed-workflow-hosted-acceptance.json) records Python 3.11 **3,138 passed / 62 skipped**, Python 3.13 **3,137 passed / 63 skipped**, both complete SDK3 matrices, security, infrastructure and both ten-minute service profiles. This source merged in [PR 83](https://github.com/CutbackAI/cutback/pull/83) on 3 November; later release heads must pass their own protected checks. PyPI dev5 is unchanged. These controlled synthetic results do not complete the platform or establish customer outcomes.
 
 [Application handoff coverage drafts](application-checks.md#use-the-mapping-in-an-agent-handoff)
 passed local component qualification. Exact tracked workflow mappings
@@ -148,7 +148,8 @@ and current tests in progress.
 
 | Installation | Available scope |
 |---|---|
-| Published PyPI `0.1.0.dev5` | Offline scanner, native observation, self-hosted collector/dashboard and the earlier source-bound support-desk evaluation workflow. Follow its [versioned walkthrough](https://github.com/CutbackAI/cutback/blob/v0.1.0.dev5/docs/testing-the-sample.md). |
+| Development release `0.1.0.dev6` | Packages the bounded source workflows described below; [PyPI](https://pypi.org/project/cutback/) is the publication source of truth. Follow the [wheel-first guide](testing-dev6-release.md). Preparation and qualification do not themselves publish a package. |
+| Earlier published PyPI `0.1.0.dev5` | Offline scanner, native observation, self-hosted collector/dashboard and the earlier source-bound support-desk evaluation workflow. Follow its [versioned walkthrough](https://github.com/CutbackAI/cutback/blob/v0.1.0.dev5/docs/testing-the-sample.md). |
 | Current GitHub source | The additional workflows below. Use the source instructions in the [README](../README.md), matching collector/agent versions and the committed lockfiles. |
 | Local qualification artifacts | Development wheels/images identified by their exact hashes in [progress](progress.md). They are not additional public PyPI releases. |
 
